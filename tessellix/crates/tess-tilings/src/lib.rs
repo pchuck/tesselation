@@ -66,6 +66,8 @@ pub mod triangle;
 pub mod windmill;
 #[cfg(feature = "zellige")]
 pub mod zellige;
+#[cfg(feature = "pavers")]
+pub mod basketweave;
 
 /// Registry of all enabled built-in tilings.
 pub fn registry() -> tess_core::Registry {
@@ -190,6 +192,10 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "windmill")]
     {
         r = r.register(windmill::spec());
+    }
+    #[cfg(feature = "pavers")]
+    {
+        r = r.register(basketweave::basketweave());
     }
     r
 }
@@ -358,7 +364,7 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-("Wallpaper", 6),
+            ("Wallpaper", 7),
             ("Quasiperiodic", 7),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
@@ -2861,6 +2867,234 @@ mod windmill_tests {
 /// coverage tests can miss. This test re-emits every tile from the public
 /// table data over a wide fixed index window — no range math at all — and
 /// requires exactly the same tile set as `generate`.
+/// Exact wallpaper-group probe for the paver data tables.
+///
+/// All paver geometry is integral, and every candidate isometry
+/// `g = (M, v)` we want to test has `M` with {0, ±1} entries and `v` a
+/// half-integer vector, so membership can be tested exactly in
+/// *doubled* coordinates (world point `p` ↔ `P = 2p`). A candidate is
+/// a symmetry iff `M` maps the lattice basis into the domino-origin
+/// lattice `L`, and for every unit-cell domino the image domino's
+/// origin `t` (the min corner of the image, i.e. `M·o + c0 + v` with
+/// `c0` the min corner of `M([0,w]×[0,h])`) lands in that kind's
+/// origin-coset set `O(kind)` — the rigorous coset check of the
+/// Python spike. All coordinates below are doubled: the lattice basis,
+/// the cell origins/extents (`kind` 0 = horizontal, 1 = vertical),
+/// and the translations `V = 2v`.
+#[cfg(all(test, feature = "pavers"))]
+fn pavers_exact_is_sym(
+    m: [i64; 4], // M = [[m[0], m[1]], [m[2], m[3]]]
+    v: [i64; 2], // doubled translation V = 2v
+    basis: &[(i64, i64); 2],
+    cells: &[(i64, i64, i64, i64, u8)],
+    in_lattice: impl Fn(i64, i64) -> bool,
+    in_origin: impl Fn(u8, i64, i64) -> bool,
+) -> bool {
+    let mv = |p: (i64, i64)| (m[0] * p.0 + m[1] * p.1, m[2] * p.0 + m[3] * p.1);
+    // M must map the lattice to itself; all candidates have det ±1, so
+    // checking the basis vectors suffices.
+    for &(bx, by) in basis {
+        let (x, y) = mv((bx, by));
+        if !in_lattice(x, y) {
+            return false;
+        }
+    }
+    for &(ox, oy, w, h, _kind) in cells {
+        let cs = [mv((0, 0)), mv((w, 0)), mv((0, h)), mv((w, h))];
+        let c0x = cs.iter().map(|c| c.0).min().unwrap();
+        let c0y = cs.iter().map(|c| c.1).min().unwrap();
+        let dx = cs.iter().map(|c| c.0).max().unwrap() - c0x;
+        let dy = cs.iter().map(|c| c.1).max().unwrap() - c0y;
+        let kind2 = u8::from(dx == 2 && dy == 4); // image domino kind: 2×4 (doubled) = V
+        let t = (
+            m[0] * ox + m[1] * oy + c0x + v[0],
+            m[2] * ox + m[3] * oy + c0y + v[1],
+        );
+        if !in_origin(kind2, t.0, t.1) {
+            return false;
+        }
+    }
+    true
+}
+
+#[cfg(test)]
+#[cfg(feature = "pavers")]
+mod pavers_tests {
+    use super::pavers_exact_is_sym;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use crate::basketweave;
+    use tess_core::geometry::{BBox, Vec2};
+
+    /// Candidate matrices (row-major) used by the paver group probes.
+    const M_ROT4: [i64; 4] = [0, -1, 1, 0];
+    const M_ROT2: [i64; 4] = [-1, 0, 0, -1];
+    const M_MIRX: [i64; 4] = [-1, 0, 0, 1]; // mirror of x = c: (2c−x, y)
+    const M_MIRY: [i64; 4] = [1, 0, 0, -1]; // mirror of y = c: (x, 2c−y)
+    const M_DIAG: [i64; 4] = [0, 1, 1, 0]; // glide/mirror of y = x + c
+    const M_ANTI: [i64; 4] = [0, -1, -1, 0]; // glide/mirror of y = −x + c
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn basketweave_covers_region() {
+        check_covers(
+            &basketweave::basketweave(),
+            "basketweave",
+            BBox::new(v2(-3.0, -3.0), v2(11.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn basketweave_rotated_scaled() {
+        check_rotated(
+            &basketweave::basketweave(),
+            "basketweave(rot30,scale0.7)",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn basketweave_deterministic() {
+        check_det(
+            &basketweave::basketweave(),
+            "basketweave",
+            BBox::new(v2(-2.0, -2.0), v2(8.0, 6.0)),
+        );
+    }
+
+    /// Lattice-membership / origin-coset predicates for the basketweave
+    /// table, in doubled coordinates. L = {x,y even, x+y ≡ 0 (mod 4)};
+    /// H origins = L ∪ (L + (0,1)), V origins = L + (2,0) ∪ L + (3,0).
+    fn bw_in_lattice(x: i64, y: i64) -> bool {
+        x.rem_euclid(4) == 0 && y.rem_euclid(4) == 0 && (x + y).rem_euclid(8) == 0
+    }
+
+    fn bw_in_origin(kind: u8, x: i64, y: i64) -> bool {
+        match kind {
+            0 => bw_in_lattice(x, y) || bw_in_lattice(x, y - 2),
+            _ => bw_in_lattice(x - 4, y) || bw_in_lattice(x - 6, y),
+        }
+    }
+
+    #[test]
+    fn basketweave_wallpaper_group_is_p4g() {
+        // Unit-cell dominoes in doubled coordinates: H (0,0), H (0,1),
+        // V (2,0), V (3,0); kind 0 = H, 1 = V.
+        let basis = [(4, 4), (4, -4)];
+        let cells: [(i64, i64, i64, i64, u8); 4] =
+            [(0, 0, 4, 2, 0), (0, 2, 4, 2, 0), (4, 0, 2, 4, 1), (6, 0, 2, 4, 1)];
+        let sym = |m: [i64; 4], v: [i64; 2]| {
+            pavers_exact_is_sym(m, v, &basis, &cells, bw_in_lattice, bw_in_origin)
+        };
+
+        // 4-folds at every even-even point; 2-folds at odd-odd;
+        // mirrors at the odd axes; six glide families.
+        let expected = [
+            (M_ROT4, [0, 0], "rot4(0,0)"),
+            (M_ROT4, [4, -4], "rot4(2,0)"),
+            (M_ROT4, [4, 4], "rot4(0,2)"),
+            (M_ROT4, [8, 0], "rot4(2,2)"),
+            (M_ROT4, [8, -8], "rot4(4,0)"),
+            (M_ROT4, [8, 8], "rot4(0,4)"),
+            (M_ROT4, [12, -4], "rot4(4,2)"),
+            (M_ROT4, [16, 0], "rot4(4,4)"),
+            (M_ROT2, [4, 4], "rot2(1,1)"),
+            (M_ROT2, [12, 12], "rot2(3,3)"),
+            (M_ROT2, [4, 12], "rot2(1,3)"),
+            (M_ROT2, [12, 4], "rot2(3,1)"),
+            (M_MIRX, [4, 0], "mir_x(1)"),
+            (M_MIRX, [12, 0], "mir_x(3)"),
+            (M_MIRY, [0, 4], "mir_y(1)"),
+            (M_MIRY, [0, 12], "mir_y(3)"),
+            (M_DIAG, [0, 4], "glide(y, x+2)"),
+            (M_DIAG, [4, 0], "glide(y+2, x)"),
+            (M_ANTI, [4, 0], "glide(2-y, -x)"),
+            (M_ANTI, [8, 4], "glide(4-y, 2-x)"),
+            (M_MIRX, [0, 4], "glide(-x, y+2)"),
+            (M_MIRY, [4, 0], "glide(x+2, -y)"),
+        ];
+        for (m, v, label) in expected {
+            assert!(
+                sym(m, v),
+                "{label} must be a symmetry of the p4g basketweave"
+            );
+        }
+
+        // The rest of the candidate families are absent: this is what
+        // pins p4g (vs p4m / cmm / pgg).
+        let forbidden = [
+            // diagonal mirrors, integer and half-integer offsets
+            (M_DIAG, [0, 0], "mir_d(0)"),
+            (M_DIAG, [-2, 2], "mir_d(1)"),
+            (M_DIAG, [-4, 4], "mir_d(2)"),
+            (M_DIAG, [-6, 6], "mir_d(3)"),
+            (M_DIAG, [-8, 8], "mir_d(4)"),
+            (M_ANTI, [0, 0], "mir_a(0)"),
+            (M_ANTI, [2, 2], "mir_a(1)"),
+            (M_ANTI, [4, 4], "mir_a(2)"),
+            (M_ANTI, [6, 6], "mir_a(3)"),
+            (M_ANTI, [8, 8], "mir_a(4)"),
+            (M_DIAG, [-1, 1], "mir_dh(1/2)"),
+            (M_DIAG, [-3, 3], "mir_dh(3/2)"),
+            (M_DIAG, [-5, 5], "mir_dh(5/2)"),
+            (M_DIAG, [-7, 7], "mir_dh(7/2)"),
+            (M_DIAG, [-9, 9], "mir_dh(9/2)"),
+            (M_ANTI, [1, 1], "mir_ah(1/2)"),
+            (M_ANTI, [3, 3], "mir_ah(3/2)"),
+            (M_ANTI, [5, 5], "mir_ah(5/2)"),
+            (M_ANTI, [7, 7], "mir_ah(7/2)"),
+            (M_ANTI, [9, 9], "mir_ah(9/2)"),
+            // even-axis and half-integer mirrors
+            (M_MIRX, [0, 0], "mir_x(0)"),
+            (M_MIRX, [8, 0], "mir_x(2)"),
+            (M_MIRX, [16, 0], "mir_x(4)"),
+            (M_MIRY, [0, 0], "mir_y(0)"),
+            (M_MIRY, [0, 8], "mir_y(2)"),
+            (M_MIRY, [0, 16], "mir_y(4)"),
+            (M_MIRX, [2, 0], "mir_xhalf(1/2)"),
+            (M_MIRX, [6, 0], "mir_xhalf(3/2)"),
+            (M_MIRX, [10, 0], "mir_xhalf(5/2)"),
+            (M_MIRX, [14, 0], "mir_xhalf(7/2)"),
+            (M_MIRX, [18, 0], "mir_xhalf(9/2)"),
+            (M_MIRY, [0, 2], "mir_yhalf(1/2)"),
+            (M_MIRY, [0, 6], "mir_yhalf(3/2)"),
+            (M_MIRY, [0, 10], "mir_yhalf(5/2)"),
+            (M_MIRY, [0, 14], "mir_yhalf(7/2)"),
+            (M_MIRY, [0, 18], "mir_yhalf(9/2)"),
+            // 4-folds away from even-even centers
+            (M_ROT4, [4, 0], "rot4(1,1)"),
+            (M_ROT4, [12, 0], "rot4(3,3)"),
+            (M_ROT4, [8, 4], "rot4(1,3)"),
+            (M_ROT4, [8, -4], "rot4(3,1)"),
+            (M_ROT4, [2, 0], "rot4(1/2,1/2)"),
+            (M_ROT4, [2, -2], "rot4(0,1)"),
+            // odd-axis vertical/horizontal glides (T(2,0), T(0,2) are
+            // not tiling translations)
+            (M_MIRX, [4, 4], "glide(2-x, y+2)"),
+            (M_MIRY, [4, 4], "glide(x+2, 2-y)"),
+        ];
+        for (m, v, label) in forbidden {
+            assert!(
+                !sym(m, v),
+                "{label} must NOT be a symmetry of the basketweave"
+            );
+        }
+    }
+}
+
+/// Brute-force cross-check of [`crate::lattice::LatticeTiling`]'s
+/// index-range culling, the one part of the generator that could silently
+/// drop (or invent) tiles at the edges of the query region: the per-cell
+/// offsets that pad the index ranges are measured in lattice coordinates
+/// (cell vertices mapped through `u(p) = A⁻¹ p`), and getting that wrong
+/// for a sheared or tall cell would produce gaps that sample-based
+/// coverage tests can miss. This test re-emits every tile from the public
+/// table data over a wide fixed index window — no range math at all — and
+/// requires exactly the same tile set as `generate`.
 #[cfg(all(
     test,
     feature = "square",
@@ -2872,13 +3106,13 @@ mod windmill_tests {
     feature = "girih_sc",
     feature = "khatam_girih",
     feature = "laves",
-    feature = "windmill"
+    feature = "pavers"
 ))]
 mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
-        archimedean, cairo, girih, girih_sc, hexagon, khatam_girih, laves, square, triangle,
-        windmill,
+        archimedean, basketweave, cairo, girih, girih_sc, hexagon, khatam_girih, laves,
+        square, triangle,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
     use tess_core::params::ParamSet;
@@ -2982,7 +3216,7 @@ mod lattice_culling_tests {
             ("kisrhombille", laves::kisrhombille()),
             ("prismatic-pentagonal", laves::prismatic_pentagonal()),
             ("floret-pentagonal", laves::floret_pentagonal()),
-            ("windmill", windmill::spec()),
+            ("basketweave", basketweave::basketweave()),
         ];
         for (name, lt) in &lattices {
             let specs = lt.params();

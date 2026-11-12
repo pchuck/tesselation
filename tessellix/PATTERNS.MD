@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (41 tilings)
+## Implemented (42 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -61,6 +61,17 @@ every dual is the face-centroid dual of an exact primal table.
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `pythagorean` | two squares (Pythagorean) | p4 | one-parameter ratio r = b/a; each cell is the square on the hypotenuse dissected into the leg squares; T-junctions inherent; the plain p4m square grid at r = 1 |
 | `windmill` | 1–2–√5 triangles around squares ("windmill") | p4 | periodic pinwheel arrangement; homochiral (no mirrors/glides); non-edge-to-edge T-junctions; naming waiver 2026-11-12 (M43) |
+
+### Paver bonds (2:1 dominoes)
+
+Practical paver bonds as `LatticeTiling` data tables: every domino is
+emitted with its long side split into two collinear unit edges, so the
+polygons are genuinely edge-to-edge at the unit edge scale (180°
+figures at the split midpoints, `2.4.4`).
+
+| id | motif | group | notes |
+|---|---|---|---|
+| `basketweave` | 2:1 dominoes in 2×2 alternating blocks | p4g | 45°-rotated square lattice ⟨(2,2),(2,−2)⟩, 4 split dominoes per cell; 4-folds at the even-even points, mirrors at the odd axes only (offset from the 4-fold centers — p4g, not p4m), six glide families; exact coset group probe (M39) |
 
 ### Aperiodic / nonperiodic
 
@@ -749,11 +760,11 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
   uniform vertex figures (e.g. 3³.4² + 3².4.3.4); data tables on
   bigger cells; moderate work each, visually rich. Their duals give
   the "mixed floret/cairo/prismatic" patterns.
-- 🔭 **Basketweave** (2:1 dominoes in 2×2 alternating blocks) and
-  **herringbone** (2:1 rotated pairs) — practical paver patterns;
-  trivial-to-easy tables; good first issues for the LatticeTiling
-  framework. (Verify wallpaper groups: basketweave p4m-ish,
-  herringbone pgg for the generic 2:1 case.)
+- 🔭 **Herringbone** (2:1 rotated pairs) — practical paver pattern;
+  trivial-to-easy table on the oblique lattice. (Group to verify: pgg
+  for the generic 2:1 case.) *Basketweave done (M39): p4g, not the
+  naive p4m guess — mirrors sit at the odd axes, offset from every
+  4-fold center.*
 
 ### Aperiodic substitution (each needs rule derivation first)
 
@@ -993,3 +1004,19 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
   aperiodic-only, Grünbaum's 1977 "windmill blades" quilt is a
   different edge-to-edge design), approved by the repo owner
   2026-11-12 (41 tilings, 263 tests).
+- 2026-11-12 — M39 Basketweave paver bond (2:1 dominoes) ✅: the
+  classical basketweave as a `LatticeTiling` data table
+  (`basketweave.rs`, feature `pavers`) — 45°-rotated square lattice
+  ⟨(2,2),(2,−2)⟩ (area 8), 2 H + 2 V split dominoes per cell; each
+  long side split into two unit edges (mid-side vertex), so vertex
+  figures carry 180° at the split midpoints (`2.4.4`) and 4.4.4.4 at
+  the even-even block corners. Verified exactly before porting
+  (Python spike over a bounded patch: area sum = |det|, edge parity,
+  vertex figures, exact-once coverage, rigorous coset symmetry check);
+  group **p4g** (not the naive p4m guess): 4-folds at every even-even
+  point, mirrors at the odd axes only — offset from the 4-fold
+  centers, no diagonal mirrors — and six glide families, with the
+  odd-axis vertical/horizontal glides absent (T(2,0)/T(0,2) are not
+  tiling translations). Standard trio + brute-force culling cross-check
+  + in-module exact group probe. TUI SVG export sanity-checked
+  (42 tilings, 267 tests).

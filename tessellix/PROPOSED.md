@@ -78,6 +78,17 @@ confirm the diffraction claim during the spike before declaring.
   edge is shared), exactly like the pythagorean T-junction lesson.
 - **Why now:** cheapest possible new entries; good first issues for the
   post-category-grouping workflow; fills the "Wallpaper (5)" section.
+- ✅ **M39 delivered (2026-11-12): basketweave** — `basketweave.rs`
+  (feature `pavers`), 45°-rotated square lattice ⟨(2,2),(2,−2)⟩ with 4
+  split dominoes per cell; long sides split into two unit edges so the
+  emitted polygons are edge-to-edge at unit scale (180° figures at the
+  split midpoints). Verified group is **p4g**, *not* the expected p4m
+  above: the 4-fold centers sit at every even-even point, but the
+  mirrors run only along the odd axes `x = 2k+1` / `y = 2k+1` —
+  offset from every 4-fold center, with no diagonal mirrors (the 90°
+  swap sends the mirror set to the even axes, which are not mirrors).
+  Exact coset symmetry check, forbidden list included; see the M39
+  changelog entry in PATTERNS.MD.
 
 ### 2. Hexagram-and-hexagon ({6/2} star-and-cross)
 
