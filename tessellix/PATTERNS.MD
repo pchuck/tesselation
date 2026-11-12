@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (39 tilings)
+## Implemented (40 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -72,6 +72,7 @@ every dual is the face-centroid dual of an exact primal table.
 | `pinwheel` | 1–2–√5 right triangle | Conway–Radin; √5 inflation + arctan(1/2) twist; infinitely many tile orientations; view-independent octave-anchored patches |
 | `chair` | Chair (L-tromino) | λ = 2 rep-4 substitution; the inflated chair's dissection is unique (exhaustive enumeration) so the rule is forced; non-edge-to-edge (T-junctions at every scale); limit-periodic; 4×3 seed blocks, one chair per orientation; octave-anchored like pinwheel |
 | `sphinx` | Sphinx (pentagonal hexiamond) | λ = 2 rep-4 substitution on the triangular lattice; of 12 hexiamonds only the 3×1 rhombus and the sphinx are rep-4, and the sphinx's dissection is unique (rule forced); 12 orientation classes (dissection mixes chiralities), doubly stochastic substitution matrix; non-edge-to-edge; 2×3 rhombus seed (exactly 2 sphinxes, unique); octave-anchored like chair |
+| `p-pentomino` | P-pentomino (rep-4 reptile) | λ = 2 rep-4 substitution; exactly two dissections of the inflated 20-cell P (exhaustive enumeration, class multisets {0,1,4,6} and {3,4,4,5}), canonical {0,1,4,6} used; 8 chiral orientation classes, doubly stochastic substitution matrix (rows/columns sum to 4); non-edge-to-edge (5 T-junctions per parent); 5×8 seed block, one tile per class (62 such tilings of the rectangle); octave-anchored like chair (M47) |
 | `ammann-beenker` | Ammann–Beenker A5 (octagonal aperiodic) | half-tile substitution (two rhombus halves + square) with per-level mirror flips; exact Q(√2) geometry; edge-to-edge; 8-fold finite patches |
 | `stampfli` | Stampfli 12-fold dodecagonal | squares + equilateral triangles + 30° rhombi; Stampfli substitution, inflation 2+√3 (Bielefeld encyclopedia rule); straddling unit children deduped by exact vertex set; 12-rhombus seed star, exact Z[√3]/4 anchors; edge-to-edge, T-junction-free, 12-fold symmetric at every generation |
 | `hat` | Hat (aperiodic monotile, "einstein") | SMKG 2023; H/T/P/F metatile substitution (29-rule patch, 22 kept), exact Eisenstein placements; inflation φ² only in the limit (iterated outlines drift by design); tiles only with its mirror image; per-view seeded lineage blobs with exact clipped-area acceptance; non-edge-to-edge (565 midpoint T-junctions at depth 3) |
@@ -786,8 +787,15 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
 - ❓ **Isohedral (IH) tile families** — parameterized generators for
   some of the 93 isohedral types (e.g. IH7-like interlocking
   variants); needs a shape-parameterization design.
-- ❓ **Polyomino/polyiamond rep-tile zoo** — L-tromino, T-nese,
-  hexiamonds beyond sphinx; easy shapes, verification-heavy.
+- ❓ **Polyomino/polyiamond rep-tile zoo** — L-tromino ✅ (chair,
+  M30); P-pentomino ✅ (implemented on branch `reptiles`, pending
+  integration, M47 — exactly two dissections of the inflated P,
+  8 chiral orientation classes, 5×8 seed block); T-tetromino ❌
+  proven **not** rep-4 (the inflated 16-cell T has zero tilings by
+  four T's: the corner cell forces a bar + stem placement that
+  isolates its neighbour — exhaustive search confirms 0); hexiamonds
+  beyond sphinx (only the 3×1 rhombus and the sphinx are rep-4);
+  remaining shapes easy, verification-heavy.
 - ❓ **Hyperbolic tilings {p,q}** — would need a hyperbolic geometry
   core (Poincaré disk) behind the same trait; large, separate arc.
 - ❓ **Wang-tiling UI** — generate Wang-satisfying patches from small
@@ -953,3 +961,17 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
   S′=S+2R, R′=12S+3R+6T with Perron λ²=7+4√3 (PF vector
   (1, 3+2√3, 4+10√3/3)); Python↔Rust table diff exact; standard trio
   green (39 tilings, 246 tests).
+- 2026-11-12 — M47 P-pentomino tiling (rep-4 reptile) ✅: λ = 2 rep-4
+  substitution (`p_pentomino.rs`, feature `reptiles`). Exhaustive
+  enumeration of the inflated 20-cell P found exactly two dissections
+  (class multisets {0,1,4,6} and {3,4,4,5}); the canonical {0,1,4,6}
+  is used. The P is chiral, so the rule necessarily mixes chiralities —
+  8 orientation classes with a doubly stochastic substitution matrix
+  (rows and columns sum to 4); non-edge-to-edge (5 T-junctions per
+  parent, verified on maximal segments); 5×8 seed block with one tile
+  per class (62 such tilings of the rectangle exist); octave-anchored
+  integer-grid generation like chair. The T-tetromino sibling was
+  dropped, proven **not** rep-4: exhaustive search finds 0 tilings of
+  the inflated 16-cell T by four T's (the corner cell forces a
+  bar + stem placement that isolates its neighbour) (40 tilings,
+  258 tests).

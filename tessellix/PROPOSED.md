@@ -334,6 +334,20 @@ confirm the diffraction claim during the spike before declaring.
 - **Verify:** chair-style battery (substitution-tiles-parent census,
   growth laws, T-junction census, octave stability) + standard trio.
 - **Effort:** S–M each; a natural single commit each or one combined.
+- **Status (branch `reptiles`):** **P-pentomino ✅ implemented** (M47,
+  pending integration): exhaustive enumeration finds exactly two
+  dissections of the inflated 20-cell P (class multisets {0,1,4,6}
+  and {3,4,4,5}); the P is chiral, so the dissection necessarily mixes
+  chiralities (8 orientation classes, doubly stochastic substitution
+  matrix); non-edge-to-edge (5 T-junctions per parent); 5×8 seed
+  block with one tile per class; octave-anchored integer-grid
+  generation like chair. **T-tetromino ❌ dropped: proven *not*
+  rep-4** — exhaustive exact search finds 0 tilings of the inflated
+  16-cell T by four T's; the corner cell (0,0) is coverable only by
+  the bar (0,0),(1,0),(2,0) + stem (1,1), which isolates cell (0,1)
+  (neighbours (0,0),(1,1) taken, (0,2) outside the region). T-tetromino
+  appears in no rep-tile list (Wikipedia "Rep-tile": the axis-parallel
+  rep-n² polyominoes are the L-tromino, L-tetromino and P-pentomino).
 
 ### 11. Jeandel–Rao aperiodic set of 11 Wang tiles
 

@@ -71,11 +71,11 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 ## Supported tilings
 
-39 built-in tilings, all discoverable in both UIs via the registry
+40 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
 **Wallpaper** (5), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
-Stampfli, girih Darb-i Imam), **Aperiodic** (6: einstein family, limit-periodic
+Stampfli, girih Darb-i Imam), **Aperiodic** (7: einstein family, limit-periodic
 rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
 UIs group their lists by it. Categories are declared on the tiling
 (never derived from its symmetry), so the grouping is honest about
@@ -117,6 +117,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `pinwheel` | Pinwheel (1–2–√5) | aperiodic Pythagorean; tiles in infinitely many orientations | — | — |
 | `chair` | Chair (L-tromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge | — | — |
 | `sphinx` | Sphinx (pentagonal hexiamond) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 12 orientations; non-edge-to-edge | — | — |
+| `p-pentomino` | P-pentomino (rep-4 reptile, limit-periodic) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 8 chiral orientation classes; non-edge-to-edge | — | — |
 | `hat` | Hat (aperiodic monotile) | aperiodic einstein (SMKG 2023); H/T/P/F metatile substitution; tiles only with its mirror image; non-edge-to-edge | — | — |
 | `turtle` | Turtle (hats in turtles) | aperiodic einstein family (SMKG 2023); turtle + hat prototiles, 9-label substitution, homochiral (no reflections), edge-to-edge hex-lattice geometry | — | — |
 | `spectre` | Spectre (chiral einstein, Tile(1,1)) | aperiodic chiral einstein family (SMKG 2023); single equal-edge prototile, aperiodic without reflections, 9-label substitution, exact Q(√3) geometry | — | — |
@@ -301,6 +302,19 @@ cross-check plus a ratio-sweep coverage test.
   exhaustive cover search) seeds origin-anchored blocks deflated a
   power-of-two-octave number of steps, so tiles always land at unit
   scale (area 3√3/2); "pattern" mode colors by orientation class.
+- **P-pentomino** (`p_pentomino.rs`) — the P-pentomino rep-tile (five
+  squares; 2×2 block plus one extra), λ = 2 rep-4. Because the P is
+  chiral, its dissection mixes chiralities: exhaustive enumeration finds
+  exactly two dissections of the inflated P (class multisets {0,1,4,6}
+  and {3,4,4,5}); the canonical one is used, and the 8 orientation
+  classes (4 rotations × 2 chiralities) stay equally numerous (the
+  substitution matrix is doubly stochastic). Inherently
+  non-edge-to-edge (five T-junctions per parent at every scale).
+  Generation is exact integer arithmetic: 5×8 seed blocks (one P per
+  orientation class — 62 such tilings of the rectangle exist, this one
+  is class-complete) on an origin-anchored lattice, deflated a
+  power-of-two-octave number of steps so tiles always land at unit
+  scale (area 5); "pattern" mode colors by orientation class.
 - **Turtle** (`turtle.rs`) — "hats in turtles", the two-prototile
   member of the einstein family (SMKG 2023, arXiv:2305.17743): 14-gon
   turtle + hat on the exact hex lattice, 9 matching-rule labels
@@ -370,7 +384,7 @@ and the search filter. The TUI and GUI are thin layers over it.
 
 ## Tests
 
-`cargo test --workspace` (currently 230 tests, all green, zero warnings):
+`cargo test --workspace` (currently 247 tests, all green, zero warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
   viewport anchoring, palette mapping.
@@ -385,7 +399,9 @@ and the search filter. The TUI and GUI are thin layers over it.
   exact per-generation cell tilings, inherent T-junction), sphinx
   census laws (counts 2·4^g, class law = substitution-matrix powers,
   exact per-generation unit-triangle tilings, refined edge census,
-  inherent T-junctions), hat invariants (metatile + hat count tables
+  inherent T-junctions), p-pentomino census laws (counts 8·4^g,
+  uniform 8 chiral orientation classes, exact per-generation cell
+  tilings, inherent T-junctions), hat invariants (metatile + hat count tables
   for 5 levels × 4 types, exact nesting, no-overlap patch with the
   565-midpoint T-junction census, integer-grid matching rules, all 9
   cluster roles + the reflected hat, outline geometry in all 12
