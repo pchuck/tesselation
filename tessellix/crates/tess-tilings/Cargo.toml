@@ -7,7 +7,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [features]
-default = ["square", "hexagon", "triangle", "archimedean", "pythagorean", "penrose", "penrose_p1", "penrose_p2", "penrose_pentagon", "hirschhorn", "zellige", "cairo", "girih", "girih_qc", "girih_sc", "khatam_girih", "laves", "ammann_beenker", "chair", "sphinx", "hat", "turtle", "spectre"]
+default = ["square", "hexagon", "triangle", "archimedean", "pythagorean", "penrose", "penrose_p1", "penrose_p2", "penrose_pentagon", "hirschhorn", "zellige", "cairo", "girih", "girih_qc", "girih_sc", "khatam_girih", "laves", "ammann_beenker", "chair", "sphinx", "hat", "turtle", "spectre", "pavers", "hexagram", "windmill", "kuniform", "reptiles", "pentagon13", "stampfli"]
 square = []
 hexagon = []
 triangle = []
@@ -31,6 +31,13 @@ girih_sc = []
 khatam_girih = []
 laves = []
 ammann_beenker = []
+pavers = []
+hexagram = []
+windmill = []
+kuniform = []
+reptiles = []
+pentagon13 = []
+stampfli = []
 
 [dependencies]
 tess-core = { path = "../tess-core" }
