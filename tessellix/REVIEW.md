@@ -5,6 +5,13 @@
 **Scope:** all of `tess-core`, `tess-tilings`, `tess-tui`, `tess-gui` (19 source files, ~8,000 lines including tests), manifests, README, AGENTS.md, and git history (29 commits).
 **Method:** full read of every source file; empirical verification of build/test/CLI claims.
 
+> **Repo note (2026-11-12):** the repository has since moved to GitHub
+> (`pchuck/tesselation`) and was re-initialized as a single squashed
+> commit (`e5321f3`). The commit references below (`ab70a17`, the 29
+> commits, the `M<n>:` per-tiling messages) describe the pre-move
+> history, which is archived, gitignored, in `tessellix/.git.bak/` and
+> no longer exists in the active repo.
+
 > **Fix status — all findings addressed on 2026-11-07.** See the
 > [Fixes applied](#fixes-applied) section at the bottom for what changed
 > per finding and how each was verified. Suite is now **97/97 green**,

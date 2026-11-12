@@ -594,7 +594,7 @@ mod tests {
             for t in pieces.iter().filter(|t| t.kind == RHOMB) {
                 wholes.push(t.verts());
             }
-            for (_, idxs) in &groups {
+            for idxs in groups.values() {
                 assert!(
                     idxs.len() <= 2,
                     "depth {depth}: hypotenuse shared by {} halves",

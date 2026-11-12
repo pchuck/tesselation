@@ -1,7 +1,10 @@
 # AGENTS.md
 
-Instructions for AI agents working in this repo. The git root is
-`/workspace/tessellix` (the `/workspace` parent is not a repo).
+Instructions for AI agents working in this repo. The project lives in
+`tessellix/` and is hosted on GitHub as `pchuck/tesselation`. The git
+root is `/workspace` (the repo was re-initialized as a single squashed
+commit when it moved to GitHub); the original per-tiling commit history
+is archived, gitignored, in `tessellix/.git.bak/`.
 
 ## Commands
 
@@ -87,7 +90,8 @@ fundamental region.
 
 - One commit per tiling, message `M<n>: <name> tiling (<vertex figure>)`
   with a body stating the lattice, cell contents, and the verification
-  performed (see `git log`).
+  performed (worked examples in the archived `tessellix/.git.bak/`
+  history; PATTERNS.MD records the same per-tiling details).
 - Keep `cargo check --workspace` warning-free.
 - Tile budget: `MAX_TILES = 250_000` (`lattice.rs`) — exceeding it
   returns the "too many tiles for this view — zoom in" message, which the

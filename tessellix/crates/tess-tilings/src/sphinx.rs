@@ -96,6 +96,13 @@ const SYMS: [[i64; 4]; 12] = [
     [1, 1, 0, -1],
 ];
 
+/// Test-helper shapes: a unit cell keyed by its sorted vertex triple,
+/// and a unit edge keyed by its sorted endpoint pair.
+#[cfg(test)]
+type UnitCell = ((i64, i64), (i64, i64), (i64, i64));
+#[cfg(test)]
+type UnitEdge = ((i64, i64), (i64, i64));
+
 /// The canonical sphinx: its six unit cells (sorted vertex triples) in
 /// the canonical frame (translate-minimized). 2× world area 6·H, i.e.
 /// area 6·√3/4.
@@ -250,7 +257,7 @@ impl Sphinx {
     /// triangles of the tile, subdivided into its `s²` unit triangles.
     /// A unit cell is keyed by its sorted vertex triple.
     #[cfg(test)]
-    fn cells(&self) -> std::collections::BTreeSet<((i64, i64), (i64, i64), (i64, i64))> {
+    fn cells(&self) -> std::collections::BTreeSet<UnitCell> {
         let g = SYMS[self.cls as usize];
         let s = self.s;
         let mut out = std::collections::BTreeSet::new();
@@ -569,7 +576,7 @@ mod tests {
         let t = Sphinx { cls, q, r, s };
         let cells: Vec<Vec<(i64, i64)>> =
             t.cells().into_iter().map(|c| vec![c.0, c.1, c.2]).collect();
-        let mut edges: BTreeMap<((i64, i64), (i64, i64)), u32> = BTreeMap::new();
+        let mut edges: BTreeMap<UnitEdge, u32> = BTreeMap::new();
         for cell in &cells {
             for k in 0..3 {
                 let (a, b) = (cell[k], cell[(k + 1) % 3]);
@@ -577,7 +584,7 @@ mod tests {
                 *edges.entry(key).or_insert(0) += 1;
             }
         }
-        let bedges: Vec<((i64, i64), (i64, i64))> = edges
+        let bedges: Vec<UnitEdge> = edges
             .into_iter()
             .filter(|(_, n)| *n == 1)
             .map(|(e, _)| e)
@@ -721,7 +728,7 @@ mod tests {
     /// growth battery (the block sides are lattice-axis-aligned, so
     /// vertex membership is exact).
     #[cfg(test)]
-    fn rhombus_cells(mq: i64, mr: i64) -> BTreeSet<((i64, i64), (i64, i64), (i64, i64))> {
+    fn rhombus_cells(mq: i64, mr: i64) -> BTreeSet<UnitCell> {
         let inside = |p: (i64, i64)| p.0 >= 0 && p.0 <= mq && p.1 >= 0 && p.1 <= mr;
         let mut want = BTreeSet::new();
         for q in 0..mq {
@@ -769,8 +776,8 @@ mod tests {
         for row in &m {
             assert_eq!(row.iter().sum::<usize>(), 4, "row sum");
         }
-        for j in 0..12 {
-            assert_eq!((0..12).map(|h| m[h][j]).sum::<usize>(), 4, "col sum");
+        for (j, _) in m.iter().enumerate() {
+            assert_eq!(m.iter().map(|row| row[j]).sum::<usize>(), 4, "col sum");
         }
         let mut dist = [0usize; 12];
         for (cls, _, _) in SEED_TILES {

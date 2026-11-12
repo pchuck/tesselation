@@ -54,7 +54,7 @@ fn layout_fingerprint(pts: &[tess_core::Vec2]) -> u64 {
     }
     let (ax, ay) = (pts[1].x - pts[0].x, pts[1].y - pts[0].y);
     let den = ax * ax + ay * ay;
-    if !(den > 0.0) {
+    if den <= 0.0 || den.is_nan() {
         // Degenerate first edge (the generators never emit one): fall
         // back to raw quantized coordinates — still deterministic.
         for p in pts {

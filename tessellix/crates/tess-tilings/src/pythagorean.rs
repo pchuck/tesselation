@@ -46,7 +46,7 @@ use crate::lattice::{similarity_map, MAX_TILES, SIMILARITY_PARAMS};
 pub const RATIO_ID: ParamId = ParamId::new("ratio");
 
 /// Golden ratio — the default square ratio.
-const PHI: f64 = 1.6180339887498949;
+const PHI: f64 = 1.618_033_988_749_895;
 
 /// Parameters: the standard scale/rotation, plus the square ratio.
 pub const PYTHAGOREAN_PARAMS: [ParamSpec; 3] = [

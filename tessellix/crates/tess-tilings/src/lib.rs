@@ -1301,7 +1301,7 @@ mod pythagorean_tests {
     /// default φ.
     #[test]
     fn pythagorean_ratio_sweep_covers() {
-        for r in [0.2, 0.5, 1.0, 1.6180339887498949, 2.0, 3.7, 10.0] {
+        for r in [0.2, 0.5, 1.0, 1.618_033_988_749_895, 2.0, 3.7, 10.0] {
             let t = PythagoreanTiling;
             let mut p = ParamSet::default_for(t.params());
             p.set(RATIO_ID, ParamValue::Float(r));
@@ -1349,7 +1349,7 @@ mod pythagorean_tests {
             // Brute force: every (i, j) in a fixed window, every cell. Mirrors the
             // generator's construction exactly (same reads, same op order) so
             // the comparison is bit-for-bit.
-            let r = p.float(RATIO_ID, 1.6180339887498949).clamp(0.2, 10.0);
+            let r = p.float(RATIO_ID, 1.618_033_988_749_895).clamp(0.2, 10.0);
             let (s1, s2) = if r >= 1.0 { (r, 1.0) } else { (1.0, r) };
             let map = similarity_map(&p);
             let a1 = map.transform(Vec2::new(s1, s2));

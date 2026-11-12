@@ -103,8 +103,6 @@ const A3: f64 = 6.881909602355867;
 const IFK: Ke = [-384, 0, 256, 0];
 const IF_F: f64 = 8.472135954999578;
 
-/// Half edge-rule offset (3*phi + 1)/2 (the HEX straddler centres).
-
 /// Prototile vertices (unit edges), exact K points, anticlockwise.
 /// Type codes: 0 EDGE (marker), 1 HEX (bobbin), 2 BOW (bow-tie), 3 DEC.
 #[allow(dead_code)]
@@ -979,7 +977,7 @@ const MARK_BOW: [(u8, [i64; 4], [i64; 4]); 114] = [
     (17, [0, -144, 0, 112], [-160, 0, 80, 0]),
     (13, [0, -144, 0, 112], [-160, 0, 112, 0]),
 ];
-const MARK_DEC: [(u8, [i64; 4], [i64; 4]); 660] = [
+static MARK_DEC: [(u8, [i64; 4], [i64; 4]); 660] = [
     (18, [480, 0, -368, 0], [0, 48, 0, -16]),
     (2, [480, 0, -368, 0], [0, -48, 0, 16]),
     (4, [400, 0, -336, 0], [0, -80, 0, 32]),
@@ -2445,11 +2443,7 @@ mod tests {
             let mut ok = true;
             for &h in &starts {
                 let mut cur = h;
-                loop {
-                    let ic = match by_out.get(&cur) {
-                        Some(&x) => x,
-                        None => break,
-                    };
+                while let Some(&ic) = by_out.get(&cur) {
                     if !visited.insert(cur) {
                         ok = false;
                         break;

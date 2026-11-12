@@ -475,8 +475,7 @@ fn build_levels(depth: u32) -> Vec<Level> {
                 .collect();
             children[ty] = vec![(ty as u8, 0u8, [0i64, 0])];
             let (mut a0, mut b0, mut a1, mut b1) = (i64::MAX, i64::MAX, i64::MIN, i64::MIN);
-            for hi in 0..CLUSTER_HAT_COUNT[ty] {
-                let (k, r, ha, hb) = CLUSTER_HATS[ty][hi];
+            for &(k, r, ha, hb) in CLUSTER_HATS[ty].iter().take(CLUSTER_HAT_COUNT[ty]) {
                 for v in HAT.iter() {
                     let p = place_pt(*v, k, r, [ha, hb]);
                     a0 = a0.min(p[0]);
@@ -671,8 +670,11 @@ fn hat_seed(ty: u8, hat_idx: usize) -> u32 {
 fn demote(metas: &[(u8, u8, [i64; 2])]) -> Vec<Hat> {
     let mut out = Vec::new();
     for &(ty, k, t) in metas {
-        for hi in 0..CLUSTER_HAT_COUNT[ty as usize] {
-            let (hk, hr, ha, hb) = CLUSTER_HATS[ty as usize][hi];
+        for (hi, &(hk, hr, ha, hb)) in CLUSTER_HATS[ty as usize]
+            .iter()
+            .take(CLUSTER_HAT_COUNT[ty as usize])
+            .enumerate()
+        {
             let (k2, t2) = compose_meta(k, t, hk, [ha, hb]);
             out.push(Hat {
                 k: k2,
@@ -729,7 +731,7 @@ impl Hat {
             return 16.0 * H;
         }
         let pts = self.world_pts();
-        let poly = Polygon::from_slice(&pts.to_vec());
+        let poly = Polygon::from_slice(pts.as_ref());
         let mut total = 0.0;
         for tri in poly.triangulate() {
             let tri_poly = Polygon::from_slice(&[
@@ -891,7 +893,7 @@ impl Tiling for HatTiling {
         // role + 1 (1..=9) — see the module docs.
         let mut tiles = Vec::with_capacity(hats.len());
         for h in &hats {
-            let poly = Polygon::from_slice(&h.world_pts().to_vec()).transform(&map);
+            let poly = Polygon::from_slice(h.world_pts().as_ref()).transform(&map);
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: 0,
@@ -979,8 +981,7 @@ mod tests {
     fn clusters_have_no_internal_overlap() {
         for ty in 0..4usize {
             let mut edges = BTreeSet::new();
-            for hi in 0..CLUSTER_HAT_COUNT[ty] {
-                let (k, r, ha, hb) = CLUSTER_HATS[ty][hi];
+            for &(k, r, ha, hb) in CLUSTER_HATS[ty].iter().take(CLUSTER_HAT_COUNT[ty]) {
                 let pts = hat_vertices(k, r, [ha, hb]);
                 for i in 0..13 {
                     let (p, q) = (pts[i], pts[(i + 1) % 13]);
@@ -1114,7 +1115,8 @@ mod tests {
         let mut metas = Vec::new();
         collect_metas(&levels, 2, TYPE_H as usize, None, &mut metas);
         assert_eq!(metas.len(), 64);
-        let mut edges: BTreeMap<([i64; 2], [i64; 2]), (u8, usize, usize)> = BTreeMap::new();
+        type EdgeKey = ([i64; 2], [i64; 2]);
+        let mut edges: BTreeMap<EdgeKey, (u8, usize, usize)> = BTreeMap::new();
         for &(name, k, t) in &metas {
             let range = BOUNDARY_RANGE[name as usize];
             let segs = &BOUNDARY[range.0..range.0 + range.1];

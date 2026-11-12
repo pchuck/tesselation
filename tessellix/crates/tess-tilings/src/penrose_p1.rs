@@ -69,7 +69,7 @@ const D216: f64 = PI + D36;
 
 const C36: f64 = 0.809_016_994_374_947_5; // cos 36°
 const S36: f64 = 0.587_785_252_292_473_1; // sin 36°
-const PHI: f64 = 1.618_033_988_749_894_9; // (1+√5)/2
+const PHI: f64 = 1.618_033_988_749_895; // (1+√5)/2
 const IP: f64 = 0.618_033_988_749_894_8; // 1/φ
 const IP2: f64 = 0.381_966_011_250_105_1; // 1/φ²
 const R_P: f64 = 0.5 / S36; // pentagon circumradius, edge 1 (0.8506508)
@@ -79,7 +79,7 @@ const AP: f64 = PHI * PHI * R_P * C36; // gnomon base offset = pentagon apothem 
 const BIG: f64 = R_C + R_P; // φ²·R_P = star-center anchor (2.2270325)
 
 /// Area of the unit-edge pentagon (largest prototile): √(25+10√5)/4.
-const A_P: f64 = 1.720_477_400_588_967_0;
+const A_P: f64 = 1.720_477_400_588_967;
 
 /// Deepest deflation used: m = 6 gives ≈ 72k tiles; m = 7 would exceed
 /// [`MAX_TILES`], so views that do not fit a level-6 patch are rejected.
@@ -134,8 +134,8 @@ fn ud(a: f64) -> Vec2 {
 /// Pentagon vertices, v0 at `c + e·R_P·ud(th)`.
 fn pentagon_pts(c: Vec2, th: f64, e: f64) -> [Vec2; 5] {
     let mut v = [c; 5];
-    for k in 0..5 {
-        v[k] = c + ud(th + D72 * k as f64) * (e * R_P);
+    for (k, slot) in v.iter_mut().enumerate() {
+        *slot = c + ud(th + D72 * k as f64) * (e * R_P);
     }
     v
 }
@@ -218,8 +218,8 @@ fn d_rhombus_pts(c: Vec2, th: f64, er: f64) -> [Vec2; 4] {
 /// Pose of a PA piece as an output pentagon: centroid + v0 direction.
 fn pa_pose(pts: &[Vec2]) -> (Vec2, f64) {
     let mut c = Vec2::ZERO;
-    for i in 0..5 {
-        c = c + pts[i] * 0.2;
+    for &p in &pts[..5] {
+        c += p * 0.2;
     }
     let d = pts[0] - c;
     (c, d.y.atan2(d.x))
@@ -275,9 +275,7 @@ fn seg_key(a: Vec2, b: Vec2, e: f64) -> SegKey {
     };
     let (mut p, mut q) = (k(a), k(b));
     if q < p {
-        let t = p;
-        p = q;
-        q = t;
+        std::mem::swap(&mut p, &mut q);
     }
     [p, q]
 }

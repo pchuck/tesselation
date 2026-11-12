@@ -53,7 +53,7 @@ use tess_core::view::ColorMode;
 use crate::lattice::{similarity_map, MAX_TILES, ROTATION_ID, SCALE_ID};
 
 const PHI: f64 = 1.618_033_988_749_895; // (1+√5)/2
-const S36: f64 = 0.587_785_252_292_4731; // sin 36°
+const S36: f64 = 0.587_785_252_292_473_1; // sin 36°
 const P2: f64 = PHI * PHI; // φ²
 const P3H: f64 = 0.5 * PHI * PHI * PHI; // φ³/2
 const P2H: f64 = 0.5 * PHI * PHI; // φ²/2
@@ -604,7 +604,7 @@ mod tests {
                 .or_default()
                 .push(i);
         }
-        for (_, idxs) in &groups {
+        for idxs in groups.values() {
             if idxs.len() == 2 {
                 let a = halves[idxs[0]];
                 let b = halves[idxs[1]];
