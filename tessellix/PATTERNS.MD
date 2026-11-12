@@ -703,6 +703,10 @@ labels, which are out of chronological order.)
 
 ## Proposed — vetted candidates
 
+The per-candidate research dossier — literature verification,
+construction path, exact-arithmetic plan, effort, and suggested order —
+lives in `PROPOSED.md`; the entries below are the short-form queue.
+
 ### Periodic, straightforward
 
 - 🔭 **2-uniform tilings** (20 known types) — supercells mixing two
