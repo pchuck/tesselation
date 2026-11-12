@@ -89,6 +89,16 @@ confirm the diffraction claim during the spike before declaring.
   swap sends the mirror set to the even axes, which are not mirrors).
   Exact coset symmetry check, forbidden list included; see the M39
   changelog entry in PATTERNS.MD.
+- ✅ **M40 delivered (2026-11-12): herringbone** — `herringbone.rs`
+  (feature `pavers`), chiral single-direction L-pairs
+  `H(a,b) + V(a+2,b)` on the oblique lattice ⟨(1,3),(2,2)⟩ (area 4),
+  2 split dominoes per cell. Verified group is **pgg** as expected
+  for the generic 2:1 case: no mirrors and no 4-folds (chiral), 16
+  2-fold centers per 4×4 period, two perpendicular glide families —
+  diagonal axes `y = x + c` and anti-diagonal axes `y = −x + c` — with
+  the off-family glides `(1−y,1−x)`, `(−x,y+1)`, `(x+1,−y)` absent.
+  Exact coset symmetry check, forbidden list included; see the M40
+  changelog entry in PATTERNS.MD.
 
 ### 2. Hexagram-and-hexagon ({6/2} star-and-cross)
 

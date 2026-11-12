@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (42 tilings)
+## Implemented (43 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -72,6 +72,7 @@ figures at the split midpoints, `2.4.4`).
 | id | motif | group | notes |
 |---|---|---|---|
 | `basketweave` | 2:1 dominoes in 2×2 alternating blocks | p4g | 45°-rotated square lattice ⟨(2,2),(2,−2)⟩, 4 split dominoes per cell; 4-folds at the even-even points, mirrors at the odd axes only (offset from the 4-fold centers — p4g, not p4m), six glide families; exact coset group probe (M39) |
+| `herringbone` | 2:1 dominoes in chiral L-pairs | pgg | oblique lattice ⟨(1,3),(2,2)⟩, 2 split dominoes per cell; single-direction (chiral): 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal + anti-diagonal axes), no mirrors; exact coset group probe (M40) |
 
 ### Aperiodic / nonperiodic
 
@@ -760,11 +761,13 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
   uniform vertex figures (e.g. 3³.4² + 3².4.3.4); data tables on
   bigger cells; moderate work each, visually rich. Their duals give
   the "mixed floret/cairo/prismatic" patterns.
-- 🔭 **Herringbone** (2:1 rotated pairs) — practical paver pattern;
-  trivial-to-easy table on the oblique lattice. (Group to verify: pgg
-  for the generic 2:1 case.) *Basketweave done (M39): p4g, not the
-  naive p4m guess — mirrors sit at the odd axes, offset from every
-  4-fold center.*
+- 🔭 **Running bond** (stretcher rows, half-brick offset) — the
+  plain paver sibling of the paver trio; trivial table on the
+  rectangular lattice. (Group to verify: cmm.) *Basketweave done
+  (M39): p4g, not the naive p4m guess — mirrors sit at the odd axes,
+  offset from every 4-fold center. Herringbone done (M40): pgg as
+  expected for the generic 2:1 case — chiral, 16 2-folds per 4×4
+  period, two perpendicular glide families.*
 
 ### Aperiodic substitution (each needs rule derivation first)
 
@@ -1019,4 +1022,21 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
   odd-axis vertical/horizontal glides absent (T(2,0)/T(0,2) are not
   tiling translations). Standard trio + brute-force culling cross-check
   + in-module exact group probe. TUI SVG export sanity-checked
-  (42 tilings, 267 tests).
+(42 tilings, 267 tests).
+- 2026-11-12 — M40 Herringbone paver bond (2:1 dominoes) ✅: the
+  chiral single-direction herringbone as a `LatticeTiling` data table
+  (`herringbone.rs`, feature `pavers`) — L-pairs `H(a,b) + V(a+2,b)`
+  at every point of the oblique lattice ⟨(1,3),(2,2)⟩ (area 4), one
+  2-domino cell; each long side split into two unit edges (mid-side
+  vertex), so vertex figures carry 180° at the split midpoints
+  (`2.4.4`). Verified exactly before porting (Python spike over a
+  bounded patch: area sum = |det|, edge parity, vertex figures,
+  exact-once coverage, rigorous coset symmetry check); group **pgg**
+  as expected for the generic 2:1 case: chiral (no mirrors, no
+  4-folds), 16 2-fold centers per 4×4 period, two perpendicular glide
+  families — diagonal axes `y = x + c` (reps `(y+1,x+1)`,
+  `(y,x+2)`, `(y−1,x+3)`, `(y−2,x+4)`) and anti-diagonal axes
+  `y = −x + c` (reps `(1−y,−x)`, `(−1−y,−x−2)`) — with the off-family
+  glides `(1−y,1−x)`, `(−x,y+1)`, `(x+1,−y)` absent. Standard trio +
+  brute-force culling cross-check + in-module exact group probe.
+  TUI SVG export sanity-checked (43 tilings, 271 tests).

@@ -71,10 +71,10 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 ## Supported tilings
 
-42 built-in tilings, all discoverable in both UIs via the registry
+43 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
-**Wallpaper** (7), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
+**Wallpaper** (8), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
 Stampfli, girih Darb-i Imam), **Aperiodic** (7: einstein family, limit-periodic
 rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
 UIs group their lists by it. Categories are declared on the tiling
@@ -108,6 +108,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `girih-star-cross` | Girih star-and-cross, 10-fold | measured classical strapwork panel: 10-pointed stars, bobbins, chord straps; 545-tile cell data table | pmm | oblique |
 | `khatam-girih` | Khatam girih decomposition (8-point) | classical kissing {8/3} star-and-cross cut into 8 rhombi + square + 4 pentagons per cell (exact Q(√2) kitab) | p4m | square |
 | `basketweave` | Basketweave (2:1 dominoes) | paver bond: 2×2 blocks of two parallel 2:1 dominoes, checkerboard orientation; long sides split into unit edges | p4g | square |
+| `herringbone` | Herringbone (2:1 dominoes) | paver bond: chiral L-pairs of 2:1 dominoes, single-direction; long sides split into unit edges | pgg | oblique |
 | `pythagorean` | Pythagorean (two squares) | periodic two-square family (one-parameter ratio); square on the hypotenuse per cell | p4 | square |
 | `windmill` | Periodic pinwheel arrangement (p4) | Conway's periodic "spin" of the pinwheel motif: 1–2–√5 triangles around squares; homochiral, non-edge-to-edge | p4 | square |
 | `penrose` | Penrose (P3) | aperiodic, 5-fold local symmetry | — | — |
