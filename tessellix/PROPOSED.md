@@ -108,6 +108,7 @@ confirm the diffraction claim during the spike before declaring.
   the spike (candidate: p4g tiling by pinwheel triangles + squares) and
   confirm the vertex figure by hand before coding (AGENTS.md step 4).
 - **Verify:** standard trio + symmetry probe for the declared group.
+- **Status:** implemented on branch windmill (pending integration) — naming-rule waiver approved by repo owner 2026-11-12
 
 ### 4. 2-uniform tilings — first batch of the closed set of 20
 

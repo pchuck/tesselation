@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (40 tilings)
+## Implemented (41 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -60,6 +60,7 @@ every dual is the face-centroid dual of an exact primal table.
 | `girih-star-cross` | 10-pointed girih star-and-cross strapwork | pmm | measured classical panel; 545-tile cell data table on the (77,45)/(0,90) oblique lattice (M35) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `pythagorean` | two squares (Pythagorean) | p4 | one-parameter ratio r = b/a; each cell is the square on the hypotenuse dissected into the leg squares; T-junctions inherent; the plain p4m square grid at r = 1 |
+| `windmill` | 1–2–√5 triangles around squares ("windmill") | p4 | periodic pinwheel arrangement; homochiral (no mirrors/glides); non-edge-to-edge T-junctions; naming waiver 2026-11-12 (M43) |
 
 ### Aperiodic / nonperiodic
 
@@ -753,9 +754,6 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
   trivial-to-easy tables; good first issues for the LatticeTiling
   framework. (Verify wallpaper groups: basketweave p4m-ish,
   herringbone pgg for the generic 2:1 case.)
-- 🔭 **Windmill tiling** — periodic arrangement of 1-2-√5 right
-  triangles around squares (Conway's "spin" of the pinwheel motif);
-  pairs nicely with the existing aperiodic pinwheel.
 
 ### Aperiodic substitution (each needs rule derivation first)
 
@@ -975,3 +973,23 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
   the inflated 16-cell T by four T's (the corner cell forces a
   bar + stem placement that isolates its neighbour) (40 tilings,
   258 tests).
+- 2026-11-12 — M43 Periodic pinwheel arrangement ("windmill", p4) ✅:
+  Conway's periodic "spin" of the pinwheel motif as a 5-tile
+  data-table `LatticeTiling` (`windmill.rs`, feature `windmill`) on
+  the (3,0)/(0,3) square lattice — four 1–2–√5 right triangles
+  (seeds 1–4, the four orientation classes) pinwheeling around one
+  square (seed 0, the largest tile); all coordinates exact integers,
+  no surds, areas 4·1 + 5 = 9 = |det|; non-edge-to-edge (mid-side
+  T-junctions): vertex figures 90⁴ at the lattice points (3i, 3j) and
+  180·90·arctan(1/2)·arctan(2) at the four T-junction classes
+  {(0,1),(0,2),(1,0),(2,0)} mod 3, all pinned by test; homochiral
+  (every triangle one chirality sign), so p4 rather than p4g —
+  4-folds at the motif centres (3i+1.5, 3j+1.5) *and* the lattice
+  points, 2-folds at all four centre classes mod 3, no mirrors or
+  glides (both directions pinned by a restricted symmetry probe over
+  a 180-tile window, 14 positive + 24 negative candidates); naming
+  waiver per AGENTS.md step 4 (no canonical published name exists:
+  Wikipedia has no "Windmill tiling", pinwheel literature is
+  aperiodic-only, Grünbaum's 1977 "windmill blades" quilt is a
+  different edge-to-edge design), approved by the repo owner
+  2026-11-12 (41 tilings, 263 tests).
