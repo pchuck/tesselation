@@ -54,7 +54,11 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 `cargo run -p tess-gui` opens an egui window (1024×640, dark theme):
 
-- **Left panel** — filter box, tiling list, parameter editors (drag
+- **Left panel** — filter box, tiling list grouped into collapsible
+  categories (Uniform, Laves/Catalan duals, Wallpaper, Quasiperiodic,
+  Aperiodic, Nonperiodic — declared per tiling, so new tilings sort
+  themselves; the search filter also matches category names and shows
+  flat results), parameter editors (drag
   values within each parameter's declared range), color-mode selector
   (single / pattern / proto), and symmetry readout (wallpaper group,
   lattice kind, basis vectors, notes). The readout is cached per tiling
@@ -68,7 +72,14 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 ## Supported tilings
 
 38 built-in tilings, all discoverable in both UIs via the registry
-(`tess-tui -- list`):
+(`tess-tui -- list`). Every tiling declares one of six canonical
+display categories — **Uniform** (11), **Laves / Catalan duals** (9),
+**Wallpaper** (5), **Quasiperiodic** (6: Penrose family, Ammann–Beenker,
+girih Darb-i Imam), **Aperiodic** (6: einstein family, limit-periodic
+rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
+UIs group their lists by it. Categories are declared on the tiling
+(never derived from its symmetry), so the grouping is honest about
+what the mathematics distinguishes; see `tess-core/src/category.rs`.
 
 | id | name | type | wallpaper group | lattice |
 |---|---|---|---|---|
@@ -402,4 +413,5 @@ Both UIs then pick it up automatically.
 
 **Aperiodic / continuous family** — implement `tess_core::Tiling`
 directly (see `penrose.rs`, `ammann_beenker.rs`, `pinwheel.rs`,
-`hirschhorn.rs`), register it, and test it the same way.
+`hirschhorn.rs`), declare its category in the impl (`TilingCategory` —
+see `tess-core/src/category.rs`), register it, and test it the same way.

@@ -33,6 +33,7 @@
 //! * every interior vertex angle sum == 360 degrees exactly;
 //! * a fine grid over a 3x3 lattice patch is covered exactly once.
 
+use tess_core::TilingCategory;
 use tess_core::geometry::{Polygon, Vec2};
 use tess_core::symmetry::{LatticeKind, WallpaperGroup};
 use tess_core::view::ColorMode;
@@ -7347,6 +7348,7 @@ pub fn girih_star_cross() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::Pmm,
         lattice_kind: LatticeKind::Oblique,
+        category: TilingCategory::Wallpaper,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

@@ -306,19 +306,27 @@ fn render(frame: &mut Frame, tui: &mut Tui) {
 fn render_side(frame: &mut Frame, tui: &mut Tui, side: &[ratatui::layout::Rect], result: &tess_core::tiling::TilingResult) {
     let t = tui.app.tiling();
 
-    // Tiling list.
-    let visible = tui.app.visible_tilings();
-    let items: Vec<ListItem> = visible
-        .iter()
-        .map(|t| {
+    // Tiling list, grouped by declared category. Headers are rendered
+    // rows but not selectable: move_selection walks the selectable set
+    // (App::visible_tilings), so the arrow keys skip them naturally.
+    let mut items: Vec<ListItem> = Vec::new();
+    for (cat, tilings) in tui.app.visible_grouped() {
+        items.push(
+            ListItem::new(format!("{} · {}", cat, tilings.len())).style(
+                Style::default()
+                    .add_modifier(Modifier::BOLD)
+                    .fg(Color::DarkGray),
+            ),
+        );
+        for t in tilings {
             let selected = t.id() == tui.app.selected_id();
             let mut style = Style::default();
             if selected {
                 style = style.add_modifier(Modifier::BOLD).fg(Color::Cyan);
             }
-            ListItem::new(format!(" {} · {}", t.name(), t.id())).style(style)
-        })
-        .collect();
+            items.push(ListItem::new(format!(" {} · {}", t.name(), t.id())).style(style));
+        }
+    }
     let list = List::new(items)
         .block(
             Block::default()

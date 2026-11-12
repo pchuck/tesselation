@@ -80,7 +80,10 @@ fundamental region.
    3.6.3.6 = trihexagonal; 3.3.4.3.4 = snub square — in this repo as
    `snub-square`).
 5. Append the fn to `src/archimedean.rs` (+ header line), register in
-   `registry()` in `src/lib.rs`, add the 3 standard tests.
+   `registry()` in `src/lib.rs`, declare its category in the table
+   (`TilingCategory`: Uniform / Laves / Wallpaper / Quasiperiodic /
+   Aperiodic / Nonperiodic — see `tess-core/src/category.rs`; the UIs
+   group their lists by it), add the 3 standard tests.
 
 **Seeds:** main/largest tile = 0, other classes 1, 2, …; "pattern" color
 = `seed % 8`, "proto" = `proto % 8` (8-color palette in

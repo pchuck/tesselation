@@ -27,6 +27,7 @@
 
 use std::f64::consts::SQRT_2;
 
+use tess_core::TilingCategory;
 use tess_core::geometry::{Polygon, Vec2};
 use tess_core::symmetry::{LatticeKind, WallpaperGroup};
 use tess_core::view::ColorMode;
@@ -88,6 +89,7 @@ pub fn tetrakis_square() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P4m,
         lattice_kind: LatticeKind::Square,
+        category: TilingCategory::Laves,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
@@ -144,6 +146,7 @@ pub fn rhombille() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6m,
         lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::Laves,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
@@ -214,6 +217,7 @@ pub fn triakis_triangular() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6m,
         lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::Laves,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
@@ -286,6 +290,7 @@ pub fn deltoidal_trihexagonal() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6m,
         lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::Laves,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
@@ -389,6 +394,7 @@ pub fn kisrhombille() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6m,
         lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::Laves,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
@@ -438,6 +444,7 @@ pub fn prismatic_pentagonal() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::Cmm,
         lattice_kind: LatticeKind::Rectangular,
+        category: TilingCategory::Laves,
         seed_pattern: SeedPattern::Checker,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
@@ -516,6 +523,7 @@ pub fn floret_pentagonal() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6,
         lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::Laves,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

@@ -1,5 +1,6 @@
 //! Hexagonal tiling 6.6.6, wallpaper group p6m.
 
+use tess_core::TilingCategory;
 use tess_core::geometry::{Polygon, Vec2};
 use tess_core::symmetry::{LatticeKind, WallpaperGroup};
 use tess_core::view::ColorMode;
@@ -27,6 +28,7 @@ pub fn spec() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6m,
         lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::Uniform,
         seed_pattern: SeedPattern::Triad,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

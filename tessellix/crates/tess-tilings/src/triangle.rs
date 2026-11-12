@@ -3,6 +3,7 @@
 //! Lattice `[(1,0), (0.5, H)]` (H = √3/2); each parallelogram cell holds
 //! one up-triangle and one down-triangle of side 1.
 
+use tess_core::TilingCategory;
 use tess_core::geometry::{Polygon, Vec2};
 use tess_core::symmetry::{LatticeKind, WallpaperGroup};
 use tess_core::view::ColorMode;
@@ -34,6 +35,7 @@ pub fn spec() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6m,
         lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::Uniform,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

@@ -48,6 +48,7 @@
 use tess_core::geometry::{BBox, Polygon, Vec2};
 use tess_core::params::{ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
+use tess_core::TilingCategory;
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 
 use crate::lattice::{similarity_map, MAX_TILES, SIMILARITY_PARAMS};
@@ -312,6 +313,10 @@ impl Tiling for TurtleTiling {
 
     fn description(&self) -> &'static str {
         "Aperiodic homochiral tiling by turtle + hat prototiles (4+√15 ratio); nine-label substitution; exact hex-lattice geometry."
+    }
+
+    fn category(&self) -> TilingCategory {
+        TilingCategory::Aperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

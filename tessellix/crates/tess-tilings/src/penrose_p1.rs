@@ -49,6 +49,7 @@ use std::f64::consts::PI;
 use tess_core::geometry::{BBox, Polygon, Vec2};
 use tess_core::params::{ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
+use tess_core::TilingCategory;
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 use tess_core::view::ColorMode;
 
@@ -569,6 +570,10 @@ impl Tiling for PenroseP1Tiling {
     fn description(&self) -> &'static str {
         "Aperiodic P1 tiling by pentagon, 10-point star, boat and diamond tiles; \
          exact φ²-deflation of a single pentagon seed (gasket patch)."
+    }
+
+    fn category(&self) -> TilingCategory {
+        TilingCategory::Quasiperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

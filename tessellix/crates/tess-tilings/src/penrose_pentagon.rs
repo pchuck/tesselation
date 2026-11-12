@@ -48,6 +48,7 @@
 use tess_core::geometry::{BBox, Polygon, Vec2};
 use tess_core::params::{ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
+use tess_core::TilingCategory;
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 use tess_core::view::ColorMode;
 
@@ -249,6 +250,10 @@ impl Tiling for PenrosePentagonTiling {
 
     fn description(&self) -> &'static str {
         "Aperiodic tiling by five pentagons with a φ-substitution; local 5-fold symmetry."
+    }
+
+    fn category(&self) -> TilingCategory {
+        TilingCategory::Quasiperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

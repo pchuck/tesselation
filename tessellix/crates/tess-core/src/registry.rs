@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::category::TilingCategory;
 use crate::tiling::Tiling;
 
 /// Collection of available tilings.
@@ -47,6 +48,36 @@ impl Registry {
     pub fn first(&self) -> Option<&dyn Tiling> {
         self.tilings.first().map(|t| t.as_ref())
     }
+
+    /// All tilings grouped by declared category (see
+    /// [`group_by_category`]).
+    pub fn grouped(&self) -> Vec<(TilingCategory, Vec<&dyn Tiling>)> {
+        group_by_category(self.iter())
+    }
+}
+
+/// Group tilings by declared category in canonical [`TilingCategory::ALL`]
+/// order, preserving the input order within each category. Categories
+/// with no members are omitted. Completeness — every input appears
+/// exactly once — is what the UIs rely on.
+pub fn group_by_category<'a>(
+    tilings: impl IntoIterator<Item = &'a dyn Tiling>,
+) -> Vec<(TilingCategory, Vec<&'a dyn Tiling>)> {
+    let mut groups: Vec<(TilingCategory, Vec<&dyn Tiling>)> = Vec::new();
+    for t in tilings {
+        let cat = t.category();
+        match groups.iter_mut().find(|(c, _)| *c == cat) {
+            Some((_, v)) => v.push(t),
+            None => groups.push((cat, vec![t])),
+        }
+    }
+    groups.sort_by_key(|(c, _)| {
+        TilingCategory::ALL
+            .iter()
+            .position(|a| a == c)
+            .expect("category is an ALL variant")
+    });
+    groups
 }
 
 #[cfg(test)]
@@ -62,6 +93,9 @@ mod tests {
         fn id(&self) -> &'static str { "dummy" }
         fn name(&self) -> &'static str { "Dummy" }
         fn description(&self) -> &'static str { "test" }
+        fn category(&self) -> crate::category::TilingCategory {
+            crate::category::TilingCategory::Wallpaper
+        }
         fn params(&self) -> &'static [crate::params::ParamSpec] { &[] }
         fn default_color_mode(&self) -> ColorMode { ColorMode::Single }
         fn generate(&self, _: &ParamSet, _: &Query) -> TilingResult {
@@ -81,5 +115,51 @@ mod tests {
         assert!(r.get("dummy").is_some());
         assert!(r.get("nope").is_none());
         assert_eq!(r.first().unwrap().id(), "dummy");
+    }
+
+    #[test]
+    fn grouped_is_canonical_complete_and_order_preserving() {
+        use crate::category::TilingCategory;
+        use crate::params::ParamSet;
+        use crate::symmetry::{LatticeKind, WallpaperGroup};
+
+        struct Fixed {
+            id: &'static str,
+            cat: TilingCategory,
+        }
+        impl Tiling for Fixed {
+            fn id(&self) -> &'static str { self.id }
+            fn name(&self) -> &'static str { "Fixed" }
+            fn description(&self) -> &'static str { "fixture" }
+            fn category(&self) -> TilingCategory { self.cat }
+            fn params(&self) -> &'static [crate::params::ParamSpec] { &[] }
+            fn generate(&self, _: &ParamSet, _: &crate::tiling::Query) -> TilingResult {
+                TilingResult {
+                    tiles: vec![],
+                    symmetry: SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None),
+                    periodic: None,
+                    message: None,
+                }
+            }
+        }
+
+        let r = Registry::new()
+            .register(Fixed { id: "u1", cat: TilingCategory::Uniform })
+            .register(Fixed { id: "a1", cat: TilingCategory::Aperiodic })
+            .register(Fixed { id: "u2", cat: TilingCategory::Uniform })
+            .register(Fixed { id: "l1", cat: TilingCategory::Laves });
+
+        let g = r.grouped();
+        // Canonical order: ALL subsequence (empty categories omitted).
+        let cats: Vec<TilingCategory> = g.iter().map(|(c, _)| *c).collect();
+        assert_eq!(
+            cats,
+            vec![TilingCategory::Uniform, TilingCategory::Laves, TilingCategory::Aperiodic]
+        );
+        // Registration order preserved within a category.
+        let u: Vec<&str> = g[0].1.iter().map(|t| t.id()).collect();
+        assert_eq!(u, vec!["u1", "u2"]);
+        // Partition: nothing dropped or duplicated.
+        assert_eq!(g.iter().map(|(_, ts)| ts.len()).sum::<usize>(), 4);
     }
 }

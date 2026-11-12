@@ -11,6 +11,7 @@
 //! Adding a new uniform / Archimedean / rectangular tiling is therefore a
 //! small data table, not new code.
 
+use tess_core::category::TilingCategory;
 use tess_core::geometry::{Affine, BBox, Polygon, Vec2};
 use tess_core::params::{ParamId, ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
@@ -82,6 +83,9 @@ pub struct LatticeTiling {
     pub offset: Vec2,
     pub group: WallpaperGroup,
     pub lattice_kind: LatticeKind,
+    /// Canonical display category (declared by each table — see
+    /// [`TilingCategory`]).
+    pub category: TilingCategory,
     pub seed_pattern: SeedPattern,
     pub params: &'static [ParamSpec],
     /// Builds the linear map from cell space to world space from params.
@@ -101,6 +105,10 @@ impl Tiling for LatticeTiling {
 
     fn description(&self) -> &'static str {
         self.description
+    }
+
+    fn category(&self) -> TilingCategory {
+        self.category
     }
 
     fn params(&self) -> &'static [ParamSpec] {

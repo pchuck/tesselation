@@ -68,6 +68,7 @@
 use tess_core::geometry::{BBox, Polygon, Vec2};
 use tess_core::params::{ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
+use tess_core::TilingCategory;
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 
 use crate::lattice::{similarity_map, MAX_TILES, SIMILARITY_PARAMS};
@@ -373,6 +374,10 @@ impl Tiling for SphinxTiling {
 
     fn description(&self) -> &'static str {
         "Aperiodic limit-periodic sphinx (rep-4 hexiamond) substitution tiling; λ = 2; tiles in 12 orientations."
+    }
+
+    fn category(&self) -> TilingCategory {
+        TilingCategory::Aperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

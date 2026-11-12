@@ -111,6 +111,7 @@
 use tess_core::geometry::{BBox, Polygon, Vec2};
 use tess_core::params::{ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
+use tess_core::TilingCategory;
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 
 use crate::lattice::{similarity_map, MAX_TILES, SIMILARITY_PARAMS};
@@ -761,6 +762,10 @@ impl Tiling for HatTiling {
 
     fn description(&self) -> &'static str {
         "Aperiodic monotile (einstein) by H/T/P/F metatile substitution; inflation φ²; tiles with its mirror image in 12 orientations."
+    }
+
+    fn category(&self) -> TilingCategory {
+        TilingCategory::Aperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

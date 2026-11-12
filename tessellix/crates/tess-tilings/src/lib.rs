@@ -296,6 +296,60 @@ mod tests {
     /// The GUI fills each tile with ear-clipped triangles; verify the
     /// triangulation of every generated tile is valid: n−2 triangles and
     /// area conserved to high precision (a sign of no overfill/gaps).
+    /// The declared-category grouping both UIs render: categories in
+    /// canonical [`TilingCategory::ALL`] order, registration order
+    /// preserved within each category, and no tiling dropped or
+    /// duplicated. The per-category census pins today's taxonomy —
+    /// extend it when adding a tiling (and the README's count).
+    #[test]
+    fn registry_groups_are_complete_and_canonically_ordered() {
+        let r = super::registry();
+        let grouped = r.grouped();
+
+        let pos = |c: &tess_core::TilingCategory| {
+            tess_core::TilingCategory::ALL
+                .iter()
+                .position(|a| a == c)
+                .expect("declared categories are ALL variants")
+        };
+        for w in grouped.windows(2) {
+            assert!(pos(&w[0].0) < pos(&w[1].0), "categories out of canonical order");
+        }
+
+        // Completeness: exactly a partition of the registry.
+        let total: usize = grouped.iter().map(|(_, ts)| ts.len()).sum();
+        assert_eq!(total, r.len(), "grouping must not drop tilings");
+        let mut ids: Vec<&str> =
+            grouped.iter().flat_map(|(_, ts)| ts.iter().map(|t| t.id())).collect();
+        ids.sort_unstable();
+        let mut expect: Vec<&str> = r.iter().map(|t| t.id()).collect();
+        expect.sort_unstable();
+        assert_eq!(ids, expect, "grouping must not duplicate tilings");
+
+        // Registration order preserved within each category.
+        for (c, ts) in &grouped {
+            let registry_order: Vec<&str> =
+                r.iter().filter(|t| t.category() == *c).map(|t| t.id()).collect();
+            let got: Vec<&str> = ts.iter().map(|t| t.id()).collect();
+            assert_eq!(got, registry_order, "{}: within-category order", c);
+        }
+
+        // Census of today's taxonomy.
+        let counts: std::collections::BTreeMap<&str, usize> =
+            grouped.iter().map(|(c, ts)| (c.label(), ts.len())).collect();
+        let expect_counts: std::collections::BTreeMap<&str, usize> = [
+            ("Uniform", 11),
+            ("Laves (Catalan duals)", 9),
+            ("Wallpaper", 5),
+            ("Quasiperiodic", 6),
+            ("Aperiodic", 6),
+            ("Nonperiodic", 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(counts, expect_counts, "category census (update when adding tilings)");
+    }
+
     #[test]
     fn all_tiles_triangulate() {
         let v2 = |x: f64, y: f64| Vec2::new(x, y);

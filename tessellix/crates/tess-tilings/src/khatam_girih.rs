@@ -48,6 +48,7 @@
 
 use std::f64::consts::SQRT_2;
 
+use tess_core::TilingCategory;
 use tess_core::geometry::{Polygon, Vec2};
 use tess_core::symmetry::{LatticeKind, WallpaperGroup};
 use tess_core::view::ColorMode;
@@ -150,6 +151,7 @@ pub fn khatam_girih() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P4m,
         lattice_kind: LatticeKind::Square,
+        category: TilingCategory::Wallpaper,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

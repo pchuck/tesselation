@@ -141,20 +141,57 @@ impl GuiApp {
                 ui.separator();
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     ui.label("Tilings");
-                    let visible: Vec<(String, String)> = self
+                    // Owned snapshot of the grouped list: sections in
+                    // canonical category order (categories with no
+                    // matches are omitted by the grouping helper).
+                    // While the search filter is active the matches
+                    // render flat — they are usually scattered across
+                    // categories, and collapsing sections would
+                    // fragment the result list.
+                    let searching = !self.app.search.trim().is_empty();
+                    let sections: Vec<(tess_core::TilingCategory, Vec<(String, String)>)> = self
                         .app
-                        .visible_tilings()
+                        .visible_grouped()
                         .into_iter()
-                        .map(|t| (t.id().to_string(), t.name().to_string()))
+                        .map(|(cat, tilings)| {
+                            (
+                                cat,
+                                tilings
+                                    .into_iter()
+                                    .map(|t| (t.id().to_string(), t.name().to_string()))
+                                    .collect(),
+                            )
+                        })
                         .collect();
-                    for (id, name) in visible {
-                        let selected = id == self.app.selected_id();
-                        if ui
-                            .selectable_label(selected, format!("{name}  ({id})"))
-                            .clicked()
-                        {
-                            self.app.select_id(&id);
+                    let selected_id = self.app.selected_id().to_string();
+                    let mut clicked: Option<String> = None;
+                    for (cat, tilings) in &sections {
+                        let mut entries = |ui: &mut egui::Ui| {
+                            for (id, name) in tilings {
+                                if ui
+                                    .selectable_label(
+                                        *id == selected_id,
+                                        format!("{name}  ({id})"),
+                                    )
+                                    .clicked()
+                                {
+                                    clicked = Some(id.clone());
+                                }
+                            }
+                        };
+                        if searching {
+                            entries(ui);
+                        } else {
+                            // Open-state is remembered per section in
+                            // egui's memory across frames/switches;
+                            // default_open only applies the first time.
+                            egui::CollapsingHeader::new(format!("{} ({})", cat, tilings.len()))
+                                .default_open(true)
+                                .show(ui, entries);
                         }
+                    }
+                    if let Some(id) = clicked {
+                        self.app.select_id(&id);
                     }
                     ui.separator();
                     self.draw_params(ui);

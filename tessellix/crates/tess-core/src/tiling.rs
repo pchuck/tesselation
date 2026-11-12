@@ -6,6 +6,7 @@
 //! (Hirschhorn) all fit this contract; UIs never need to know which one
 //! they are dealing with.
 
+use crate::category::TilingCategory;
 use crate::geometry::{BBox, Polygon, Vec2};
 use crate::params::ParamSet;
 use crate::symmetry::SymmetryMeta;
@@ -60,6 +61,10 @@ pub trait Tiling {
     fn name(&self) -> &'static str;
     /// One-line description shown in UIs.
     fn description(&self) -> &'static str;
+    /// Canonical display category: how the UIs group their tiling
+    /// lists. Declared per tiling — never derived from geometry or
+    /// symmetry — so the taxonomy stays honest (see [`TilingCategory`]).
+    fn category(&self) -> TilingCategory;
     /// Parameter declarations, discovered by UIs.
     fn params(&self) -> &'static [ParamSpec];
     /// Color mode the UI should start with for this tiling.

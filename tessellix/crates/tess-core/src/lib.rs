@@ -4,6 +4,7 @@
 //! * [`params`] — typed, self-describing tiling parameters
 //! * [`tiling`] — the [`Tiling`] trait and generation results
 //! * [`symmetry`] — wallpaper groups and symmetry metadata
+//! * [`category`] — canonical display categories (declared per tiling)
 //! * [`registry`] — the tiling registry
 //! * [`view`] — viewport (pan/zoom) and color modes
 //! * [`paint`] — shared color palette
@@ -11,6 +12,7 @@
 //! * [`svg`] — SVG export
 
 pub mod app;
+pub mod category;
 pub mod geometry;
 pub mod paint;
 pub mod params;
@@ -21,6 +23,7 @@ pub mod tiling;
 pub mod view;
 
 pub use app::App;
+pub use category::TilingCategory;
 pub use geometry::{Affine, BBox, Point, Polygon, Vec2};
 pub use params::{ParamId, ParamKind, ParamSet, ParamSpec, ParamValue};
 pub use registry::Registry;

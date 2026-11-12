@@ -50,6 +50,7 @@ use std::sync::Mutex;
 use tess_core::geometry::{BBox, Polygon, Vec2};
 use tess_core::params::{ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
+use tess_core::TilingCategory;
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 
 use crate::lattice::{similarity_map, MAX_TILES, SIMILARITY_PARAMS};
@@ -927,6 +928,10 @@ impl Tiling for HirschhornTiling {
 
     fn description(&self) -> &'static str {
         "Nonperiodic monohedral tiling by the 140°/60°/160°/80°/100° pentagon (Hirschhorn–Hunt 1985), grown 6-fold symmetrically."
+    }
+
+    fn category(&self) -> TilingCategory {
+        TilingCategory::Nonperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

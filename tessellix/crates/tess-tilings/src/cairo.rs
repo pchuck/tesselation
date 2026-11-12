@@ -11,6 +11,7 @@
 //! below is a proper 4-coloring of the class-adjacency graph, so edge-
 //! adjacent pentagons always differ in color.
 
+use tess_core::TilingCategory;
 use tess_core::geometry::{Polygon, Vec2};
 use tess_core::symmetry::{LatticeKind, WallpaperGroup};
 use tess_core::view::ColorMode;
@@ -110,6 +111,7 @@ pub fn cairo_pentagonal() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P4g,
         lattice_kind: LatticeKind::Square,
+        category: TilingCategory::Laves,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
@@ -183,6 +185,7 @@ pub fn cairo_collinear() -> LatticeTiling {
         offset: Vec2::new(-5.0, 13.0),
         group: WallpaperGroup::P4g,
         lattice_kind: LatticeKind::Square,
+        category: TilingCategory::Laves,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

@@ -36,6 +36,7 @@
 use tess_core::geometry::{BBox, Polygon, Vec2};
 use tess_core::params::{ParamId, ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
+use tess_core::TilingCategory;
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 use tess_core::view::ColorMode;
 
@@ -70,6 +71,10 @@ impl Tiling for PythagoreanTiling {
 
     fn description(&self) -> &'static str {
         "Two-square Pythagorean tiling — a b² square and an a² square per cell on the rotated lattice (b,a),(−a,b), so each cell is the square on the hypotenuse dissected into the leg squares. Ratio r = b/a is a parameter (default φ); p4, degenerating to the p4m square grid at r = 1."
+    }
+
+    fn category(&self) -> TilingCategory {
+        TilingCategory::Wallpaper
     }
 
     fn params(&self) -> &'static [ParamSpec] {

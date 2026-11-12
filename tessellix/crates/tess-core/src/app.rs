@@ -2,9 +2,10 @@
 
 use std::collections::BTreeMap;
 
+use crate::category::TilingCategory;
 use crate::geometry::{BBox, Vec2};
 use crate::params::{ParamId, ParamSet, ParamSpec, ParamValue};
-use crate::registry::Registry;
+use crate::registry::{group_by_category, Registry};
 use crate::tiling::{Query, Tiling, TilingResult};
 use crate::view::{ColorMode, Viewport};
 
@@ -60,7 +61,8 @@ impl App {
             .unwrap_or_else(|| self.registry.first().expect("empty registry"))
     }
 
-    /// Tilings matching the search filter (id or name, case-insensitive).
+    /// Tilings matching the search filter (id, name, or category label,
+    /// case-insensitive).
     pub fn visible_tilings(&self) -> Vec<&dyn Tiling> {
         let q = self.search.trim().to_lowercase();
         self.registry
@@ -69,8 +71,18 @@ impl App {
                 q.is_empty()
                     || t.id().to_lowercase().contains(&q)
                     || t.name().to_lowercase().contains(&q)
+                    || t.category().label().to_lowercase().contains(&q)
             })
             .collect()
+    }
+
+    /// The visible (search-filtered) tilings grouped by declared
+    /// category, in canonical [`TilingCategory::ALL`] order. This is
+    /// what UIs render as grouped lists; completeness (every visible
+    /// tiling appears exactly once) is guaranteed by
+    /// [`crate::registry::group_by_category`].
+    pub fn visible_grouped(&self) -> Vec<(TilingCategory, Vec<&dyn Tiling>)> {
+        group_by_category(self.visible_tilings())
     }
 
     /// Select a tiling by id. Parameters are reset to defaults the first
@@ -176,5 +188,72 @@ impl App {
     pub fn result_region(&self, region: BBox) -> TilingResult {
         let params = self.params().clone();
         self.tiling().generate(&params, &Query { region })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::category::TilingCategory;
+    use crate::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
+
+    struct Fixed {
+        id: &'static str,
+        cat: TilingCategory,
+    }
+    impl Tiling for Fixed {
+        fn id(&self) -> &'static str { self.id }
+        fn name(&self) -> &'static str { "Fixed" }
+        fn description(&self) -> &'static str { "fixture" }
+        fn category(&self) -> TilingCategory { self.cat }
+        fn params(&self) -> &'static [ParamSpec] { &[] }
+        fn generate(&self, _: &ParamSet, _: &Query) -> TilingResult {
+            TilingResult {
+                tiles: vec![],
+                symmetry: SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None),
+                periodic: None,
+                message: None,
+            }
+        }
+    }
+
+    fn fixture() -> App {
+        let reg = Registry::new()
+            .register(Fixed { id: "u1", cat: TilingCategory::Uniform })
+            .register(Fixed { id: "a1", cat: TilingCategory::Aperiodic })
+            .register(Fixed { id: "u2", cat: TilingCategory::Uniform })
+            .register(Fixed { id: "l1", cat: TilingCategory::Laves });
+        App::new(reg, 10.0)
+    }
+
+    #[test]
+    fn search_matches_category_label() {
+        let mut app = fixture();
+        app.search = "laves".into();
+        let ids: Vec<&str> = app.visible_tilings().iter().map(|t| t.id()).collect();
+        assert_eq!(ids, vec!["l1"]);
+        app.search = "aperiodic".into();
+        let ids: Vec<&str> = app.visible_tilings().iter().map(|t| t.id()).collect();
+        assert_eq!(ids, vec!["a1"]);
+        app.search = "  APERIODIC ".into(); // trimmed + case-insensitive
+        let ids: Vec<&str> = app.visible_tilings().iter().map(|t| t.id()).collect();
+        assert_eq!(ids, vec!["a1"]);
+    }
+
+    #[test]
+    fn visible_grouped_is_canonical_and_complete() {
+        let app = fixture();
+        let g = app.visible_grouped();
+        let cats: Vec<TilingCategory> = g.iter().map(|(c, _)| *c).collect();
+        assert_eq!(
+            cats,
+            vec![TilingCategory::Uniform, TilingCategory::Laves, TilingCategory::Aperiodic]
+        );
+        assert_eq!(
+            g[0].1.iter().map(|t| t.id()).collect::<Vec<_>>(),
+            vec!["u1", "u2"],
+            "registration order preserved within a category"
+        );
+        assert_eq!(g.iter().map(|(_, ts)| ts.len()).sum::<usize>(), 4);
     }
 }

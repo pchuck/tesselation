@@ -22,6 +22,7 @@
 //! This is the *periodic stand-in* for the genuinely quasiperiodic girih
 //! star-and-cross tiling (see the separate `girih-quasiperiodic` entry, M18).
 
+use tess_core::TilingCategory;
 use tess_core::geometry::{Polygon, Vec2};
 use tess_core::symmetry::{LatticeKind, WallpaperGroup};
 use tess_core::view::ColorMode;
@@ -70,6 +71,7 @@ pub fn girih_shesh_band() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P2,
         lattice_kind: LatticeKind::Oblique,
+        category: TilingCategory::Wallpaper,
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
