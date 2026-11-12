@@ -243,6 +243,8 @@ confirm the diffraction claim during the spike before declaring.
 - **References:** Bridges 2021 paper (stampfliSchaad.pdf);
   arXiv:2102.06046; tilings.math.uni-bielefeld.de 12-fold entries
   (Socolar, Schlottmann, Watanabe).
+- **Status:** implemented on branch stampfli (pending integration);
+  committed as M45.
 
 ### 7. Golden bee / Ammann chair (Ammann A2, inflation √φ)
 

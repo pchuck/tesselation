@@ -71,11 +71,11 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 ## Supported tilings
 
-38 built-in tilings, all discoverable in both UIs via the registry
+39 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
-**Wallpaper** (5), **Quasiperiodic** (6: Penrose family, Ammann–Beenker,
-girih Darb-i Imam), **Aperiodic** (6: einstein family, limit-periodic
+**Wallpaper** (5), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
+Stampfli, girih Darb-i Imam), **Aperiodic** (6: einstein family, limit-periodic
 rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
 UIs group their lists by it. Categories are declared on the tiling
 (never derived from its symmetry), so the grouping is honest about
@@ -113,6 +113,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `penrose_p2` | Penrose (P2) | aperiodic kite-dart tiling by half-tile substitution; local 5-fold symmetry | — | — |
 | `penrose-pentagon` | Penrose Pentagon (5-tile φ-substitution) | aperiodic five-pentagon substitution tiling; 5-fold local symmetry | — | — |
 | `ammann-beenker` | Ammann-Beenker (A5) | aperiodic square+45°-rhombus by substitution; local 8-fold symmetry | — | — |
+| `stampfli` | Stampfli (12-fold) | aperiodic square+triangle+30°-rhombus by substitution (inflation 2+√3); exact dodecagonal seed star, local 12-fold symmetry | — | — |
 | `pinwheel` | Pinwheel (1–2–√5) | aperiodic Pythagorean; tiles in infinitely many orientations | — | — |
 | `chair` | Chair (L-tromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge | — | — |
 | `sphinx` | Sphinx (pentagonal hexiamond) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 12 orientations; non-edge-to-edge | — | — |
@@ -250,6 +251,18 @@ cross-check plus a ratio-sweep coverage test.
   half). Seeds with the 8-rhombus star (inradius √2/2·scale), deflates
   with per-step culling exactly like Penrose, and pairs halves back into
   squares on shared hypotenuses; every child vertex lies in Z[√2].
+- **Stampfli 12-fold** (`stampfli.rs`) — squares, equilateral triangles
+  and 30° rhombi under Stampfli's substitution (inflation λ = 2+√3,
+  rule from the Bielefeld Tilings Encyclopedia): square → 1 square +
+  12 rhombi + 20 triangles, rhombus → 2 squares + 3 rhombi + 12
+  triangles, triangle → 6 rhombi + 10 triangles (unit children per
+  parent, edge partition 1 : √3/2 : √3/2 : 1). Some children straddle
+  parent edges with exactly one vertex outside; neighbouring parents
+  generate the same straddler, so pieces are deduped by their exact
+  vertex set. Seeds with the 12-rhombus star at scale λ^n and deflates
+  to unit pieces with per-step culling; all anchors stay exact in
+  Z[√3]/4, giving edge-to-edge, T-junction-free patches with exact
+  12-fold symmetry about the seed at every generation.
 - **Pinwheel** (`pinwheel.rs`) — Conway–Radin tiling by the 1–2–√5
   right triangle; √5 inflation with an `arctan(1/2)` twist, so tiles
   occur in infinitely many orientations. Labeled-vertex child placement

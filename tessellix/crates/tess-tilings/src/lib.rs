@@ -54,6 +54,8 @@ pub mod hat;
 pub mod turtle;
 #[cfg(feature = "spectre")]
 pub mod spectre;
+#[cfg(feature = "stampfli")]
+pub mod stampfli;
 #[cfg(feature = "square")]
 pub mod square;
 #[cfg(feature = "triangle")]
@@ -92,6 +94,10 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "ammann_beenker")]
     {
         r = r.register(ammann_beenker::AmmannBeenkerTiling);
+    }
+    #[cfg(feature = "stampfli")]
+    {
+        r = r.register(stampfli::StampfliTiling);
     }
     #[cfg(feature = "penrose")]
     {
@@ -341,7 +347,7 @@ mod tests {
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
             ("Wallpaper", 5),
-            ("Quasiperiodic", 6),
+            ("Quasiperiodic", 7),
             ("Aperiodic", 6),
             ("Nonperiodic", 1),
         ]
@@ -1258,6 +1264,52 @@ mod ammann_beenker_tests {
         check_det(
             &ammann_beenker::AmmannBeenkerTiling,
             "ammann-beenker",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+}
+
+#[cfg(all(test, feature = "stampfli"))]
+mod stampfli_tests {
+    use super::tests::{check_coverage, check_det, check_rotated};
+    use crate::stampfli::StampfliTiling;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn stampfli_covers_region() {
+        let t = StampfliTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(
+            &t,
+            "stampfli",
+            &p,
+            BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)),
+        );
+    }
+
+    #[test]
+    fn stampfli_rotated_scaled() {
+        check_rotated(
+            &StampfliTiling,
+            "stampfli(rot25,scale0.6)",
+            BBox::new(v2(-7.0, -7.0), v2(7.0, 7.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn stampfli_deterministic() {
+        check_det(
+            &StampfliTiling,
+            "stampfli",
             BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
         );
     }

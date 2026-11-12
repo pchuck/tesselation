@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (38 tilings)
+## Implemented (39 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -73,6 +73,7 @@ every dual is the face-centroid dual of an exact primal table.
 | `chair` | Chair (L-tromino) | λ = 2 rep-4 substitution; the inflated chair's dissection is unique (exhaustive enumeration) so the rule is forced; non-edge-to-edge (T-junctions at every scale); limit-periodic; 4×3 seed blocks, one chair per orientation; octave-anchored like pinwheel |
 | `sphinx` | Sphinx (pentagonal hexiamond) | λ = 2 rep-4 substitution on the triangular lattice; of 12 hexiamonds only the 3×1 rhombus and the sphinx are rep-4, and the sphinx's dissection is unique (rule forced); 12 orientation classes (dissection mixes chiralities), doubly stochastic substitution matrix; non-edge-to-edge; 2×3 rhombus seed (exactly 2 sphinxes, unique); octave-anchored like chair |
 | `ammann-beenker` | Ammann–Beenker A5 (octagonal aperiodic) | half-tile substitution (two rhombus halves + square) with per-level mirror flips; exact Q(√2) geometry; edge-to-edge; 8-fold finite patches |
+| `stampfli` | Stampfli 12-fold dodecagonal | squares + equilateral triangles + 30° rhombi; Stampfli substitution, inflation 2+√3 (Bielefeld encyclopedia rule); straddling unit children deduped by exact vertex set; 12-rhombus seed star, exact Z[√3]/4 anchors; edge-to-edge, T-junction-free, 12-fold symmetric at every generation |
 | `hat` | Hat (aperiodic monotile, "einstein") | SMKG 2023; H/T/P/F metatile substitution (29-rule patch, 22 kept), exact Eisenstein placements; inflation φ² only in the limit (iterated outlines drift by design); tiles only with its mirror image; per-view seeded lineage blobs with exact clipped-area acceptance; non-edge-to-edge (565 midpoint T-junctions at depth 3) |
 | `turtle` | Turtle ("hats in turtles", einstein family) | turtle (14 sides, area 10√3) + hat prototiles on Kaplan's exact hex lattice; 9-label 8+1 key-point substitution with per-level chirality flip; homochiral (no reflected tiles), edge-to-edge; turtle:hat ratio → 4+√15 |
 | `spectre` | Spectre (chiral einstein Tile(1,1)) | single equal-edge prototile, aperiodic *without* reflections; 9-label D12 substitution (spectre.js-identical), exact Q(√3) surd geometry; edge-to-edge |
@@ -701,6 +702,39 @@ labels, which are out of chronological order.)
   `Query` import that warned under `cargo test`.)
 - **Status:** committed (M38). 36 tilings, 224 tests at the commit.
 
+## Follow-up: Stampfli 12-fold — ✅ complete (M45)
+
+### 15. Stampfli 12-fold dodecagonal ✅ (M45)
+
+- **What it is:** the classic dodecagonal quasiperiodic tiling by
+  squares, equilateral triangles and 30° rhombi with locally repeated
+  12-fold rosettes (Stampfli & Schaad, Bridges 2021); completes the
+  repo's rotation series Penrose 5 / Ammann–Beenker 8 / girih 10 /
+  Stampfli 12.
+- **Rule:** patch substitution with inflation λ = 2+√3, transcribed
+  from the Bielefeld Tilings Encyclopedia rule figure
+  (`staempflis-12-fold-1/rule.svg`, canonical R01 variants): square →
+  1 square + 12 rhombi + 20 triangles, rhombus → 2 squares + 3 rhombi
+  + 12 triangles, triangle → 6 rhombi + 10 triangles (unit children;
+  every parent edge partitions 1 : √3/2 : √3/2 : 1 = λ). Triangles
+  straddle parent edges with exactly one vertex outside; adjacent
+  parents generate the same straddler, so children are deduped by
+  exact sorted vertex set.
+- **Construction** (`stampfli.rs`, feature `stampfli`): seeds the
+  12-rhombus star (inradius 1/2·scale) at scale λ^n and deflates to
+  unit pieces with per-step culling (descendant cone ≤ 0.32·s bound);
+  anchors stay exact in Z[√3]/4 under all 12 rotations — no floating
+  point in the tiling code.
+- **Verification:** exact-Q(√3) Python battery first (per-parent cover
+  exactly once + edge partitions; gen 1–4 growth: zero overlaps, zero
+  T-junctions, no edge used >2×, exact 12-fold symmetry, PF area law
+  per parent); Python↔Rust rule-table diff exact; Rust census rows
+  S′ = S+2R, R′ = 12S+3R+6T for the star at all depths (gen 1–4
+  counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
+  306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
+- **Status:** implemented on branch stampfli (pending integration).
+  39 tilings, 246 tests at this commit.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -724,9 +758,6 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
 
 ### Aperiodic substitution (each needs rule derivation first)
 
-- 🔭 **Stampfli 12-fold dodecagonal** — squares + triangles + 30°
-  rhombi (+ dodecagons), inflation 2+√3; the classic 12-fold
-  quasiperiodic tiling (Stampfli & Schaad, Bridges 2021). Moderate-hard.
 - 🔭 **Socolar 12-fold shield tiling** — shield hexagons + rhombi +
   squares; hard (rule geometry).
 - 🔭 **Ammann sets A1–A4** — the rest of Ammann's aperiodic families;
@@ -908,3 +939,17 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
   vertex figures, exact-once coverage, p4m invariance); standard trio +
   culling list green. TUI export matches M15's undecomposed silhouette
   (38 tilings, 230 tests).
+- 2026-11-12 — M45 Stampfli 12-fold dodecagonal ✅: the dodecagonal
+  quasiperiodic tiling by squares + equilateral triangles + 30° rhombi
+  (Stampfli & Schaad, Bridges 2021) as a patch substitution with
+  inflation 2+√3, rule transcribed from the Bielefeld encyclopedia
+  figure; straddling unit children (one vertex outside the parent,
+  shared by two parents) deduped by exact sorted vertex set; 12-rhombus
+  seed star at scale λ^n deflated to unit pieces with per-step culling,
+  all anchors exact in Z[√3]/4 (`stampfli.rs`, feature `stampfli`).
+  Verified exact before porting: per-parent cover-exactly-once + edge
+  partition 1:√3/2:√3/2:1; gen 1–4 battery zero overlaps, zero
+  T-junctions, exact 12-fold symmetry, PF area law; star census rows
+  S′=S+2R, R′=12S+3R+6T with Perron λ²=7+4√3 (PF vector
+  (1, 3+2√3, 4+10√3/3)); Python↔Rust table diff exact; standard trio
+  green (39 tilings, 246 tests).
