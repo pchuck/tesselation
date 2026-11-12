@@ -462,7 +462,7 @@ mod tests {
         }
         for c in 5..=7u8 {
             let ec = outline(c);
-            let k = (c - 4) as u8;
+            let k = c - 4;
             for i in 0..6 {
                 let (x, y) = e4[i];
                 let (rx, ry) = match k {
@@ -481,11 +481,11 @@ mod tests {
         // correspondence i ↔ (4−i) mod 6 (reversed to stay CCW): each
         // mirror edge is the x-axis reflection of the corresponding
         // canonical edge.
-        for i in 0..6 {
+        for (i, e4i) in e4.iter().enumerate().take(6) {
             let j = ((4 - i as i32).rem_euclid(6)) as usize;
             let (x, y) = e0[j];
             assert!(
-                (e4[i].0 - x).abs() < 1e-9 && (e4[i].1 + y).abs() < 1e-9,
+                (e4i.0 - x).abs() < 1e-9 && (e4i.1 + y).abs() < 1e-9,
                 "c4: edge {i} is not the mirror of canonical edge {j}"
             );
         }
