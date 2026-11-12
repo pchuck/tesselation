@@ -1,0 +1,6 @@
+# ignore python drafts/prototypes, for now
+python/
+# ignore reference texts and images, for now
+reference/
+# other..
+logs

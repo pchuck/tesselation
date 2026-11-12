@@ -1,0 +1,9 @@
+[package]
+name = "tess-core"
+description = "Core abstractions for the tessellix tiling generator: geometry, parameters, tiling trait, registry, symmetry metadata"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]

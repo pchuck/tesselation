@@ -1,0 +1,13 @@
+[package]
+name = "tess-tui"
+description = "TUI for the tessellix tiling generator (ratatui)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+tess-core = { path = "../tess-core" }
+tess-tilings = { path = "../tess-tilings" }
+ratatui = "0.29"
+crossterm = "0.28"

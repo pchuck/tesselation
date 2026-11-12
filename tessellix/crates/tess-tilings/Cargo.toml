@@ -1,0 +1,36 @@
+[package]
+name = "tess-tilings"
+description = "Built-in tiling generators for tessellix (square, hexagon, and more)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[features]
+default = ["square", "hexagon", "triangle", "archimedean", "pythagorean", "penrose", "penrose_p1", "penrose_p2", "penrose_pentagon", "hirschhorn", "zellige", "cairo", "girih", "girih_qc", "girih_sc", "khatam_girih", "laves", "ammann_beenker", "chair", "sphinx", "hat", "turtle", "spectre"]
+square = []
+hexagon = []
+triangle = []
+archimedean = []
+pythagorean = []
+penrose = []
+penrose_p1 = []
+penrose_p2 = []
+penrose_pentagon = []
+hirschhorn = []
+zellige = []
+cairo = []
+chair = []
+sphinx = []
+hat = []
+turtle = []
+spectre = []
+girih = []
+girih_qc = []
+girih_sc = []
+khatam_girih = []
+laves = []
+ammann_beenker = []
+
+[dependencies]
+tess-core = { path = "../tess-core" }
