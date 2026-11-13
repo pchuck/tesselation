@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (46 tilings)
+## Implemented (47 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -76,6 +76,7 @@ figures at the split midpoints, `2.4.4`).
 | `herringbone` | 2:1 dominoes in chiral L-pairs | pgg | oblique lattice ⟨(1,3),(2,2)⟩, 2 split dominoes per cell; single-direction (chiral): 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal + anti-diagonal axes), no mirrors; exact coset group probe (M40) |
 | `running-bond` | 2:1 dominoes in stretcher rows, half-brick offset | cmm | rectangular lattice ⟨(2,0),(0,2)⟩, 2 split dominoes per cell; mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions; exact coset group probe (M41) |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | p6m | hexagonal tiling with one of every three hexagons (index-3 sublattice m ≡ n mod 3 of the honeycomb centers) dissected into six-triangle fans; Wikipedia `2-uniform n10`, t = 2, e = 3 |
+| `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | pmm | hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (rectangular lattice, hexagons share full horizontal edges); Wikipedia `2-uniform n11`, t = 2, e = 3 |
 
 ### Aperiodic / nonperiodic
 
@@ -763,8 +764,12 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
 - 🔭 **2-uniform tilings** (20 known types) — supercells mixing two
   uniform vertex figures (e.g. 3³.4² + 3².4.3.4); data tables on
   bigger cells; moderate work each, visually rich. Their duals give
-<<<<<<< HEAD
-  the "mixed floret/cairo/prismatic" patterns.
+the "mixed floret/cairo/prismatic" patterns.
+- ✅ **2-uniform arc underway (M44, M48).** *`kuniform-p6m` done
+  (M44): the "1/3-dissected" honeycomb (Wikipedia `2-uniform n10`) on
+  the index-3 sublattice m ≡ n mod 3 of the honeycomb centers.
+  `kuniform-pmm` done (M48): the "rows of triangles between rows of
+  hexagons" tiling (Wikipedia `2-uniform n11`).*
 - ✅ **Paver trio complete (M39–M41).** *Basketweave done
   (M39): p4g, not the naive p4m guess — mirrors sit at the odd axes,
   offset from every 4-fold center. Herringbone done (M40): pgg as
@@ -1088,4 +1093,21 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   figures 3⁶ (49, 1 orbit) and 3².6² (241, 6 translation orbits),
   fine irrational-offset grid exact-once, exact cell-set probes for
   R60/R120 + both mirrors); standard trio + vertex-figure + cell-set
+<<<<<<< HEAD
   symmetry tests + culling list green (46 tilings, 285 tests).
+- 2026-11-13 — M48 2-uniform tiling (3.6.3.6; 3².6², pmm) ✅: second
+  entry of the 2-uniform arc (`kuniform-pmm` in `kuniform.rs`, same
+  `kuniform` feature) — the "rows of triangles between rows of
+  hexagons" tiling (Wikipedia `2-uniform n11`, t = 2, e = 3):
+  flat-top hexagons on the rectangular lattice span{(2,0),(0,√3)}
+  sharing full horizontal edges, gaps filled by one down-pointing
+  triangle (apex (1,0)) and one up-pointing triangle (apex (1,√3))
+  per cell; exact Q(√3) table, one hexagon + two triangles per cell
+  (area 2√3 = |det|). Verified exactly in the Python spike before
+  porting (±3 patch: edge parity 260 shared × 2 + 68 boundary,
+  182 vertices / 114 interior with figures 3.6.3.6 (36, 1 orbit) and
+  3².6² (78, 2 translation orbits), fine irrational-offset grid
+  exact-once, exact cell-set probes for the three mirrors + two
+  half-turns, 9 negative rotation probes R60/R90/R120 about
+  (0,0)/(1,0)/(1,√3/2)); standard trio + vertex-figure + cell-set
+  symmetry tests + culling list green (47 tilings, 290 tests).

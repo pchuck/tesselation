@@ -194,7 +194,11 @@ confirm the diffraction claim during the spike before declaring.
   the p6m entry 3⁶ ; 3².6² as `kuniform-p6m` (index-3 honeycomb
   dissection, exact Q(√3) table, both vertex orbits + p6m
   generators verified by an exact-surd Python spike and Rust
-  cell-set probes).
+  cell-set probes), and the pmm entry 3.6.3.6 ; 3².6² as
+  `kuniform-pmm` (hexagons on the rectangular lattice
+  span{(2,0),(0,√3)} with up- and down-pointing triangle rows in
+  the gaps, exact Q(√3) table, both vertex orbits + pmm
+  generators verified the same way).
 
 ---
 

@@ -194,6 +194,7 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "kuniform")]
     {
         r = r.register(kuniform::kuniform_p6m());
+        r = r.register(kuniform::kuniform_pmm());
     }
     #[cfg(feature = "laves")]
     {
@@ -382,7 +383,7 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-("Wallpaper", 11),
+("Wallpaper", 12),
             ("Quasiperiodic", 7),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
@@ -3847,8 +3848,10 @@ mod kuniform_tests {
     /// floats): `g` must send every table cell to some table cell
     /// plus a lattice translation — Cramer solve for the shift,
     /// integrality within 1e-6, vertex geometry within 1e-9. With
-    /// `symmetry = false` (a negative probe) no such mapping may
-    /// exist.
+    /// `symmetry = false` (a negative probe) at least one cell must
+    /// fail to map — individual cells can match (a hexagon is
+    /// invariant under 60° about its own centre) without the
+    /// mapping extending to the whole tiling.
     fn probe_symmetry(lt: &LatticeTiling, g: impl Fn(Vec2) -> Vec2, symmetry: bool, label: &str) {
         let b1 = lt.lattice[0];
         let b2 = lt.lattice[1];
@@ -3860,6 +3863,7 @@ mod kuniform_tests {
             )
         };
         let cells: Vec<Vec<Vec2>> = lt.cells.iter().map(|c| c.poly.pts.clone()).collect();
+        let mut mismatched = 0;
         for (i, cp) in cells.iter().enumerate() {
             let gp: Vec<Vec2> = cp.iter().map(|p| g(*p)).collect();
             let mut matched = false;
@@ -3886,11 +3890,19 @@ mod kuniform_tests {
                     break;
                 }
             }
-            assert!(
-                matched == symmetry,
-                "{label}: table cell {i} expected {symmetry:?}, matched={matched}"
-            );
+            if symmetry {
+                assert!(
+                    matched,
+                    "{label}: table cell {i} expected a match, none found"
+                );
+            } else if !matched {
+                mismatched += 1;
+            }
         }
+        assert!(
+            symmetry || mismatched > 0,
+            "{label}: every table cell matched — expected a negative probe to fail"
+        );
     }
 
     /// The declared p6m generators act on the cell set: 60°/120°
@@ -3921,6 +3933,88 @@ mod kuniform_tests {
             true,
             "mirror line at 60 deg",
         );
+    }
+
+    #[test]
+    fn kuniform_pmm_covers_region() {
+        check_covers(
+            &kuniform::kuniform_pmm(),
+            "kuniform-pmm",
+            BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_pmm_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_pmm(),
+            "kuniform-pmm(rot30,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_pmm_deterministic() {
+        check_det(
+            &kuniform::kuniform_pmm(),
+            "kuniform-pmm",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch: one 3.6.3.6
+    /// orbit (the hexagon-corner vertices (2i+1, √3j)) and two 3².6²
+    /// orbits (the triangle-base vertices (2i+1/2, H+√3j)). Counts
+    /// and reps match the Python spike.
+    #[test]
+    fn kuniform_pmm_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_pmm(),
+            &[
+                Figure {
+                    figure: "3636",
+                    count: 36,
+                    orbits: &[(1000, 0)],
+                },
+                Figure {
+                    figure: "3366",
+                    count: 78,
+                    orbits: &[(500, 866), (1500, 866)],
+                },
+            ],
+        );
+    }
+
+    fn rot_about(deg: f64, c: Vec2, p: Vec2) -> Vec2 {
+        c + (p - c).rotated(deg.to_radians())
+    }
+
+    /// The declared pmm generators act on the cell set: mirrors
+    /// x = 0, y = 0, y = H and the half-turns at (1, 0) and (1, H).
+    /// Negative probes: no 6-, 9-, or 12-fold rotation about any of
+    /// (0,0), (1,0), (1,H) — pmm has none (lattice argument: R60
+    /// sends b1 = (2,0) to (1, √3) = b1/2 + b2, not a lattice
+    /// vector).
+    #[test]
+    fn kuniform_pmm_symmetry() {
+        let lt = kuniform::kuniform_pmm();
+        probe_symmetry(&lt, |p| v2(-p.x, p.y), true, "mirror x=0");
+        probe_symmetry(&lt, |p| v2(p.x, -p.y), true, "mirror y=0");
+        probe_symmetry(&lt, |p| v2(p.x, 2.0 * H - p.y), true, "mirror y=H");
+        probe_symmetry(&lt, |p| v2(2.0 - p.x, -p.y), true, "180 deg about (1,0)");
+        probe_symmetry(&lt, |p| v2(2.0 - p.x, 2.0 * H - p.y), true, "180 deg about (1,H)");
+        for c in [Vec2::ZERO, v2(1.0, 0.0), v2(1.0, H)] {
+            for deg in [60.0, 90.0, 120.0] {
+                probe_symmetry(
+                    &lt,
+                    move |p| rot_about(deg, c, p),
+                    false,
+                    &format!("{deg} deg about ({c})"),
+                );
+            }
+        }
     }
 }
 #[cfg(all(
@@ -4040,6 +4134,7 @@ mod lattice_culling_tests {
             ("girih-sc", girih_sc::girih_star_cross()),
             ("khatam-girih", khatam_girih::khatam_girih()),
             ("kuniform-p6m", kuniform::kuniform_p6m()),
+            ("kuniform-pmm", kuniform::kuniform_pmm()),
             ("tetrakis-square", laves::tetrakis_square()),
             ("rhombille", laves::rhombille()),
             ("triakis-triangular", laves::triakis_triangular()),

@@ -71,10 +71,10 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 ## Supported tilings
 
-46 built-in tilings, all discoverable in both UIs via the registry
+47 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
-**Wallpaper** (11), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
+**Wallpaper** (12), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
 Stampfli, girih Darb-i Imam), **Aperiodic** (7: einstein family, limit-periodic
 rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
 UIs group their lists by it. Categories are declared on the tiling
@@ -114,6 +114,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `pythagorean` | Pythagorean (two squares) | periodic two-square family (one-parameter ratio); square on the hypotenuse per cell | p4 | square |
 | `windmill` | Periodic pinwheel arrangement (p4) | Conway's periodic "spin" of the pinwheel motif: 1–2–√5 triangles around squares; homochiral, non-edge-to-edge | p4 | square |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | 2-uniform k-uniform: hexagonal tiling with one of every three hexagons dissected into six-triangle fans (Wikipedia `2-uniform n10`) | p6m | hexagonal |
+| `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | 2-uniform k-uniform: hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (Wikipedia `2-uniform n11`) | pmm | rectangular |
 | `penrose` | Penrose (P3) | aperiodic, 5-fold local symmetry | — | — |
 | `penrose-p1` | Penrose P1 (pentagon, star, boat, diamond) | aperiodic 4-prototile φ²-deflation with short-edge merges across parent boundaries; 5-fold local symmetry | — | — |
 | `penrose_p2` | Penrose (P2) | aperiodic kite-dart tiling by half-tile substitution; local 5-fold symmetry | — | — |
@@ -392,7 +393,7 @@ and the search filter. The TUI and GUI are thin layers over it.
 
 ## Tests
 
-`cargo test --workspace` (currently 285 tests, all green, zero warnings):
+`cargo test --workspace` (currently 290 tests, all green, zero warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
   viewport anchoring, palette mapping.
