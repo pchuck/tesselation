@@ -296,15 +296,18 @@ fn render(frame: &mut Frame, tui: &mut Tui) {
                 let buf = frame.buffer_mut();
                 for sy in 0..h {
                     for sx in 0..w {
-                        let fg = r.at(sx, sy);
-                        let fg = match fg {
+                        // One cell = one pixel: a space glyph shows only
+                        // its BACKGROUND color, so the pixel color goes
+                        // to `bg` (fg is irrelevant for blanks).
+                        let px = r.at(sx, sy);
+                        let px = match px {
                             raster::BORDER => Color::Indexed(tui.border256),
                             raster::GAP => Color::Indexed(tui.gap256),
                             c => Color::Indexed(c),
                         };
                         let cell = &mut buf[(canvas.x + sx as u16, canvas.y + sy as u16)];
                         cell.set_char(' ');
-                        cell.set_style(Style::default().fg(fg).bg(Color::Indexed(tui.bg256)));
+                        cell.set_style(Style::default().fg(px).bg(px));
                     }
                 }
             }
@@ -550,6 +553,31 @@ mod tests {
         assert_eq!(count_symbol(&term, "▀"), 0, "preview should be dropped");
         let text = buffer_text(&term);
         assert!(text.contains("cat    "));
+    }
+
+    #[test]
+    fn render_paints_the_main_canvas() {
+        // Regression: the canvas blit used to put the pixel color on
+        // `fg` of a space glyph — invisible, since a blank shows only
+        // its background. The canvas region must now contain many
+        // colored (non-default-background) cells.
+        let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let mut tui = Tui::new();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        let buf = term.backend().buffer();
+        let w = buf.area.width as usize;
+        // Canvas = everything right of the 30-column side panel, above
+        // the 1-row status bar.
+        let mut painted = 0usize;
+        for y in 0..29usize {
+            for x in 30..100usize {
+                let c = &buf.content[y * w + x];
+                if c.style().bg != Some(Color::Reset) {
+                    painted += 1;
+                }
+            }
+        }
+        assert!(painted > 500, "canvas should be painted, got {painted} cells");
     }
 
     #[test]
