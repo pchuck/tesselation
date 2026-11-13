@@ -258,8 +258,14 @@ confirm the diffraction claim during the spike before declaring.
   wallpaper groups); Rao 2017 completeness; Bagina 2011
   (8 edge-to-edge types); arXiv:2501.07090 (monotiles per type family).
 - **Status:** type 13 (Rice) implemented (M49) — canonical A = 120°
-  instance, exact Q(√3) 8-tile unit, group p2. Types 1–15 remain
-  open (M50+).
+  instance, exact Q(√3) 8-tile unit, group p2. Remaining (M50+),
+  in the arc's priority order: **14, 15** (fixed-shape showstoppers),
+  then 7/9/11/12 (parameterized 2-iso families), then 2/3/5/10, then 1
+  (p2 topology). Existing tilings likely cover 4 (cairo), 1
+  (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) — verify the
+  assignments at design time; implement only uncovered types. One type
+  per task, delegated; all `pentagon1..15` features pre-created
+  (types 4/8 map to cairo/hirschhorn pending verification).
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 
@@ -326,6 +332,11 @@ confirm the diffraction claim during the spike before declaring.
   a documented note (chair precedent).
 
 ### 8. Socolar 12-fold (and the shield tiling)
+
+- **Sprint allocation (2026-11-13):** the shield tiling (Gähler) is
+  the first deliverable (M51, delegated, feature `socolar`); Socolar's
+  own 1989 rule table and the wheel tiling (MLD duals) follow if the
+  class lands well.
 
 - **Motif:** Socolar's 1989 dodecagonal quasicrystal tiling — three
   prototiles (30° rhombus, square, regular hexagon) with a published
@@ -543,6 +554,11 @@ confirm the diffraction claim during the spike before declaring.
   machinery.
 
 ### 19. Second measured ornamental panel
+
+- **Sprint allocation (2026-11-13):** first deliverable of the girih
+  extension arc (M52, delegated to the strong track, feature
+  `girih_ext`) — prefer the p6m 12-point panel; the Hankin PIC engine
+  (#14) is the follow-up arc after one concrete pattern lands.
 
 - **Motif:** reuse the M35 measurement pipeline on a second classical
   panel. Candidates from Wichmann's tiling search database
