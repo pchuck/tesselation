@@ -476,7 +476,7 @@ confirm the diffraction claim during the spike before declaring.
   93; the arc completes the census later. Needs a small design doc
   (edge-orbit data model, parameter bounds per type) before code.
 
-### 14. Hankin polygons-in-contact strapwork engine 🔨 (M53, in progress)
+### 14. Hankin polygons-in-contact strapwork engine ✅ (M53: fourfold khatam on 4.8.8; layer mode remains open)
 
 - **Sprint allocation (2026-11-13):** second deliverable of the girih
   extension arc (M53, delegated to the strong track, feature
@@ -486,6 +486,22 @@ confirm the diffraction claim during the spike before declaring.
   general layer mode documented as the follow-up direction. Suggested
   substrate: 4.8.8 (fourfold khatam family), distinct from the just-
   shipped 12-point W85 panel.
+- **Done (M53):** the design question is answered **tiling mode**: the
+  strapwork region partition is itself a face-to-face periodic tiling,
+  so `pic-4-8-8` (`pic_4_8_8.rs`) registers it directly (M35 precedent)
+  — Hankin PIC at contact angle δ = 45° on the 4.8.8 substrate (the
+  *median* fourfold star): every ray runs midpoint-to-midpoint, so the
+  walls are the opposite-midpoint chords — the {8/2} two-square octagram
+  in each octagon, the four midpoint chords in each substrate square —
+  partitioning the plane into 14 faces per `A·Z²` cell (regular octagon
+  1+√2, small square 1/2, 4 house pentagons 1/8+√2/4, 8 star tips 1/8;
+  Σ = 3+2√2 = |det| exactly), every vertex a (p+q√2)/4 surd. The
+  un-interlaced partition verifies exactly **p4m** (positive rot90/mirror
+  probes pass, quarter-step rot90, half-step rot180 and the glide all
+  fail). The general **layer mode** (wall network over an arbitrary
+  host substrate without registering a partition, one engine × every
+  substrate × acute/median/obtuse openings) stays the documented
+  follow-up direction.
 
 - **Motif:** the generative alternative to measured panels (M35):
   Hankin's polygons-in-contact method — given a substrate tiling and a

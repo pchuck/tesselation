@@ -24,6 +24,8 @@ pub mod chair;
 pub mod girih;
 #[cfg(feature = "girih_ext")]
 pub mod girih_w85;
+#[cfg(feature = "hankin_ext")]
+pub mod pic_4_8_8;
 #[cfg(feature = "girih_qc")]
 pub mod girih_qc;
 #[cfg(feature = "girih_sc")]
@@ -198,6 +200,10 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "girih_ext")]
     {
         r = r.register(girih_w85::girih_w85());
+    }
+    #[cfg(feature = "hankin_ext")]
+    {
+        r = r.register(pic_4_8_8::pic_4_8_8());
     }
     #[cfg(feature = "khatam_girih")]
     {
@@ -395,7 +401,7 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-("Wallpaper", 14),
+            ("Wallpaper", 15),
             ("Quasiperiodic", 7),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
@@ -4039,6 +4045,7 @@ mod kuniform_tests {
     feature = "girih",
     feature = "girih_sc",
     feature = "girih_ext",
+    feature = "hankin_ext",
     feature = "khatam_girih",
 feature = "kuniform",
     feature = "laves",
@@ -4050,7 +4057,8 @@ mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
         archimedean, basketweave, cairo, girih, girih_sc, girih_w85, hexagon, herringbone,
-        khatam_girih, kuniform, laves, pentagon13, running_bond, square, triangle, windmill,
+        khatam_girih, kuniform, laves, pentagon13, pic_4_8_8, running_bond, square, triangle,
+        windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
     use tess_core::params::ParamSet;
@@ -4147,6 +4155,7 @@ mod lattice_culling_tests {
             ("girih", girih::girih_shesh_band()),
             ("girih-sc", girih_sc::girih_star_cross()),
             ("girih-w85", girih_w85::girih_w85()),
+            ("pic-4-8-8", pic_4_8_8::pic_4_8_8()),
             ("khatam-girih", khatam_girih::khatam_girih()),
             ("kuniform-p6m", kuniform::kuniform_p6m()),
             ("kuniform-pmm", kuniform::kuniform_pmm()),
@@ -4647,6 +4656,294 @@ mod girih_w85_tests {
         assert_eq!(t.id, "girih-w85");
         assert_eq!(t.group, WallpaperGroup::P6);
         assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
+        assert_eq!(t.category, TilingCategory::Wallpaper);
+    }
+}
+
+#[cfg(all(test, feature = "hankin_ext"))]
+mod pic_4_8_8_tests {
+    use super::lattice::LatticeTiling;
+    use super::pic_4_8_8::pic_4_8_8;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    const RT2: f64 = core::f64::consts::SQRT_2;
+    const A: f64 = 1.0 + RT2;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    fn sub(a: Vec2, b: Vec2) -> Vec2 {
+        v2(a.x - b.x, a.y - b.y)
+    }
+
+    fn norm(a: Vec2) -> f64 {
+        (a.x * a.x + a.y * a.y).sqrt()
+    }
+
+    type Isometry = Box<dyn Fn(Vec2) -> Vec2>;
+
+    /// Is `k` an exact member of the (1/4)·Z[√2] surd grid? Exhaustive
+    /// over the table's bounded range; distinct q representatives differ
+    /// by √2 ≫ 1e-9, so the decision is exact here.
+    fn on_quarter_surd_grid(k: f64) -> bool {
+        let k4 = 4.0 * k;
+        (-60..=60).any(|q| {
+            let p = k4 - q as f64 * RT2;
+            (p - p.round()).abs() < 1e-9
+        })
+    }
+
+    /// Positive symmetry test: the image of the face `pts` under `f` must
+    /// coincide, vertex for vertex, with some orbit face plus an EXACT
+    /// lattice translation (integer multiples of the basis vectors). With
+    /// all coordinates on the (1/4)·Z[√2] grid the nearest non-lattice
+    /// offset is ≥ √2/4 ≈ 0.35, so the 1e-9 tolerance cannot blur a
+    /// genuine near-miss into a hit.
+    fn image_is_a_face(t: &LatticeTiling, pts: &[Vec2], f: &dyn Fn(Vec2) -> Vec2) -> bool {
+        let img: Vec<Vec2> = pts.iter().map(|p| f(*p)).collect();
+        for cell in &t.cells {
+            let v = &cell.poly.pts;
+            if v.len() != img.len() {
+                continue;
+            }
+            for i in 0..v.len() {
+                let d = sub(img[0], v[i]);
+                let (mx, my) = (d.x / A, d.y / A);
+                if (mx - mx.round()).abs() > 1e-9 || (my - my.round()).abs() > 1e-9 {
+                    continue;
+                }
+                let shift = v2(mx.round() * A, my.round() * A);
+                // Vertex-SET match (orientation-free: mirrors reverse the
+                // winding of the CCW-normalised table).
+                let target: Vec<Vec2> = v.iter().map(|p| *p + shift).collect();
+                let mut used = vec![false; target.len()];
+                let mut ok = true;
+                for p in &img {
+                    let hit = target.iter().position(|q| norm(sub(*p, *q)) < 1e-9);
+                    match hit {
+                        Some(j) if !used[j] => used[j] = true,
+                        _ => {
+                            ok = false;
+                            break;
+                        }
+                    }
+                }
+                if ok {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn all_faces(t: &LatticeTiling) -> Vec<Vec<Vec2>> {
+        t.cells.iter().map(|c| c.poly.pts.clone()).collect()
+    }
+
+    #[test]
+    fn pic_4_8_8_covers_region() {
+        check_covers(
+            &pic_4_8_8(),
+            "pic-4-8-8",
+            BBox::new(v2(-24.0, -18.0), v2(24.0, 18.0)),
+        );
+    }
+
+    #[test]
+    fn pic_4_8_8_rotated_scaled() {
+        check_rotated(
+            &pic_4_8_8(),
+            "pic-4-8-8(rot20,scale0.6)",
+            BBox::new(v2(-24.0, -18.0), v2(24.0, 18.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn pic_4_8_8_deterministic() {
+        check_det(
+            &pic_4_8_8(),
+            "pic-4-8-8",
+            BBox::new(v2(-12.0, -9.0), v2(12.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn pic_4_8_8_unit_structure() {
+        let t = pic_4_8_8();
+        assert_eq!(t.cells.len(), 14);
+        let by_seed = |s: u32| t.cells.iter().filter(|c| c.seed == s).count();
+        assert_eq!(
+            (by_seed(0), by_seed(1), by_seed(2), by_seed(3)),
+            (1, 1, 4, 8),
+            "orbit census: octagon, small square, 4 houses, 8 star tips"
+        );
+
+        // Exact Q(√2) construction: every coordinate is a (1/4)·Z[√2] surd.
+        for c in &t.cells {
+            for p in &c.poly.pts {
+                assert!(on_quarter_surd_grid(p.x), "vertex x {} off the grid", p.x);
+                assert!(on_quarter_surd_grid(p.y), "vertex y {} off the grid", p.y);
+            }
+        }
+
+        // Σ(cell areas) = |det(lattice)| — exact over Q(√2) (spike):
+        // (1+√2) + 1/2 + 4(1/8+√2/4) + 8(1/8) = 3+2√2 = (1+√2)².
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        assert!((det - A * A).abs() < 1e-12);
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-12, "Σ areas {sum} vs det {det}");
+
+        // Octagon (seed 0): regular, side √2/2, centred on the octagon
+        // centre (A/2, A/2).
+        let oct = t.cells.iter().find(|c| c.seed == 0).unwrap();
+        let v = &oct.poly.pts;
+        assert_eq!(v.len(), 8);
+        for i in 0..v.len() {
+            let side = norm(sub(v[(i + 1) % 8], v[i]));
+            assert!((side - RT2 / 2.0).abs() < 1e-12, "octagon side {side}");
+        }
+        let cen = v.iter().fold(Vec2::ZERO, |a, p| a + *p);
+        assert!(norm(sub(cen / 8.0, v2(A / 2.0, A / 2.0))) < 1e-12);
+        assert!((oct.poly.area() - A).abs() < 1e-12, "octagon area = 1+√2");
+
+        // Small square (seed 1): side √2/2 (the [±√2/4]² khatam centre),
+        // centred on the origin.
+        let sq = t.cells.iter().find(|c| c.seed == 1).unwrap();
+        let v = &sq.poly.pts;
+        assert_eq!(v.len(), 4);
+        for i in 0..4 {
+            let side = norm(sub(v[(i + 1) % 4], v[i]));
+            assert!((side - RT2 / 2.0).abs() < 1e-12, "square side {side}");
+        }
+        assert!((sq.poly.area() - 0.5).abs() < 1e-12, "square area = 1/2");
+
+        // House pentagons (seed 2): area 1/8 + √2/4 each.
+        let mut houses = 0;
+        for c in t.cells.iter().filter(|c| c.seed == 2) {
+            assert_eq!(c.poly.pts.len(), 5);
+            assert!((c.poly.area() - (0.125 + RT2 / 4.0)).abs() < 1e-12);
+            houses += 1;
+        }
+        assert_eq!(houses, 4);
+
+        // Star tips (seed 3): isosceles right triangles, legs 1/2, area
+        // exactly 1/8 — the octagram arm caps between the two overlaid
+        // squares and the substrate walls.
+        for c in t.cells.iter().filter(|c| c.seed == 3) {
+            let v = &c.poly.pts;
+            assert_eq!(v.len(), 3);
+            assert!((c.poly.area() - 0.125).abs() < 1e-12, "tip area = 1/8");
+            let right = (0..3).any(|i| {
+                let e1 = sub(v[(i + 1) % 3], v[i]);
+                let e2 = sub(v[(i + 2) % 3], v[i]);
+                let dot = e1.x * e2.x + e1.y * e2.y;
+                let l1 = e1.x * e1.x + e1.y * e1.y;
+                let l2 = e2.x * e2.x + e2.y * e2.y;
+                dot.abs() < 1e-12 && (l1 - 0.25).abs() < 1e-12 && (l2 - 0.25).abs() < 1e-12
+            });
+            assert!(right, "the tip is a right isosceles triangle with legs 1/2");
+        }
+
+        // Every interior angle is a multiple of 45° (Hankin contacts at
+        // δ = 45° produce only 45°, 90° and 135° corners — the spike's
+        // census).
+        for c in &t.cells {
+            let v = &c.poly.pts;
+            let n = v.len();
+            for i in 0..n {
+                let e1 = sub(v[(i + n - 1) % n], v[i]);
+                let e2 = sub(v[(i + 1) % n], v[i]);
+                let ang = (e1.x * e2.y - e1.y * e2.x)
+                    .abs()
+                    .atan2(e1.x * e2.x + e1.y * e2.y);
+                let k = (ang / std::f64::consts::FRAC_PI_4).round();
+                assert!(
+                    k >= 1.0 && (ang - k * std::f64::consts::FRAC_PI_4).abs() < 1e-9,
+                    "angle {ang} at {:?} is not a multiple of 45°",
+                    v[i]
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn pic_4_8_8_symmetry_is_p4m() {
+        let t = pic_4_8_8();
+        let faces = all_faces(&t);
+
+        // Positive probes: each must map every face to a face. All
+        // matrices are exact integer/reflection maps (no trig).
+        let c = v2(A / 2.0, A / 2.0); // octagon centre
+        let e1 = v2(A / 2.0, 0.0); // octagon-octagon contact
+        let e2 = v2(0.0, A / 2.0); // substrate-edge contact
+        let positives: Vec<(&str, Isometry)> = vec![
+            ("rot90 @ substrate square centre", Box::new(|p| v2(-p.y, p.x))),
+            (
+                "rot90 @ octagon centre",
+                Box::new(move |p| {
+                    let d = sub(p, c);
+                    v2(c.x - d.y, c.y + d.x)
+                }),
+            ),
+            (
+                "rot180 @ octagon-octagon contact",
+                Box::new(move |p| v2(2.0 * e1.x - p.x, 2.0 * e1.y - p.y)),
+            ),
+            (
+                "rot180 @ square-square contact",
+                Box::new(move |p| v2(2.0 * e2.x - p.x, 2.0 * e2.y - p.y)),
+            ),
+            ("mirror y = 0", Box::new(|p| v2(p.x, -p.y))),
+            ("mirror x = 0", Box::new(|p| v2(-p.x, p.y))),
+            ("mirror y = A/2", Box::new(move |p| v2(p.x, 2.0 * c.y - p.y))),
+            ("mirror y = x", Box::new(|p| v2(p.y, p.x))),
+            ("mirror y = -x", Box::new(|p| v2(-p.y, -p.x))),
+        ];
+        for (label, f) in &positives {
+            for (i, face) in faces.iter().enumerate() {
+                assert!(
+                    image_is_a_face(&t, face, f),
+                    "{label} must be a symmetry but fails on face {i}"
+                );
+            }
+        }
+
+        // Negative probes: the symmetry group is EXACTLY p4m — a quarter-
+        // step rotation off the centres, a half-step twirl on a cell edge
+        // line and a glide reflection must all fail on some face.
+        let q = v2(A / 4.0, A / 4.0);
+        let negatives: Vec<(&str, Isometry)> = vec![
+            (
+                "rot90 @ (A/4, A/4)",
+                Box::new(move |p| {
+                    let d = sub(p, q);
+                    v2(q.x - d.y, q.y + d.x)
+                }),
+            ),
+            (
+                "rot180 @ (A/4, 0)",
+                Box::new(move |p| v2(2.0 * q.x - p.x, -p.y)),
+            ),
+            ("glide (A/2, A/2−y)", Box::new(move |p| v2(p.x + A / 2.0, 2.0 * q.y - p.y))),
+        ];
+        for (label, f) in &negatives {
+            let fails = faces.iter().filter(|face| !image_is_a_face(&t, face, f)).count();
+            assert!(fails > 0, "{label} must NOT be a symmetry");
+        }
+    }
+
+    #[test]
+    fn pic_4_8_8_symmetry_metadata() {
+        let t = pic_4_8_8();
+        assert_eq!(t.id, "pic-4-8-8");
+        assert_eq!(t.group, WallpaperGroup::P4m);
+        assert_eq!(t.lattice_kind, LatticeKind::Square);
         assert_eq!(t.category, TilingCategory::Wallpaper);
     }
 }

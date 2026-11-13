@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (49 tilings)
+## Implemented (50 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -60,6 +60,7 @@ every dual is the face-centroid dual of an exact primal table.
 | `girih-shesh-band` | girih strapwork band | p2 | single shesh-band hexagon, oblique lattice |
 | `girih-star-cross` | 10-pointed girih star-and-cross strapwork | pmm | measured classical panel; 545-tile cell data table on the (77,45)/(0,90) oblique lattice (M35) |
 | `girih-w85` | 12-pointed girih star interlace | p6 | Wichmann data18/W85 (Alhambra Mexuar): exact Q(√3) strap-line grid (L = 283.92, strap 9, all vertices (p+q√3)/50), 42 tiles per hexagonal cell; motif is *632 but the drawn over/under interlace is chiral → p6 (M52) |
+| `pic-4-8-8` | Hankin PIC fourfold khatam (median) | p4m | polygons-in-contact strapwork on the 4.8.8 substrate at δ = 45°: rays run edge-midpoint to edge-midpoint ({8/2} two-square octagram per octagon, midpoint chords per square), face-to-face partition into octagon + small square + 4 house pentagons + 8 star tips, 14 faces per A·Z² cell (A = 1+√2), exact Q(√2) with all vertices (p+q√2)/4; un-interlaced, mirrors and glide probe verified (M53) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `pythagorean` | two squares (Pythagorean) | p4 | one-parameter ratio r = b/a; each cell is the square on the hypotenuse dissected into the leg squares; T-junctions inherent; the plain p4m square grid at r = 1 |
 | `windmill` | 1–2–√5 triangles around squares ("windmill") | p4 | periodic pinwheel arrangement; homochiral (no mirrors/glides); non-edge-to-edge T-junctions; naming waiver 2026-11-12 (M43) |
@@ -1190,3 +1191,27 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   faces alone are p6m 167/167 but ink pieces never mirror-match 0/177);
   standard trio + unit structure + p6 symmetry tests + culling list
   green (49 tilings, 314 tests).
+- 2026-11-13 — M53 Hankin polygons-in-contact fourfold khatam (4.8.8
+  substrate), p4m ✅: the generative strapwork engine's first deliverable
+  (`pic_4_8_8.rs`, feature `hankin_ext`) — Hankin polygons-in-contact at
+  contact angle δ = 45° (median opening) on the truncated-square 4.8.8
+  substrate. **Tiling mode** (design decision, PROPOSED #14): the
+  strapwork region partition is a face-to-face periodic tiling in its own
+  right, so it registers directly (M35 precedent) rather than as a render
+  layer; layer mode stays the documented follow-up. At δ = 45° every ray
+  runs edge-midpoint to edge-midpoint, so the walls are exactly the
+  opposite-midpoint chords — the {8/2} two-square octagram (Rub el Hizb)
+  inside each octagon, the four midpoint chords inside each substrate
+  square — head-to-head at shared midpoints (angle census {45°, 90°,
+  135°}, no T-junctions). 14 faces per square `A·Z²` cell (A = 1+√2):
+  1 regular octagon (area 1+√2), 1 small square [±√2/4]² (1/2), 4 house
+  pentagons (1/8+√2/4), 8 star-tip triangles (1/8), Σ = 3+2√2 = |det|
+  **exactly over Q(√2)**; every vertex on the (p+q√2)/4 grid. Exact Q(√2)
+  spike before porting (Fraction arithmetic: areas sum to |det| with 0
+  error, 90×90 exactly-once coverage, interior-edge pairing, full
+  symmetry probe set); group **p4m** verified position-aware (positive:
+  rot90 about the square centre and octagon centre, rot180 about both
+  edge-contact classes, mirrors y=0/x=0/y=A/2/y=±x; negative: rot90@(A/4,
+  A/4), rot180@(A/4,0) and the glide all fail). Standard trio + unit
+  structure + p4m symmetry + symmetry-metadata tests, culling cross-check
+  green (50 tilings, 320 tests).
