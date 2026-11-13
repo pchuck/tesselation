@@ -476,7 +476,16 @@ confirm the diffraction claim during the spike before declaring.
   93; the arc completes the census later. Needs a small design doc
   (edge-orbit data model, parameter bounds per type) before code.
 
-### 14. Hankin polygons-in-contact strapwork engine
+### 14. Hankin polygons-in-contact strapwork engine 🔨 (M53, in progress)
+
+- **Sprint allocation (2026-11-13):** second deliverable of the girih
+  extension arc (M53, delegated to the strong track, feature
+  `hankin_ext`). Design-first per the question below; for the first
+  concrete deliverable prefer **tiling mode** on one substrate (the
+  strapwork partition as a registry tiling, M35 precedent), with the
+  general layer mode documented as the follow-up direction. Suggested
+  substrate: 4.8.8 (fourfold khatam family), distinct from the just-
+  shipped 12-point W85 panel.
 
 - **Motif:** the generative alternative to measured panels (M35):
   Hankin's polygons-in-contact method — given a substrate tiling and a
