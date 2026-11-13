@@ -11,6 +11,10 @@ pub struct GuiApp {
     /// parameter values change — never per frame — so panel rendering
     /// cannot trigger view-sized tile generation (e.g. Hirschhorn growth).
     meta: Option<Meta>,
+    /// Cached preview: tiles over a tiling-derived window (see
+    /// [`tess_core::App::preview_region`]), keyed like [`Meta`]. Never
+    /// regenerated per frame.
+    preview: Option<Preview>,
 }
 
 /// Region-independent metadata shown in the side panel.
@@ -18,6 +22,13 @@ struct Meta {
     key: String,
     symmetry: tess_core::SymmetryMeta,
     periodic: Option<[tess_core::Vec2; 2]>,
+}
+
+/// Cached preview patch shown in the side panel.
+struct Preview {
+    key: String,
+    window: tess_core::BBox,
+    tiles: Vec<tess_core::Tile>,
 }
 
 /// Layout fingerprint of a polygon's vertex list: equal exactly when two
@@ -79,6 +90,7 @@ impl GuiApp {
         Self {
             app: tess_core::App::new(tess_tilings::registry(), 60.0),
             meta: None,
+            preview: None,
         }
     }
 
@@ -109,6 +121,80 @@ impl GuiApp {
             });
         }
         self.meta.as_ref().unwrap()
+    }
+
+    /// The side-panel preview: the selected tiling over a
+    /// tiling-derived window (never per-frame generation; the cache
+    /// key tracks tiling + parameter values). Colors follow the
+    /// canvas's color mode, except `Single` falls back to `Proto` —
+    /// one color for every tile would make the preview a featureless
+    /// slab.
+    fn draw_preview(&mut self, ui: &mut egui::Ui, rect: egui::Rect) {
+        let mut key = self.app.selected_id().to_string();
+        for spec in self.app.tiling().params() {
+            let v = self
+                .app
+                .param_value(spec.id)
+                .unwrap_or_else(|| spec.default_value());
+            key.push_str(&format!("|{}={:?}", spec.id, v));
+        }
+        if self.preview.as_ref().is_none_or(|p| p.key != key) {
+            let aspect = f64::from(rect.width()) / f64::from(rect.height().max(1.0));
+            let (result, window) = self.app.preview_result(aspect);
+            self.preview = Some(Preview {
+                key,
+                window,
+                tiles: result.tiles,
+            });
+        }
+        let preview = self.preview.as_ref().unwrap();
+
+        let (br, bg_, bb) = paint::rgb(paint::BORDER);
+        let (ar, ag, ab) = paint::rgb(paint::BACKGROUND);
+        let painter = ui.painter_at(rect);
+        painter.rect_filled(rect, 3.0, egui::Color32::from_rgb(ar, ag, ab));
+        if preview.tiles.is_empty() {
+            painter.text(
+                rect.center(),
+                egui::Align2::CENTER_CENTER,
+                "(no preview)",
+                egui::FontId::proportional(12.0),
+                egui::Color32::from_rgb(br, bg_, bb),
+            );
+            return;
+        }
+        let wx = (preview.window.max.x - preview.window.min.x).max(1e-9);
+        let wy = (preview.window.max.y - preview.window.min.y).max(1e-9);
+        let scale = (rect.width() / wx as f32).min(rect.height() / wy as f32);
+        let cx = (preview.window.min.x + preview.window.max.x) / 2.0;
+        let cy = (preview.window.min.y + preview.window.max.y) / 2.0;
+        let to_screen = |p: tess_core::Vec2| {
+            egui::pos2(
+                rect.center().x + (p.x - cx) as f32 * scale,
+                rect.center().y - (p.y - cy) as f32 * scale,
+            )
+        };
+        let border = egui::Stroke::new(0.8_f32, egui::Color32::from_rgb(br, bg_, bb));
+        let mode = self.app.color_mode.preview_mode();
+        for tile in &preview.tiles {
+            let pts = &tile.poly.pts;
+            if pts.len() < 3 {
+                continue;
+            }
+            let screen: Vec<egui::Pos2> = pts.iter().map(|&p| to_screen(p)).collect();
+            let (r, g, b) = paint::rgb(paint::tile_rgb(mode, tile));
+            let color = egui::Color32::from_rgb(r, g, b);
+            let tris = tile.poly.triangulate();
+            let mut mesh = egui::Mesh::with_texture(egui::TextureId::default());
+            for q in &screen {
+                mesh.colored_vertex(*q, color);
+            }
+            for t in tris {
+                mesh.add_triangle(t[0], t[1], t[2]);
+            }
+            painter.add(egui::Shape::Mesh(mesh));
+            painter.add(egui::Shape::closed_line(screen, border));
+        }
     }
 }
 
@@ -220,6 +306,11 @@ impl GuiApp {
                     if let Some(n) = m.symmetry.notes {
                         ui.label(n);
                     }
+                    ui.separator();
+                    ui.label("preview");
+                    let size = egui::vec2(ui.available_width(), 110.0);
+                    let (prect, _) = ui.allocate_exact_size(size, egui::Sense::hover());
+                    self.draw_preview(ui, prect);
                 });
             });
     }

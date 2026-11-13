@@ -189,6 +189,87 @@ impl App {
         let params = self.params().clone();
         self.tiling().generate(&params, &Query { region })
     }
+
+    /// The world window a small preview of the selected tiling should
+    /// be rendered over, derived from the tiling itself: periodic
+    /// tilings span a fixed multiple of their lattice basis, aperiodic
+    /// ones span a fixed multiple of the mean tile extent measured by a
+    /// bounded probe pass. The registry spans pitch scales from ~1
+    /// world unit (square lattice) to ~80 (measured panels) — a fixed
+    /// window would show either a single tile or a shapeless mass.
+    ///
+    /// `aspect` = preview pixel width / height.
+    pub fn preview_region(&self, aspect: f64) -> BBox {
+        // Bounded probe: ±10 world units around the origin. Aperiodic
+        // patches grow from the origin; periodic tables return their
+        // intersecting cells; nothing here can trigger view-sized
+        // generation.
+        let probe_region = BBox::new(Vec2::new(-10.0, -10.0), Vec2::new(10.0, 10.0));
+        let probe = self.result_region(probe_region);
+        preview_window(probe.periodic, mean_tile_side(&probe.tiles), aspect)
+    }
+
+    /// Tiles for a preview of the selected tiling over a window
+    /// derived by [`App::preview_region`], with the same shrink-and-
+    /// retry on generation refusal as the main view. Returns the
+    /// (possibly shrunken) window actually used alongside the tiles.
+    pub fn preview_result(&self, aspect: f64) -> (TilingResult, BBox) {
+        let mut window = self.preview_region(aspect);
+        let mut result = self.result_region(window);
+        let mut shrink = 0.4;
+        while result.message.is_some() && shrink > 0.05 {
+            let cx = (window.min.x + window.max.x) / 2.0;
+            let cy = (window.min.y + window.max.y) / 2.0;
+            let hx = (window.max.x - window.min.x) / 2.0 * shrink;
+            let hy = (window.max.y - window.min.y) / 2.0 * shrink;
+            window = BBox::new(Vec2::new(cx - hx, cy - hy), Vec2::new(cx + hx, cy + hy));
+            result = self.result_region(window);
+            shrink *= 0.4;
+        }
+        (result, window)
+    }
+}
+
+/// Mean tile bounding-box side over `tiles` (0 if none usable).
+pub fn mean_tile_side(tiles: &[crate::tiling::Tile]) -> f64 {
+    let mut total = 0.0;
+    let mut n = 0usize;
+    for t in tiles.iter().take(60_000) {
+        let bb = t.poly.aabb();
+        let s = (bb.size().x + bb.size().y) / 2.0;
+        if s.is_finite() && s > 0.0 {
+            total += s;
+            n += 1;
+        }
+    }
+    if n == 0 { 0.0 } else { total / n as f64 }
+}
+
+/// The world window for a tiling preview (see
+/// [`App::preview_region`]). `aspect` = pixel width / height.
+pub fn preview_window(
+    periodic: Option<[Vec2; 2]>,
+    mean_tile: f64,
+    aspect: f64,
+) -> BBox {
+    const PERIODIC_SPAN: f64 = 2.6;
+    const APERIODIC_SPAN: f64 = 9.0;
+    const FALLBACK_HALF: f64 = 8.0;
+    const HALF_LIMITS: (f64, f64) = (0.2, 5000.0);
+    let base = match periodic {
+        Some([a1, a2]) => PERIODIC_SPAN * a1.length().max(a2.length()),
+        None if mean_tile > 0.0 => APERIODIC_SPAN * mean_tile,
+        _ => 2.0 * FALLBACK_HALF,
+    };
+    let half = (base / 2.0).clamp(HALF_LIMITS.0, HALF_LIMITS.1);
+    // Aspect fit: the tight dimension keeps `half`; the other stretches
+    // so the preview is filled edge to edge.
+    let (hx, hy) = if aspect >= 1.0 {
+        (half * aspect, half)
+    } else {
+        (half, half / aspect)
+    };
+    BBox::new(Vec2::new(-hx, -hy), Vec2::new(hx, hy))
 }
 
 #[cfg(test)]
@@ -255,5 +336,65 @@ mod tests {
             "registration order preserved within a category"
         );
         assert_eq!(g.iter().map(|(_, ts)| ts.len()).sum::<usize>(), 4);
+    }
+
+    fn bbox_half(b: BBox) -> (f64, f64) {
+        ((b.max.x - b.min.x) / 2.0, (b.max.y - b.min.y) / 2.0)
+    }
+
+    #[test]
+    fn preview_window_spans_lattice_basis() {
+        let b = super::preview_window(
+            Some([Vec2::new(3.0, 0.0), Vec2::new(0.0, 4.0)]),
+            0.0,
+            1.0,
+        );
+        let (hx, hy) = bbox_half(b);
+        assert!((hx - 5.2).abs() < 1e-9 && (hy - 5.2).abs() < 1e-9);
+        // Wide aspect stretches x only.
+        let b = super::preview_window(
+            Some([Vec2::new(3.0, 0.0), Vec2::new(0.0, 4.0)]),
+            0.0,
+            2.0,
+        );
+        let (hx, hy) = bbox_half(b);
+        assert!((hx - 10.4).abs() < 1e-9 && (hy - 5.2).abs() < 1e-9);
+    }
+
+    #[test]
+    fn preview_window_spans_mean_tile_and_falls_back() {
+        let b = super::preview_window(None, 0.5, 1.0);
+        let (hx, hy) = bbox_half(b);
+        assert!((hx - 2.25).abs() < 1e-9 && (hy - 2.25).abs() < 1e-9);
+        let b = super::preview_window(None, 0.0, 1.0);
+        let (hx, _) = bbox_half(b);
+        assert!((hx - 8.0).abs() < 1e-9);
+        // Tall aspect stretches y only.
+        let b = super::preview_window(None, 1.0, 0.5);
+        let (hx, hy) = bbox_half(b);
+        assert!((hx - 4.5).abs() < 1e-9 && (hy - 9.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn mean_tile_side_ignores_degenerate_tiles() {
+        let mut poly = crate::geometry::Polygon::new(vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(2.0, 0.0),
+            Vec2::new(2.0, 1.0),
+            Vec2::new(0.0, 1.0),
+        ]);
+        let t = crate::tiling::Tile { poly: poly.clone(), proto: 0, seed: 0 };
+        assert!((super::mean_tile_side(&[t]) - 1.5).abs() < 1e-9);
+        poly = crate::geometry::Polygon::new(vec![Vec2::new(0.0, 0.0); 3]);
+        let t = crate::tiling::Tile { poly, proto: 0, seed: 0 };
+        assert_eq!(super::mean_tile_side(&[t]), 0.0);
+        assert_eq!(super::mean_tile_side(&[]), 0.0);
+    }
+
+    #[test]
+    fn preview_mode_reveals_structure() {
+        assert_eq!(ColorMode::Single.preview_mode(), ColorMode::Proto);
+        assert_eq!(ColorMode::Proto.preview_mode(), ColorMode::Proto);
+        assert_eq!(ColorMode::Pattern.preview_mode(), ColorMode::Pattern);
     }
 }

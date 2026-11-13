@@ -238,18 +238,25 @@ fn render(frame: &mut Frame, tui: &mut Tui) {
     // Generate tiling for the current view.
     let result = tui.app.result(w, h);
 
-    // Side panel. The preview block needs ~11 rows; on short terminals
-    // it is dropped in favor of list + params + info.
-    let with_preview = area.height >= 24;
+    // Side panel. The preview block's height adapts to the terminal:
+    // 9 content rows on tall terminals, 7 on medium ones, dropped on
+    // short ones (< 18 rows).
+    let preview_rows: u16 = if area.height >= 24 {
+        9
+    } else if area.height >= 18 {
+        7
+    } else {
+        0
+    };
     let side = Layout::default()
         .direction(Direction::Vertical)
-        .constraints(if with_preview {
+        .constraints(if preview_rows > 0 {
             vec![
                 Constraint::Length(1),
                 Constraint::Min(4),
                 Constraint::Length(1),
                 Constraint::Min(3),
-                Constraint::Length(11),
+                Constraint::Length(preview_rows + 2),
                 Constraint::Min(3),
             ]
         } else {
@@ -262,7 +269,7 @@ fn render(frame: &mut Frame, tui: &mut Tui) {
             ]
         })
         .split(main[0]);
-    render_side(frame, tui, &side, &result, with_preview);
+    render_side(frame, tui, &side, &result, preview_rows);
 
     // Canvas.
     if w > 0 && h > 0 {
@@ -335,7 +342,7 @@ fn render_side(
     tui: &mut Tui,
     side: &[ratatui::layout::Rect],
     result: &tess_core::tiling::TilingResult,
-    with_preview: bool,
+    preview_rows: u16,
 ) {
     let t = tui.app.tiling();
 
@@ -409,7 +416,7 @@ fn render_side(
     frame.render_widget(params, side[3]);
 
     // Info.
-    let info_idx = if with_preview { 5 } else { 4 };
+    let info_idx = if preview_rows > 0 { 5 } else { 4 };
     let info = {
         let mut lines = vec![
             format!("cat    {}", t.category().label()),
@@ -435,7 +442,7 @@ fn render_side(
     // Preview: the selected tiling as a half-block mini-render. Cached
     // per (id, params, color mode, size); generation is bounded by the
     // small window, so browsing stays responsive.
-    if !with_preview {
+    if preview_rows == 0 {
         return;
     }
     let pv = side[4];
@@ -449,17 +456,7 @@ fn render_side(
     if pw == 0 || ph == 0 {
         return;
     }
-    let thumb = tui.thumbs.get_or_generate(
-        crate::thumb::ThumbCtx {
-            tiling: t,
-            specs,
-            params: tui.app.params(),
-            mode: tui.app.color_mode,
-            palette256: &tui.palette256,
-        },
-        pw,
-        ph,
-    );
+    let thumb = tui.thumbs.get_or_generate(&tui.app, &tui.palette256, pw, ph);
     let map = |c: u8| match c {
         raster::BORDER => Color::Indexed(tui.border256),
         raster::GAP => Color::Indexed(tui.bg256),
@@ -531,13 +528,37 @@ mod tests {
     }
 
     #[test]
-    fn render_short_terminal_drops_preview() {
-        let terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
-        let mut term = terminal;
+    fn render_adapts_preview_to_terminal_height() {
+        // Medium terminal (18–23 rows): preview present, smaller block.
+        let mut term = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        let mut tui = Tui::new();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        let thumbs_medium = count_symbol(&term, "▀");
+        assert!(thumbs_medium > 20, "expected preview at h=20, got {thumbs_medium}");
+
+        // Tall terminal: strictly more preview rows than the medium one.
+        let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let mut tui = Tui::new();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        let thumbs_tall = count_symbol(&term, "▀");
+        assert!(thumbs_tall > thumbs_medium, "h=30 should paint more preview rows than h=20");
+
+        // Short terminal (< 18 rows): preview dropped entirely.
+        let mut term = Terminal::new(TestBackend::new(100, 16)).unwrap();
         let mut tui = Tui::new();
         term.draw(|f| render(f, &mut tui)).unwrap();
         assert_eq!(count_symbol(&term, "▀"), 0, "preview should be dropped");
         let text = buffer_text(&term);
         assert!(text.contains("cat    "));
+    }
+
+    #[test]
+    fn debug_dump_screen() {
+        let terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let mut term = terminal;
+        let mut tui = Tui::new();
+        tui.app.move_selection(2);
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        println!("{}", buffer_text(&term));
     }
 }

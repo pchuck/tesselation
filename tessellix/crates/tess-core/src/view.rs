@@ -41,6 +41,17 @@ impl ColorMode {
             _ => None,
         }
     }
+
+    /// The mode a small thumbnail should render in. `Single` colors
+    /// every tile alike, which makes a thumbnail a featureless slab —
+    /// previews fall back to `Proto` (prototile classes), the mode that
+    /// reveals structure at thumbnail scale.
+    pub fn preview_mode(self) -> ColorMode {
+        match self {
+            ColorMode::Single => ColorMode::Proto,
+            other => other,
+        }
+    }
 }
 
 /// Camera state. `zoom` is screen pixels per world unit.
