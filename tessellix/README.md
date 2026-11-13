@@ -71,10 +71,10 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 ## Supported tilings
 
-44 built-in tilings, all discoverable in both UIs via the registry
+45 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
-**Wallpaper** (9), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
+**Wallpaper** (10), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
 Stampfli, girih Darb-i Imam), **Aperiodic** (7: einstein family, limit-periodic
 rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
 UIs group their lists by it. Categories are declared on the tiling
@@ -95,6 +95,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `truncated-hexagonal` | Truncated hexagonal (3.12.12) | Archimedean | p6m | hexagonal |
 | `snub-square` | Snub square (3.3.4.3.4) | Archimedean | p4g | square |
 | `star-cross` | Star and cross ({8/3}) | Islamic star-and-cross family (one-parameter) | p4m | square |
+| `hexagram` | Hexagram and hexagon ({6/2}) | hexagram star-and-hexagon family (one-parameter) | p6m | hexagonal |
 | `cairo-pentagonal` | Cairo pentagonal (3.3.3 / 4.4.4.4) | pentagonal (Catalan dual of the snub square) | p4g | square |
 | `cairo-collinear` | Cairo collinear (3.3.3 / 4.4.4.4) | pentagonal, integer-coordinate collinear form | p4g | square |
 | `tetrakis-square` | Tetrakis square (V4.8.8) | Laves (Catalan dual of the truncated square) | p4m | square |
@@ -135,9 +136,11 @@ framework models all 17 wallpaper groups and the four lattice kinds
 
 Each periodic tiling accepts the same two parameters, discovered by the
 UIs: **scale** (0.1–50, step 0.05) and **rotation** (0–360°, step 5°).
-Two families add a third: star-and-cross takes **star radius**
-(0.05–0.5), spanning gapped layouts to the kissing (khatam) case, and
-the Pythagorean two-square family takes the **square ratio** b/a
+Three families add a third: star-and-cross takes **star radius**
+(0.05–0.5), spanning gapped layouts to the kissing (khatam) case;
+hexagram takes **star tip radius** (0.05–0.5, default 0.5), spanning
+gapped layouts to the kissing hexagram-and-hexagon case; and the
+Pythagorean two-square family takes the **square ratio** b/a
 (0.2–10, default φ).
 
 ## Design

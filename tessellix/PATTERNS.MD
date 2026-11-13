@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (44 tilings)
+## Implemented (45 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -56,6 +56,7 @@ every dual is the face-centroid dual of an exact primal table.
 | id | motif | group | notes |
 |---|---|---|---|
 | `star-cross` | {8/3} star and cross | p4m | one-parameter star radius: gapped → kissing (khatam) |
+| `hexagram` | hexagram and hexagon ({6/2}) | p6m | one-parameter star tip radius: gapped → kissing hexagram-and-hexagon tiling; stars on the hexagonal lattice, interstice split into two hexagons at the kissing radius |
 | `girih-shesh-band` | girih strapwork band | p2 | single shesh-band hexagon, oblique lattice |
 | `girih-star-cross` | 10-pointed girih star-and-cross strapwork | pmm | measured classical panel; 545-tile cell data table on the (77,45)/(0,90) oblique lattice (M35) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
@@ -1058,3 +1059,17 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   trio + brute-force culling cross-check + in-module exact group
   probe. TUI SVG export sanity-checked. Paver trio complete
   (44 tilings, 275 tests).
+- 2026-11-13 — M42 Hexagram-and-hexagon-and-hexagon ({6/2} star-and-cross) ✅: the
+   PROPOSED.md #2 entry as a one-parameter family on the hexagonal
+   lattice (`hexagram.rs`, feature `hexagram`) — {6/2} six-pointed
+   stars at the lattice points, tip radius T ∈ [0.05, 1/2]
+   (default 1/2 = the kissing hexagram-and-hexagon tiling); the
+   interstice is one 16-vertex polygon for T < 1/2 and splits into two
+   regular hexagons H(C1), H(C2) per cell (area √3/8 each, touching at
+   the cell center) at the kissing radius; per-cell area identity exact
+   (√3·T² + √3/2 − √3·T² = √3/2); T = 1/3 (tips on the Voronoi ring)
+   is the only critical value and does not change the 16-gon
+   combinatorics; p6m group probe on the star layer (the interstice is
+   its complement); kissing vertex figures 60.120.60.120 /
+   60.60.120.120; sweep covers gapped + critical + kissing radii
+   (45 tilings, 280 tests).

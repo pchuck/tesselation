@@ -126,6 +126,7 @@ confirm the diffraction claim during the spike before declaring.
   triangles are shared.
 - **Verify:** standard battery + culling list; a `star-cross`-style
   parameter sweep test (coverage at the critical radii).
+- **Status:** implemented on branch hexagram (pending integration).
 
 ### 3. Windmill tiling
 

@@ -30,6 +30,8 @@ pub mod girih_sc;
 pub mod khatam_girih;
 #[cfg(feature = "laves")]
 pub mod laves;
+#[cfg(feature = "hexagram")]
+pub mod hexagram;
 #[cfg(feature = "hexagon")]
 pub mod hexagon;
 #[cfg(feature = "hirschhorn")]
@@ -85,6 +87,10 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "hexagon")]
     {
         r = r.register(hexagon::spec());
+    }
+    #[cfg(feature = "hexagram")]
+    {
+        r = r.register(hexagram::HexagramTiling);
     }
     #[cfg(feature = "triangle")]
     {
@@ -370,8 +376,8 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-            ("Wallpaper", 9),
-("Quasiperiodic", 7),
+("Wallpaper", 10),
+            ("Quasiperiodic", 7),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
         ]
@@ -1702,6 +1708,182 @@ mod zellige_tests {
                 &p,
                 BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
             );
+        }
+    }
+}
+
+#[cfg(all(test, feature = "hexagram"))]
+mod hexagram_tests {
+    use super::tests::{check_coverage, check_covers, check_det, check_rotated};
+    use crate::hexagram;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::{Query, Tiling};
+
+    /// √3 (a local const: `std::f64::consts::SQRT_3` is unstable in
+    /// this toolchain — the `more_float_constants` gate).
+    const SQRT_3: f64 = 1.7320508075688773;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn hexagram_covers_region() {
+        check_covers(
+            &hexagram::HexagramTiling,
+            "hexagram",
+            BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
+        );
+    }
+
+    #[test]
+    fn hexagram_rotated_scaled() {
+        check_rotated(
+            &hexagram::HexagramTiling,
+            "hexagram(rot22.5,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            22.5,
+        );
+    }
+
+    #[test]
+    fn hexagram_deterministic() {
+        check_det(
+            &hexagram::HexagramTiling,
+            "hexagram",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// The star tip radius parameter must produce a valid, gap-free
+    /// tiling at the kissing default, at the critical T = 1/3 (tips
+    /// land on the Voronoi-vertex ring), at gapped radii, and at the
+    /// wide-gap floor.
+    #[test]
+    fn hexagram_gap_family() {
+        let t = hexagram::HexagramTiling;
+        for radius in [0.5_f64, 1.0 / 3.0, 0.45, 0.3, 0.15] {
+            let mut p = ParamSet::default_for(t.params());
+            p.set(hexagram::STAR_RADIUS_ID, ParamValue::Float(radius));
+            check_coverage(
+                &t,
+                &format!("hexagram(r={radius})"),
+                &p,
+                BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
+            );
+        }
+    }
+
+    /// p6m generator probe on the generated output: for each generator
+    /// (60-degree about a star center, 120-degree about the two
+    /// hexagon centers C1, C2, mirror y -> -y, mirror in the a2 line),
+    /// the exact image of every interior emitted star must equal an
+    /// emitted star as a vertex set. "Interior" means centroid in
+    /// [-8, 8]^2 — the image of every interior lattice point stays
+    /// well inside the 16x16 view, so its image star is always
+    /// emitted, even though it may itself sit outside the interior
+    /// box (e.g. rot60 of P(3,9) = (-3, 10.4)); the lookup therefore
+    /// runs over ALL emitted stars. The per-cell emission is not
+    /// generator-invariant as a tile set (a generator maps the cell
+    /// basis {a1,a2} to a skewed GL(2,Z) basis), but the interstice
+    /// is the complement of the star layer, so preserving the star
+    /// layer setwise preserves the whole tiling.
+    #[test]
+    fn hexagram_group_symmetry() {
+        fn rot60(v: Vec2) -> Vec2 {
+            // 60-degree rotation: [[1/2, -sqrt3/2], [sqrt3/2, 1/2]]
+            v2(0.5 * v.x - 0.5 * SQRT_3 * v.y, 0.5 * SQRT_3 * v.x + 0.5 * v.y)
+        }
+        fn rot120(v: Vec2) -> Vec2 {
+            // 120-degree rotation: [[-1/2, -sqrt3/2], [sqrt3/2, -1/2]]
+            v2(-0.5 * v.x - 0.5 * SQRT_3 * v.y, 0.5 * SQRT_3 * v.x - 0.5 * v.y)
+        }
+
+        for radius in [0.5_f64, 0.3] {
+            let tiling = hexagram::HexagramTiling;
+            let mut p = ParamSet::default_for(tiling.params());
+            p.set(hexagram::STAR_RADIUS_ID, ParamValue::Float(radius));
+            let region = BBox::new(v2(-16.0, -16.0), v2(16.0, 16.0));
+            let r = tiling.generate(&p, &Query { region });
+            assert!(
+                r.message.is_none(),
+                "hexagram(r={radius}): {msg}",
+                msg = r.message.unwrap_or("")
+            );
+
+            let centroid = |pts: &[Vec2]| {
+                let c = pts.iter().fold(Vec2::ZERO, |acc, v| acc + *v);
+                c / pts.len() as f64
+            };
+            // All emitted stars (proto 1), with centroids; the probe
+            // runs over the interior subset (centroid in [±8]²) but
+            // matches images against every emitted star.
+            let stars: Vec<Vec<Vec2>> = r
+                .tiles
+                .iter()
+                .filter(|tl| tl.proto == 1)
+                .map(|tl| tl.poly.pts.clone())
+                .collect();
+            let centroids: Vec<Vec2> = stars.iter().map(|pts| centroid(pts)).collect();
+            let interior: Vec<usize> = centroids
+                .iter()
+                .enumerate()
+                .filter(|(_, c)| c.x.abs() < 8.0 && c.y.abs() < 8.0)
+                .map(|(i, _)| i)
+                .collect();
+            assert!(!interior.is_empty(), "hexagram(r={radius}): no interior stars");
+
+            let gens: [Box<dyn Fn(Vec2) -> Vec2>; 5] = [
+                Box::new(rot60),
+                Box::new(move |v: Vec2| {
+                    let c1 = v2(0.5, SQRT_3 / 6.0);
+                    c1 + rot120(v - c1)
+                }),
+                Box::new(move |v: Vec2| {
+                    let c2 = v2(1.0, SQRT_3 / 3.0);
+                    c2 + rot120(v - c2)
+                }),
+                Box::new(|v: Vec2| v2(v.x, -v.y)),
+                Box::new(|v: Vec2| {
+                    // reflection in the a2 line (60-degree axis)
+                    v2(
+                        -0.5 * v.x + 0.5 * SQRT_3 * v.y,
+                        0.5 * SQRT_3 * v.x + 0.5 * v.y,
+                    )
+                }),
+            ];
+            for (gi, g) in gens.iter().enumerate() {
+                for &si in &interior {
+                    let s = &stars[si];
+                    let img: Vec<Vec2> = s.iter().map(|v| g(*v)).collect();
+                    let ic = centroid(&img);
+                    let mut found = false;
+                    for (oi, o) in stars.iter().enumerate() {
+                        if (centroids[oi] - ic).length() > 1e-6 {
+                            continue;
+                        }
+                        let mut ok = o.len() == img.len();
+                        for v in &img {
+                            if !o.iter().any(|w| (*v - *w).length() < 1e-9) {
+                                ok = false;
+                                break;
+                            }
+                        }
+                        assert!(
+                            ok,
+                            "hexagram(r={radius}): generator {gi} does not map star to an emitted star"
+                        );
+                        found = true;
+                        break;
+                    }
+                    assert!(
+                        found,
+                        "hexagram(r={radius}): generator {gi} image star not in emitted set"
+                    );
+                }
+            }
         }
     }
 }
