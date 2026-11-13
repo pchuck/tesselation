@@ -234,13 +234,13 @@ confirm the diffraction claim during the spike before declaring.
   | 12 | 2a=d=c+e, A=90°, 2B+C=360°, C+E=180° | pgg/p2 | 8 | 2-iso | no |
   | 13 | d=2a=2e, B=E=90°, 2A+D=360° | pgg/p2 | 8 | 2-iso | no |
   | 14 | 2a=2c=d=e, A=90°, B≈145.34°, C≈69.32°, D≈124.66°, E≈110.68° | p2 | 6 | 3-iso | **no** |
-  | 15 | a=c=e, b=2a, d=(a+√2)/(√3−1), A=150°, B=60°, C=135°, D=105°, E=90° | pgg/p2 | 12 | 3-iso | **no** |
+  | 15 | a=c=e, b=2a, d=a√2/(√3−1)=a√(2+√3), A=150°, B=60°, C=135°, D=105°, E=90° | pgg (verified, M55) | 12 | 3-iso | **no** |
 
 - **Priorities within the arc:** the fixed-shape showstoppers first —
   **type 14** (Stein 1985; exact proportions b/a =
   √((11√57−25)/8), sin B = (√57−3)/8 — a Q(√57) tiling, spectacular),
-  **type 15** (MMVD 2015; the last-discovered convex pentagon; exact
-  surd field Q(√2,√3)-flavored — **verify** the exact d form), and
+  **type 15** (MMVD 2015; the last-discovered convex pentagon; field
+  exactly Q(√3), d = a√2/(√3−1) = a√(2+√3) — landed, M55), and
   **type 13** (Rice; d=2a=2e right-angle pentagon, integer-friendly).
   Then the parameterized pgg/p2 families (7, 9, 11, 12) with one
   canonical default parameter set each, then 2/3/5/10, then type 1
@@ -257,18 +257,22 @@ confirm the diffraction claim during the spike before declaring.
 - **References:** Wikipedia "Pentagonal tiling" (15-type table +
   wallpaper groups); Rao 2017 completeness; Bagina 2011
   (8 edge-to-edge types); arXiv:2501.07090 (monotiles per type family).
-- **Status:** type 14 (Stein 1985) implemented (M50) — the completely
-  determined shape (2a = 2c = d = e, b = βa = √((11√57−25)/8 · a²),
-  A = 90°), exact Q(√57, β) 6-tile oblique unit, 3-isohedral,
-  group p2 (2222). Type 13 (Rice) implemented (M49) — canonical
-  A = 120° instance, exact Q(√3) 8-tile unit, group p2.
-  **Next: type 15 (MMVD 2015) = M55, in progress** — the other
-  fixed-shape showstopper; dossier row above (a = c = e, b = 2a,
-  d = (a+√2)/(√3−1), 150°/60°/135°/105°/90°), exact field expected
-  Q(√2, √3) — **verify the exact d form and the group (pgg vs p2)
-  by exact probe**; 12-tile primitive cell, 3-isohedral.
-  Remaining after 15 (M56+), in the arc's priority order:
-  then 7/9/11/12 (parameterized 2-iso families), then
+- **Status:** type 15 (MMVD 2015) implemented (M55) — the other
+  fixed-shape showstopper: group **pgg confirmed** by exhaustive
+  exact probe (25 translations + 25 half-turns + 50 glides + 0
+  mirrors in a 5×5 window), the expected Q(√2,√3) field collapses
+  to **exact Q(√3)** (all vertices (p+q√3)/2), and the dossier row's
+  d was a typo — the correct form is d = a√2/(√3−1) = a√(2+√3)
+  (= a(√6+√2)/2), verified exactly and now corrected in the row
+  above. 12-tile rectangular unit (four congruent 3-tile blocks),
+  3-isohedral (full-group orbits are three fours), non-edge-to-edge
+  (4 T-split edges per cell). Type 14 (Stein 1985) implemented
+  (M50) — the completely determined shape (2a = 2c = d = e,
+  b = βa = √((11√57−25)/8 · a²), A = 90°), exact Q(√57, β)
+  6-tile oblique unit, 3-isohedral, group p2 (2222). Type 13 (Rice)
+  implemented (M49) — canonical A = 120° instance, exact Q(√3)
+  8-tile unit, group p2. Remaining (M56+), in the arc's priority
+  order: then 7/9/11/12 (parameterized 2-iso families), then
   2/3/5/10, then 1 (p2 topology). Existing tilings likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
   verify the assignments at design time; implement only uncovered

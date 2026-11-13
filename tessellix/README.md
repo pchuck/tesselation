@@ -72,10 +72,10 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 ## Supported tilings
 
-53 built-in tilings, all discoverable in both UIs via the registry
+54 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
-**Wallpaper** (18), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
+**Wallpaper** (19), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
 Stampfli, girih Darb-i Imam), **Aperiodic** (7: einstein family, limit-periodic
 rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
 UIs group their lists by it. Categories are declared on the tiling
@@ -122,6 +122,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | 2-uniform k-uniform: hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (Wikipedia `2-uniform n11`) | pmm | rectangular |
 | `pentagon-13` | Pentagon type 13 (Rice) | pentagonal (Rice type 13, A = 120°): d = 2a = 2e, B = E = 90°; 2-isohedral chiral pair, 8 tiles per cell | p2 | rectangular |
 | `pentagon-14` | Pentagon type 14 (Stein) | pentagonal (Stein 1985, completely determined): 2a = 2c = d = e, b = βa, A = 90°; 3-isohedral, 6 tiles per oblique cell | p2 | oblique |
+| `pentagon-15` | Pentagon type 15 (Mann) | pentagonal (Mann / McLoud-Mann / Von Derau 2015): A = 150°, B = 60°, C = 135°, D = 105°, E = 90°, a = 2b, c² = 2+√3; 3-isohedral, 12 tiles per rectangular cell, two perpendicular glides | pgg | rectangular |
 | `penrose` | Penrose (P3) | aperiodic, 5-fold local symmetry | — | — |
 | `penrose-p1` | Penrose P1 (pentagon, star, boat, diamond) | aperiodic 4-prototile φ²-deflation with short-edge merges across parent boundaries; 5-fold local symmetry | — | — |
 | `penrose_p2` | Penrose (P2) | aperiodic kite-dart tiling by half-tile substitution; local 5-fold symmetry | — | — |
@@ -400,7 +401,7 @@ and the search filter. The TUI and GUI are thin layers over it.
 
 ## Tests
 
-`cargo test --workspace` (currently 346 tests, all green, zero
+`cargo test --workspace` (currently 353 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

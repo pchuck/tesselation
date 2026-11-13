@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (53 tilings)
+## Implemented (54 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -83,6 +83,7 @@ figures at the split midpoints, `2.4.4`).
 | `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | pmm | hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (rectangular lattice, hexagons share full horizontal edges); Wikipedia `2-uniform n11`, t = 2, e = 3 |
 | `pentagon-13` | Rice pentagon, type 13 (A = 120°) | p2 | 2-isohedral chiral pair (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3); long side split into two collinear a-edges (M49) |
 | `pentagon-14` | Stein pentagon, type 14 (completely determined) | p2 | 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, exact Q(√57, β) with β = √((11√57−25)/8); long sides split into two collinear unit fine edges — 7/5/6-vertex cells (M50) |
+| `pentagon-15` | Mann pentagon, type 15 (MMVD 2015) | pgg | 3-isohedral (seeds 0/1/2), 12 tiles per rectangular cell = 4 congruent 3-tile blocks, exact Q(√3) (a = 2, b = d = e = 1, c = √(2+√3), all vertices on the (p+q√3)/2 grid); non-edge-to-edge — 4 T-split edges per cell (M55) |
 
 ### Aperiodic / nonperiodic
 
@@ -757,12 +758,14 @@ labels, which are out of chronological order.)
   counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
   306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
 - **Status:** implemented (M45).
-## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50 landed)
+## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55 landed)
 
 The PROPOSED.md #5 arc (all 15 convex pentagonal tiling types). Type 13
 (Rice) lands first: its 8-tile primitive unit is small enough for a
 plain data table; type 14 (Stein) second: a 6-tile unit, but with the
-census's first exact-Q(√57) surd field.
+census's first exact-Q(√57) surd field; type 15 (Mann/McLoud-Mann/
+Von Derau 2015) third: a 12-tile rectangular unit in exact Q(√3) —
+the arc's only pgg — with two perpendicular glide families.
 
 ### 15. Pentagon type 13 (Rice) ✅ (M49)
 
@@ -848,6 +851,51 @@ census's first exact-Q(√57) surd field.
   side multisets), C2-rotation invariance test, and the brute-force
   culling cross-check.
 - **Status:** committed (M50). 52 tilings, 332 tests at the commit.
+
+### 17. Pentagon type 15 (Mann/McLoud-Mann/Von Derau 2015) ✅ (M55)
+
+- **Motif:** the last-discovered convex pentagonal tiling type (MMVD
+  2015): the fixed-shape prototile with a = c = e, b = 2a,
+  d = a√2/(√3−1) = a√(2+√3) (the dossier row's (a+√2)/(√3−1) was a
+  typo) and angles A = 150°, B = 60°, C = 135°, D = 105°, E = 90°
+  (A + E = C + D = 240°). 3-isohedral: three isohedral classes under
+  the full pattern group (each a four of tiles), twelve tiles per
+  primitive unit.
+- **Geometry:** shipped at 2× the paper scale with the cyclic
+  relabelling (shipped A = paper E, …): a = 2, b = d = e = 1,
+  c = √(2+√3), tile area (5+3√3)/4. Exact Q(√3) — every cell vertex
+  lies on the (p + q√3)/2 grid; no decimal approximations shipped.
+  Not edge-to-edge at the pentagon level: a side of length 2 can meet
+  two collinear unit sides of a neighbour (T-junction); 4 of the 60
+  cell edges are T-split, the other 56 are full matches.
+- **Unit cell:** 12 tiles on the rectangular lattice
+  w1 = (−(1+√3)/2, (3+√3)/2), w2 = ((9+6√3)/2, 3+3√3/2)
+  (w1 ⊥ w2, |w1|² = 4+2√3, |w2|² = 63+36√3,
+  |det| = 12 × tile area = 15+9√3). The 12-tile cell decomposes into
+  four congruent 3-tile blocks. Extracted from a verified exact-Q(√3)
+  forced construction and checked before porting: zero overlaps,
+  exactly-once coverage on a 20400-point sample, all 60 central
+  edges exactly glued, and an exhaustive symmetry audit.
+- **Group:** **pgg** (confirmed by the exhaustive exact audit —
+  25 translations + 25 half-turns + 50 glides + 0 mirrors in a 5×5
+  window, exactly 100 symmetries). Two perpendicular glide families:
+  g1² = w1 (axes ∥ w1) and g2² = w2 (axes ∥ w2), each
+  chirality-flipping; no mirrors (the reflection-free test asserts
+  no (M, t) with M a reflection maps a tile onto the tiling). The
+  2-fold centers form the coset c0 + (1/2)L with c0 = (√3, −1/2) —
+  four per primitive cell, not on the tiling lattice L itself.
+  Seeds 0/1/2 ship the three full-group isohedral classes
+  {T1,T4,T7,T10} / {T2,T5,T8,T11} / {T3,T6,T9,T12}; restricted to the
+  p2 translation + half-turn subgroup the six orbits are the six
+  chirality-labeled pairs {T1,T7}, {T2,T8}, …, {T6,T12}.
+- **Verify:** standard trio (coverage, rotated-scaled, deterministic)
+  + unit-structure test (exact lattice facts, |det| = 12·area,
+  per-tile side/angle fingerprints) + isohedral-class test + pgg
+  symmetry test (exact half-turn patch equality; g1/g2 image-window
+  containment; negative mirror probes) + window-census test
+  (93/89/45 tiles at three fixed windows), plus the brute-force
+  culling cross-check.
+- **Status:** committed (M55). 52 tilings, 333 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -1408,3 +1456,20 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   three anchors. **Deferred follow-up:** the TUI/GUI live overlay
   (`App`-level wall stroke) — layer mode is CLI/SVG for now.
   (53 tilings, 346 tests).
+- 2026-11-13 — M55 Pentagon type 15 (Mann/McLoud-Mann/Von Derau 2015)
+  ✅: the last-discovered convex pentagon type (fixed-shape,
+  150°/60°/135°/105°/90°, a = c = e, b = 2a, d = a√2/(√3−1) — the
+  dossier's (a+√2)/(√3−1) was a typo, corrected) as an exact-Q(√3)
+  12-tile data table (`pentagon15.rs`, feature `pentagon15`) — all
+  vertices on the (p+q√3)/2 grid; 12 tiles per rectangular cell
+  (four congruent 3-tile blocks); non-edge-to-edge (4 T-split edges
+  per cell). Group **pgg** confirmed by an exhaustive exact
+  symmetry audit (25 translations + 25 half-turns + 50 glides + 0
+  mirrors in a 5×5 window): two perpendicular glide families
+  (g1² = w1, g2² = w2), no mirrors, 2-fold centers on the coset
+  c0 + (1/2)L, c0 = (√3, −1/2), four per cell; 3-isohedral full-group
+  classes (seeds 0/1/2), six p2-subgroup orbits. Verified exactly
+  before porting (20400-point exactly-once coverage, 60/60 edge
+  gluing, symmetry audit, shipped-template congruence); standard trio
+  + unit structure + isohedral-class + pgg-symmetry + window-census
+  tests, culling cross-check green (54 tilings, 353 tests).
