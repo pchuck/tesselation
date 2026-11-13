@@ -99,6 +99,17 @@ confirm the diffraction claim during the spike before declaring.
   the off-family glides `(1−y,1−x)`, `(−x,y+1)`, `(x+1,−y)` absent.
   Exact coset symmetry check, forbidden list included; see the M40
   changelog entry in PATTERNS.MD.
+- ✅ **M41 delivered (2026-11-12): running bond — trio complete** —
+  `running_bond.rs` (feature `pavers`), stretcher rows of 2:1 dominoes
+  offset by half a brick on the rectangular lattice ⟨(2,0),(0,2)⟩,
+  2 split dominoes per cell. Verified group is **cmm** as expected:
+  mirrors at every integer `x = k` axis and at the half-integer
+  `y = l + 1/2` axes, 2-folds at `(k, l+1/2)` (on the mirrors) and
+  `(k+1/2, l)` (between the rows), two glide families per direction
+  (reps `(x+1,−y)`, `(x+1,4−y)`, `(1−x,y+1)`, `(3−x,y+1)`), no
+  diagonal mirrors, no 4-folds, and the off-axis glides
+  `(x+1,1−y)`, `(−x,y+1)` absent. Exact coset symmetry check,
+  forbidden list included; see the M41 changelog entry in PATTERNS.MD.
 
 ### 2. Hexagram-and-hexagon ({6/2} star-and-cross)
 

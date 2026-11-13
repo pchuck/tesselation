@@ -70,6 +70,8 @@ pub mod zellige;
 pub mod basketweave;
 #[cfg(feature = "pavers")]
 pub mod herringbone;
+#[cfg(feature = "pavers")]
+pub mod running_bond;
 
 /// Registry of all enabled built-in tilings.
 pub fn registry() -> tess_core::Registry {
@@ -199,6 +201,7 @@ pub fn registry() -> tess_core::Registry {
     {
         r = r.register(basketweave::basketweave());
         r = r.register(herringbone::herringbone());
+        r = r.register(running_bond::running_bond());
     }
     r
 }
@@ -367,8 +370,8 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-            ("Wallpaper", 8),
-            ("Quasiperiodic", 7),
+            ("Wallpaper", 9),
+("Quasiperiodic", 7),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
         ]
@@ -2927,6 +2930,7 @@ mod pavers_tests {
     use super::tests::{check_covers, check_det, check_rotated};
     use crate::basketweave;
     use crate::herringbone;
+    use crate::running_bond;
     use tess_core::geometry::{BBox, Vec2};
 
     /// Candidate matrices (row-major) used by the paver group probes.
@@ -3249,6 +3253,188 @@ mod pavers_tests {
             );
         }
     }
+
+    #[test]
+    fn running_bond_covers_region() {
+        check_covers(
+            &running_bond::running_bond(),
+            "running-bond",
+            BBox::new(v2(-4.0, -4.0), v2(8.0, 6.0)),
+        );
+    }
+
+    #[test]
+    fn running_bond_rotated_scaled() {
+        check_rotated(
+            &running_bond::running_bond(),
+            "running-bond(rot30,scale0.7)",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn running_bond_deterministic() {
+        check_det(
+            &running_bond::running_bond(),
+            "running-bond",
+            BBox::new(v2(-3.0, -3.0), v2(9.0, 5.0)),
+        );
+    }
+
+    /// Lattice-membership / origin-set predicates for the running-bond
+    /// table, in doubled coordinates. L = 2ℤ²; domino origins = L ∪
+    /// (L + (1,1)) (all horizontal — there are no vertical dominoes).
+    fn rb_in_lattice(x: i64, y: i64) -> bool {
+        x.rem_euclid(4) == 0 && y.rem_euclid(4) == 0
+    }
+
+    fn rb_in_origin(kind: u8, x: i64, y: i64) -> bool {
+        match kind {
+            0 => rb_in_lattice(x, y) || rb_in_lattice(x - 2, y - 2),
+            _ => false, // no vertical dominoes in the running bond
+        }
+    }
+
+    #[test]
+    fn running_bond_wallpaper_group_is_cmm() {
+        // Unit-cell dominoes in doubled coordinates: H (0,0),
+        // H (1,1); kind 0 = H.
+        let basis = [(4, 0), (0, 4)];
+        let cells: [(i64, i64, i64, i64, u8); 2] =
+            [(0, 0, 4, 2, 0), (2, 2, 4, 2, 0)];
+        let sym = |m: [i64; 4], v: [i64; 2]| {
+            pavers_exact_is_sym(m, v, &basis, &cells, rb_in_lattice, rb_in_origin)
+        };
+
+        // Mirrors at the integer x-axes and half-integer y-axes;
+        // 2-folds at (k, l+1/2) on the mirrors and at (k+1/2, l)
+        // between the rows; two glide families per direction.
+        let expected = [
+            (M_MIRX, [0, 0], "mir_x(0)"),
+            (M_MIRX, [4, 0], "mir_x(1)"),
+            (M_MIRX, [8, 0], "mir_x(2)"),
+            (M_MIRX, [12, 0], "mir_x(3)"),
+            (M_MIRX, [16, 0], "mir_x(4)"),
+            (M_MIRY, [0, 2], "mir_yhalf(1/2)"),
+            (M_MIRY, [0, 6], "mir_yhalf(3/2)"),
+            (M_MIRY, [0, 10], "mir_yhalf(5/2)"),
+            (M_MIRY, [0, 14], "mir_yhalf(7/2)"),
+            (M_MIRY, [0, 18], "mir_yhalf(9/2)"),
+            // 2-folds on the mirrors: (k, l+1/2)
+            (M_ROT2, [0, 2], "rot2(0,1/2)"),
+            (M_ROT2, [0, 6], "rot2(0,3/2)"),
+            (M_ROT2, [0, 10], "rot2(0,5/2)"),
+            (M_ROT2, [0, 14], "rot2(0,7/2)"),
+            (M_ROT2, [4, 2], "rot2(1,1/2)"),
+            (M_ROT2, [4, 6], "rot2(1,3/2)"),
+            (M_ROT2, [4, 10], "rot2(1,5/2)"),
+            (M_ROT2, [4, 14], "rot2(1,7/2)"),
+            (M_ROT2, [8, 2], "rot2(2,1/2)"),
+            (M_ROT2, [8, 6], "rot2(2,3/2)"),
+            (M_ROT2, [8, 10], "rot2(2,5/2)"),
+            (M_ROT2, [8, 14], "rot2(2,7/2)"),
+            (M_ROT2, [12, 2], "rot2(3,1/2)"),
+            (M_ROT2, [12, 6], "rot2(3,3/2)"),
+            (M_ROT2, [12, 10], "rot2(3,5/2)"),
+            (M_ROT2, [12, 14], "rot2(3,7/2)"),
+            (M_ROT2, [16, 2], "rot2(4,1/2)"),
+            (M_ROT2, [16, 6], "rot2(4,3/2)"),
+            (M_ROT2, [16, 10], "rot2(4,5/2)"),
+            (M_ROT2, [16, 14], "rot2(4,7/2)"),
+            // 2-folds between the rows: (k+1/2, l)
+            (M_ROT2, [2, 0], "rot2(1/2,0)"),
+            (M_ROT2, [2, 4], "rot2(1/2,1)"),
+            (M_ROT2, [2, 8], "rot2(1/2,2)"),
+            (M_ROT2, [2, 12], "rot2(1/2,3)"),
+            (M_ROT2, [2, 16], "rot2(1/2,4)"),
+            (M_ROT2, [6, 0], "rot2(3/2,0)"),
+            (M_ROT2, [6, 4], "rot2(3/2,1)"),
+            (M_ROT2, [6, 8], "rot2(3/2,2)"),
+            (M_ROT2, [6, 12], "rot2(3/2,3)"),
+            (M_ROT2, [6, 16], "rot2(3/2,4)"),
+            (M_ROT2, [10, 0], "rot2(5/2,0)"),
+            (M_ROT2, [10, 4], "rot2(5/2,1)"),
+            (M_ROT2, [10, 8], "rot2(5/2,2)"),
+            (M_ROT2, [10, 12], "rot2(5/2,3)"),
+            (M_ROT2, [10, 16], "rot2(5/2,4)"),
+            (M_ROT2, [14, 0], "rot2(7/2,0)"),
+            (M_ROT2, [14, 4], "rot2(7/2,1)"),
+            (M_ROT2, [14, 8], "rot2(7/2,2)"),
+            (M_ROT2, [14, 12], "rot2(7/2,3)"),
+            (M_ROT2, [14, 16], "rot2(7/2,4)"),
+            // two glide families per direction
+            (M_MIRY, [2, 0], "glide(x+1, -y)"),
+            (M_MIRY, [2, 8], "glide(x+1, 4-y)"),
+            (M_MIRX, [2, 2], "glide(1-x, y+1)"),
+            (M_MIRX, [6, 2], "glide(3-x, y+1)"),
+        ];
+        for (m, v, label) in expected {
+            assert!(
+                sym(m, v),
+                "{label} must be a symmetry of the cmm running bond"
+            );
+        }
+
+        // No diagonal mirrors, no 4-folds, no integer-axis y-mirrors,
+        // no off-axis glides, and 2-folds only at the two center
+        // families: this is what pins cmm (vs cmm' / pmm / p4g).
+        let forbidden = [
+            // diagonal mirrors, integer and half-integer offsets
+            (M_DIAG, [0, 0], "mir_d(0)"),
+            (M_DIAG, [-2, 2], "mir_d(1)"),
+            (M_DIAG, [-4, 4], "mir_d(2)"),
+            (M_DIAG, [-6, 6], "mir_d(3)"),
+            (M_DIAG, [-8, 8], "mir_d(4)"),
+            (M_DIAG, [-1, 1], "mir_dh(1/2)"),
+            (M_DIAG, [-3, 3], "mir_dh(3/2)"),
+            (M_DIAG, [-5, 5], "mir_dh(5/2)"),
+            (M_DIAG, [-7, 7], "mir_dh(7/2)"),
+            (M_ANTI, [0, 0], "mir_a(0)"),
+            (M_ANTI, [2, 2], "mir_a(1)"),
+            (M_ANTI, [4, 4], "mir_a(2)"),
+            (M_ANTI, [6, 6], "mir_a(3)"),
+            (M_ANTI, [8, 8], "mir_a(4)"),
+            (M_ANTI, [1, 1], "mir_ah(1/2)"),
+            (M_ANTI, [3, 3], "mir_ah(3/2)"),
+            (M_ANTI, [5, 5], "mir_ah(5/2)"),
+            (M_ANTI, [7, 7], "mir_ah(7/2)"),
+            // integer-axis y-mirrors and half-integer x-mirrors
+            (M_MIRY, [0, 0], "mir_y(0)"),
+            (M_MIRY, [0, 4], "mir_y(1)"),
+            (M_MIRY, [0, 8], "mir_y(2)"),
+            (M_MIRY, [0, 12], "mir_y(3)"),
+            (M_MIRY, [0, 16], "mir_y(4)"),
+            (M_MIRX, [2, 0], "mir_xhalf(1/2)"),
+            (M_MIRX, [6, 0], "mir_xhalf(3/2)"),
+            (M_MIRX, [10, 0], "mir_xhalf(5/2)"),
+            (M_MIRX, [14, 0], "mir_xhalf(7/2)"),
+            (M_MIRX, [18, 0], "mir_xhalf(9/2)"),
+            // 2-folds off the two center families
+            (M_ROT2, [0, 0], "rot2(0,0)"),
+            (M_ROT2, [4, 4], "rot2(1,1)"),
+            (M_ROT2, [8, 8], "rot2(2,2)"),
+            (M_ROT2, [12, 12], "rot2(3,3)"),
+            (M_ROT2, [16, 16], "rot2(4,4)"),
+            (M_ROT2, [2, 2], "rot2(1/2,1/2)"),
+            (M_ROT2, [6, 6], "rot2(3/2,3/2)"),
+            (M_ROT2, [10, 10], "rot2(5/2,5/2)"),
+            (M_ROT2, [14, 14], "rot2(7/2,7/2)"),
+            // no 4-folds
+            (M_ROT4, [0, 0], "rot4(0,0)"),
+            (M_ROT4, [4, 0], "rot4(1,1)"),
+            // off-axis glides
+            (M_MIRY, [2, 2], "glide(x+1, 1-y)"),
+            (M_MIRX, [0, 2], "glide(-x, y+1)"),
+        ];
+        for (m, v, label) in forbidden {
+            assert!(
+                !sym(m, v),
+                "{label} must NOT be a symmetry of the running bond"
+            );
+        }
+    }
 }
 
 /// Brute-force cross-check of [`crate::lattice::LatticeTiling`]'s
@@ -3277,8 +3463,7 @@ mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
         archimedean, basketweave, cairo, girih, girih_sc, hexagon, herringbone,
-        khatam_girih, laves,
-        square, triangle,
+        khatam_girih, laves, running_bond, square, triangle,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
     use tess_core::params::ParamSet;
@@ -3384,6 +3569,7 @@ mod lattice_culling_tests {
             ("floret-pentagonal", laves::floret_pentagonal()),
             ("basketweave", basketweave::basketweave()),
             ("herringbone", herringbone::herringbone()),
+            ("running-bond", running_bond::running_bond()),
         ];
         for (name, lt) in &lattices {
             let specs = lt.params();

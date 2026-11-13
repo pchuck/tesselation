@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (43 tilings)
+## Implemented (44 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -73,6 +73,7 @@ figures at the split midpoints, `2.4.4`).
 |---|---|---|---|
 | `basketweave` | 2:1 dominoes in 2×2 alternating blocks | p4g | 45°-rotated square lattice ⟨(2,2),(2,−2)⟩, 4 split dominoes per cell; 4-folds at the even-even points, mirrors at the odd axes only (offset from the 4-fold centers — p4g, not p4m), six glide families; exact coset group probe (M39) |
 | `herringbone` | 2:1 dominoes in chiral L-pairs | pgg | oblique lattice ⟨(1,3),(2,2)⟩, 2 split dominoes per cell; single-direction (chiral): 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal + anti-diagonal axes), no mirrors; exact coset group probe (M40) |
+| `running-bond` | 2:1 dominoes in stretcher rows, half-brick offset | cmm | rectangular lattice ⟨(2,0),(0,2)⟩, 2 split dominoes per cell; mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions; exact coset group probe (M41) |
 
 ### Aperiodic / nonperiodic
 
@@ -761,13 +762,13 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
   uniform vertex figures (e.g. 3³.4² + 3².4.3.4); data tables on
   bigger cells; moderate work each, visually rich. Their duals give
   the "mixed floret/cairo/prismatic" patterns.
-- 🔭 **Running bond** (stretcher rows, half-brick offset) — the
-  plain paver sibling of the paver trio; trivial table on the
-  rectangular lattice. (Group to verify: cmm.) *Basketweave done
+- ✅ **Paver trio complete (M39–M41).** *Basketweave done
   (M39): p4g, not the naive p4m guess — mirrors sit at the odd axes,
   offset from every 4-fold center. Herringbone done (M40): pgg as
   expected for the generic 2:1 case — chiral, 16 2-folds per 4×4
-  period, two perpendicular glide families.*
+period, two perpendicular glide families. Running bond done
+  (M41): cmm as expected — mirrors at the integer x-axes and
+  half-integer y-axes, centered 2-folds, glides in both directions.*
 
 ### Aperiodic substitution (each needs rule derivation first)
 
@@ -1039,4 +1040,21 @@ lives in `PROPOSED.md`; the entries below are the short-form queue.
   `y = −x + c` (reps `(1−y,−x)`, `(−1−y,−x−2)`) — with the off-family
   glides `(1−y,1−x)`, `(−x,y+1)`, `(x+1,−y)` absent. Standard trio +
   brute-force culling cross-check + in-module exact group probe.
-  TUI SVG export sanity-checked (43 tilings, 271 tests).
+TUI SVG export sanity-checked (43 tilings, 271 tests).
+- 2026-11-13 — M41 Running bond paver bond (2:1 dominoes) ✅: the
+  stretcher (running) bond as a `LatticeTiling` data table
+  (`running_bond.rs`, feature `pavers`) — rows of 2:1 dominoes offset
+  by half a brick, rectangular lattice ⟨(2,0),(0,2)⟩, 2 split
+  dominoes per cell (long sides split into two unit edges, 180°
+  vertex figures at the split midpoints, `2.4.4`). Verified exactly
+  before porting (Python spike over a bounded patch: area sum = |det|,
+  edge parity, vertex figures, exact-once coverage, rigorous coset
+  symmetry check); group **cmm** as expected: mirrors at every
+  integer `x = k` axis and at the half-integer `y = l + 1/2` axes,
+  2-folds at `(k, l+1/2)` (on the mirrors) and `(k+1/2, l)` (between
+  the rows), two glide families per direction (reps `(x+1,−y)`,
+  `(x+1,4−y)`, `(1−x,y+1)`, `(3−x,y+1)`), no diagonal mirrors, no
+  4-folds, off-axis glides `(x+1,1−y)`, `(−x,y+1)` absent. Standard
+  trio + brute-force culling cross-check + in-module exact group
+  probe. TUI SVG export sanity-checked. Paver trio complete
+  (44 tilings, 275 tests).
