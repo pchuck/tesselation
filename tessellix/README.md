@@ -43,6 +43,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--scale` | 1.0 | uniform scale (1.0 → ~20 world units tall) |
 | `--rotation` | 0 | rotation in degrees |
 | `--mode` | pattern | `single` \| `pattern` \| `proto` |
+| `--strapwork DEG` | off | overlay the Hankin PIC strapwork walls at contact angle DEG (measured from each tile edge) on any tiling — layer mode of the polygons-in-contact engine (`tess-core::strapwork`) |
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **TUI keys:** `↑`/`↓` select tiling (wraps, respects the search filter) ·
@@ -399,7 +400,7 @@ and the search filter. The TUI and GUI are thin layers over it.
 
 ## Tests
 
-`cargo test --workspace` (currently 338 tests, all green, zero
+`cargo test --workspace` (currently 346 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

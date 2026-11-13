@@ -484,7 +484,7 @@ confirm the diffraction claim during the spike before declaring.
   93; the arc completes the census later. Needs a small design doc
   (edge-orbit data model, parameter bounds per type) before code.
 
-### 14. Hankin polygons-in-contact strapwork engine ✅ (M53 fourfold + M54 sixfold + M56 twelvefold tilings; M57 layer mode in progress)
+### 14. Hankin polygons-in-contact strapwork engine ✅ (M53 fourfold + M54 sixfold + M56 twelvefold tilings + M57 layer mode)
 
 - **Sprint allocation (2026-11-13):** second deliverable of the girih
   extension arc (M53, delegated to the strong track, feature
@@ -586,6 +586,30 @@ confirm the diffraction claim during the spike before declaring.
   3.12.12 is dodecagons and triangles only — so unlike M53 there is no
   square-fill family here; the vertex pentagons and medial triangles carry
   that role.
+- **Done (M57):** the general **layer mode** — `tess-core`
+  `strapwork.rs` (no feature gate: rendering/generator infrastructure),
+  `walls(tiles: &[Tile], delta_deg: f64) -> Vec<Wall>`, a pure f64
+  function of (tiles, δ) for an *arbitrary* host tiling: at each edge
+  midpoint two rays enter each adjacent tile at contact angle δ
+  symmetric about the inward normal, the adjacent tile fires the
+  point-reflected pair so walls are continuous across edges, straight
+  through at M; inside a tile a ray runs to its boundary exit and is
+  split at every crossing with the tile's other rays (crossings
+  subdivide rather than terminate — first-crossing termination would
+  drop the rosette-core edges the registered partitions contain, and
+  the PIC modules are ground truth), collinear strand ends and
+  near-parallel rays guarded, output endpoint-deduped on a 1e-6 grid
+  and sorted, deterministic. The **three tiling-mode cross-checks**
+  tie it to the proven tables: registry substrate → engine walls ≡
+  registered internal edges, zero missing / zero extra, worst endpoint
+  2e-15 (bar 1e-9), equal length sums, window-invariant —
+  4.8.8@45° ↔ `pic-4-8-8` (640 segments), 3.6.3.6@60° ↔
+  `pic-3-6-3-6` (668), 3.12.12@60° ↔ `pic-3-12-12` (1030).
+  **Rendering:** SVG only — `export --strapwork <δ>` strokes the wall
+  network in the border color (width 3× the tile border, ∝ view,
+  round caps); flag absent = byte-identical export. No new registry
+  tiling (built-in count stays 53). **Remaining follow-up:** the
+  TUI/GUI live overlay (wall stroke in `App`-level rendering).
 
 - **Motif:** the generative alternative to measured panels (M35):
   Hankin's polygons-in-contact method — given a substrate tiling and a

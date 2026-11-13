@@ -6,6 +6,8 @@
 //!   tess-tui export --tiling ID    write an SVG of the tiling
 //!     --width N --height N --out FILE --scale F --rotation DEG --mode MODE
 //!     [--param ID=VALUE ...]       set a tiling parameter (see `list`)
+//!     [--strapwork DEG]            overlay the Hankin PIC strapwork walls
+//!                                  at contact angle DEG on the tiling
 
 mod app_ui;
 mod raster;
@@ -49,6 +51,7 @@ struct ExportArgs {
     rotation: f64,
     mode: ColorMode,
     params: Vec<(String, String)>,
+    strapwork: Option<f64>,
 }
 
 /// Parse a float CLI value, rejecting NaN and infinities: they would
@@ -71,6 +74,7 @@ fn export(args: &[String]) -> Result<(), String> {
         rotation: 0.0,
         mode: ColorMode::Pattern,
         params: Vec::new(),
+        strapwork: None,
     };
     let mut i = 0;
     let next = |i: &mut usize| -> Result<String, String> {
@@ -105,6 +109,7 @@ fn export(args: &[String]) -> Result<(), String> {
             "--mode" => {
                 a.mode = ColorMode::parse(&next(&mut i)?).ok_or_else(|| "bad --mode".to_string())?
             }
+            "--strapwork" => a.strapwork = Some(finite(&next(&mut i)?, "--strapwork")?),
             "--param" => {
                 let v = next(&mut i)?;
                 let (id, value) = v
@@ -183,7 +188,14 @@ fn export(args: &[String]) -> Result<(), String> {
         return Err(msg.into());
     }
 
-    let svg = tess_core::svg::render_svg(&result.tiles, &region, a.mode);
+    // Hankin PIC strapwork overlay (M57 layer mode): walls at the given
+    // contact angle over whatever tiles were generated. Absent flag = no
+    // overlay, and the SVG is byte-identical to the pre-M57 export.
+    let walls = match a.strapwork {
+        Some(delta) => tess_core::strapwork::walls(&result.tiles, delta),
+        None => Vec::new(),
+    };
+    let svg = tess_core::svg::render_svg_with_walls(&result.tiles, &region, a.mode, &walls);
     std::fs::write(&a.out, svg).map_err(|e| format!("failed to write {}: {e}", a.out))?;
     println!("wrote {} ({} tiles)", a.out, result.tiles.len());
     Ok(())

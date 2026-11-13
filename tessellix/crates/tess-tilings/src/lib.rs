@@ -5998,3 +5998,152 @@ mod pic_3_12_12_tests {
         assert_eq!(t.category, TilingCategory::Wallpaper);
     }
 }
+
+/// M57 layer-mode verification anchors: the generic strapwork engine in
+/// `tess_core::strapwork` laid on each canonical registry substrate at
+/// the canonical contact angle must reproduce the registered PIC
+/// partition's internal edges **exactly** (1e-9 on endpoints, 1e-6 key
+/// grid) — layer mode and tiling mode pinned to each other (PROPOSED #14).
+#[cfg(all(test, feature = "hankin_ext", feature = "archimedean"))]
+mod strapwork_layer_mode {
+    use std::collections::BTreeMap;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::ParamSet;
+    use tess_core::strapwork::{walls, Wall};
+    use tess_core::tiling::{Query, Tiling};
+
+    type SegKey = ((i64, i64), (i64, i64));
+
+    fn key_pt(p: Vec2) -> (i64, i64) {
+        ((p.x * 1e6).round() as i64, (p.y * 1e6).round() as i64)
+    }
+
+    /// Endpoint-canonical (order- and direction-independent) key.
+    fn key_seg(a: Vec2, b: Vec2) -> SegKey {
+        let (ka, kb) = (key_pt(a), key_pt(b));
+        if ka <= kb {
+            (ka, kb)
+        } else {
+            (kb, ka)
+        }
+    }
+
+    fn inside(p: Vec2, r: f64) -> bool {
+        p.x.abs() <= r && p.y.abs() <= r
+    }
+
+    /// Engine walls over the tiles of `substrate` intersecting `region`,
+    /// kept inside the radius-`r` box (where coverage is complete).
+    fn engine_set(substrate: &dyn Tiling, delta_deg: f64, region: BBox, r: f64) -> BTreeMap<SegKey, Wall> {
+        let params = ParamSet::default_for(substrate.params());
+        let res = substrate.generate(&params, &Query { region });
+        walls(&res.tiles, delta_deg)
+            .into_iter()
+            .filter(|w| inside(w.a, r) && inside(w.b, r))
+            .map(|w| (key_seg(w.a, w.b), w))
+            .collect()
+    }
+
+    /// Internal edges of the registered PIC partition: edges shared by
+    /// exactly 2 generated faces, kept inside the radius-`r` box.
+    fn pic_set(pic: &dyn Tiling, region: BBox, r: f64) -> BTreeMap<SegKey, [Vec2; 2]> {
+        let params = ParamSet::default_for(pic.params());
+        let res = pic.generate(&params, &Query { region });
+        let mut count: BTreeMap<SegKey, u32> = BTreeMap::new();
+        let mut raw: BTreeMap<SegKey, [Vec2; 2]> = BTreeMap::new();
+        for tile in &res.tiles {
+            let q = &tile.poly.pts;
+            for i in 0..q.len() {
+                let (a, b) = (q[i], q[(i + 1) % q.len()]);
+                let k = key_seg(a, b);
+                *count.entry(k).or_default() += 1;
+                raw.entry(k).or_insert([a, b]);
+            }
+        }
+        raw.into_iter()
+            .filter(|(k, seg)| count[k] == 2 && inside(seg[0], r) && inside(seg[1], r))
+            .collect()
+    }
+
+    fn dist(a: Vec2, b: Vec2) -> f64 {
+        (a - b).length()
+    }
+
+    /// The anchor: engine walls ≡ PIC internal edges — same key sets,
+    /// endpoints to 1e-9 (best pairing), equal length sums; and stable
+    /// against window growth (no boundary artifacts on either side).
+    fn check_anchor(substrate_id: &str, pic_id: &str, delta_deg: f64, region: BBox, r: f64) {
+        let registry = crate::registry();
+        let substrate = registry.get(substrate_id).expect(substrate_id);
+        let pic = registry.get(pic_id).expect(pic_id);
+        let grown = BBox::new(
+            Vec2::new(region.min.x - 3.0, region.min.y - 3.0),
+            Vec2::new(region.max.x + 3.0, region.max.y + 3.0),
+        );
+
+        let eng = engine_set(substrate, delta_deg, region, r);
+        let pic_edges = pic_set(pic, region, r);
+        assert!(!eng.is_empty() && !pic_edges.is_empty(), "{pic_id}: empty anchor sets");
+
+        let missing: Vec<_> = pic_edges.keys().copied().filter(|k| !eng.contains_key(k)).collect();
+        let extra: Vec<_> = eng.keys().copied().filter(|k| !pic_edges.contains_key(k)).collect();
+        assert!(
+            missing.is_empty() && extra.is_empty(),
+            "{substrate_id}@{delta_deg}° vs {pic_id}: engine={} pic={} missing={missing:?} extra={extra:?}",
+            eng.len(),
+            pic_edges.len()
+        );
+
+        let mut worst = 0.0f64;
+        let mut len_e = 0.0f64;
+        let mut len_p = 0.0f64;
+        for (k, w) in &eng {
+            let seg = &pic_edges[k];
+            let pair = dist(w.a, seg[0])
+                .max(dist(w.b, seg[1]))
+                .min(dist(w.a, seg[1]).max(dist(w.b, seg[0])));
+            worst = worst.max(pair);
+            len_e += w.length();
+            len_p += dist(seg[0], seg[1]);
+        }
+        assert!(worst < 1e-9, "{pic_id}: worst endpoint mismatch {worst:e}");
+        assert!((len_e - len_p).abs() < 1e-9, "{pic_id}: length sums {len_e} vs {len_p}");
+
+        // Window-size invariance (same filter radius, grown region).
+        assert_eq!(eng.keys().collect::<Vec<_>>(), engine_set(substrate, delta_deg, grown, r).keys().collect::<Vec<_>>(), "{substrate_id}: engine set shifted with the window");
+        assert_eq!(pic_edges.keys().collect::<Vec<_>>(), pic_set(pic, grown, r).keys().collect::<Vec<_>>(), "{pic_id}: internal-edge set shifted with the window");
+    }
+
+    #[test]
+    fn layer_walls_4_8_8_match_pic_partition() {
+        check_anchor(
+            "truncated-square",
+            "pic-4-8-8",
+            45.0,
+            BBox::new(Vec2::new(-8.0, -8.0), Vec2::new(8.0, 8.0)),
+            6.0,
+        );
+    }
+
+    #[test]
+    fn layer_walls_3_6_3_6_match_pic_partition() {
+        check_anchor(
+            "trihexagonal",
+            "pic-3-6-3-6",
+            60.0,
+            BBox::new(Vec2::new(-8.0, -8.0), Vec2::new(8.0, 8.0)),
+            5.0,
+        );
+    }
+
+    #[test]
+    fn layer_walls_3_12_12_match_pic_partition() {
+        check_anchor(
+            "truncated-hexagonal",
+            "pic-3-12-12",
+            60.0,
+            BBox::new(Vec2::new(-10.0, -10.0), Vec2::new(10.0, 10.0)),
+            6.0,
+        );
+    }
+}

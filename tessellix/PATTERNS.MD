@@ -1371,3 +1371,40 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   (dodecagons and triangles only), so M53's square fills have no counterpart;
   the vertex pentagons and the medial triangles take that role.
   (53 tilings, 338 tests).
+- 2026-11-13 — M57 PIC layer-mode strapwork engine ✅: the general
+  polygons-in-contact engine behind M53/M54/M56, decoupled from any one
+  substrate — `tess_core::strapwork::walls(tiles, δ)` (tess-core, no
+  feature gate; layer mode is infrastructure) lays the wall network over
+  an **arbitrary** host tiling as a pure f64 function: at every edge
+  midpoint two rays enter each adjacent tile at contact angle δ to the
+  edge, symmetric about the inward normal; the adjacent tile fires the
+  point-reflected pair at the shared midpoint, so walls are continuous
+  across edges, straight through at M. Inside a tile each ray runs to
+  the boundary exit and is **split at every crossing** with the tile's
+  other rays — first-crossing termination would drop the rosette-core
+  edges (the chord segments strictly between two crossings of
+  `pic-4-8-8`'s {8/2} and `pic-3-6-3-6`/`pic-3-12-12`'s {6/2}, {12/4}
+  stars), and per PROPOSED #14 the registered PIC modules are ground
+  truth. Guards: degenerate tiles (< 3 vertices or area) and zero-length
+  edges emit nothing; near-parallel rays (|d₁×d₂| < 1e-9 on unit dirs)
+  give no crossing — this covers the collinear strand ends, whose
+  duplicate pieces dedupe on the 1e-6 endpoint grid; events within
+  1e-8·scale merge, sub-eps pieces drop. Output is ordered + deduped
+  through a BTreeMap: deterministic, no RNG. **Verification anchors:**
+  three cross-check tests (`strapwork_layer_mode` in tess-tilings) run
+  the engine on the registry substrates and compare the segment set
+  against the registered PIC tiling's internal edges (edges shared by
+  exactly 2 faces, endpoint-canonical 1e-6 keys): 4.8.8@45° ↔ `pic-4-8-8`
+  640 walls, 3.6.3.6@60° ↔ `pic-3-6-3-6` 668, 3.12.12@60° ↔
+  `pic-3-12-12` 1030 — zero missing, zero extra, worst endpoint 2e-15
+  (≤ 1e-9 bar), length sums equal to 1e-12, both sets invariant under
+  window growth. **Rendering:** SVG only this round —
+  `export --strapwork <δ>` strokes the walls in the border color at 3×
+  the tile-border width (∝ view, round caps); the flag's absence keeps
+  the export byte-identical (verified by string diff), overlay `<line>`
+  counts 716/1224/1488 on the three substrates vs 0 without. Five
+  tess-core engine tests (median-chord census, midpoint crossing,
+  no-exit/no-dangle termination, determinism, degenerate skip) + the
+  three anchors. **Deferred follow-up:** the TUI/GUI live overlay
+  (`App`-level wall stroke) — layer mode is CLI/SVG for now.
+  (53 tilings, 346 tests).

@@ -6,6 +6,7 @@
 //! * [`symmetry`] — wallpaper groups and symmetry metadata
 //! * [`category`] — canonical display categories (declared per tiling)
 //! * [`registry`] — the tiling registry
+//! * [`strapwork`] — Hankin PIC strapwork layer engine (wall overlay)
 //! * [`view`] — viewport (pan/zoom) and color modes
 //! * [`paint`] — shared color palette
 //! * [`app`] — shared application state for the TUI and GUI
@@ -17,6 +18,7 @@ pub mod geometry;
 pub mod paint;
 pub mod params;
 pub mod registry;
+pub mod strapwork;
 pub mod symmetry;
 pub mod svg;
 pub mod tiling;
