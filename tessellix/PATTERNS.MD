@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (48 tilings)
+## Implemented (49 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -59,6 +59,7 @@ every dual is the face-centroid dual of an exact primal table.
 | `hexagram` | hexagram and hexagon ({6/2}) | p6m | one-parameter star tip radius: gapped → kissing hexagram-and-hexagon tiling; stars on the hexagonal lattice, interstice split into two hexagons at the kissing radius |
 | `girih-shesh-band` | girih strapwork band | p2 | single shesh-band hexagon, oblique lattice |
 | `girih-star-cross` | 10-pointed girih star-and-cross strapwork | pmm | measured classical panel; 545-tile cell data table on the (77,45)/(0,90) oblique lattice (M35) |
+| `girih-w85` | 12-pointed girih star interlace | p6 | Wichmann data18/W85 (Alhambra Mexuar): exact Q(√3) strap-line grid (L = 283.92, strap 9, all vertices (p+q√3)/50), 42 tiles per hexagonal cell; motif is *632 but the drawn over/under interlace is chiral → p6 (M52) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `pythagorean` | two squares (Pythagorean) | p4 | one-parameter ratio r = b/a; each cell is the square on the hypotenuse dissected into the leg squares; T-junctions inherent; the plain p4m square grid at r = 1 |
 | `windmill` | 1–2–√5 triangles around squares ("windmill") | p4 | periodic pinwheel arrangement; homochiral (no mirrors/glides); non-edge-to-edge T-junctions; naming waiver 2026-11-12 (M43) |
@@ -1169,3 +1170,23 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   exactly-once coverage, edge parity, 360° vertex figures, pgg/p2
   glide probe); standard trio + unit structure + chirality + C2
   invariance tests, culling cross-check (48 tilings, 297 tests).
+- 2026-11-13 — M52 12-pointed girih star interlace panel (W85), p6 ✅:
+  the Wichmann data18/W85 panel (Alhambra, Mexuar patio; SPA 1914 / Wade,
+  Lee's Kharraqan 1067–8, Bonner's Uljaytu, Topkapı scroll) as an
+  **exact-Q(√3)** line-grid data table (`girih_w85.rs`, feature
+  `girih_ext`) — hexagonal lattice a1 = (283.92, 0), a2 = rot60(a1),
+  strap width 9; six band families at 30°·k with a regular-vertex
+  12-pointed star at every lattice point; 42 tiles per cell (star 1,
+  kite 12, pentagon 6, triangle 2, rectangle 3, sheared quad 6, reflex
+  ink hexagon 12), all vertices on the (p + q√3)/50 grid. Wichmann
+  classifies the motif as *632 (p6m), but the drawn over/under interlace
+  is **chiral**: the exact Q(√3) symmetry probe confirms rot60 at the
+  stars + rot180 at the three lattice-edge midpoints + rot120 at
+  (a1+a2)/3 and hold while all six mirror axes and both 30° rotations
+  fail — so the drawn face-to-face tiling is **p6** (the only proper
+  overgroup of p6 is p6m, ruled out). Verified exactly in the Python
+  spike before porting (Fraction-Q(√3) cell areas sum to |det| = 0 error,
+  150×150 exactly-once coverage, 1775/1775 side-by-side edge test; ground
+  faces alone are p6m 167/167 but ink pieces never mirror-match 0/177);
+  standard trio + unit structure + p6 symmetry tests + culling list
+  green (49 tilings, 314 tests).

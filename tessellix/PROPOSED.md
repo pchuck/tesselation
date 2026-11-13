@@ -553,12 +553,20 @@ confirm the diffraction claim during the spike before declaring.
   straightforward but new; do after #6/#8 establish the 12-fold
   machinery.
 
-### 19. Second measured ornamental panel
+### 19. Second measured ornamental panel ✅ (M52)
 
 - **Sprint allocation (2026-11-13):** first deliverable of the girih
   extension arc (M52, delegated to the strong track, feature
   `girih_ext`) — prefer the p6m 12-point panel; the Hankin PIC engine
   (#14) is the follow-up arc after one concrete pattern lands.
+- **Done (M52):** `girih-w85` (`girih_w85.rs`) ships the Wichmann
+  data18/W85 panel (Alhambra, Mexuar patio) — not measured pixel-wise
+  but cracked to an **exact line-grid construction over Q(√3)** (lattice
+  L = 283.92, strap 9, all vertices on the (p + q√3)/50 grid), 42 tiles
+  per hexagonal cell. Wichmann's *632 is the un-interlaced motif; the
+  drawn over/under interlace is chiral, so the verified group is **p6**
+  (exact Q(√3) cell-set probe: rot60 at the stars, rot180 at the three
+  lattice-edge midpoints, rot120 at (a1+a2)/3, no mirrors, no rot30).
 
 - **Motif:** reuse the M35 measurement pipeline on a second classical
   panel. Candidates from Wichmann's tiling search database

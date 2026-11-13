@@ -71,7 +71,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 ## Supported tilings
 
-48 built-in tilings, all discoverable in both UIs via the registry
+49 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
 **Wallpaper** (13), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
@@ -107,6 +107,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `floret-pentagonal` | Floret pentagonal (V3.3.3.3.6) | Laves (Catalan dual of the snub trihexagonal), chiral | p6 | hexagonal |
 | `girih-shesh-band` | Girih shesh-band (6.6.6) | periodic girih strapwork band | p2 | oblique |
 | `girih-star-cross` | Girih star-and-cross, 10-fold | measured classical strapwork panel: 10-pointed stars, bobbins, chord straps; 545-tile cell data table | pmm | oblique |
+| `girih-w85` | Girih 12-pointed star interlace (W85) | Wichmann panel data18/W85 (Alhambra, Mexuar patio): exact Q(√3) strap grid L = 283.92, strap 9; 42 tiles per hexagonal cell; drawn interlace chiral | p6 | hexagonal |
 | `khatam-girih` | Khatam girih decomposition (8-point) | classical kissing {8/3} star-and-cross cut into 8 rhombi + square + 4 pentagons per cell (exact Q(√2) kitab) | p4m | square |
 | `basketweave` | Basketweave (2:1 dominoes) | paver bond: 2×2 blocks of two parallel 2:1 dominoes, checkerboard orientation; long sides split into unit edges | p4g | square |
 | `herringbone` | Herringbone (2:1 dominoes) | paver bond: chiral L-pairs of 2:1 dominoes, single-direction; long sides split into unit edges | pgg | oblique |

@@ -22,6 +22,8 @@ pub mod cairo;
 pub mod chair;
 #[cfg(feature = "girih")]
 pub mod girih;
+#[cfg(feature = "girih_ext")]
+pub mod girih_w85;
 #[cfg(feature = "girih_qc")]
 pub mod girih_qc;
 #[cfg(feature = "girih_sc")]
@@ -192,6 +194,10 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "girih_sc")]
     {
         r = r.register(girih_sc::girih_star_cross());
+    }
+    #[cfg(feature = "girih_ext")]
+    {
+        r = r.register(girih_w85::girih_w85());
     }
     #[cfg(feature = "khatam_girih")]
     {
@@ -389,7 +395,7 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-("Wallpaper", 13),
+("Wallpaper", 14),
             ("Quasiperiodic", 7),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
@@ -4032,6 +4038,7 @@ mod kuniform_tests {
     feature = "cairo",
     feature = "girih",
     feature = "girih_sc",
+    feature = "girih_ext",
     feature = "khatam_girih",
 feature = "kuniform",
     feature = "laves",
@@ -4042,7 +4049,7 @@ feature = "kuniform",
 mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
-        archimedean, basketweave, cairo, girih, girih_sc, hexagon, herringbone,
+        archimedean, basketweave, cairo, girih, girih_sc, girih_w85, hexagon, herringbone,
         khatam_girih, kuniform, laves, pentagon13, running_bond, square, triangle, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
@@ -4139,6 +4146,7 @@ mod lattice_culling_tests {
             ("cairo-collinear", cairo::cairo_collinear()),
             ("girih", girih::girih_shesh_band()),
             ("girih-sc", girih_sc::girih_star_cross()),
+            ("girih-w85", girih_w85::girih_w85()),
             ("khatam-girih", khatam_girih::khatam_girih()),
             ("kuniform-p6m", kuniform::kuniform_p6m()),
             ("kuniform-pmm", kuniform::kuniform_pmm()),
@@ -4404,5 +4412,241 @@ mod pentagon13_tests {
         assert_eq!(t.lattice_kind, LatticeKind::Rectangular);
         assert_eq!(t.category, TilingCategory::Wallpaper);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the L0 cell (seed 0)");
+    }
+}
+
+#[cfg(all(test, feature = "girih_ext"))]
+mod girih_w85_tests {
+    use super::girih_w85::{girih_w85, s3, L, STRAP_W};
+    use super::lattice::LatticeTiling;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn girih_w85_covers_region() {
+        check_covers(
+            &girih_w85(),
+            "girih-w85",
+            BBox::new(v2(-120.0, -90.0), v2(560.0, 420.0)),
+        );
+    }
+
+    #[test]
+    fn girih_w85_rotated_scaled() {
+        check_rotated(
+            &girih_w85(),
+            "girih-w85(rot30,scale0.7)",
+            BBox::new(v2(-150.0, -120.0), v2(520.0, 400.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn girih_w85_deterministic() {
+        check_det(
+            &girih_w85(),
+            "girih-w85",
+            BBox::new(v2(-100.0, -100.0), v2(600.0, 400.0)),
+        );
+    }
+
+    /// Vertex-figure census of the shipped cell: 42 tiles on the hexagonal
+    /// lattice with Σ areas = |det| exactly (Q(√3) identity verified in the
+    /// spike), the exact star identities, and every interior angle a
+    /// multiple of 30°.
+    #[test]
+    fn girih_w85_unit_structure() {
+        let t = girih_w85();
+        assert_eq!(t.cells.len(), 42, "42 tiles per primitive cell");
+        let mut counts = [0usize; 7];
+        for c in &t.cells {
+            counts[c.seed as usize] += 1;
+        }
+        assert_eq!(
+            counts, [1, 12, 6, 2, 3, 6, 12],
+            "seed census: star 1, kite 12, pentagon 6, triangle 2, rectangle 3, quad 6, ink hexagon 12"
+        );
+        // Hexagonal lattice: |a2| = L, 60° between, det = L²√3/2.
+        assert_eq!(t.lattice[0], Vec2::new(L, 0.0), "a1 = (L, 0)");
+        let det = t.lattice[0].cross(t.lattice[1]);
+        assert!((det - L * L * s3() / 2.0).abs() < 1e-9, "det = L²√3/2");
+        assert!((t.lattice[1].length() - L).abs() < 1e-9, "|a2| = L");
+        // Exact area identity: Σ cells == |det| (verified at 0 error in
+        // Fraction-Q(√3) arithmetic in the Python spike).
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!(
+            (sum - det).abs() < 1e-7,
+            "cell areas {sum} must sum to |det| = {det}"
+        );
+        // Star identities at the origin-centred 24-gon.
+        let d = L / 4.0 - STRAP_W / 2.0; // 66.48
+        let star = &t.cells[0];
+        assert_eq!(star.seed, 0);
+        let n = star.poly.len();
+        assert_eq!(n, 24, "the 12-pointed star is a 24-gon");
+        let edge = d * (1.0 - 1.0 / s3());
+        for i in 0..n {
+            let p = star.poly.pts[i];
+            let q = star.poly.pts[(i + 1) % n];
+            let r = (q - p).length();
+            assert!((r - edge).abs() < 1e-9, "star edge {r} ≠ d(1−1/√3) = {edge}");
+            let want = if i % 2 == 0 { d * 2.0f64.sqrt() } else { 2.0 * d / s3() };
+            assert!(
+                (p.length() - want).abs() < 1e-9,
+                "vertex {i} radius {} ≠ {want}",
+                p.length()
+            );
+        }
+        // Every interior angle of every cell is a multiple of 30°.
+        for c in &t.cells {
+            let k = c.poly.len();
+            for i in 0..k {
+                let p0 = c.poly.pts[(i + k - 1) % k];
+                let p1 = c.poly.pts[i];
+                let p2 = c.poly.pts[(i + 1) % k];
+                let (e1, e2) = (p1 - p0, p2 - p1);
+                let turn = e1.cross(e2).atan2(e1.dot(e2)).to_degrees();
+                let interior = 180.0 - turn; // CCW cells: reflex joints give interior > 180
+                let u = (interior / 30.0).round();
+                assert!(
+                    u > 0.0 && u < 12.0 && (interior - 30.0 * u).abs() < 1e-6,
+                    "cell angle {interior}° is not a multiple of 30°"
+                );
+            }
+        }
+    }
+
+    /// A candidate symmetry acting on world points.
+    type Isometry = Box<dyn Fn(Vec2) -> Vec2>;
+
+    /// Does the transformed image of one table cell equal a table cell
+    /// translated by an exact integer lattice combination? (Float version of
+    /// the exact-Q(√3) membership test from the spike.)
+    fn image_is_a_tile(t: &LatticeTiling, pts: &[Vec2], f: impl Fn(Vec2) -> Vec2) -> bool {
+        let det = t.lattice[0].cross(t.lattice[1]);
+        for cand in &t.cells {
+            let n = cand.poly.len();
+            if n != pts.len() {
+                continue;
+            }
+            for sh in 0..n {
+                let d = cand.poly.pts[sh] - f(pts[0]);
+                let i = d.cross(t.lattice[1]) / det;
+                let j = t.lattice[0].cross(d) / det;
+                if (i - i.round()).abs() > 1e-6 || (j - j.round()).abs() > 1e-6 {
+                    continue;
+                }
+                let off = t.lattice[0] * i.round() + t.lattice[1] * j.round();
+                if (0..n).all(|k| (f(pts[k]) + off - cand.poly.pts[(sh + k) % n]).length() < 1e-7)
+                {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    /// Wallpaper group p6, positively and negatively pinned on the exact
+    /// table: 6-fold rotations at the star centres (lattice points), 2-fold
+    /// rotations at the midpoints of all three lattice-edge classes, 3-fold
+    /// rotations at (a1+a2)/3 and 2(a1+a2)/3 — and *no* 30° rotations and
+    /// *no* mirrors (the over/under interlace is chiral; Wichmann's *632 is
+    /// the motif without the ink partition).
+    #[test]
+    fn girih_w85_symmetry_is_p6() {
+        let t = girih_w85();
+        let s = s3() / 2.0;
+        let rot = |deg: f64, c: Vec2| {
+            let (cc, ss) = match deg {
+                30.0 => (s3() / 2.0, 0.5),
+                60.0 => (0.5, s),
+                120.0 => (-0.5, s),
+                180.0 => (-1.0, 0.0),
+                _ => unreachable!(),
+            };
+            move |q: Vec2| {
+                let d = q - c;
+                v2(c.x + cc * d.x - ss * d.y, c.y + ss * d.x + cc * d.y)
+            }
+        };
+        let mirror = |deg: f64| {
+            // reflection in the line through the origin at angle `deg`:
+            // matrix [[cos 2a, sin 2a], [sin 2a, −cos 2a]]
+            let (cc, ss) = match deg {
+                0.0 => (1.0, 0.0),
+                30.0 => (0.5, s),
+                60.0 => (-0.5, s),
+                90.0 => (-1.0, 0.0),
+                _ => unreachable!(),
+            };
+            move |q: Vec2| v2(cc * q.x + ss * q.y, ss * q.x - cc * q.y)
+        };
+        let a1 = t.lattice[0];
+        let a2 = t.lattice[1];
+        // Positive generators.
+        for (deg, c, label) in [
+            (60.0, v2(0.0, 0.0), "rot60 @ star centre (0,0)"),
+            (60.0, a1, "rot60 @ star centre a1"),
+            (120.0, (a1 + a2) * (1.0 / 3.0), "rot120 @ (a1+a2)/3"),
+            (120.0, (a1 + a2) * (2.0 / 3.0), "rot120 @ 2(a1+a2)/3"),
+            (180.0, a1 * 0.5, "rot180 @ a1/2"),
+            (180.0, a2 * 0.5, "rot180 @ a2/2"),
+            (180.0, (a1 + a2) * 0.5, "rot180 @ (a1+a2)/2"),
+        ] {
+            let f = rot(deg, c);
+            for cell in &t.cells {
+                assert!(
+                    image_is_a_tile(&t, &cell.poly.pts, f),
+                    "{label} must preserve the tiling (cell seed {} fails)",
+                    cell.seed
+                );
+            }
+        }
+        // Negative candidates: 30° rotations and every mirror class fail.
+        // (If any mirror existed anywhere, composing with the 6-fold
+        // rotations would put one through a star centre in one of the
+        // tested axis classes — p6m is the only wallpaper group properly
+        // containing p6.)
+        let mid = a1 * 0.5;
+        let m30mid = {
+            let m = mirror(30.0);
+            move |q: Vec2| m(q - mid) + mid
+        };
+        let negatives: Vec<(&str, Isometry)> = vec![
+            ("rot30 @ star centre", Box::new(rot(30.0, v2(0.0, 0.0)))),
+            ("rot30 @ a1/2", Box::new(rot(30.0, mid))),
+            ("mirror 0° @ star", Box::new(mirror(0.0))),
+            ("mirror 30° @ star", Box::new(mirror(30.0))),
+            ("mirror 60° @ star", Box::new(mirror(60.0))),
+            ("mirror 90° @ star", Box::new(mirror(90.0))),
+            ("mirror 30° @ a1/2", Box::new(m30mid)),
+        ];
+        for (label, f) in &negatives {
+            let fails = t
+                .cells
+                .iter()
+                .filter(|cell| !image_is_a_tile(&t, &cell.poly.pts, f))
+                .count();
+            assert!(
+                fails > 0,
+                "{label} must NOT be a symmetry (a chiral interlace has none)"
+            );
+        }
+    }
+
+    #[test]
+    fn girih_w85_symmetry_metadata() {
+        let t = girih_w85();
+        assert_eq!(t.id, "girih-w85");
+        assert_eq!(t.group, WallpaperGroup::P6);
+        assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
+        assert_eq!(t.category, TilingCategory::Wallpaper);
     }
 }
