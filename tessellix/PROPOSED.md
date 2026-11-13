@@ -496,7 +496,11 @@ confirm the diffraction claim during the spike before declaring.
   shipped 12-point W85 panel. **Follow-up (M54 ✅, same feature
   `hankin_ext`):** PIC tiling mode on the 3.6.3.6 substrate (sixfold
   khatam family, exact Q(√3)) — second substrate proves the method
-  generalizes.
+  generalizes. **Third substrate (M56, in progress, same feature):**
+  the 3.12.12 truncated-hexagonal substrate — completes Kaplan's
+  canonical trio (4.8.8, 3.6.3.6, 3.12.12) and yields the twelvefold
+  rosette family; exact Q(√3); verify the forced-or-chosen δ and the
+  group by exact probe.
 - **Done (M53):** the design question is answered **tiling mode**: the
   strapwork region partition is itself a face-to-face periodic tiling,
   so `pic-4-8-8` (`pic_4_8_8.rs`) registers it directly (M35 precedent)
