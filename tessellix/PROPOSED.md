@@ -261,9 +261,14 @@ confirm the diffraction claim during the spike before declaring.
   determined shape (2a = 2c = d = e, b = βa = √((11√57−25)/8 · a²),
   A = 90°), exact Q(√57, β) 6-tile oblique unit, 3-isohedral,
   group p2 (2222). Type 13 (Rice) implemented (M49) — canonical
-  A = 120° instance, exact Q(√3) 8-tile unit, group p2. Remaining
-  (M51+), in the arc's priority order: **15** (fixed-shape
-  showstopper), then 7/9/11/12 (parameterized 2-iso families), then
+  A = 120° instance, exact Q(√3) 8-tile unit, group p2.
+  **Next: type 15 (MMVD 2015) = M55, in progress** — the other
+  fixed-shape showstopper; dossier row above (a = c = e, b = 2a,
+  d = (a+√2)/(√3−1), 150°/60°/135°/105°/90°), exact field expected
+  Q(√2, √3) — **verify the exact d form and the group (pgg vs p2)
+  by exact probe**; 12-tile primitive cell, 3-isohedral.
+  Remaining after 15 (M56+), in the arc's priority order:
+  then 7/9/11/12 (parameterized 2-iso families), then
   2/3/5/10, then 1 (p2 topology). Existing tilings likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
   verify the assignments at design time; implement only uncovered

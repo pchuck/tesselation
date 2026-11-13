@@ -7,7 +7,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [features]
-default = ["square", "hexagon", "triangle", "archimedean", "pythagorean", "penrose", "penrose_p1", "penrose_p2", "penrose_pentagon", "hirschhorn", "zellige", "cairo", "girih", "girih_qc", "girih_sc", "girih_ext", "hankin_ext", "khatam_girih", "laves", "ammann_beenker", "chair", "sphinx", "hat", "turtle", "spectre", "pavers", "hexagram", "windmill", "kuniform", "reptiles", "pentagon13", "pentagon14", "stampfli"]
+default = ["square", "hexagon", "triangle", "archimedean", "pythagorean", "penrose", "penrose_p1", "penrose_p2", "penrose_pentagon", "hirschhorn", "zellige", "cairo", "girih", "girih_qc", "girih_sc", "girih_ext", "hankin_ext", "khatam_girih", "laves", "ammann_beenker", "chair", "sphinx", "hat", "turtle", "spectre", "pavers", "hexagram", "windmill", "kuniform", "reptiles", "pentagon13", "pentagon14", "pentagon15", "stampfli"]
 square = []
 hexagon = []
 triangle = []
