@@ -257,15 +257,18 @@ confirm the diffraction claim during the spike before declaring.
 - **References:** Wikipedia "Pentagonal tiling" (15-type table +
   wallpaper groups); Rao 2017 completeness; Bagina 2011
   (8 edge-to-edge types); arXiv:2501.07090 (monotiles per type family).
-- **Status:** type 13 (Rice) implemented (M49) — canonical A = 120°
-  instance, exact Q(√3) 8-tile unit, group p2. Remaining (M50+),
-  in the arc's priority order: **14, 15** (fixed-shape showstoppers),
-  then 7/9/11/12 (parameterized 2-iso families), then 2/3/5/10, then 1
-  (p2 topology). Existing tilings likely cover 4 (cairo), 1
-  (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) — verify the
-  assignments at design time; implement only uncovered types. One type
-  per task, delegated; all `pentagon1..15` features pre-created
-  (types 4/8 map to cairo/hirschhorn pending verification).
+- **Status:** type 14 (Stein 1985) implemented (M50) — the completely
+  determined shape (2a = 2c = d = e, b = βa = √((11√57−25)/8 · a²),
+  A = 90°), exact Q(√57, β) 6-tile oblique unit, 3-isohedral,
+  group p2 (2222). Type 13 (Rice) implemented (M49) — canonical
+  A = 120° instance, exact Q(√3) 8-tile unit, group p2. Remaining
+  (M51+), in the arc's priority order: **15** (fixed-shape
+  showstopper), then 7/9/11/12 (parameterized 2-iso families), then
+  2/3/5/10, then 1 (p2 topology). Existing tilings likely cover 4
+  (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
+  verify the assignments at design time; implement only uncovered
+  types. One type per task, delegated; all `pentagon1..15` features
+  pre-created (types 4/8 map to cairo/hirschhorn pending verification).
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 

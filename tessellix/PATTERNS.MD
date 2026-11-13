@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (50 tilings)
+## Implemented (51 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -80,6 +80,7 @@ figures at the split midpoints, `2.4.4`).
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | p6m | hexagonal tiling with one of every three hexagons (index-3 sublattice m ≡ n mod 3 of the honeycomb centers) dissected into six-triangle fans; Wikipedia `2-uniform n10`, t = 2, e = 3 |
 | `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | pmm | hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (rectangular lattice, hexagons share full horizontal edges); Wikipedia `2-uniform n11`, t = 2, e = 3 |
 | `pentagon-13` | Rice pentagon, type 13 (A = 120°) | p2 | 2-isohedral chiral pair (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3); long side split into two collinear a-edges (M49) |
+| `pentagon-14` | Stein pentagon, type 14 (completely determined) | p2 | 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, exact Q(√57, β) with β = √((11√57−25)/8); long sides split into two collinear unit fine edges — 7/5/6-vertex cells (M50) |
 
 ### Aperiodic / nonperiodic
 
@@ -754,11 +755,12 @@ labels, which are out of chronological order.)
   counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
   306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
 - **Status:** implemented (M45).
-## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49 landed)
+## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50 landed)
 
 The PROPOSED.md #5 arc (all 15 convex pentagonal tiling types). Type 13
 (Rice) lands first: its 8-tile primitive unit is small enough for a
-plain data table.
+plain data table; type 14 (Stein) second: a 6-tile unit, but with the
+census's first exact-Q(√57) surd field.
 
 ### 15. Pentagon type 13 (Rice) ✅ (M49)
 
@@ -801,6 +803,49 @@ plain data table.
   chirality-seed test, C2-rotation invariance test, and the
   brute-force culling cross-check.
 - **Status:** committed (M49). 39 tilings, 218 tests at the commit.
+
+### 16. Pentagon type 14 (Stein) ✅ (M50)
+
+- **Motif:** Stein's type-14 convex pentagonal tiling (1985): the
+  completely determined shape (no free parameters) with side
+  constraints 2a = 2c = d = e (i.e. a = c = 1, d = e = 2) and
+  b = βa, β = √((11√57−25)/8); angles A = 90°, B ≈ 145.34°,
+  C ≈ 69.32°, D ≈ 124.66°, E ≈ 110.68° (2B + C = 360°,
+  C + E = 180°). 3-isohedral: three isohedral classes, six tiles
+  per primitive unit (Wikipedia: "each primitive unit contains six
+  tiles", group p2 / orbifold 2222).
+- **Geometry:** exact surds, a = c = 1: β = √((11√57−25)/8)
+  (side b), q = (√57−3)/8 = sin B, p = √((6√57−2)/64) =
+  sin(B − 90°); βp = (43−√57)/16 lies in Q(√57) exactly,
+  βq = √((438√57−2706)/256); tile area β(3√57−1)/16 +
+  p(√57−5)/4. Not edge-to-edge: each long side (length 2) is drawn
+  as two collinear unit fine edges, giving 7-vertex D-class cells,
+  5-vertex M-class cells and 6-vertex salmon cells.
+- **Unit cell:** 6 tiles on the oblique lattice
+  w1 = (2pq, −(13+9√57)/16), w2 = (−(β+2p), −(√57−1)/2)
+  (|det| = 6 × tile area, w1 · w2 ≠ 0). All coordinates are exact
+  surds in Q(√57, β, p, bq) — no decimal approximations shipped.
+  The table was extracted from a verified image-propagation of the
+  Wikipedia 18-tile patch (14 edge gluings, BFS growth to a 15-tile
+  exact structure) and verified before porting: 21600-point
+  exactly-once overlay (40×40 grid + 20000 random points over a
+  24×24 window with ±5×±6 lattice translations), surd identities
+  to ≤2.2e-16.
+- **Group:** p2 (orbifold 2222). The 2-fold center is
+  O = (β + p/2, q/2) — the midpoint joining the A-corners of the
+  D0/D180 pair; the half-turn maps D0 ↔ D180, M0 ↔ M180 and
+  MTHS ↔ MTHSp180 (shifted by a w2 translation), so each seed
+  class maps onto itself and the group stays p2 with the classes
+  distinguished. C2 invariance is tested on generated patches.
+- **Seeds:** 0 = D class {D0, D180}, 1 = M class {M0, M180},
+  2 = salmon class {MTHS, MTHSp180}; pattern mode assigns the three
+  classes distinct colors of the 8-color palette (seed % 8).
+- **Verify:** standard trio (coverage, rotated-scaled, deterministic) +
+  unit-structure test (per-class exact side/angle/area/determinant
+  fingerprints), isohedral-class test (per-tile vertex counts and
+  side multisets), C2-rotation invariance test, and the brute-force
+  culling cross-check.
+- **Status:** committed (M50). 51 tilings, 326 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -1215,3 +1260,17 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   A/4), rot180@(A/4,0) and the glide all fail). Standard trio + unit
   structure + p4m symmetry + symmetry-metadata tests, culling cross-check
   green (50 tilings, 320 tests).
+- 2026-11-13 — M50 Pentagon type 14 (Stein 1985) ✅: the completely
+  determined type-14 prototile (2a = 2c = d = e, b = βa, A = 90°,
+  2B + C = 360°, C + E = 180°) as an exact-surds 6-tile data table
+  (`pentagon14.rs`, feature `pentagon14`) — coordinates in
+  Q(√57, β, p, bq) with β = √((11√57−25)/8), βp = (43−√57)/16
+  exact in Q(√57); oblique lattice w1 = (2pq, −(13+9√57)/16),
+  w2 = (−(β+2p), −(√57−1)/2), |det| = 6 × tile area; long sides
+  split into two collinear unit fine edges (7/5/6-vertex cells);
+  3-isohedral classes as seeds 0/1/2; group p2 (2222), C2 center
+  O = (β + p/2, q/2). Verified exactly before porting (21600-point
+  exactly-once overlay over a ±5×±6 lattice window; surd
+  identities to ≤2.2e-16); standard trio + unit structure +
+  isohedral-class + C2 invariance tests, culling cross-check
+  (51 tilings, 326 tests).
