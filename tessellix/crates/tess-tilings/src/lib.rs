@@ -25,6 +25,8 @@ pub mod girih;
 #[cfg(feature = "girih_ext")]
 pub mod girih_w85;
 #[cfg(feature = "hankin_ext")]
+pub mod pic_3_6_3_6;
+#[cfg(feature = "hankin_ext")]
 pub mod pic_4_8_8;
 #[cfg(feature = "girih_qc")]
 pub mod girih_qc;
@@ -210,6 +212,7 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "hankin_ext")]
     {
         r = r.register(pic_4_8_8::pic_4_8_8());
+        r = r.register(pic_3_6_3_6::pic_3_6_3_6());
     }
     #[cfg(feature = "khatam_girih")]
     {
@@ -412,7 +415,7 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-            ("Wallpaper", 16),
+            ("Wallpaper", 17),
             ("Quasiperiodic", 7),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
@@ -4069,8 +4072,8 @@ mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
         archimedean, basketweave, cairo, girih, girih_sc, girih_w85, hexagon, herringbone,
-        khatam_girih, kuniform, laves, pentagon13, pentagon14, pic_4_8_8, running_bond, square,
-        triangle, windmill,
+        khatam_girih, kuniform, laves, pentagon13, pentagon14, pic_3_6_3_6, pic_4_8_8,
+        running_bond, square, triangle, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
     use tess_core::params::ParamSet;
@@ -4168,6 +4171,7 @@ mod lattice_culling_tests {
             ("girih-sc", girih_sc::girih_star_cross()),
             ("girih-w85", girih_w85::girih_w85()),
             ("pic-4-8-8", pic_4_8_8::pic_4_8_8()),
+            ("pic-3-6-3-6", pic_3_6_3_6::pic_3_6_3_6()),
             ("khatam-girih", khatam_girih::khatam_girih()),
             ("kuniform-p6m", kuniform::kuniform_p6m()),
             ("kuniform-pmm", kuniform::kuniform_pmm()),
@@ -5214,5 +5218,324 @@ mod pentagon14_tests {
             set_a, set_b,
             "180° rotation about the 2-fold centre O must preserve the tiling"
         );
+    }
+}
+
+#[cfg(all(test, feature = "hankin_ext"))]
+mod pic_3_6_3_6_tests {
+    use super::lattice::LatticeTiling;
+    use super::pic_3_6_3_6::pic_3_6_3_6;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    /// √3 — `2·(√3/2)`, the substrate's apothem constant doubled (exact in
+    /// f64); `consts::SQRT_3` is unstable at this crate's MSRV.
+    const RT3: f64 = 2.0 * 0.866_025_403_784_438_6;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    fn sub(a: Vec2, b: Vec2) -> Vec2 {
+        v2(a.x - b.x, a.y - b.y)
+    }
+
+    fn norm(a: Vec2) -> f64 {
+        (a.x * a.x + a.y * a.y).sqrt()
+    }
+
+    type Isometry = Box<dyn Fn(Vec2) -> Vec2>;
+
+    /// Rotation by 60°k about `c`, as an exact matrix in Q(√3) (no trig).
+    fn rot(c: Vec2, k: usize) -> Isometry {
+        let (co, si): (f64, f64) = match k % 6 {
+            0 => (1.0, 0.0),
+            1 => (0.5, RT3 / 2.0),
+            2 => (-0.5, RT3 / 2.0),
+            3 => (-1.0, 0.0),
+            4 => (-0.5, -RT3 / 2.0),
+            _ => (0.5, -RT3 / 2.0),
+        };
+        Box::new(move |p| {
+            let d = sub(p, c);
+            v2(c.x + co * d.x - si * d.y, c.y + si * d.x + co * d.y)
+        })
+    }
+
+    /// Reflection in the line through `c` with unit direction `(u, w)`.
+    fn refl(c: Vec2, u: f64, w: f64) -> Isometry {
+        Box::new(move |p| {
+            let d = sub(p, c);
+            let pr = 2.0 * (u * d.x + w * d.y);
+            v2(c.x + pr * u - d.x, c.y + pr * w - d.y)
+        })
+    }
+
+    /// Is `k` an exact member of the (1/4)·Z[√3] surd grid? Exhaustive over
+    /// the table's bounded range; for |q| ≤ 60 the closest q√3 gets to an
+    /// integer is 97 − 56√3 ≈ 5.1e-3 ≫ 1e-9, so the decision is exact here.
+    fn on_quarter_surd_grid(k: f64) -> bool {
+        let k4 = 4.0 * k;
+        (-60..=60).any(|q| {
+            let p = k4 - q as f64 * RT3;
+            (p - p.round()).abs() < 1e-9
+        })
+    }
+
+    /// Positive symmetry test: the image of the face `pts` under `f` must
+    /// coincide, vertex for vertex, with some orbit face plus an EXACT
+    /// lattice translation `m·(2,0) + n·(1,√3)`. Table vertices live on the
+    /// (1/4)·Z × (√3/4)·Z grid, whose lattice coordinates are multiples of
+    /// 1/8 and 1/4, so the nearest non-lattice offset is ≈ 0.25 world units
+    /// and the 1e-9 tolerance cannot blur a genuine near-miss into a hit.
+    fn image_is_a_face(t: &LatticeTiling, pts: &[Vec2], f: &dyn Fn(Vec2) -> Vec2) -> bool {
+        let img: Vec<Vec2> = pts.iter().map(|p| f(*p)).collect();
+        for cell in &t.cells {
+            let v = &cell.poly.pts;
+            if v.len() != img.len() {
+                continue;
+            }
+            for i in 0..v.len() {
+                let d = sub(img[0], v[i]);
+                // d = m·(2,0) + n·(1,√3)  ⟹  n = d.y/√3, m = (d.x − n)/2
+                let n = d.y / RT3;
+                let m = (d.x - n) / 2.0;
+                if (m - m.round()).abs() > 1e-9 || (n - n.round()).abs() > 1e-9 {
+                    continue;
+                }
+                let (mi, ni) = (m.round(), n.round());
+                let shift = v2(2.0 * mi + ni, ni * RT3);
+                // Vertex-SET match (orientation-free: mirrors reverse the
+                // winding of the CCW-normalised table).
+                let target: Vec<Vec2> = v.iter().map(|p| *p + shift).collect();
+                let mut used = vec![false; target.len()];
+                let mut ok = true;
+                for p in &img {
+                    let hit = target.iter().position(|q| norm(sub(*p, *q)) < 1e-9);
+                    match hit {
+                        Some(j) if !used[j] => used[j] = true,
+                        _ => {
+                            ok = false;
+                            break;
+                        }
+                    }
+                }
+                if ok {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn all_faces(t: &LatticeTiling) -> Vec<Vec<Vec2>> {
+        t.cells.iter().map(|c| c.poly.pts.clone()).collect()
+    }
+
+    #[test]
+    fn pic_3_6_3_6_covers_region() {
+        check_covers(
+            &pic_3_6_3_6(),
+            "pic-3-6-3-6",
+            BBox::new(v2(-24.0, -18.0), v2(24.0, 18.0)),
+        );
+    }
+
+    #[test]
+    fn pic_3_6_3_6_rotated_scaled() {
+        check_rotated(
+            &pic_3_6_3_6(),
+            "pic-3-6-3-6(rot20,scale0.6)",
+            BBox::new(v2(-24.0, -18.0), v2(24.0, 18.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn pic_3_6_3_6_deterministic() {
+        check_det(
+            &pic_3_6_3_6(),
+            "pic-3-6-3-6",
+            BBox::new(v2(-12.0, -9.0), v2(12.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn pic_3_6_3_6_unit_structure() {
+        let t = pic_3_6_3_6();
+        assert_eq!(t.cells.len(), 12);
+        let by_seed = |s: u32| t.cells.iter().filter(|c| c.seed == s).count();
+        assert_eq!(
+            (by_seed(0), by_seed(1), by_seed(2)),
+            (4, 6, 2),
+            "orbit census: 4 hexagram-core hexagons, 6 hexagram tips, 2 midsegment triangles"
+        );
+
+        // Exact Q(√3) construction: every coordinate is a (1/4)·Z[√3] surd.
+        for c in &t.cells {
+            for p in &c.poly.pts {
+                assert!(on_quarter_surd_grid(p.x), "vertex x {} off the grid", p.x);
+                assert!(on_quarter_surd_grid(p.y), "vertex y {} off the grid", p.y);
+            }
+        }
+
+        // Σ(cell areas) = |det(lattice)| — exact over Q(√3) (spike):
+        // 4·(3√3/8) + 8·(√3/16) = 3√3/2 + √3/2 = 2√3.
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        assert!((det - 2.0 * RT3).abs() < 1e-12, "det = 2√3, got {det}");
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-12, "Σ areas {sum} vs det {det}");
+
+        // Seed 0 — four regular hexagons of side 1/2 (the hexagram cores),
+        // centred on the substrate hexagon centre and on the three
+        // hexagon–hexagon contacts.
+        let mut centres: Vec<(f64, f64)> = Vec::new();
+        for c in t.cells.iter().filter(|c| c.seed == 0) {
+            let v = &c.poly.pts;
+            assert_eq!(v.len(), 6);
+            for i in 0..6 {
+                let side = norm(sub(v[(i + 1) % 6], v[i]));
+                assert!((side - 0.5).abs() < 1e-12, "hexagon side {side}");
+            }
+            assert!(
+                (c.poly.area() - 3.0 * RT3 / 8.0).abs() < 1e-12,
+                "hexagon area = 3√3/8"
+            );
+            let cen = v.iter().fold(Vec2::ZERO, |a, p| a + *p);
+            let cen = cen / 6.0;
+            centres.push((cen.x, cen.y));
+        }
+        let want = [
+            (0.0, 0.0),
+            (1.0, 0.0),
+            (0.5, RT3 / 2.0),
+            (1.5, RT3 / 2.0),
+        ];
+        for w in want {
+            assert!(
+                centres.iter().any(|c| norm(sub(v2(c.0, c.1), v2(w.0, w.1))) < 1e-12),
+                "no hexagram core centred on {:?}",
+                w
+            );
+        }
+        assert_eq!(centres.len(), 4);
+
+        // Seeds 1 and 2 — eight equilateral triangles of side 1/2 and area
+        // √3/16: the six hexagram arms and the two midsegment cuts.
+        for c in t.cells.iter().filter(|c| c.seed != 0) {
+            let v = &c.poly.pts;
+            assert_eq!(v.len(), 3);
+            for i in 0..3 {
+                let side = norm(sub(v[(i + 1) % 3], v[i]));
+                assert!((side - 0.5).abs() < 1e-12, "triangle side {side}");
+            }
+            assert!(
+                (c.poly.area() - RT3 / 16.0).abs() < 1e-12,
+                "triangle area = √3/16"
+            );
+        }
+        // The tip apexes ride the six edge midpoints of the substrate hexagon
+        // at O (circumradius 1, apothem √3/2) — the hexagram's arms.
+        let m_ids = [(0.75, RT3 / 4.0), (0.0, RT3 / 2.0), (-0.75, RT3 / 4.0),
+                     (-0.75, -RT3 / 4.0), (0.0, -RT3 / 2.0), (0.75, -RT3 / 4.0)];
+        for m in m_ids {
+            let hit = t.cells.iter().filter(|c| c.seed == 1).any(|c| {
+                c.poly
+                    .pts
+                    .iter()
+                    .any(|p| norm(sub(*p, v2(m.0, m.1))) < 1e-12)
+            });
+            assert!(hit, "no hexagram tip apex on the midpoint {:?}", m);
+        }
+
+        // Every interior angle is 60° or 120° — the sixfold engine at
+        // δ = 60° produces only those two corners (the spike's census:
+        // {60, 120} and nothing else).
+        for c in &t.cells {
+            let v = &c.poly.pts;
+            let n = v.len();
+            for i in 0..n {
+                let e1 = sub(v[(i + n - 1) % n], v[i]);
+                let e2 = sub(v[(i + 1) % n], v[i]);
+                let ang = (e1.x * e2.y - e1.y * e2.x)
+                    .abs()
+                    .atan2(e1.x * e2.x + e1.y * e2.y);
+                let k = (ang / std::f64::consts::FRAC_PI_6).round();
+                assert!(
+                    (ang - k * std::f64::consts::FRAC_PI_6).abs() < 1e-9,
+                    "angle {ang} at {:?} is not a multiple of 30°",
+                    v[i]
+                );
+                assert!(
+                    (ang - std::f64::consts::FRAC_PI_3).abs() < 1e-9
+                        || (ang - 2.0 * std::f64::consts::FRAC_PI_3).abs() < 1e-9,
+                    "angle {ang} at {:?} is neither 60° nor 120°",
+                    v[i]
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn pic_3_6_3_6_symmetry_is_p6m() {
+        let t = pic_3_6_3_6();
+        let faces = all_faces(&t);
+
+        // Positive probes: each must map every face to a face. Every centre
+        // and axis below is an exact Q(√3) point and every map an exact
+        // Q(√3) matrix (no trig).
+        let o = v2(0.0, 0.0); // hexagon centre
+        let w = v2(1.0, 0.0); // hexagon–hexagon contact
+        let tri = v2(1.0, RT3 / 3.0); // substrate triangle centre
+        let p0 = v2(0.5, 0.0); // wall midline point
+        let positives: Vec<(&str, Isometry)> = vec![
+            ("rot60 @ hexagon centre", rot(o, 1)),
+            ("rot60 @ hexagon-hexagon contact", rot(w, 1)),
+            ("rot120 @ substrate triangle centre", rot(tri, 2)),
+            ("rot180 @ midline point", rot(p0, 3)),
+            ("mirror y = 0", refl(o, 1.0, 0.0)),
+            ("mirror x = 0", refl(o, 0.0, 1.0)),
+            ("mirror y = √3", refl(v2(0.0, RT3), 1.0, 0.0)),
+            ("mirror x = 2", refl(v2(2.0, 0.0), 0.0, 1.0)),
+            ("mirror at 60° through O", refl(o, 0.5, RT3 / 2.0)),
+        ];
+        for (label, f) in &positives {
+            for (i, face) in faces.iter().enumerate() {
+                assert!(
+                    image_is_a_face(&t, face, f),
+                    "{label} must be a symmetry but fails on face {i}"
+                );
+            }
+        }
+
+        // Negative probes: the symmetry group is EXACTLY p6m — a right-angle
+        // turn on the sixfold centre, a sixfold turn on the threefold centre,
+        // a half turn off the 2-fold sites and a mirror between two mirror
+        // lines must all fail on some face.
+        let negatives: Vec<(&str, Isometry)> = vec![
+            ("rot90 @ hexagon centre", Box::new(|p| v2(-p.y, p.x))),
+            ("rot60 @ substrate triangle centre", rot(tri, 1)),
+            (
+                "rot180 @ (3/8, √3/8)",
+                Box::new(|p| v2(0.75 - p.x, RT3 / 4.0 - p.y)),
+            ),
+            ("mirror y = √3/4", refl(v2(0.0, RT3 / 4.0), 1.0, 0.0)),
+        ];
+        for (label, f) in &negatives {
+            let fails = faces.iter().filter(|face| !image_is_a_face(&t, face, f)).count();
+            assert!(fails > 0, "{label} must NOT be a symmetry");
+        }
+    }
+
+    #[test]
+    fn pic_3_6_3_6_symmetry_metadata() {
+        let t = pic_3_6_3_6();
+        assert_eq!(t.id, "pic-3-6-3-6");
+        assert_eq!(t.group, WallpaperGroup::P6m);
+        assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
+        assert_eq!(t.category, TilingCategory::Wallpaper);
     }
 }

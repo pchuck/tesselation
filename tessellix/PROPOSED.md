@@ -484,7 +484,7 @@ confirm the diffraction claim during the spike before declaring.
   93; the arc completes the census later. Needs a small design doc
   (edge-orbit data model, parameter bounds per type) before code.
 
-### 14. Hankin polygons-in-contact strapwork engine ✅ (M53: fourfold khatam on 4.8.8; M54 sixfold follow-up in progress; layer mode remains open)
+### 14. Hankin polygons-in-contact strapwork engine ✅ (M53: fourfold khatam on 4.8.8; M54 ✅: sixfold khatam on 3.6.3.6; layer mode remains open)
 
 - **Sprint allocation (2026-11-13):** second deliverable of the girih
   extension arc (M53, delegated to the strong track, feature
@@ -493,7 +493,7 @@ confirm the diffraction claim during the spike before declaring.
   strapwork partition as a registry tiling, M35 precedent), with the
   general layer mode documented as the follow-up direction. Suggested
   substrate: 4.8.8 (fourfold khatam family), distinct from the just-
-  shipped 12-point W85 panel. **Follow-up (M54, same feature
+  shipped 12-point W85 panel. **Follow-up (M54 ✅, same feature
   `hankin_ext`):** PIC tiling mode on the 3.6.3.6 substrate (sixfold
   khatam family, exact Q(√3)) — second substrate proves the method
   generalizes.
@@ -513,6 +513,23 @@ confirm the diffraction claim during the spike before declaring.
   host substrate without registering a partition, one engine × every
   substrate × acute/median/obtuse openings) stays the documented
   follow-up direction.
+- **Done (M54):** the method generalizes — `pic-3-6-3-6`
+  (`pic_3_6_3_6.rs`, same `hankin_ext` feature) lays the engine on the
+  trihexagonal 3.6.3.6 substrate as the **sixfold** khatam. Here the
+  contact angle is forced rather than chosen: the ray from the far end of
+  a unit edge meets this edge's midline at depth ½·tan(90°−δ), and the
+  next midpoint's ray closes onto exactly that depth (√3/4) only at
+  **δ = 60°**, where each chord spans two midpoint steps — at δ = 30° the
+  chords span four steps and retrace the same lines, at δ = 90° the rays
+  hit the substrate vertices. So the walls are the {6/2} hexagram in each
+  hexagon plus the three midsegments in each triangle, and the partition
+  is exactly a **half-scale 3.6.3.6**: 12 faces per `⟨(2,0),(1,√3)⟩` cell
+  (4 hexagram-core hexagons 3√3/8, 6 hexagram tips √3/16, 2 midsegment
+  triangles √3/16; Σ = 2√3 = |det| exactly over Q(√3)), every vertex on
+  the (p+q√3)/4 grid. The un-interlaced partition verifies exactly **p6m**
+  (positive rot60 at two inequivalent centres, rot120, rot180 and five
+  mirrors pass; rot90, rot60 on the threefold centre, an off-site rot180
+  and the mirror y = √3/4 all fail).
 
 - **Motif:** the generative alternative to measured panels (M35):
   Hankin's polygons-in-contact method — given a substrate tiling and a

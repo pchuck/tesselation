@@ -71,10 +71,10 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 ## Supported tilings
 
-51 built-in tilings, all discoverable in both UIs via the registry
+52 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
-**Wallpaper** (16), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
+**Wallpaper** (17), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
 Stampfli, girih Darb-i Imam), **Aperiodic** (7: einstein family, limit-periodic
 rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
 UIs group their lists by it. Categories are declared on the tiling
@@ -109,6 +109,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `girih-star-cross` | Girih star-and-cross, 10-fold | measured classical strapwork panel: 10-pointed stars, bobbins, chord straps; 545-tile cell data table | pmm | oblique |
 | `girih-w85` | Girih 12-pointed star interlace (W85) | Wichmann panel data18/W85 (Alhambra, Mexuar patio): exact Q(√3) strap grid L = 283.92, strap 9; 42 tiles per hexagonal cell; drawn interlace chiral | p6 | hexagonal |
 | `pic-4-8-8` | Hankin PIC fourfold khatam | Hankin polygons-in-contact strapwork on the 4.8.8 substrate (contact angle δ = 45°): midpoint-chord walls — {8/2} octagram in each octagon — partitioning the plane into octagon + small square + 4 house pentagons + 8 star tips per cell, exact Q(√2) | p4m | square |
+| `pic-3-6-3-6` | Hankin PIC sixfold khatam | Hankin polygons-in-contact strapwork on the trihexagonal (3.6.3.6) substrate (contact angle δ = 60°): midpoint-chord walls — {6/2} hexagram in each hexagon, midsegments in each triangle — partitioning the plane into 4 hexagram-core hexagons + 6 hexagram tips + 2 midsegment triangles per cell (a half-scale 3.6.3.6), exact Q(√3) | p6m | hexagonal |
 | `khatam-girih` | Khatam girih decomposition (8-point) | classical kissing {8/3} star-and-cross cut into 8 rhombi + square + 4 pentagons per cell (exact Q(√2) kitab) | p4m | square |
 | `basketweave` | Basketweave (2:1 dominoes) | paver bond: 2×2 blocks of two parallel 2:1 dominoes, checkerboard orientation; long sides split into unit edges | p4g | square |
 | `herringbone` | Herringbone (2:1 dominoes) | paver bond: chiral L-pairs of 2:1 dominoes, single-direction; long sides split into unit edges | pgg | oblique |
@@ -397,7 +398,7 @@ and the search filter. The TUI and GUI are thin layers over it.
 
 ## Tests
 
-`cargo test --workspace` (currently 326 tests, all green, zero
+`cargo test --workspace` (currently 332 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

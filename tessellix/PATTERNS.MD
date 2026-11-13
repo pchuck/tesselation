@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (51 tilings)
+## Implemented (52 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -61,6 +61,7 @@ every dual is the face-centroid dual of an exact primal table.
 | `girih-star-cross` | 10-pointed girih star-and-cross strapwork | pmm | measured classical panel; 545-tile cell data table on the (77,45)/(0,90) oblique lattice (M35) |
 | `girih-w85` | 12-pointed girih star interlace | p6 | Wichmann data18/W85 (Alhambra Mexuar): exact Q(√3) strap-line grid (L = 283.92, strap 9, all vertices (p+q√3)/50), 42 tiles per hexagonal cell; motif is *632 but the drawn over/under interlace is chiral → p6 (M52) |
 | `pic-4-8-8` | Hankin PIC fourfold khatam (median) | p4m | polygons-in-contact strapwork on the 4.8.8 substrate at δ = 45°: rays run edge-midpoint to edge-midpoint ({8/2} two-square octagram per octagon, midpoint chords per square), face-to-face partition into octagon + small square + 4 house pentagons + 8 star tips, 14 faces per A·Z² cell (A = 1+√2), exact Q(√2) with all vertices (p+q√2)/4; un-interlaced, mirrors and glide probe verified (M53) |
+| `pic-3-6-3-6` | Hankin PIC sixfold khatam | p6m | polygons-in-contact strapwork on the trihexagonal 3.6.3.6 substrate at δ = 60°: rays run edge-midpoint to edge-midpoint ({6/2} hexagram per hexagon, midsegments per triangle), face-to-face partition — the wall network *is* a half-scale 3.6.3.6 — into 4 hexagram-core hexagons + 6 hexagram tips + 2 midsegment triangles, 12 faces per ⟨(2,0),(1,√3)⟩ cell, Σ = 2√3 = |det| exact over Q(√3) with all vertices on the (p+q√3)/4 grid; un-interlaced, rot60/rot120/rot180 + five mirrors probe verified (M54) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `pythagorean` | two squares (Pythagorean) | p4 | one-parameter ratio r = b/a; each cell is the square on the hypotenuse dissected into the leg squares; T-junctions inherent; the plain p4m square grid at r = 1 |
 | `windmill` | 1–2–√5 triangles around squares ("windmill") | p4 | periodic pinwheel arrangement; homochiral (no mirrors/glides); non-edge-to-edge T-junctions; naming waiver 2026-11-12 (M43) |
@@ -845,7 +846,7 @@ census's first exact-Q(√57) surd field.
   fingerprints), isohedral-class test (per-tile vertex counts and
   side multisets), C2-rotation invariance test, and the brute-force
   culling cross-check.
-- **Status:** committed (M50). 51 tilings, 326 tests at the commit.
+- **Status:** committed (M50). 52 tilings, 332 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -1273,4 +1274,45 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   exactly-once overlay over a ±5×±6 lattice window; surd
   identities to ≤2.2e-16); standard trio + unit structure +
   isohedral-class + C2 invariance tests, culling cross-check
-  (51 tilings, 326 tests).
+  (52 tilings, 332 tests).
+- 2026-11-13 — M54 Hankin polygons-in-contact sixfold khatam (3.6.3.6
+  substrate), p6m ✅: the sixfold engine of the same strapwork generator
+  (`pic_3_6_3_6.rs`, feature `hankin_ext`) — Hankin polygons-in-contact at
+  contact angle **δ = 60°** on the trihexagonal 3.6.3.6 substrate, the
+  hexagonal twin of M53. δ is not a free choice here: the ray from a unit
+  edge's other end meets this edge's midline at depth ½·tan(90°−δ), and the
+  next midpoint's ray closes onto exactly that point only at depth √3/4,
+  i.e. only at δ = 60°, where the chord spans two midpoint steps. At δ = 30°
+  the chords span four steps (the same lines run backwards, the triangle
+  walls never arrive) and at δ = 90° the rays run through the substrate
+  vertices (T-junctions). So the walls are exactly the **{6/2} hexagram** —
+  `M_i → M_{i+2}` chords in each hexagon — plus the **three midsegments** in
+  each triangle, head-to-head on shared midpoints (angle census {60°, 120°}
+  and nothing else). Closure, proved exactly: that network *is* a
+  trihexagonal tiling of edge ½, so a cell of the substrate's own lattice
+  Λ = ⟨(2,0),(1,√3)⟩ (one substrate hexagon per cell) holds **12 faces in
+  three seeds** — 4 regular hexagons of side ½ (the hexagram core on the
+  hexagon centre plus three closing on the hexagon–hexagon contacts, area
+  3√3/8), 6 hexagram tip triangles riding the six midpoints M₀…M₅ (√3/16)
+  and 2 midsegment triangles in the two substrate triangles (√3/16);
+  Σ = 4·(3√3/8) + 8·(√3/16) = 3√3/2 + √3/2 = **2√3 = |det Λ| exactly over
+  Q(√3)**, and all 12 orbit centroids are distinct modulo Λ. Every vertex
+  lands on the (p+q√3)/4 grid — in fact on x ∈ Z/4, y ∈ (√3/4)·Z — so the
+  table is 12 rows of integer quadruples with no decimal anywhere. Exact
+  Fraction-Q(√3) spike before porting (VERDICT: ALL GOOD): exact segment
+  splitting at exact intersections, 169+288 interior faces with every
+  interior edge shared exactly twice, 32 300 fine-grid probes all covered
+  exactly once, corner angles only 60°/120° with all 50 core vertices
+  summing to 360°, Σ areas = 2√3 as a field identity with 0 error. A second
+  exact script re-checked the shipped table against the spike's face set
+  both ways (972 lattice faces, no duplicates, 0 missing, 0 extra). Group
+  **p6m** verified position-aware (positive: rot60 at the hexagon centre and
+  at a hexagon–hexagon contact, rot120 at a substrate triangle centre,
+  rot180 at a midline point, mirrors y=0, x=0, y=√3, x=2 and the 60° mirror
+  through O; negative: rot90@O, rot60 at the triangle centre, rot180 at
+  (3/8, √3/8) and the mirror y=√3/4 all fail). Standard trio + unit
+  structure + p6m symmetry + symmetry-metadata tests, culling cross-check
+  green; SVG export parse (text only, never rendered) confirms 2251 tiles in
+  exactly two area classes 3√3/8 and √3/16 with 6-gon ⇔ hexagon and
+  3-gon ⇔ triangle and 0 of 2816 probes off exactly-once coverage
+  (52 tilings, 332 tests).
