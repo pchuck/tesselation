@@ -484,7 +484,7 @@ confirm the diffraction claim during the spike before declaring.
   93; the arc completes the census later. Needs a small design doc
   (edge-orbit data model, parameter bounds per type) before code.
 
-### 14. Hankin polygons-in-contact strapwork engine ✅ (M53: fourfold khatam on 4.8.8; M54 ✅: sixfold khatam on 3.6.3.6; M56 ✅: twelvefold khatam on 3.12.12; layer mode remains open)
+### 14. Hankin polygons-in-contact strapwork engine ✅ (M53 fourfold + M54 sixfold + M56 twelvefold tilings; M57 layer mode in progress)
 
 - **Sprint allocation (2026-11-13):** second deliverable of the girih
   extension arc (M53, delegated to the strong track, feature
@@ -499,8 +499,26 @@ confirm the diffraction claim during the spike before declaring.
   generalizes. **Third substrate (M56 ✅, same feature):**
   the 3.12.12 truncated-hexagonal substrate — completes Kaplan's
   canonical trio (4.8.8, 3.6.3.6, 3.12.12) and yields the twelvefold
-  rosette family; exact Q(√3); verify the forced-or-chosen δ and the
-  group by exact probe.
+  rosette family; exact Q(√3); δ forced to 60°, group p6m verified.
+- **Layer-mode design (M57, coordinator decisions 2026-11-13):**
+  - Engine in **tess-core** `strapwork.rs`: `walls(tiles, δ) ->
+    Vec<(Vec2, Vec2)>` — per edge midpoint, one ray per adjacent tile
+    at contact angle δ; rays terminate at ray–ray intersections or the
+    tile boundary. Pure function of (tiles, δ) — fits the determinism
+    policy. f64 geometry (hosts are arbitrary); exactness is asserted
+    only where the host is exact.
+  - **Verification anchor:** for a regular registry substrate, layer
+    walls at the canonical δ must equal the corresponding registered
+    PIC tiling's internal edges exactly (1e-9): 4.8.8@45° ↔ `pic-4-8-8`,
+    3.6.3.6@60° ↔ `pic-3-6-3-6`, 3.12.12@60° ↔ `pic-3-12-12`. Three
+    cross-check tests in tess-tilings tie layer mode to the proven
+    tiling mode.
+  - **Rendering:** SVG only this round — `export --strapwork <δ>`
+    strokes the wall network over the tile fill (border color, width
+    ∝ view). TUI/GUI live overlay deferred (documented follow-up).
+  - **No new registry tiling:** layer mode is a rendering/generator
+    facility; the built-in count stays 53. Docs: README export
+    section + PATTERNS.MD M57 changelog + this entry's Done bullet.
 - **Done (M53):** the design question is answered **tiling mode**: the
   strapwork region partition is itself a face-to-face periodic tiling,
   so `pic-4-8-8` (`pic_4_8_8.rs`) registers it directly (M35 precedent)
