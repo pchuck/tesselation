@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (47 tilings)
+## Implemented (48 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -77,6 +77,7 @@ figures at the split midpoints, `2.4.4`).
 | `running-bond` | 2:1 dominoes in stretcher rows, half-brick offset | cmm | rectangular lattice ⟨(2,0),(0,2)⟩, 2 split dominoes per cell; mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions; exact coset group probe (M41) |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | p6m | hexagonal tiling with one of every three hexagons (index-3 sublattice m ≡ n mod 3 of the honeycomb centers) dissected into six-triangle fans; Wikipedia `2-uniform n10`, t = 2, e = 3 |
 | `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | pmm | hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (rectangular lattice, hexagons share full horizontal edges); Wikipedia `2-uniform n11`, t = 2, e = 3 |
+| `pentagon-13` | Rice pentagon, type 13 (A = 120°) | p2 | 2-isohedral chiral pair (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3); long side split into two collinear a-edges (M49) |
 
 ### Aperiodic / nonperiodic
 
@@ -750,8 +751,54 @@ labels, which are out of chronological order.)
   S′ = S+2R, R′ = 12S+3R+6T for the star at all depths (gen 1–4
   counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
   306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
-- **Status:** implemented on branch stampfli (pending integration).
-  39 tilings, 246 tests at this commit.
+- **Status:** implemented (M45).
+## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49 landed)
+
+The PROPOSED.md #5 arc (all 15 convex pentagonal tiling types). Type 13
+(Rice) lands first: its 8-tile primitive unit is small enough for a
+plain data table.
+
+### 15. Pentagon type 13 (Rice) ✅ (M49)
+
+- **Motif:** Rice's type-13 convex pentagonal tiling (d = 2a = 2e,
+  B = E = 90°, 2A + D = 360°, which forces C = A), canonical instance
+  A = 120°. 2-isohedral: the two isohedral classes are the two
+  chiralities of the scalene prototile, and each primitive unit holds
+  eight tiles (Wikipedia: "each primitive unit contains eight tiles").
+- **Geometry:** exact Q(√3), b = 1: a = e = (3√3+1)/13, c = (4−√3)/13,
+  d = (6√3+2)/13 = 2a; angles A = C = D = 120°, B = E = 90°; tile area
+  9(14+3√3)/338. Not edge-to-edge: the long side d is drawn as two
+  collinear a-edges (6-vertex figure A,B,C,M,D,E with M the d-midpoint),
+  so every joint is a full fine-edge against a full fine-edge
+  (a = e = d/2) — the "non-edge-to-edge" sense is only the pentagon-level
+  d = d/2 + d/2 split.
+- **Unit cell:** 8 tiles on the rectangular lattice T1 = (3s, 3s),
+  T2 = (s, −s) with s = (9+√3)/13 (T1 ⊥ T2, |T1| = 3|T2|,
+  |det| = 6s² = 8 × tile area). Lc is the index-3 sublattice
+  {α + β ≡ 0 (mod 3)} of the fine joint-group lattice; the joint group
+  itself (det 8A/3) is a supergroup of the tiling's translations and
+  cannot be used as the tiling lattice. All 48 tile vertices lie on the
+  (p + q√3)/26 grid. The table was extracted from an exact Q(√3)
+  forced-growth unit (joint tree: L1 = rot180(L0, mid-d); G0, G1, D0,
+  Y0 = b-b reflections; Y1 = a-e rotation; D1 = rot180(D0, mid-d)) and
+  verified before porting: 9×9 block (648 tiles) with zero overlaps and
+  exactly-once coverage on an irrational-offset fine grid, edge parity
+  all-2 in the interior (count-1 only on the outer ring), and interior
+  vertex figures (120,120,120), (180,90,90), (180,180), (90,90,90,90).
+- **Group:** pgg at the pattern level — two perpendicular glide
+  families (±45° directions; g² a lattice translation,
+  chirality-flipping), no mirrors — reduced to **p2** when the chiral
+  pair is distinguished, which is the group shipped. The 2-fold center
+  is the midpoint of the prototile's long side (vertex M of the L0
+  cell); the C2 invariance is tested on generated patches.
+- **Seeds:** 0 = CCW class {L0, L1, Y1, Y0}, 1 = its mirror
+  {G0, G1, D0, D1}; the 2-coloring of pattern mode is exactly the
+  chiral pair.
+- **Verify:** standard trio (coverage, rotated-scaled, deterministic) +
+  unit-structure test (exact side/angle/area/determinant identities),
+  chirality-seed test, C2-rotation invariance test, and the
+  brute-force culling cross-check.
+- **Status:** committed (M49). 39 tilings, 218 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -1093,7 +1140,6 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   figures 3⁶ (49, 1 orbit) and 3².6² (241, 6 translation orbits),
   fine irrational-offset grid exact-once, exact cell-set probes for
   R60/R120 + both mirrors); standard trio + vertex-figure + cell-set
-<<<<<<< HEAD
   symmetry tests + culling list green (46 tilings, 285 tests).
 - 2026-11-13 — M48 2-uniform tiling (3.6.3.6; 3².6², pmm) ✅: second
   entry of the 2-uniform arc (`kuniform-pmm` in `kuniform.rs`, same
@@ -1111,3 +1157,15 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   half-turns, 9 negative rotation probes R60/R90/R120 about
   (0,0)/(1,0)/(1,√3/2)); standard trio + vertex-figure + cell-set
   symmetry tests + culling list green (47 tilings, 290 tests).
+- 2026-11-13 — M49 Pentagon type 13 (Rice) ✅: the canonical
+  A = 120° instance of Rice's type-13 pentagon (d = 2a = 2e,
+  B = E = 90°) as an exact-Q(√3) 8-tile data table
+  (`pentagon13.rs`, feature `pentagon13`) — rectangular lattice
+  T1 = (3s, 3s), T2 = (s, −s), s = (9+√3)/13, all 48 vertices on the
+  (p + q√3)/26 grid; long side split into two collinear a-edges;
+  2-isohedral chiral pair as seeds 0/1; group p2 (pgg with the chiral
+  pair distinguished); C2 center at the prototile's d-midpoint.
+  Verified exactly before porting (648-tile block: zero overlaps,
+  exactly-once coverage, edge parity, 360° vertex figures, pgg/p2
+  glide probe); standard trio + unit structure + chirality + C2
+  invariance tests, culling cross-check (48 tilings, 297 tests).

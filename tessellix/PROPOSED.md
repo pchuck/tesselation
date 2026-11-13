@@ -126,7 +126,7 @@ confirm the diffraction claim during the spike before declaring.
   triangles are shared.
 - **Verify:** standard battery + culling list; a `star-cross`-style
   parameter sweep test (coverage at the critical radii).
-- **Status:** implemented on branch hexagram (pending integration).
+- **Status:** implemented (M42).
 
 ### 3. Windmill tiling
 
@@ -141,7 +141,7 @@ confirm the diffraction claim during the spike before declaring.
   the spike (candidate: p4g tiling by pinwheel triangles + squares) and
   confirm the vertex figure by hand before coding (AGENTS.md step 4).
 - **Verify:** standard trio + symmetry probe for the declared group.
-- **Status:** implemented on branch windmill (pending integration) — naming-rule waiver approved by repo owner 2026-11-12
+- **Status:** implemented (M43) — naming-rule waiver approved by repo owner 2026-11-12
 
 ### 4. 2-uniform tilings — first batch of the closed set of 20
 
@@ -190,7 +190,7 @@ confirm the diffraction claim during the spike before declaring.
   check must verify *both* orbit figures, and the two-orbit structure
   itself — assert exactly 2 vertex classes over a large patch), plus
   the culling list.
-- **Status:** implemented on branch kuniform (pending integration):
+- **Status:** implemented (M44 + M48):
   the p6m entry 3⁶ ; 3².6² as `kuniform-p6m` (index-3 honeycomb
   dissection, exact Q(√3) table, both vertex orbits + p6m
   generators verified by an exact-surd Python spike and Rust
@@ -257,6 +257,9 @@ confirm the diffraction claim during the spike before declaring.
 - **References:** Wikipedia "Pentagonal tiling" (15-type table +
   wallpaper groups); Rao 2017 completeness; Bagina 2011
   (8 edge-to-edge types); arXiv:2501.07090 (monotiles per type family).
+- **Status:** type 13 (Rice) implemented (M49) — canonical A = 120°
+  instance, exact Q(√3) 8-tile unit, group p2. Types 1–15 remain
+  open (M50+).
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 

@@ -76,6 +76,8 @@ pub mod basketweave;
 pub mod herringbone;
 #[cfg(feature = "pavers")]
 pub mod running_bond;
+#[cfg(feature = "pentagon13")]
+pub mod pentagon13;
 
 /// Registry of all enabled built-in tilings.
 pub fn registry() -> tess_core::Registry {
@@ -137,6 +139,10 @@ pub fn registry() -> tess_core::Registry {
     {
         r = r.register(pinwheel::PinwheelTiling);
         r = r.register(pythagorean::PythagoreanTiling);
+    }
+    #[cfg(feature = "pentagon13")]
+    {
+        r = r.register(pentagon13::spec());
     }
     #[cfg(feature = "hirschhorn")]
     {
@@ -383,7 +389,7 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-("Wallpaper", 12),
+("Wallpaper", 13),
             ("Quasiperiodic", 7),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
@@ -4027,16 +4033,17 @@ mod kuniform_tests {
     feature = "girih",
     feature = "girih_sc",
     feature = "khatam_girih",
-    feature = "kuniform",
+feature = "kuniform",
     feature = "laves",
     feature = "pavers",
+    feature = "pentagon13",
     feature = "windmill"
 ))]
 mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
         archimedean, basketweave, cairo, girih, girih_sc, hexagon, herringbone,
-        khatam_girih, kuniform, laves, running_bond, square, triangle, windmill,
+        khatam_girih, kuniform, laves, pentagon13, running_bond, square, triangle, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
     use tess_core::params::ParamSet;
@@ -4142,10 +4149,11 @@ mod lattice_culling_tests {
             ("kisrhombille", laves::kisrhombille()),
             ("prismatic-pentagonal", laves::prismatic_pentagonal()),
             ("floret-pentagonal", laves::floret_pentagonal()),
-            ("windmill", windmill::spec()),
+("windmill", windmill::spec()),
             ("basketweave", basketweave::basketweave()),
             ("herringbone", herringbone::herringbone()),
             ("running-bond", running_bond::running_bond()),
+            ("pentagon-13", pentagon13::spec()),
         ];
         for (name, lt) in &lattices {
             let specs = lt.params();
@@ -4174,5 +4182,227 @@ mod lattice_culling_tests {
                 &format!("{name}(rot30,scale0.7)"),
             );
         }
+    }
+}
+
+#[cfg(all(test, feature = "pentagon13"))]
+mod pentagon13_tests {
+    use super::pentagon13::{side_a, side_c, side_d, s_lat, tile_area};
+    use super::tests::{check_coverage, check_det, check_rotated};
+    use crate::pentagon13::spec;
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Polygon, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+    use tess_core::tiling::{Query, Tiling};
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    fn shoelace_sign(poly: &Polygon) -> f64 {
+        let n = poly.len();
+        (0..n)
+            .map(|i| {
+                let (a, b) = (poly.pts[i], poly.pts[(i + 1) % n]);
+                a.x * b.y - b.x * a.y
+            })
+            .sum()
+    }
+
+    #[test]
+    fn pentagon_13_covers_region() {
+        let t = spec();
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(
+            &t,
+            "pentagon-13",
+            &p,
+            BBox::new(v2(-4.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    #[test]
+    fn pentagon_13_rotated_scaled() {
+        check_rotated(
+            &spec(),
+            "pentagon-13(rot30,scale0.7)",
+            BBox::new(v2(-5.0, -5.0), v2(7.0, 7.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn pentagon_13_deterministic() {
+        check_det(
+            &spec(),
+            "pentagon-13",
+            BBox::new(v2(-3.0, -3.0), v2(9.0, 9.0)),
+        );
+    }
+
+    /// Unit structure of the primitive cell: 8 tiles of the exact
+    /// Q(√3) prototile (A = C = D = 120°, B = E = 90°, d = 2a = 2e) on
+    /// the rectangular lattice T1 = (3s, 3s), T2 = (s, −s), s = (9+√3)/13,
+    /// with |det| = 8 × tile area and |T1| = 3|T2|, T1 ⊥ T2.
+    #[test]
+    fn pentagon_13_unit_structure_is_exact() {
+        let t = spec();
+        assert_eq!(t.cells.len(), 8, "the primitive unit holds eight tiles");
+        let s = s_lat();
+        assert_eq!(t.lattice[0], Vec2::new(3.0 * s, 3.0 * s), "T1 = (3s, 3s)");
+        assert_eq!(t.lattice[1], Vec2::new(s, -s), "T2 = (s, −s)");
+        let det = t.lattice[0].cross(t.lattice[1]);
+        assert!(
+            (det.abs() - 8.0 * tile_area()).abs() < 1e-12,
+            "lattice cell area {det} ≠ 8 × tile area"
+        );
+        let (t1, t2) = (t.lattice[0], t.lattice[1]);
+        assert!((t1.dot(t2)).abs() < 1e-12, "lattice must be rectangular");
+        assert!(
+            (t1.length() - 3.0 * t2.length()).abs() < 1e-12,
+            "|T1| must be 3×|T2|"
+        );
+        assert!((t2.length() - s * 2.0f64.sqrt()).abs() < 1e-12, "|T2| must be s√2");
+        // Side lengths: a = e = (3√3+1)/13, d = 2a, c = (4−√3)/13.
+        let a = side_a();
+        let c = side_c();
+        let d = side_d();
+        assert!((d - 2.0 * a).abs() < 1e-12, "d = 2a");
+        assert!(c < a && a < d);
+        // Every cell: sides b, c, d/2, d/2, e, a and angles
+        // 120°, 90°, 120°, 180° (the collinear d-midpoint), 120°, 90°.
+        let want_sides = [1.0, c, d / 2.0, d / 2.0, a, a];
+        let want_angles = [
+            std::f64::consts::TAU / 3.0,
+            std::f64::consts::FRAC_PI_2,
+            std::f64::consts::TAU / 3.0,
+            std::f64::consts::PI,
+            std::f64::consts::TAU / 3.0,
+            std::f64::consts::FRAC_PI_2,
+        ];
+        for cell in &t.cells {
+            assert!(
+                (cell.poly.area() - tile_area()).abs() < 1e-12,
+                "cell area ≠ 9(14+3√3)/338"
+            );
+            let n = cell.poly.len();
+            assert_eq!(n, 6, "cells carry the d-midpoint vertex");
+            for i in 0..n {
+                let (p0, p1, p2) =
+                    (cell.poly.pts[(i + n - 1) % n], cell.poly.pts[i], cell.poly.pts[(i + 1) % n]);
+                let len = (p2 - p1).length();
+                assert!(
+                    (len - want_sides[i]).abs() < 1e-12,
+                    "side {i} = {len} ≠ {}",
+                    want_sides[i]
+                );
+                let v1 = p0 - p1;
+                let v2 = p2 - p1;
+                let ang = (v1.dot(v2) / (v1.length() * v2.length())).clamp(-1.0, 1.0).acos();
+                assert!(
+                    (ang - want_angles[i]).abs() < 1e-9,
+                    "angle {i} = {} rad ≠ {}",
+                    ang,
+                    want_angles[i]
+                );
+            }
+        }
+    }
+
+    /// 2-isohedral: seeds 0 and 1 are exactly the two chiral (isohedral)
+    /// classes — four CCW cells and four CW cells — and every generated
+    /// tile keeps the chirality of its seed (the cell map is a
+    /// similarity, which cannot flip orientation).
+    #[test]
+    fn pentagon_13_seeds_track_the_chiral_pair() {
+        let t = spec();
+        let n0 = t
+            .cells
+            .iter()
+            .filter(|c| c.seed == 0)
+            .count();
+        let n1 = t.cells.len() - n0;
+        assert_eq!((n0, n1), (4, 4), "four tiles per chiral class");
+        for c in &t.cells {
+            let sign = if shoelace_sign(&c.poly) > 0.0 { 1 } else { -1 };
+            let want = if c.seed == 0 { 1 } else { -1 };
+            assert_eq!(sign, want, "seed {} cell has the wrong chirality", c.seed);
+        }
+        let p = ParamSet::default_for(t.params());
+        let r = t.generate(&p, &Query { region: BBox::new(v2(-4.0, -3.0), v2(10.0, 10.0)) });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        let mut seen = [false; 2];
+        for tile in &r.tiles {
+            assert!(tile.seed <= 1, "seeds must stay in {{0, 1}}");
+            seen[tile.seed as usize] = true;
+            let sign = if shoelace_sign(&tile.poly) > 0.0 { 1 } else { -1 };
+            let want = if tile.seed == 0 { 1 } else { -1 };
+            assert_eq!(sign, want, "generated tile flipped chirality (seed {})", tile.seed);
+        }
+        assert!(seen[0] && seen[1], "both chiral classes must appear");
+    }
+
+    /// The wallpaper group is p2 (pgg with the chiral pair distinguished):
+    /// the 2-fold center is the midpoint of the prototile's long side
+    /// (vertex M of the L0 cell), and 180° rotation about it preserves
+    /// the tiling exactly.
+    #[test]
+    fn pentagon_13_c2_rotation_is_a_symmetry() {
+        let t = spec();
+        let p = ParamSet::default_for(t.params());
+        let c = t.cells[0].poly.pts[3];
+        let rot = |q: Vec2| c * 2.0 - q;
+        let ra = BBox::new(v2(-4.0, -4.0), v2(10.0, 10.0));
+        let cs: Vec<Vec2> = ra.corners().iter().map(|&q| rot(q)).collect();
+        let rb = BBox::new(
+            Vec2::new(
+                cs.iter().map(|q| q.x).fold(f64::MAX, f64::min),
+                cs.iter().map(|q| q.y).fold(f64::MAX, f64::min),
+            ),
+            Vec2::new(
+                cs.iter().map(|q| q.x).fold(f64::MIN, f64::max),
+                cs.iter().map(|q| q.y).fold(f64::MIN, f64::max),
+            ),
+        );
+        let ra_tiles = t.generate(&p, &Query { region: ra });
+        let rb_tiles = t.generate(&p, &Query { region: rb });
+        assert!(ra_tiles.message.is_none(), "{:?}", ra_tiles.message);
+        assert!(rb_tiles.message.is_none(), "{:?}", rb_tiles.message);
+        assert!(!ra_tiles.tiles.is_empty());
+        // Vertex key on a 1e-6 grid (distinct vertices are ≥ c = 0.174
+        // apart; the two computations of a shared joint agree to ~1e-14).
+        let key = |pts: &[Vec2]| {
+            let mut v: Vec<(i64, i64)> = pts
+                .iter()
+                .map(|q| ((q.x * 1e6).round() as i64, (q.y * 1e6).round() as i64))
+                .collect();
+            v.sort_unstable();
+            v
+        };
+        let set_b: std::collections::HashSet<Vec<(i64, i64)>> =
+            rb_tiles.tiles.iter().map(|t| key(&t.poly.pts)).collect();
+        let set_a: std::collections::HashSet<Vec<(i64, i64)>> = ra_tiles
+            .tiles
+            .iter()
+            .map(|t| key(&t.poly.pts.iter().map(|q| rot(*q)).collect::<Vec<_>>()))
+            .collect();
+        assert_eq!(set_a.len(), ra_tiles.tiles.len(), "rotation must be injective on the patch");
+        assert_eq!(
+            set_a, set_b,
+            "180° rotation about the d-midpoint 2-fold center must preserve the tiling"
+        );
+    }
+
+    #[test]
+    fn pentagon_13_symmetry_metadata() {
+        let t = spec();
+        assert_eq!(t.id, "pentagon-13");
+        assert_eq!(t.group, WallpaperGroup::P2);
+        assert_eq!(t.lattice_kind, LatticeKind::Rectangular);
+        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.cells[0].seed, 0, "the prototile is the L0 cell (seed 0)");
     }
 }
