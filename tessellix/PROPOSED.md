@@ -190,6 +190,11 @@ confirm the diffraction claim during the spike before declaring.
   check must verify *both* orbit figures, and the two-orbit structure
   itself — assert exactly 2 vertex classes over a large patch), plus
   the culling list.
+- **Status:** implemented on branch kuniform (pending integration):
+  the p6m entry 3⁶ ; 3².6² as `kuniform-p6m` (index-3 honeycomb
+  dissection, exact Q(√3) table, both vertex orbits + p6m
+  generators verified by an exact-surd Python spike and Rust
+  cell-set probes).
 
 ---
 

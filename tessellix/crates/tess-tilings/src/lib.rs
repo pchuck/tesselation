@@ -28,6 +28,8 @@ pub mod girih_qc;
 pub mod girih_sc;
 #[cfg(feature = "khatam_girih")]
 pub mod khatam_girih;
+#[cfg(feature = "kuniform")]
+pub mod kuniform;
 #[cfg(feature = "laves")]
 pub mod laves;
 #[cfg(feature = "hexagram")]
@@ -188,6 +190,10 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "khatam_girih")]
     {
         r = r.register(khatam_girih::khatam_girih());
+    }
+    #[cfg(feature = "kuniform")]
+    {
+        r = r.register(kuniform::kuniform_p6m());
     }
     #[cfg(feature = "laves")]
     {
@@ -376,7 +382,7 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-("Wallpaper", 10),
+("Wallpaper", 11),
             ("Quasiperiodic", 7),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
@@ -3619,15 +3625,304 @@ mod pavers_tests {
     }
 }
 
-/// Brute-force cross-check of [`crate::lattice::LatticeTiling`]'s
-/// index-range culling, the one part of the generator that could silently
-/// drop (or invent) tiles at the edges of the query region: the per-cell
-/// offsets that pad the index ranges are measured in lattice coordinates
-/// (cell vertices mapped through `u(p) = A⁻¹ p`), and getting that wrong
-/// for a sheared or tall cell would produce gaps that sample-based
-/// coverage tests can miss. This test re-emits every tile from the public
-/// table data over a wide fixed index window — no range math at all — and
-/// requires exactly the same tile set as `generate`.
+/// Tests for the 2-uniform (k-uniform) `LatticeTiling` tables.
+#[cfg(all(test, feature = "kuniform"))]
+mod kuniform_tests {
+    use super::lattice::LatticeTiling;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use crate::kuniform;
+    use std::collections::{BTreeSet, HashMap};
+    use tess_core::geometry::{BBox, Vec2};
+
+    const H: f64 = 0.8660254037844386; // √3/2
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn kuniform_p6m_covers_region() {
+        check_covers(
+            &kuniform::kuniform_p6m(),
+            "kuniform-p6m",
+            BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_p6m_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_p6m(),
+            "kuniform-p6m(rot30,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_p6m_deterministic() {
+        check_det(
+            &kuniform::kuniform_p6m(),
+            "kuniform-p6m",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// One expected figure orbit in the ±3×±3 patch census.
+    struct Figure<'a> {
+        /// Canonical figure string (lexicographically smallest cyclic
+        /// rotation, e.g. "3366", "3636", "333333").
+        figure: &'a str,
+        /// Interior vertices of that figure in the patch.
+        count: usize,
+        /// Orbit reps in [0,b1]×[0,b2], 3-decimal quantized.
+        orbits: &'a [(i32, i32)],
+    }
+
+    /// Per-vertex sector record: (start angle deg, span deg, side count).
+    type Sector = (f64, f64, u32);
+
+    /// Emit the ±3×±3 patch straight from the table (the same
+    /// emission the Python spike used), deduplicate vertices by
+    /// 6-decimal key, and check the interior-vertex census: the
+    /// angle-sum-360 vertices carry exactly the declared figures,
+    /// with the expected counts and translation-orbit structure.
+    fn check_vertex_figures(lt: &LatticeTiling, expect: &[Figure]) {
+        let b1 = lt.lattice[0];
+        let b2 = lt.lattice[1];
+        let det = b1.cross(b2);
+        // Inverse of the lattice map p -> [b1 b2] * u (the same
+        // world->lattice inverse as the generator, in cell space).
+        let inv = |p: Vec2| -> Vec2 {
+            Vec2::new(
+                (b2.y * p.x - b2.x * p.y) / det,
+                (-b1.y * p.x + b1.x * p.y) / det,
+            )
+        };
+        let key = |p: Vec2| -> (i64, i64) {
+            ((p.x * 1e6).round() as i64, (p.y * 1e6).round() as i64)
+        };
+
+        // Per vertex key: the accumulated interior angle (60° triangle
+        // corner, 120° hexagon corner) and the CCW sectors
+        // (start angle deg, span deg, side count).
+        let mut angles: HashMap<(i64, i64), f64> = HashMap::new();
+        let mut sectors: HashMap<(i64, i64), Vec<Sector>> = HashMap::new();
+        for i in -3i64..=3 {
+            for j in -3i64..=3 {
+                let tr = b1 * i as f64 + b2 * j as f64;
+                for c in &lt.cells {
+                    let pts = c.poly.translated(tr).pts;
+                    let n = pts.len();
+                    let span = (n - 2) as f64 * 180.0 / n as f64;
+                    for k in 0..n {
+                        let v = pts[k];
+                        let b = pts[(k + 1) % n];
+                        let kk = key(v);
+                        *angles.entry(kk).or_insert(0.0) += span;
+                        // Sector of this CCW polygon at v: CCW from the
+                        // v->next direction, spanning the interior angle.
+                        let start = f64::atan2(b.y - v.y, b.x - v.x).to_degrees();
+                        let start = if start < 0.0 { start + 360.0 } else { start };
+                        sectors.entry(kk).or_default().push((start, span, n as u32));
+                    }
+                }
+            }
+        }
+
+        // Canonical cyclic figure (lex-smallest rotation of the
+        // side-count sequence) of one interior vertex.
+        let figure_of = |secs: &[Sector]| -> String {
+            let mut s: Vec<Sector> = secs.to_vec();
+            s.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            // Sectors of an interior vertex tile the 360 degrees:
+            // walk them CCW from the smallest start angle.
+            let mut cur = s[0].0;
+            for (s0, sp, _) in s.iter() {
+                assert!(
+                    (*s0 - cur).abs() < 1e-6,
+                    "figure walk gap: sector at {s0}, expected {cur}"
+                );
+                cur += sp;
+                if cur >= 360.0 - 1e-9 {
+                    cur -= 360.0;
+                }
+            }
+            assert!(
+                (cur - s[0].0).abs() < 1e-6,
+                "figure walk must close, ends at {cur}"
+            );
+            let seq: Vec<u32> = s.iter().map(|t| t.2).collect();
+            let mut best = seq.clone();
+            for r in 1..seq.len() {
+                let mut rot = Vec::with_capacity(seq.len());
+                rot.extend_from_slice(&seq[r..]);
+                rot.extend_from_slice(&seq[..r]);
+                if rot < best {
+                    best = rot;
+                }
+            }
+            best.iter().map(|n| n.to_string()).collect()
+        };
+
+        let mut figs: HashMap<String, Vec<(i64, i64)>> = HashMap::new();
+        for (kk, sum) in &angles {
+            if (sum - 360.0).abs() < 1e-6 {
+                let secs = sectors
+                    .get(kk)
+                    .unwrap_or_else(|| panic!("interior vertex without sectors"));
+                let f = figure_of(secs);
+                figs.entry(f).or_default().push(*kk);
+            }
+        }
+
+        for e in expect {
+            let vs = figs.get(e.figure).cloned().unwrap_or_default();
+            assert_eq!(
+                vs.len(),
+                e.count,
+                "{}: {} interior vertices in the ±3 patch, expected {}",
+                e.figure,
+                vs.len(),
+                e.count
+            );
+            // Orbit reps: v - A*floor(A^-1 v), quantized to 3
+            // decimals (a 1e-5 guard keeps vertices exactly on a
+            // lattice line in the correct fundamental cell).
+            let mut orbits: BTreeSet<(i32, i32)> = BTreeSet::new();
+            for &kk in &vs {
+                let p = v2(kk.0 as f64 * 1e-6, kk.1 as f64 * 1e-6);
+                let u = inv(p);
+                let fx = (u.x + 1e-5).floor();
+                let fy = (u.y + 1e-5).floor();
+                let rep = p - b1 * fx - b2 * fy;
+                orbits.insert(
+                    ((rep.x * 1000.0).round() as i32, (rep.y * 1000.0).round() as i32),
+                );
+            }
+            let want: BTreeSet<(i32, i32)> = e.orbits.iter().copied().collect();
+            assert_eq!(&orbits, &want, "{}: orbit reps in [0,b1]×[0,b2]", e.figure);
+        }
+        let declared: BTreeSet<&str> = expect.iter().map(|e| e.figure).collect();
+        for f in figs.keys() {
+            assert!(
+                declared.contains(f.as_str()),
+                "unexpected vertex figure {f} (declared: {declared:?})"
+            );
+        }
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch: one 3⁶ orbit
+    /// (the fan apexes) and six 3².6² orbits — the honeycomb-vertex
+    /// orbit splits into six translation orbits under the index-3
+    /// translation lattice. Counts and reps match the Python spike.
+    #[test]
+    fn kuniform_p6m_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_p6m(),
+            &[
+                Figure {
+                    figure: "333333",
+                    count: 49,
+                    orbits: &[(0, 0)],
+                },
+                Figure {
+                    figure: "3366",
+                    count: 241,
+                    orbits: &[
+                        (500, 866),
+                        (1000, 0),
+                        (1000, 1732),
+                        (2000, 0),
+                        (2000, 1732),
+                        (2500, 866),
+                    ],
+                },
+            ],
+        );
+    }
+
+    /// Cell-set symmetry probe (the Python spike's exact test in
+    /// floats): `g` must send every table cell to some table cell
+    /// plus a lattice translation — Cramer solve for the shift,
+    /// integrality within 1e-6, vertex geometry within 1e-9. With
+    /// `symmetry = false` (a negative probe) no such mapping may
+    /// exist.
+    fn probe_symmetry(lt: &LatticeTiling, g: impl Fn(Vec2) -> Vec2, symmetry: bool, label: &str) {
+        let b1 = lt.lattice[0];
+        let b2 = lt.lattice[1];
+        let det = b1.cross(b2);
+        let inv = |p: Vec2| -> Vec2 {
+            Vec2::new(
+                (b2.y * p.x - b2.x * p.y) / det,
+                (-b1.y * p.x + b1.x * p.y) / det,
+            )
+        };
+        let cells: Vec<Vec<Vec2>> = lt.cells.iter().map(|c| c.poly.pts.clone()).collect();
+        for (i, cp) in cells.iter().enumerate() {
+            let gp: Vec<Vec2> = cp.iter().map(|p| g(*p)).collect();
+            let mut matched = false;
+            for cj in &cells {
+                let mut hit = false;
+                for w in cj {
+                    let t = gp[0] - *w;
+                    let u = inv(t);
+                    // A symmetry shift must be a lattice translation.
+                    if (u.x - u.x.round()).abs() > 1e-6 || (u.y - u.y.round()).abs() > 1e-6 {
+                        continue;
+                    }
+                    let tr = b1 * u.x.round() + b2 * u.y.round();
+                    let shifted: Vec<Vec2> = cj.iter().map(|w| *w + tr).collect();
+                    hit = gp.iter().all(|p| {
+                        shifted.iter().any(|s| (*p - *s).length() < 1e-9)
+                    }) && shifted.iter().all(|s| gp.iter().any(|p| (*p - *s).length() < 1e-9));
+                    if hit {
+                        break;
+                    }
+                }
+                if hit {
+                    matched = true;
+                    break;
+                }
+            }
+            assert!(
+                matched == symmetry,
+                "{label}: table cell {i} expected {symmetry:?}, matched={matched}"
+            );
+        }
+    }
+
+    /// The declared p6m generators act on the cell set: 60°/120°
+    /// rotations about the fan apex at the origin, the mirror y = 0,
+    /// and the mirror along the 60° line.
+    #[test]
+    fn kuniform_p6m_symmetry() {
+        let lt = kuniform::kuniform_p6m();
+        probe_symmetry(
+            &lt,
+            |p| p.rotated(std::f64::consts::PI / 3.0),
+            true,
+            "R60 about (0,0)",
+        );
+        probe_symmetry(
+            &lt,
+            |p| p.rotated(2.0 * std::f64::consts::PI / 3.0),
+            true,
+            "R120 about (0,0)",
+        );
+        probe_symmetry(&lt, |p| v2(p.x, -p.y), true, "mirror y=0");
+        probe_symmetry(
+            &lt,
+            |p| {
+                let d = v2(0.5, H);
+                d * (2.0 * p.dot(d)) - p
+            },
+            true,
+            "mirror line at 60 deg",
+        );
+    }
+}
 #[cfg(all(
     test,
     feature = "square",
@@ -3638,14 +3933,16 @@ mod pavers_tests {
     feature = "girih",
     feature = "girih_sc",
     feature = "khatam_girih",
+    feature = "kuniform",
     feature = "laves",
-    feature = "pavers"
+    feature = "pavers",
+    feature = "windmill"
 ))]
 mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
         archimedean, basketweave, cairo, girih, girih_sc, hexagon, herringbone,
-        khatam_girih, laves, running_bond, square, triangle,
+        khatam_girih, kuniform, laves, running_bond, square, triangle, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
     use tess_core::params::ParamSet;
@@ -3742,6 +4039,7 @@ mod lattice_culling_tests {
             ("girih", girih::girih_shesh_band()),
             ("girih-sc", girih_sc::girih_star_cross()),
             ("khatam-girih", khatam_girih::khatam_girih()),
+            ("kuniform-p6m", kuniform::kuniform_p6m()),
             ("tetrakis-square", laves::tetrakis_square()),
             ("rhombille", laves::rhombille()),
             ("triakis-triangular", laves::triakis_triangular()),
@@ -3749,6 +4047,7 @@ mod lattice_culling_tests {
             ("kisrhombille", laves::kisrhombille()),
             ("prismatic-pentagonal", laves::prismatic_pentagonal()),
             ("floret-pentagonal", laves::floret_pentagonal()),
+            ("windmill", windmill::spec()),
             ("basketweave", basketweave::basketweave()),
             ("herringbone", herringbone::herringbone()),
             ("running-bond", running_bond::running_bond()),
