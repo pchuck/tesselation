@@ -484,7 +484,7 @@ confirm the diffraction claim during the spike before declaring.
   93; the arc completes the census later. Needs a small design doc
   (edge-orbit data model, parameter bounds per type) before code.
 
-### 14. Hankin polygons-in-contact strapwork engine ✅ (M53: fourfold khatam on 4.8.8; M54 ✅: sixfold khatam on 3.6.3.6; layer mode remains open)
+### 14. Hankin polygons-in-contact strapwork engine ✅ (M53: fourfold khatam on 4.8.8; M54 ✅: sixfold khatam on 3.6.3.6; M56 ✅: twelvefold khatam on 3.12.12; layer mode remains open)
 
 - **Sprint allocation (2026-11-13):** second deliverable of the girih
   extension arc (M53, delegated to the strong track, feature
@@ -496,7 +496,7 @@ confirm the diffraction claim during the spike before declaring.
   shipped 12-point W85 panel. **Follow-up (M54 ✅, same feature
   `hankin_ext`):** PIC tiling mode on the 3.6.3.6 substrate (sixfold
   khatam family, exact Q(√3)) — second substrate proves the method
-  generalizes. **Third substrate (M56, in progress, same feature):**
+  generalizes. **Third substrate (M56 ✅, same feature):**
   the 3.12.12 truncated-hexagonal substrate — completes Kaplan's
   canonical trio (4.8.8, 3.6.3.6, 3.12.12) and yields the twelvefold
   rosette family; exact Q(√3); verify the forced-or-chosen δ and the
@@ -534,6 +534,40 @@ confirm the diffraction claim during the spike before declaring.
   (positive rot60 at two inequivalent centres, rot120, rot180 and five
   mirrors pass; rot90, rot60 on the threefold centre, an off-site rot180
   and the mirror y = √3/4 all fail).
+- **Done (M56):** the trio is complete — `pic-3-12-12`
+  (`pic_3_12_12.rs`, same `hankin_ext` feature) lays the engine on the
+  truncated-hexagonal 3.12.12 substrate as the **twelvefold** khatam
+  (khatam-e shamsa). δ is forced again, and here it is forced by a single
+  clean fact: the substrate midpoints of a regular n-gon lie on its
+  incircle 360°/n apart, and a ray leaving a midpoint at angle δ to the
+  edge leaves it at angle δ to the *tangent*, so by the tangent-chord
+  theorem it meets the incircle again after a central angle of exactly 2δ
+  — it lands head-on at another midpoint iff **δ = 180°·k/n**. The
+  dodecagon admits {15°, 30°, 45°, 60°, 75°, 90°}, the triangle only 60°,
+  so δ = 60° is the *unique* contact angle closing both polygons (δ = 90°,
+  the other dodecagon candidate, sends the triangle rays along their
+  normals through the substrate vertices). The walls are the 12 chords
+  `M_i → M_{i+4}` per dodecagon — the {12/4} star of four overlaid
+  equilateral triangles — plus the three midsegments per triangle: 18
+  walls per cell, face-to-face with 0 T-junctions. A cell of the substrate
+  lattice `⟨(3/2+√3, 1+√3/2), (0, 2+√3)⟩` holds **45 faces in six orbits**
+  (rosette-core dodecagon 3/2+3√3/4, 6 vertex pentagons 3/8+3√3/16, 12
+  band quads 1/8+√3/12, 2 medial triangles √3/16, 12 inner quads
+  1/16+√3/48, 12 star notches √3/48; Σ = 6 + 7√3/2 = |det| exactly over
+  Q(√3)), every vertex a (p+q√3)/24 surd and every corner 30°–150°. The
+  midsegments quarter each substrate triangle (medial quarter = a face,
+  corner quarters = pentagon tips) and the chords cut each dodecagon into
+  the core, twelve each of the three inner orbits and twelve
+  half-pentagon corners — the classical twelvefold rosette. The
+  un-interlaced partition verifies exactly **p6m** (positive rot60/rot120/
+  rot180 at the dodecagon centre, rot120 at a substrate triangle centre,
+  rot180 at a dodecagon–dodecagon midpoint and the mirrors y = 0, x = 0,
+  30° through O; rot30, rot90, rot60 on the threefold centre, rot180 on the
+  dodecagon–triangle midpoint and on a substrate vertex, and the mirrors
+  y = √3/2, x = 1 all fail). Note the substrate has **no squares** —
+  3.12.12 is dodecagons and triangles only — so unlike M53 there is no
+  square-fill family here; the vertex pentagons and medial triangles carry
+  that role.
 
 - **Motif:** the generative alternative to measured panels (M35):
   Hankin's polygons-in-contact method — given a substrate tiling and a

@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (52 tilings)
+## Implemented (53 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -62,6 +62,7 @@ every dual is the face-centroid dual of an exact primal table.
 | `girih-w85` | 12-pointed girih star interlace | p6 | Wichmann data18/W85 (Alhambra Mexuar): exact Q(√3) strap-line grid (L = 283.92, strap 9, all vertices (p+q√3)/50), 42 tiles per hexagonal cell; motif is *632 but the drawn over/under interlace is chiral → p6 (M52) |
 | `pic-4-8-8` | Hankin PIC fourfold khatam (median) | p4m | polygons-in-contact strapwork on the 4.8.8 substrate at δ = 45°: rays run edge-midpoint to edge-midpoint ({8/2} two-square octagram per octagon, midpoint chords per square), face-to-face partition into octagon + small square + 4 house pentagons + 8 star tips, 14 faces per A·Z² cell (A = 1+√2), exact Q(√2) with all vertices (p+q√2)/4; un-interlaced, mirrors and glide probe verified (M53) |
 | `pic-3-6-3-6` | Hankin PIC sixfold khatam | p6m | polygons-in-contact strapwork on the trihexagonal 3.6.3.6 substrate at δ = 60°: rays run edge-midpoint to edge-midpoint ({6/2} hexagram per hexagon, midsegments per triangle), face-to-face partition — the wall network *is* a half-scale 3.6.3.6 — into 4 hexagram-core hexagons + 6 hexagram tips + 2 midsegment triangles, 12 faces per ⟨(2,0),(1,√3)⟩ cell, Σ = 2√3 = |det| exact over Q(√3) with all vertices on the (p+q√3)/4 grid; un-interlaced, rot60/rot120/rot180 + five mirrors probe verified (M54) |
+| `pic-3-12-12` | Hankin PIC twelvefold khatam | p6m | polygons-in-contact strapwork on the truncated-hexagonal 3.12.12 substrate at δ = 60°: the tangent-chord theorem closes a midpoint ray onto another midpoint only at δ = 180°·k/n, so δ = 60° is the single angle that closes both polygons — 12 chords `M_i→M_{i+4}` per dodecagon (the {12/4} rosette, four overlaid triangles) plus the triangle midsegments; face-to-face partition into 45 faces per ⟨(3/2+√3, 1+√3/2),(0,2+√3)⟩ cell in six orbits (1 rosette-core dodecagon + 6 vertex pentagons + 12 band quads + 2 medial triangles + 12 inner quads + 12 star notches), Σ = 6 + 7√3/2 = |det| exact over Q(√3) with all vertices on the (p+q√3)/24 grid and corners only 30–150°; un-interlaced, rot60/rot120/rot180 + three mirrors probe verified and 7 negative probes pin the group to p6m (M56) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `pythagorean` | two squares (Pythagorean) | p4 | one-parameter ratio r = b/a; each cell is the square on the hypotenuse dissected into the leg squares; T-junctions inherent; the plain p4m square grid at r = 1 |
 | `windmill` | 1–2–√5 triangles around squares ("windmill") | p4 | periodic pinwheel arrangement; homochiral (no mirrors/glides); non-edge-to-edge T-junctions; naming waiver 2026-11-12 (M43) |
@@ -1316,3 +1317,57 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   exactly two area classes 3√3/8 and √3/16 with 6-gon ⇔ hexagon and
   3-gon ⇔ triangle and 0 of 2816 probes off exactly-once coverage
   (52 tilings, 332 tests).
+- 2026-11-13 — M56 Hankin polygons-in-contact twelvefold khatam (3.12.12
+  substrate), p6m ✅: the twelvefold engine of the same strapwork generator
+  (`pic_3_12_12.rs`, feature `hankin_ext`) — Hankin polygons-in-contact at
+  contact angle **δ = 60°** on the truncated-hexagonal 3.12.12 substrate, the
+  third member of the PIC family after M53 (fourfold) and M54 (sixfold). δ is
+  *derived*, not chosen: the midpoints of a regular n-gon lie on its incircle
+  360°/n apart, and a ray that leaves a midpoint at angle δ to the edge leaves
+  it at angle δ to the tangent, so by the tangent-chord theorem it cuts that
+  circle again after a central angle of exactly 2δ — it arrives head-on at
+  another midpoint iff δ = 180°·k/n. The dodecagon allows
+  {15°, 30°, 45°, 60°, 75°, 90°}, the triangle only 60°: **δ = 60° is the one
+  contact angle that closes both** (δ = 90°, which the dodecagon would accept,
+  drives the triangle rays along their normals through the substrate vertices
+  — the M54 T-junction lesson). The walls are therefore the 12 chords
+  `M_i → M_{i+4}` per dodecagon — the {12/4} star, four overlaid equilateral
+  triangles, the classic twelvefold rosette — plus the three midsegments per
+  triangle: 18 walls per cell, collinear through the shared midpoints and
+  face-to-face (exact splitting of the 882 walls of a 49-cell patch gives
+  V = 2266, E = 4410, F = 2146, Euler characteristic 2, T-junctions 0). A cell
+  of the substrate's own lattice Λ = ⟨(3/2+√3, 1+√3/2),(0, 2+√3)⟩ (both
+  vectors of length 2+√3, 60° apart; one dodecagon + two triangles) holds
+  **45 faces in six seeds** — 1 rosette-core regular dodecagon of side ½ at O
+  (3/2 + 3√3/4), 6 vertex pentagons each wrapping one 3.12.12 vertex
+  (3/8 + 3√3/16), 12 band quadrilaterals (1/8 + √3/12), the 2 midsegment medial
+  triangles of the substrate triangles (√3/16), 12 inner quadrilaterals
+  (1/16 + √3/48) and 12 star-notch triangles (√3/48); Σ = **6 + 7√3/2 =
+  |det Λ| exactly over Q(√3)**. The decomposition is the classical one: the
+  midsegments quarter every substrate triangle into four √3/16 pieces — the
+  medial one is a face, the three corner ones are pentagon tips — and each
+  pentagon is exactly one such quarter plus two dodecagon corner pieces of
+  (3+√3)/16, so each dodecagon holds the core, twelve each of seeds 2/4/5 and
+  twelve half-pentagon corners = 6 + 3√3, its own area. Every vertex lands on
+  the (p+q√3)/24 grid (the exact common denominator of the spike's denominator
+  survey) and the corner census is 30°/60°/90°/120°/150° only
+  (1176/2058/2232/1878/1176), summing to 360° at every interior vertex. Exact
+  Fraction-Q(√3) spike before porting (VERDICT: ALL GOOD): interior edges
+  shared exactly twice (4110 interior, 300 patch border), 2500 fine-grid probes
+  all covered exactly once, Σ areas = |det| with 0 error. Group **p6m**
+  verified position-aware (positive: rot60/rot120/rot180 at the dodecagon
+  centre, rot120 at a substrate triangle centre, rot180 at a
+  dodecagon–dodecagon midpoint, mirrors y=0, x=0 and the 30° line through O;
+  negative: rot30@O, rot90@O, rot60 at the triangle centre, rot180 at the
+  dodecagon–triangle midpoint, rot180 at a substrate vertex, and the mirrors
+  y=√3/2 and x=1 all fail). Standard trio + unit structure + p6m symmetry +
+  symmetry-metadata tests, culling cross-check green; SVG export parse (text
+  only, never rendered) confirms 2289 tiles in exactly the six table area
+  classes (2.79904 = 3/2+3√3/4 core … 0.03608 = √3/48 notch), vertex histogram
+  {12: 49, 5: 320, 4: 1246, 3: 674} in the 1 : 6 : 24 : 14 orbit ratio, and
+  all 9194 exported vertices coincident with a table vertex plus an exact
+  lattice translation (worst 7e-5 — the SVG's own rounding — and 0 off).
+  Deviation from the milestone brief: the 3.12.12 substrate has **no squares**
+  (dodecagons and triangles only), so M53's square fills have no counterpart;
+  the vertex pentagons and the medial triangles take that role.
+  (53 tilings, 338 tests).

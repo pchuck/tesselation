@@ -25,6 +25,8 @@ pub mod girih;
 #[cfg(feature = "girih_ext")]
 pub mod girih_w85;
 #[cfg(feature = "hankin_ext")]
+pub mod pic_3_12_12;
+#[cfg(feature = "hankin_ext")]
 pub mod pic_3_6_3_6;
 #[cfg(feature = "hankin_ext")]
 pub mod pic_4_8_8;
@@ -213,6 +215,7 @@ pub fn registry() -> tess_core::Registry {
     {
         r = r.register(pic_4_8_8::pic_4_8_8());
         r = r.register(pic_3_6_3_6::pic_3_6_3_6());
+        r = r.register(pic_3_12_12::pic_3_12_12());
     }
     #[cfg(feature = "khatam_girih")]
     {
@@ -415,7 +418,7 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-            ("Wallpaper", 17),
+            ("Wallpaper", 18),
             ("Quasiperiodic", 7),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
@@ -4072,8 +4075,8 @@ mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
         archimedean, basketweave, cairo, girih, girih_sc, girih_w85, hexagon, herringbone,
-        khatam_girih, kuniform, laves, pentagon13, pentagon14, pic_3_6_3_6, pic_4_8_8,
-        running_bond, square, triangle, windmill,
+        khatam_girih, kuniform, laves, pentagon13, pentagon14, pic_3_12_12, pic_3_6_3_6,
+        pic_4_8_8, running_bond, square, triangle, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
     use tess_core::params::ParamSet;
@@ -4172,6 +4175,7 @@ mod lattice_culling_tests {
             ("girih-w85", girih_w85::girih_w85()),
             ("pic-4-8-8", pic_4_8_8::pic_4_8_8()),
             ("pic-3-6-3-6", pic_3_6_3_6::pic_3_6_3_6()),
+            ("pic-3-12-12", pic_3_12_12::pic_3_12_12()),
             ("khatam-girih", khatam_girih::khatam_girih()),
             ("kuniform-p6m", kuniform::kuniform_p6m()),
             ("kuniform-pmm", kuniform::kuniform_pmm()),
@@ -5534,6 +5538,461 @@ mod pic_3_6_3_6_tests {
     fn pic_3_6_3_6_symmetry_metadata() {
         let t = pic_3_6_3_6();
         assert_eq!(t.id, "pic-3-6-3-6");
+        assert_eq!(t.group, WallpaperGroup::P6m);
+        assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
+        assert_eq!(t.category, TilingCategory::Wallpaper);
+    }
+}
+#[cfg(all(test, feature = "hankin_ext"))]
+mod pic_3_12_12_tests {
+    use super::lattice::LatticeTiling;
+    use super::pic_3_12_12::pic_3_12_12;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    /// √3 — `2·(√3/2)`, the substrate's apothem constant doubled (exact in
+    /// f64); `consts::SQRT_3` is unstable at this crate's MSRV.
+    const RT3: f64 = 2.0 * 0.866_025_403_784_438_6;
+    /// The lattice basis (the 3.12.12 substrate's own translations):
+    /// `a1 = (3/2+√3, 1+√3/2)`, `a2 = (0, 2+√3)`.
+    const A1X: f64 = 1.5 + RT3;
+    const A1Y: f64 = 1.0 + RT3 / 2.0;
+    const A2Y: f64 = 2.0 + RT3;
+    /// Substrate dodecagon apothem `1 + √3/2`.
+    const RAP: f64 = 1.0 + RT3 / 2.0;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    fn sub(a: Vec2, b: Vec2) -> Vec2 {
+        v2(a.x - b.x, a.y - b.y)
+    }
+
+    fn norm(a: Vec2) -> f64 {
+        (a.x * a.x + a.y * a.y).sqrt()
+    }
+
+    fn cross(a: Vec2, b: Vec2) -> f64 {
+        a.x * b.y - a.y * b.x
+    }
+
+    type Isometry = Box<dyn Fn(Vec2) -> Vec2>;
+
+    /// Rotation by 60°·k about `c`, as an exact matrix in Q(√3) (no trig).
+    fn rot(c: Vec2, k: usize) -> Isometry {
+        let (co, si): (f64, f64) = match k % 6 {
+            0 => (1.0, 0.0),
+            1 => (0.5, RT3 / 2.0),
+            2 => (-0.5, RT3 / 2.0),
+            3 => (-1.0, 0.0),
+            4 => (-0.5, -RT3 / 2.0),
+            _ => (0.5, -RT3 / 2.0),
+        };
+        Box::new(move |p| {
+            let d = sub(p, c);
+            v2(c.x + co * d.x - si * d.y, c.y + si * d.x + co * d.y)
+        })
+    }
+
+    /// Rotation by 30° about `c`; cos 30° = √3/2 and sin 30° = 1/2, so this
+    /// too is exact over Q(√3). Used as a negative probe.
+    fn rot30(c: Vec2) -> Isometry {
+        Box::new(move |p| {
+            let d = sub(p, c);
+            v2(
+                c.x + RT3 / 2.0 * d.x - 0.5 * d.y,
+                c.y + 0.5 * d.x + RT3 / 2.0 * d.y,
+            )
+        })
+    }
+
+    /// Reflection in the line through `c` with unit direction `(u, w)`.
+    fn refl(c: Vec2, u: f64, w: f64) -> Isometry {
+        Box::new(move |p| {
+            let d = sub(p, c);
+            let pr = 2.0 * (u * d.x + w * d.y);
+            v2(c.x + pr * u - d.x, c.y + pr * w - d.y)
+        })
+    }
+
+    /// Is `k` an exact member of the (1/24)·Z[√3] surd grid? Exhaustive over
+    /// the table's bounded numerators (|p| ≤ 33, |q| ≤ 18): for q ≠ Q the gap
+    /// `|P + (Q−q)√3| ≥ 1/(|P| + |Q−q|√3) ≈ 7.5e-3`, so the 1e-9 decision is
+    /// exact here — no near-miss can be rounded into a hit.
+    fn on_twentyfourth_surd_grid(k: f64) -> bool {
+        let k24 = 24.0 * k;
+        (-60..=60).any(|q| {
+            let p = k24 - q as f64 * RT3;
+            (p - p.round()).abs() < 1e-9
+        })
+    }
+
+    /// Every corner angle of a face, rounded to the 30° lattice; asserts
+    /// outright that no corner falls off that lattice.
+    fn corners(v: &[Vec2]) -> Vec<u32> {
+        let n = v.len();
+        (0..n)
+            .map(|i| {
+                let e1 = sub(v[(i + n - 1) % n], v[i]);
+                let e2 = sub(v[(i + 1) % n], v[i]);
+                let a = cross(e1, e2).abs().atan2(e1.x * e2.x + e1.y * e2.y);
+                let k = (a / std::f64::consts::FRAC_PI_6).round();
+                assert!(
+                    (a - k * std::f64::consts::FRAC_PI_6).abs() < 1e-9,
+                    "corner {a} at {:?} is not a multiple of 30°",
+                    v[i]
+                );
+                (k * 30.0) as u32
+            })
+            .collect()
+    }
+
+    /// The 12 vertices of the substrate dodecagon centred at `c`: the vertex
+    /// `(1 + √3/2, 1/2)` turned through 30°·k — all exact Q(√3) points.
+    fn dodecagon_vertices(c: Vec2) -> Vec<Vec2> {
+        let (co, si) = (RT3 / 2.0, 0.5);
+        let mut p = v2(RAP, 0.5);
+        let mut out = Vec::with_capacity(12);
+        for _ in 0..12 {
+            out.push(c + p);
+            p = v2(co * p.x - si * p.y, si * p.x + co * p.y);
+        }
+        out
+    }
+
+    /// The 3.12.12 vertices (one triangle + two dodecagons each) around the
+    /// origin: the vertices of the dodecagons on the nearby lattice points.
+    fn substrate_vertices() -> Vec<Vec2> {
+        let mut out: Vec<Vec2> = Vec::new();
+        for m in -2..=2i32 {
+            for n in -2..=2i32 {
+                let c = v2(m as f64 * A1X, m as f64 * A1Y + n as f64 * A2Y);
+                for p in dodecagon_vertices(c) {
+                    if !out.iter().any(|q| norm(sub(*q, p)) < 1e-9) {
+                        out.push(p);
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    /// Strict containment in a convex face (every face of this partition is
+    /// convex: the corner census stops at 150°).
+    fn strictly_inside(p: Vec2, v: &[Vec2]) -> bool {
+        let n = v.len();
+        let s: Vec<f64> = (0..n)
+            .map(|i| cross(sub(v[(i + 1) % n], v[i]), sub(p, v[i])))
+            .collect();
+        s.iter().all(|c| *c > 1e-9) || s.iter().all(|c| *c < -1e-9)
+    }
+
+    /// Positive symmetry test: the image of the face `pts` under `f` must
+    /// coincide, vertex for vertex, with some orbit face plus an EXACT
+    /// lattice translation `m·a1 + n·a2`. Table vertices live on
+    /// `(1/24)·Z[√3]`, so a lattice coordinate of a difference is
+    /// `((12Q−6P) + (4P−6Q)√3)/72`; with the table's numerators bounded by
+    /// 33 and 18, a non-lattice offset is at least ≈ 8e-6 away — three orders
+    /// of magnitude above the 1e-9 tolerance, which therefore cannot blur a
+    /// genuine near-miss into a hit.
+    fn image_is_a_face(t: &LatticeTiling, pts: &[Vec2], f: &dyn Fn(Vec2) -> Vec2) -> bool {
+        let img: Vec<Vec2> = pts.iter().map(|p| f(*p)).collect();
+        for cell in &t.cells {
+            let v = &cell.poly.pts;
+            if v.len() != img.len() {
+                continue;
+            }
+            for i in 0..v.len() {
+                let d = sub(img[0], v[i]);
+                // d = m·(3/2+√3, 1+√3/2) + n·(0, 2+√3)
+                let m = d.x / A1X;
+                let n = (d.y - m * A1Y) / A2Y;
+                if (m - m.round()).abs() > 1e-9 || (n - n.round()).abs() > 1e-9 {
+                    continue;
+                }
+                let (mi, ni) = (m.round(), n.round());
+                let shift = v2(mi * A1X, mi * A1Y + ni * A2Y);
+                // Vertex-SET match (orientation-free: mirrors reverse the
+                // winding of the CCW-normalised table).
+                let target: Vec<Vec2> = v.iter().map(|p| *p + shift).collect();
+                let mut used = vec![false; target.len()];
+                let mut ok = true;
+                for p in &img {
+                    let hit = target.iter().position(|q| norm(sub(*p, *q)) < 1e-9);
+                    match hit {
+                        Some(j) if !used[j] => used[j] = true,
+                        _ => {
+                            ok = false;
+                            break;
+                        }
+                    }
+                }
+                if ok {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn all_faces(t: &LatticeTiling) -> Vec<Vec<Vec2>> {
+        t.cells.iter().map(|c| c.poly.pts.clone()).collect()
+    }
+
+    #[test]
+    fn pic_3_12_12_covers_region() {
+        check_covers(
+            &pic_3_12_12(),
+            "pic-3-12-12",
+            BBox::new(v2(-24.0, -18.0), v2(24.0, 18.0)),
+        );
+    }
+
+    #[test]
+    fn pic_3_12_12_rotated_scaled() {
+        check_rotated(
+            &pic_3_12_12(),
+            "pic-3-12-12(rot20,scale0.6)",
+            BBox::new(v2(-24.0, -18.0), v2(24.0, 18.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn pic_3_12_12_deterministic() {
+        check_det(
+            &pic_3_12_12(),
+            "pic-3-12-12",
+            BBox::new(v2(-12.0, -9.0), v2(12.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn pic_3_12_12_unit_structure() {
+        let t = pic_3_12_12();
+        assert_eq!(t.cells.len(), 45);
+        let by_seed = |s: u32| t.cells.iter().filter(|c| c.seed == s).count();
+        assert_eq!(
+            (by_seed(0), by_seed(1), by_seed(2), by_seed(3), by_seed(4), by_seed(5)),
+            (1, 6, 12, 2, 12, 12),
+            "orbit census: rosette core, 6 vertex pentagons, 12 band quads, \
+             2 medial triangles, 12 inner quads, 12 star notches"
+        );
+
+        // Exact Q(√3) construction: every coordinate is a (1/24)·Z[√3] surd.
+        for c in &t.cells {
+            for p in &c.poly.pts {
+                assert!(on_twentyfourth_surd_grid(p.x), "vertex x {} off the grid", p.x);
+                assert!(on_twentyfourth_surd_grid(p.y), "vertex y {} off the grid", p.y);
+            }
+        }
+
+        // Σ(cell areas) = |det(lattice)| — exact over Q(√3) (spike):
+        // (3/2+3√3/4) + 6·(3/8+3√3/16) + 12·(1/8+√3/12) + 2·(√3/16)
+        //   + 12·(1/16+√3/48) + 12·(√3/48) = 6 + 7√3/2.
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        assert!(
+            (det - (6.0 + 3.5 * RT3)).abs() < 1e-12,
+            "det = 6 + 7√3/2, got {det}"
+        );
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-12, "Σ areas {sum} vs det {det}");
+
+        // Seed 0 — one regular dodecagon of side 1/2 (the {12/4} star core)
+        // centred on the substrate dodecagon at O.
+        let cores: Vec<_> = t.cells.iter().filter(|c| c.seed == 0).collect();
+        assert_eq!(cores.len(), 1);
+        let v = &cores[0].poly.pts;
+        assert_eq!(v.len(), 12);
+        for i in 0..12 {
+            let side = norm(sub(v[(i + 1) % 12], v[i]));
+            assert!((side - 0.5).abs() < 1e-12, "core side {side}");
+        }
+        assert!(
+            (cores[0].poly.area() - (1.5 + 0.75 * RT3)).abs() < 1e-12,
+            "core area = 3/2 + 3√3/4"
+        );
+        let cen = v.iter().fold(Vec2::ZERO, |a, p| a + *p) / 12.0;
+        assert!(norm(cen) < 1e-12, "core centred on O, got {cen}");
+        assert_eq!(corners(v), vec![150; 12]);
+
+        // Seed 1 — the six vertex pentagons: four long chords of length
+        // ℓ = √(1/4+√3/8) plus the short midsegment side of length 1/2, and
+        // each wraps exactly one 3.12.12 vertex.
+        let subs = substrate_vertices();
+        let mut wrapped = 0;
+        for c in t.cells.iter().filter(|c| c.seed == 1) {
+            let v = &c.poly.pts;
+            assert_eq!(v.len(), 5);
+            let ell = (0.25 + RT3 / 8.0).sqrt();
+            let sides: Vec<f64> = (0..5)
+                .map(|i| norm(sub(v[(i + 1) % 5], v[i])))
+                .collect();
+            let shorts = sides.iter().filter(|s| (**s - 0.5).abs() < 1e-12).count();
+            let longs = sides.iter().filter(|s| (**s - ell).abs() < 1e-12).count();
+            assert_eq!((shorts, longs), (1, 4), "pentagon sides {sides:?}");
+            assert!(
+                (c.poly.area() - (0.375 + 0.1875 * RT3)).abs() < 1e-12,
+                "pentagon area = 3/8 + 3√3/16"
+            );
+            assert_eq!(
+                {
+                    let mut got = corners(v);
+                    got.sort_unstable();
+                    got
+                },
+                vec![90, 90, 120, 120, 120]
+            );
+            wrapped += subs.iter().filter(|p| strictly_inside(**p, v)).count();
+        }
+        assert_eq!(wrapped, 6, "one 3.12.12 vertex wrapped per pentagon");
+
+        // Seeds 2, 4 — the two quadrilateral orbits (band quads with sides
+        // ℓ, ℓ, m, m and inner quads with sides √3/6, √3/6, m, m, where
+        // m = √(1/12+√3/24)).
+        let m = (1.0 / 12.0 + RT3 / 24.0).sqrt();
+        let ell = (0.25 + RT3 / 8.0).sqrt();
+        for (seed, area, angles) in [(2u32, 0.125 + RT3 / 12.0, vec![60, 90, 90, 120]),
+                                     (4, 1.0 / 16.0 + RT3 / 48.0, vec![60, 60, 90, 150])]
+        {
+            for c in t.cells.iter().filter(|c| c.seed == seed) {
+                let v = &c.poly.pts;
+                assert_eq!(v.len(), 4);
+                let sides: Vec<f64> = (0..4)
+                    .map(|i| norm(sub(v[(i + 1) % 4], v[i])))
+                    .collect();
+                let two = |s: f64| sides.iter().filter(|x| (**x - s).abs() < 1e-12).count();
+                if seed == 2 {
+                    assert_eq!((two(ell), two(m)), (2, 2), "band quad sides {sides:?}");
+                } else {
+                    assert_eq!((two(RT3 / 6.0), two(m)), (2, 2), "inner quad sides {sides:?}");
+                }
+                let mut got = corners(v);
+                got.sort_unstable();
+                assert_eq!(got, angles);
+                assert!(
+                    (c.poly.area() - area).abs() < 1e-12,
+                    "seed {seed} quad area"
+                );
+            }
+        }
+
+        // Seed 3 — the midsegment medial triangle of each substrate triangle:
+        // equilateral of side 1/2, area √3/16, centred on a substrate
+        // triangle centre (1 + 2√3/3, 0) modulo the lattice.
+        for c in t.cells.iter().filter(|c| c.seed == 3) {
+            let v = &c.poly.pts;
+            assert_eq!(v.len(), 3);
+            for i in 0..3 {
+                let side = norm(sub(v[(i + 1) % 3], v[i]));
+                assert!((side - 0.5).abs() < 1e-12, "medial side {side}");
+            }
+            assert!(
+                (c.poly.area() - RT3 / 16.0).abs() < 1e-12,
+                "medial area = √3/16"
+            );
+            let cen = v.iter().fold(Vec2::ZERO, |a, p| a + *p) / 3.0;
+            let hit = [-1.0, 1.0].iter().any(|s| {
+                let w = v2(s * (1.0 + 2.0 * RT3 / 3.0), 0.0);
+                let d = sub(cen, w);
+                let m = d.x / A1X;
+                let n = (d.y - m * A1Y) / A2Y;
+                (m - m.round()).abs() < 1e-9 && (n - n.round()).abs() < 1e-9
+            });
+            assert!(hit, "medial triangle off a substrate triangle centre: {cen}");
+        }
+
+        // Seed 5 — the twelve star notches: isosceles triangles with two
+        // chords of √3/6 against a 1/2 base, corners 30°/120°/30°.
+        for c in t.cells.iter().filter(|c| c.seed == 5) {
+            let v = &c.poly.pts;
+            assert_eq!(v.len(), 3);
+            let sides: Vec<f64> = (0..3)
+                .map(|i| norm(sub(v[(i + 1) % 3], v[i])))
+                .collect();
+            let two = sides.iter().filter(|s| (**s - RT3 / 6.0).abs() < 1e-12).count();
+            let base = sides.iter().filter(|s| (**s - 0.5).abs() < 1e-12).count();
+            assert_eq!((two, base), (2, 1), "notch sides {sides:?}");
+            assert!(
+                (c.poly.area() - RT3 / 48.0).abs() < 1e-12,
+                "notch area = √3/48"
+            );
+            let mut got = corners(v);
+            got.sort_unstable();
+            assert_eq!(got, vec![30, 30, 120]);
+        }
+
+        // No face contains a substrate vertex except the six pentagons: the
+        // rosette pieces stay inside their own dodecagon and the medial
+        // triangles inside their own triangle.
+        for c in t.cells.iter().filter(|c| c.seed != 1) {
+            let n = subs.iter().filter(|p| strictly_inside(**p, &c.poly.pts)).count();
+            assert_eq!(n, 0, "seed {} face holds a substrate vertex", c.seed);
+        }
+    }
+
+    #[test]
+    fn pic_3_12_12_symmetry_is_p6m() {
+        let t = pic_3_12_12();
+        let faces = all_faces(&t);
+
+        // Positive probes: each must map every face to a face. Every centre
+        // and axis below is an exact Q(√3) point and every map an exact
+        // Q(√3) matrix (no trig).
+        let o = v2(0.0, 0.0); // substrate dodecagon centre
+        let tri = v2(1.0 + 2.0 * RT3 / 3.0, 0.0); // substrate triangle centre
+        let m1 = v2(RAP * RT3 / 2.0, RAP / 2.0); // dodecagon-dodecagon midpoint
+        let positives: Vec<(&str, Isometry)> = vec![
+            ("rot60 @ dodecagon centre", rot(o, 1)),
+            ("rot120 @ dodecagon centre", rot(o, 2)),
+            ("rot180 @ dodecagon centre", rot(o, 3)),
+            ("rot120 @ substrate triangle centre", rot(tri, 2)),
+            ("rot180 @ dodecagon-dodecagon midpoint", rot(m1, 3)),
+            ("mirror y = 0", refl(o, 1.0, 0.0)),
+            ("mirror x = 0", refl(o, 0.0, 1.0)),
+            ("mirror at 30° through O", refl(o, RT3 / 2.0, 0.5)),
+        ];
+        for (label, f) in &positives {
+            for (i, face) in faces.iter().enumerate() {
+                assert!(
+                    image_is_a_face(&t, face, f),
+                    "{label} must be a symmetry but fails on face {i}"
+                );
+            }
+        }
+
+        // Negative probes: the symmetry group is EXACTLY p6m — a 30° or 90°
+        // turn on the sixfold centre, a sixfold turn on the threefold centre,
+        // half turns on the wrong sites and a mirror between two mirror lines
+        // must all fail on some face.
+        let m0 = v2(RAP, 0.0); // dodecagon-triangle midpoint
+        let vert = v2(RAP, 0.5); // a 3.12.12 vertex
+        let negatives: Vec<(&str, Isometry)> = vec![
+            ("rot30 @ dodecagon centre", rot30(o)),
+            ("rot90 @ dodecagon centre", Box::new(|p| v2(-p.y, p.x))),
+            ("rot60 @ substrate triangle centre", rot(tri, 1)),
+            ("rot180 @ dodecagon-triangle midpoint", rot(m0, 3)),
+            ("rot180 @ substrate vertex", rot(vert, 3)),
+            ("mirror y = √3/2", refl(v2(0.0, RT3 / 2.0), 1.0, 0.0)),
+            ("mirror x = 1", refl(v2(1.0, 0.0), 0.0, 1.0)),
+        ];
+        for (label, f) in &negatives {
+            let fails = faces
+                .iter()
+                .filter(|face| !image_is_a_face(&t, face, f))
+                .count();
+            assert!(fails > 0, "{label} must NOT be a symmetry");
+        }
+    }
+
+    #[test]
+    fn pic_3_12_12_symmetry_metadata() {
+        let t = pic_3_12_12();
+        assert_eq!(t.id, "pic-3-12-12");
         assert_eq!(t.group, WallpaperGroup::P6m);
         assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
         assert_eq!(t.category, TilingCategory::Wallpaper);
