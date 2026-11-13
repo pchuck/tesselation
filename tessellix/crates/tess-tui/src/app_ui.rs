@@ -9,7 +9,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Text};
-use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Wrap};
+use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap};
 use ratatui::{Frame, Terminal};
 
 use tess_core::app::App;
@@ -35,13 +35,18 @@ struct Tui {
     gap256: u8,
     canvas_size: (u32, u32),
     raster: Option<raster::Raster>,
+    list_state: ListState,
+    thumbs: crate::thumb::Cache,
     dirty: bool,
 }
 
 impl Tui {
     fn new() -> Self {
         let registry = tess_tilings::registry();
-        let palette256: Vec<u8> = paint::PALETTE.iter().map(|&c| paint::rgb_to_256(c)).collect();
+        let palette256: Vec<u8> = paint::PALETTE
+            .iter()
+            .map(|&c| paint::rgb_to_256(c))
+            .collect();
         Self {
             app: App::new(registry, 8.0),
             mode: Mode::List,
@@ -51,6 +56,8 @@ impl Tui {
             gap256: 124,
             canvas_size: (0, 0),
             raster: None,
+            list_state: ListState::default(),
+            thumbs: crate::thumb::Cache::new(),
             dirty: true,
         }
     }
@@ -160,7 +167,10 @@ impl Tui {
         // pan_screen drags the content by (dx, dy) screen pixels (y down);
         // negate both so the keys reveal in the direction they name:
         // h -> left, l -> right, j -> down, k -> up (matching vim scroll).
-        self.app.pan(-dir_x as f64 * w as f64 * 0.3, -dir_y as f64 * h as f64 * 0.3);
+        self.app.pan(
+            -dir_x as f64 * w as f64 * 0.3,
+            -dir_y as f64 * h as f64 * 0.3,
+        );
         self.dirty = true;
     }
 }
@@ -228,18 +238,31 @@ fn render(frame: &mut Frame, tui: &mut Tui) {
     // Generate tiling for the current view.
     let result = tui.app.result(w, h);
 
-    // Side panel.
+    // Side panel. The preview block needs ~11 rows; on short terminals
+    // it is dropped in favor of list + params + info.
+    let with_preview = area.height >= 24;
     let side = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(1),
-            Constraint::Min(4),
-            Constraint::Length(1),
-            Constraint::Min(3),
-            Constraint::Min(2),
-        ])
+        .constraints(if with_preview {
+            vec![
+                Constraint::Length(1),
+                Constraint::Min(4),
+                Constraint::Length(1),
+                Constraint::Min(3),
+                Constraint::Length(11),
+                Constraint::Min(3),
+            ]
+        } else {
+            vec![
+                Constraint::Length(1),
+                Constraint::Min(4),
+                Constraint::Length(1),
+                Constraint::Min(3),
+                Constraint::Min(2),
+            ]
+        })
         .split(main[0]);
-    render_side(frame, tui, &side, &result);
+    render_side(frame, tui, &side, &result, with_preview);
 
     // Canvas.
     if w > 0 && h > 0 {
@@ -284,7 +307,11 @@ fn render(frame: &mut Frame, tui: &mut Tui) {
 
     // Status bar.
     let t = tui.app.tiling();
-    let search = if tui.mode == Mode::Search { "search> " } else { "" };
+    let search = if tui.mode == Mode::Search {
+        "search> "
+    } else {
+        ""
+    };
     let status = format!(
         " {} [{}] · {} · tiles {} · {} · z {:.1} {} │ ↑↓ tiling/param  tab list/params  ←→ adjust  hjkl pan  +/- zoom  c color  r reset  / search  q quit",
         t.name(),
@@ -303,13 +330,21 @@ fn render(frame: &mut Frame, tui: &mut Tui) {
     );
 }
 
-fn render_side(frame: &mut Frame, tui: &mut Tui, side: &[ratatui::layout::Rect], result: &tess_core::tiling::TilingResult) {
+fn render_side(
+    frame: &mut Frame,
+    tui: &mut Tui,
+    side: &[ratatui::layout::Rect],
+    result: &tess_core::tiling::TilingResult,
+    with_preview: bool,
+) {
     let t = tui.app.tiling();
 
     // Tiling list, grouped by declared category. Headers are rendered
     // rows but not selectable: move_selection walks the selectable set
     // (App::visible_tilings), so the arrow keys skip them naturally.
+    // A ListState keeps the scroll offset and follows the selection.
     let mut items: Vec<ListItem> = Vec::new();
+    let mut selected_item: Option<usize> = None;
     for (cat, tilings) in tui.app.visible_grouped() {
         items.push(
             ListItem::new(format!("{} · {}", cat, tilings.len())).style(
@@ -320,6 +355,9 @@ fn render_side(frame: &mut Frame, tui: &mut Tui, side: &[ratatui::layout::Rect],
         );
         for t in tilings {
             let selected = t.id() == tui.app.selected_id();
+            if selected {
+                selected_item = Some(items.len());
+            }
             let mut style = Style::default();
             if selected {
                 style = style.add_modifier(Modifier::BOLD).fg(Color::Cyan);
@@ -327,6 +365,7 @@ fn render_side(frame: &mut Frame, tui: &mut Tui, side: &[ratatui::layout::Rect],
             items.push(ListItem::new(format!(" {} · {}", t.name(), t.id())).style(style));
         }
     }
+    tui.list_state.select(selected_item);
     let list = List::new(items)
         .block(
             Block::default()
@@ -339,7 +378,7 @@ fn render_side(frame: &mut Frame, tui: &mut Tui, side: &[ratatui::layout::Rect],
                 .add_modifier(Modifier::REVERSED)
                 .fg(Color::Cyan),
         );
-    frame.render_widget(list, side[1]);
+    frame.render_stateful_widget(list, side[1], &mut tui.list_state);
 
     // Params.
     let specs = t.params();
@@ -361,18 +400,20 @@ fn render_side(frame: &mut Frame, tui: &mut Tui, side: &[ratatui::layout::Rect],
             ListItem::new(format!("{}{} = {}", marker, spec.label, v)).style(style)
         })
         .collect();
-    let params = List::new(param_items)
-        .block(
-            Block::default()
-                .title(" params (tab to edit) ")
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::DarkGray)),
-        );
+    let params = List::new(param_items).block(
+        Block::default()
+            .title(" params (tab to edit) ")
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::DarkGray)),
+    );
     frame.render_widget(params, side[3]);
 
     // Info.
+    let info_idx = if with_preview { 5 } else { 4 };
     let info = {
         let mut lines = vec![
+            format!("cat    {}", t.category().label()),
+            format!("id     {}", t.id()),
             format!("group  {}", result.symmetry.group),
             format!("lattice {}", result.symmetry.lattice),
         ];
@@ -389,5 +430,114 @@ fn render_side(frame: &mut Frame, tui: &mut Tui, side: &[ratatui::layout::Rect],
                 .border_style(Style::default().fg(Color::DarkGray)),
         )
         .wrap(Wrap { trim: false });
-    frame.render_widget(info, side[4]);
+    frame.render_widget(info, side[info_idx]);
+
+    // Preview: the selected tiling as a half-block mini-render. Cached
+    // per (id, params, color mode, size); generation is bounded by the
+    // small window, so browsing stays responsive.
+    if !with_preview {
+        return;
+    }
+    let pv = side[4];
+    let block = Block::default()
+        .title(" preview ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::DarkGray));
+    frame.render_widget(block.clone(), pv);
+    let pw = pv.width.saturating_sub(2) as u32;
+    let ph = pv.height.saturating_sub(2) as u32;
+    if pw == 0 || ph == 0 {
+        return;
+    }
+    let thumb = tui.thumbs.get_or_generate(
+        crate::thumb::ThumbCtx {
+            tiling: t,
+            specs,
+            params: tui.app.params(),
+            mode: tui.app.color_mode,
+            palette256: &tui.palette256,
+        },
+        pw,
+        ph,
+    );
+    let map = |c: u8| match c {
+        raster::BORDER => Color::Indexed(tui.border256),
+        raster::GAP => Color::Indexed(tui.bg256),
+        c => Color::Indexed(c),
+    };
+    let buf = frame.buffer_mut();
+    for r in 0..(ph as usize).min(thumb.rows.len()) {
+        for x in 0..(pw as usize).min(thumb.w as usize) {
+            let (top, bot) = thumb.rows[r][x];
+            let cell = &mut buf[(pv.x + 1 + x as u16, pv.y + 1 + r as u16)];
+            cell.set_char('▀');
+            cell.set_style(Style::default().fg(map(top)).bg(map(bot)));
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::backend::TestBackend;
+
+    /// Count cells with the given symbol across the whole buffer.
+    fn count_symbol(terminal: &Terminal<TestBackend>, sym: &str) -> usize {
+        terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .filter(|c| c.symbol() == sym)
+            .count()
+    }
+
+    /// Whole-buffer text with newlines per row (for substring checks).
+    fn buffer_text(terminal: &Terminal<TestBackend>) -> String {
+        let buf = terminal.backend().buffer();
+        let w = buf.area.width as usize;
+        let mut s = String::new();
+        for (i, c) in buf.content.iter().enumerate() {
+            if i > 0 && i % w == 0 {
+                s.push('\n');
+            }
+            s.push_str(c.symbol());
+        }
+        s
+    }
+
+    #[test]
+    fn render_draws_preview_and_follows_selection() {
+        let terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let mut term = terminal;
+        let mut tui = Tui::new();
+        // Two selection moves exercise the list state + thumb cache.
+        tui.app.move_selection(1);
+        tui.app.move_selection(1);
+        term.draw(|f| render(f, &mut tui)).unwrap();
+
+        // Preview block: many half-block cells painted.
+        let thumbs = count_symbol(&term, "▀");
+        assert!(thumbs > 50, "expected preview pixels, got {thumbs}");
+        // Info box gained the category/id lines.
+        let text = buffer_text(&term);
+        assert!(text.contains("cat    "), "info box missing category line");
+        assert!(text.contains("id     "), "info box missing id line");
+        // Preview block title present.
+        assert!(text.contains("preview"), "preview block missing");
+        // Second draw (no state change) must not panic and stays stable.
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        assert_eq!(count_symbol(&term, "▀"), thumbs);
+    }
+
+    #[test]
+    fn render_short_terminal_drops_preview() {
+        let terminal = Terminal::new(TestBackend::new(100, 20)).unwrap();
+        let mut term = terminal;
+        let mut tui = Tui::new();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        assert_eq!(count_symbol(&term, "▀"), 0, "preview should be dropped");
+        let text = buffer_text(&term);
+        assert!(text.contains("cat    "));
+    }
 }

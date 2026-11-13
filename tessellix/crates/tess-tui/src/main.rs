@@ -9,6 +9,7 @@
 
 mod app_ui;
 mod raster;
+mod thumb;
 
 use tess_core::params::{ParamKind, ParamValue};
 use tess_core::view::ColorMode;
@@ -19,7 +20,9 @@ fn main() {
         None => app_ui::run().map_err(|e| e.to_string()),
         Some("list") => list(),
         Some("export") => export(&args[1..]),
-        Some(other) => Err(format!("unknown command: {other}\nusage: tess-tui [list | export ...]")),
+        Some(other) => Err(format!(
+            "unknown command: {other}\nusage: tess-tui [list | export ...]"
+        )),
     };
     if let Err(e) = result {
         eprintln!("error: {e}");
@@ -72,7 +75,10 @@ fn export(args: &[String]) -> Result<(), String> {
     let mut i = 0;
     let next = |i: &mut usize| -> Result<String, String> {
         if *i >= args.len() {
-            return Err(format!("missing value for {}", args[(*i).saturating_sub(1)]));
+            return Err(format!(
+                "missing value for {}",
+                args[(*i).saturating_sub(1)]
+            ));
         }
         let v = args[*i].clone();
         *i += 1;
@@ -83,12 +89,22 @@ fn export(args: &[String]) -> Result<(), String> {
         i += 1;
         match key {
             "--tiling" => a.tiling = next(&mut i)?,
-            "--width" => a.width = next(&mut i)?.parse::<u32>().map_err(|_| "bad --width".to_string())?,
-            "--height" => a.height = next(&mut i)?.parse::<u32>().map_err(|_| "bad --height".to_string())?,
+            "--width" => {
+                a.width = next(&mut i)?
+                    .parse::<u32>()
+                    .map_err(|_| "bad --width".to_string())?
+            }
+            "--height" => {
+                a.height = next(&mut i)?
+                    .parse::<u32>()
+                    .map_err(|_| "bad --height".to_string())?
+            }
             "--out" | "-o" => a.out = next(&mut i)?,
             "--scale" => a.scale = finite(&next(&mut i)?, "--scale")?,
             "--rotation" => a.rotation = finite(&next(&mut i)?, "--rotation")?,
-            "--mode" => a.mode = ColorMode::parse(&next(&mut i)?).ok_or_else(|| "bad --mode".to_string())?,
+            "--mode" => {
+                a.mode = ColorMode::parse(&next(&mut i)?).ok_or_else(|| "bad --mode".to_string())?
+            }
             "--param" => {
                 let v = next(&mut i)?;
                 let (id, value) = v
@@ -113,10 +129,15 @@ fn export(args: &[String]) -> Result<(), String> {
     }
 
     let registry = tess_tilings::registry();
-    let tiling = registry.get(&a.tiling).ok_or_else(|| format!("unknown tiling: {}", a.tiling))?;
+    let tiling = registry
+        .get(&a.tiling)
+        .ok_or_else(|| format!("unknown tiling: {}", a.tiling))?;
     let mut params = tess_core::params::ParamSet::default_for(tiling.params());
     params.set(tess_tilings::lattice::SCALE_ID, ParamValue::Float(a.scale));
-    params.set(tess_tilings::lattice::ROTATION_ID, ParamValue::Angle(a.rotation));
+    params.set(
+        tess_tilings::lattice::ROTATION_ID,
+        ParamValue::Angle(a.rotation),
+    );
     // Generic --param ID=VALUE overrides, resolved against the tiling's
     // self-describing specs (ParamId holds a 'static str, so match on the
     // spec's own id, then set it with the kind-appropriate value).
@@ -130,14 +151,12 @@ fn export(args: &[String]) -> Result<(), String> {
                 format!("unknown parameter '{id}' for tiling '{name}' (see `tess-tui list`)")
             })?;
         let v = match spec.kind {
-            ParamKind::Float { .. } => ParamValue::Float(finite(
-                value,
-                &format!("value for parameter '{id}'"),
-            )?),
-            ParamKind::Angle { .. } => ParamValue::Angle(finite(
-                value,
-                &format!("value for parameter '{id}'"),
-            )?),
+            ParamKind::Float { .. } => {
+                ParamValue::Float(finite(value, &format!("value for parameter '{id}'"))?)
+            }
+            ParamKind::Angle { .. } => {
+                ParamValue::Angle(finite(value, &format!("value for parameter '{id}'"))?)
+            }
             ParamKind::Int { .. } => ParamValue::Int(
                 value
                     .parse()
@@ -165,8 +184,7 @@ fn export(args: &[String]) -> Result<(), String> {
     }
 
     let svg = tess_core::svg::render_svg(&result.tiles, &region, a.mode);
-    std::fs::write(&a.out, svg)
-        .map_err(|e| format!("failed to write {}: {e}", a.out))?;
+    std::fs::write(&a.out, svg).map_err(|e| format!("failed to write {}: {e}", a.out))?;
     println!("wrote {} ({} tiles)", a.out, result.tiles.len());
     Ok(())
 }
