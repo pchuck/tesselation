@@ -274,6 +274,10 @@ confirm the diffraction claim during the spike before declaring.
   verify the assignments at design time; implement only uncovered
   types. One type per task, delegated; all `pentagon1..15` features
   pre-created (types 4/8 map to cairo/hirschhorn pending verification).
+  **Type 7 = M58, in progress** (fast-worker) — first parameterized
+  2-iso family (b=c=d=e, B+2E=2C+D=360°); the task pins and documents
+  one canonical instance (pentagon13 precedent); 8-tile unit,
+  edge-to-edge, pgg/p2 by probe.
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 
