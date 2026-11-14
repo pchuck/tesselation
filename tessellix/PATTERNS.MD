@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (54 tilings)
+## Implemented (55 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -84,6 +84,7 @@ figures at the split midpoints, `2.4.4`).
 | `pentagon-13` | Rice pentagon, type 13 (A = 120°) | p2 | 2-isohedral chiral pair (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3); long side split into two collinear a-edges (M49) |
 | `pentagon-14` | Stein pentagon, type 14 (completely determined) | p2 | 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, exact Q(√57, β) with β = √((11√57−25)/8); long sides split into two collinear unit fine edges — 7/5/6-vertex cells (M50) |
 | `pentagon-15` | Mann pentagon, type 15 (MMVD 2015) | pgg | 3-isohedral (seeds 0/1/2), 12 tiles per rectangular cell = 4 congruent 3-tile blocks, exact Q(√3) (a = 2, b = d = e = 1, c = √(2+√3), all vertices on the (p+q√3)/2 grid); non-edge-to-edge — 4 T-split edges per cell (M55) |
+| `pentagon-9` | Rice pentagon, type 9 (Rice 1977) | pgg | 2-isohedral (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3) (A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; vertices on the (Z+Z√3)/7 grid); edge-to-edge, vertex stars {A,A,C}, {D,E,E}, {B,B,C,D}; two perpendicular glide families squaring to the primitive translations, no mirrors (M59) |
 
 ### Aperiodic / nonperiodic
 
@@ -758,14 +759,16 @@ labels, which are out of chronological order.)
   counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
   306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
 - **Status:** implemented (M45).
-## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55 landed)
+## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59 landed)
 
 The PROPOSED.md #5 arc (all 15 convex pentagonal tiling types). Type 13
 (Rice) lands first: its 8-tile primitive unit is small enough for a
 plain data table; type 14 (Stein) second: a 6-tile unit, but with the
 census's first exact-Q(√57) surd field; type 15 (Mann/McLoud-Mann/
 Von Derau 2015) third: a 12-tile rectangular unit in exact Q(√3) —
-the arc's only pgg — with two perpendicular glide families.
+the arc's first pgg — with two perpendicular glide families; type 9
+(Rice 1977) fourth: an 8-tile rectangular unit in exact Q(√3), the
+arc's second pgg and its first edge-to-edge pentagon-level Rice type.
 
 ### 15. Pentagon type 13 (Rice) ✅ (M49)
 
@@ -896,6 +899,59 @@ the arc's only pgg — with two perpendicular glide families.
   (93/89/45 tiles at three fixed windows), plus the brute-force
   culling cross-check.
 - **Status:** committed (M55). 52 tilings, 333 tests at the commit.
+
+### 18. Pentagon type 9 (Rice 1977) ✅ (M59)
+
+- **Motif:** Rice's type-9 convex pentagonal tiling — a
+  two-parameter family with b = c = d = e and 2A + C = D + 2E = 360°.
+  The shipped instance pins the exact-Q(√3) member A = C = 120°,
+  cos B = 1/7 (B ≈ 81.79°), cos D = 23/98 (D ≈ 76.43°),
+  cos E = −11/14 (E ≈ 141.79°), a = 6, b = c = d = e = 14 (tile
+  area 141√3). 2-isohedral: two full-group orbits
+  {T1,T4,T5,T8} / {T2,T3,T6,T7}, eight tiles per primitive unit.
+- **Geometry:** edge-to-edge at the pentagon level (every side is
+  matched by exactly one full side of one neighbour — the quotient
+  census pairs equal lengths only: a↔a ×4, b↔c ×4, b↔d ×4, c↔c ×2,
+  d↔e ×4, e↔e ×2, 40 directed rules). The three vertex stars are
+  {A,A,C}, {D,E,E} and {B,B,C,D} — 120°+120°+120°,
+  76.43°+2·141.79° and 2·81.79°+120°+76.43°, each exactly 360°.
+  Every cell vertex lies on the (Z + Z√3)/7 grid; no decimal
+  approximations shipped.
+- **Unit cell:** 8 tiles on the rectangular lattice
+  w1 = (−30, 6√3), w2 = (−141/7, −235√3/7)
+  (w1 ⊥ w2, |w1|² = 1008, |w2|² = 185556/49,
+  det = 1128√3 = 8 × tile area). Extracted from a verified
+  exact-Q(√3) construction and checked before porting: zero
+  overlaps, exactly-once coverage on an 81×71-point sample, complete
+  full-edge gluing with the three closed vertex stars, and an exact
+  symmetry audit of the quotient table.
+- **Group:** **pgg**. The half-turn centres c0 = (13, 4√3) and its
+  images; two perpendicular glide families
+  g1 = (M_v, (167/7, −165√3/7)) with axis ∥ w2 and g1² = w2, and
+  g2 = (M_u, (12, −8√3)) with axis ∥ w1 and g2² = −w1, where M_v is
+  reflection about the w2 direction (fixing w2, negating w1) and
+  M_u = −M_v about the w1 direction (all exact Q(√3)). No mirrors:
+  every symmetry with a glide's linear part shifts by exactly half a
+  primitive translation along its axis, so no conjugate is a pure
+  reflection. Confirmed
+  two ways: a gauge-invariant automorphism audit of the exact
+  quotient table (perm + lattice gauge over Z), then exact geometric
+  verification of the seeded generators on the reconstruction.
+  Seeds 0/1 ship the two full-group isohedral orbits; the glides
+  identify the two chiralities inside each orbit.
+- **Verify:** standard trio (coverage, rotated-scaled, deterministic)
+  + unit-structure test (exact lattice facts, det = 8·area, per-tile
+  cyclic (side, angle) fingerprints, exact corner cosines) +
+  edge-to-edge gluing census (61-tile patch: no duplicate directed
+  side, every interior side full-matched, zero T-junctions) +
+  vertex-star census (interior stars exactly {A,A,C}, {D,E,E},
+  {B,B,C,D}, sums 2π) + isohedral-class test + pgg symmetry test
+  (exact half-turn patch equality; g1/g2 image-window containment;
+  g1² = w2, g2² = −w1; negative mirror probes) + window-census test
+  (61/32/16/4 tiles at four fixed windows, cross-checked against an
+  independent Python emulation of the lattice.rs culling), plus the
+  brute-force culling cross-check.
+- **Status:** committed (M59). 55 tilings, 362 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -1473,3 +1529,25 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   gluing, symmetry audit, shipped-template congruence); standard trio
   + unit structure + isohedral-class + pgg-symmetry + window-census
   tests, culling cross-check green (54 tilings, 353 tests).
+- 2026-11-14 — M59 Pentagon type 9 (Rice 1977) ✅: a two-parameter
+  Rice family (b = c = d = e, 2A + C = D + 2E = 360°) pinned to its
+  exact-Q(√3) member A = C = 120°, cos B = 1/7, cos D = 23/98,
+  cos E = −11/14, a = 6, b = c = d = e = 14 (area 141√3) as an
+  8-tile data table (`pentagon9.rs`, feature `pentagon9`) — all
+  vertices on the (Z+Z√3)/7 grid; rectangular cell
+  w1 = (−30, 6√3) ⊥ w2 = (−141/7, −235√3/7), det = 1128√3 = 8·area.
+  Edge-to-edge at the pentagon level (equal-length quotient census
+  a↔a/b↔c/b↔d/c↔c/d↔e/e↔e), vertex stars {A,A,C}, {D,E,E},
+  {B,B,C,D}. Group **pgg** confirmed by a gauge-invariant
+  automorphism audit of the exact quotient table plus exact
+  geometric verification: half-turn c0 = (13, 4√3), glides
+  g1 = (M_v, (167/7, −165√3/7)) (axis ∥ w2, g1² = w2) and
+  g2 = (M_u, (12, −8√3)) (axis ∥ w1, g2² = −w1), no mirrors (every
+  glide-class element shifts half a primitive translation along its
+  axis). 2-isohedral (seeds 0/1: {T1,T4,T5,T8} / {T2,T3,T6,T7}).
+  Verified exactly before porting (81×71 exactly-once coverage
+  sample, complete full-edge gluing + closed vertex stars); standard
+  trio + unit structure + edge-gluing census + vertex stars +
+  isohedral-class + pgg-symmetry + window-census tests (counts
+  61/32/16/4 cross-checked against an independent Python emulation
+  of the culling), culling cross-check green (55 tilings, 362 tests).

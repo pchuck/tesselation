@@ -228,7 +228,7 @@ confirm the diffraction claim during the spike before declaring.
   | 6 | a=d=e, b=c, B+D=180°, 2B=E | p2 | 4 | 2-iso | yes |
   | 7 | b=c=d=e, B+2E=2C+D=360° | pgg/p2 | 8 | 2-iso | yes |
   | 8 | b=c=d=e, 2B+C=D+2E=360° | pgg/p2 | 8 | 2-iso | yes |
-  | 9 | b=c=d=e, 2A+C=D+2E=360° | pgg/p2 | 8 | 2-iso | yes |
+  | 9 | b=c=d=e, 2A+C=D+2E=360° | pgg (verified, M59) | 8 | 2-iso | yes |
   | 10 | a=b=c+e, A=90°, B+E=180°, B+2C=360° | p2 / cmm | 6 | 3-iso | **no** |
   | 11 | 2a+c=d=e, A=90°, 2B+C=360°, C+E=180° | pgg/p2 | 8 | 2-iso | no |
   | 12 | 2a=d=c+e, A=90°, 2B+C=360°, C+E=180° | pgg/p2 | 8 | 2-iso | no |
@@ -271,8 +271,16 @@ confirm the diffraction claim during the spike before declaring.
   b = βa = √((11√57−25)/8 · a²), A = 90°), exact Q(√57, β)
   6-tile oblique unit, 3-isohedral, group p2 (2222). Type 13 (Rice)
   implemented (M49) — canonical A = 120° instance, exact Q(√3)
-  8-tile unit, group p2. Remaining (M56+), in the arc's priority
-  order: then 7/9/11/12 (parameterized 2-iso families), then
+  8-tile unit, group p2. Type 9 (Rice 1977) implemented (M59) — the
+  first edge-to-edge Rice type of the arc, pinned to the exact-Q(√3)
+  member A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14,
+  a = 6, b = c = d = e = 14 (area 141√3, vertices on the
+  (Z+Z√3)/7 grid): 8-tile rectangular unit, 2-isohedral (seeds
+  0/1), group **pgg confirmed** (gauge-invariant quotient-table
+  automorphism audit plus exact generator verification — half-turn
+  c0 = (13, 4√3), perpendicular glides g1² = w2 and g2² = −w1, no
+  mirrors). Remaining (M56+), in the arc's priority
+  order: then 7/11/12 (parameterized 2-iso families), then
   2/3/5/10, then 1 (p2 topology). Existing tilings likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
   verify the assignments at design time; implement only uncovered
