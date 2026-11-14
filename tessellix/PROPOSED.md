@@ -349,10 +349,23 @@ confirm the diffraction claim during the spike before declaring.
 
 ### 8. Socolar 12-fold (and the shield tiling)
 
-- **Sprint allocation (2026-11-13):** the shield tiling (Gähler) is
-  the first deliverable (M51, delegated, feature `socolar`); Socolar's
-  own 1989 rule table and the wheel tiling (MLD duals) follow if the
-  class lands well.
+- **Sprint allocation (updated 2026-11-14, coordinator):** Socolar-12
+  itself is **BLOCKED ON SOURCE** — four attempts (two context-ceiling
+  deaths, two API timeouts, zero task failures) culminated in a
+  stop-report proving the published substitution figure is a
+  *decorated* rule whose second decoration state's child patches appear
+  in no accessible source (Klitzing page + Tilings Encyclopedia checked;
+  the authoritative Socolar, Phys. Rev. B 39 (1989) 10519 is paywalled;
+  exhaustive anchor-shift / 576-case frame / 92×144 decoration-variant
+  scans leave zero consistent completions of the drawn tables — evidence
+  pack preserved in the task scratch `REPORT.md`). Retargeted per owner
+  decision: **M51 = the shield tiling (Gähler)**, feature `shield`,
+  as this dossier's dodecagonal deliverable. The **wheel tiling**
+  (Nissen) — shield's edge-orthogonal MLD dual — follows as a second
+  commit if the shield lands well. A cut-and-project implementation of
+  Socolar-12 (canonical, ~1–2 dev-days, new CPS engine path) remains a
+  future research item; the socolar scratch's exact-arithmetic and
+  pixel-audit tooling transfers.
 
 - **Motif:** Socolar's 1989 dodecagonal quasicrystal tiling — three
   prototiles (30° rhombus, square, regular hexagon) with a published
