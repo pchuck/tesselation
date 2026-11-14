@@ -286,10 +286,23 @@ confirm the diffraction claim during the spike before declaring.
   verify the assignments at design time; implement only uncovered
   types. One type per task, delegated; all `pentagon1..15` features
   pre-created (types 4/8 map to cairo/hirschhorn pending verification).
-  **Type 7 = M58, in progress** (fast-worker) — first parameterized
-  2-iso family (b=c=d=e, B+2E=2C+D=360°); the task pins and documents
-  one canonical instance (pentagon13 precedent); 8-tile unit,
-  edge-to-edge, pgg/p2 by probe.
+  **Type 7 (M58): DEFERRED with evidence** — four sessions culminated in
+  an honest stop: the 15°/30°-grid pin clause is provably unsatisfiable
+  (0 of 25 grid points close; nearest miss exactly (1+√2−√6)/2 ≈ 0.0176),
+  the valid 22.5°-grid pin (A=67.5°, B=C=135°, D=90°, E=112.5°, a²=2+√2,
+  all conditions exact) admits **no 8-tile periodic cell** (exact
+  translational pairing failure + 22M-node bounded search, 0 solutions,
+  unbounded tree — a bounded negative, not an exhaustive proof); the
+  reference instance ≈(148°,133°) is off-grid and not surd-pin-able.
+  Evidence pack: task scratch REPORT.md (376 lines). Brief corrections
+  learned: A = C − B/2 (not B/2 + C); the "B < D" clause is not a
+  convexity condition. Future milestone: re-scope (reference-instance
+  combinatorics first, pose-model audit, or periodicity-proof framing).
+  **Type 11 = M60, in progress** (fast-worker) — 2a+c=d=e, A=90°,
+  2B+C=360°, C+E=180° (⇒ C=360−2B, E=2B−180, D=270−B; convex 90°<B<180°);
+  8-tile 2-iso unit, NON-edge-to-edge (chair/pinwheel refined-census
+  policy); pin the REFERENCE animation's instance (M58 lesson) and derive
+  the glue combinatorics from the frames (M59's proven tint pipeline).
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 
