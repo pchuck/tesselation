@@ -33,7 +33,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 5 | Pentagon census (types 1–15) | Wallpaper | tables + 2 direct | S–L each | P1 |
 | 6 | Stampfli 12-fold (2+√3) | Quasiperiodic | substitution | M–L | P1 |
 | 7 | Golden bee / Ammann chair (A2, √φ) | Quasiperiodic* | substitution | M–L | P1 |
-| 8 | Socolar / shield 12-fold | Quasiperiodic | substitution | L | P1 |
+| 8 | shield tiling ✅ DONE (M51); Socolar-12 blocked-on-source, wheel tiling = MLD-dual follow-up | Quasiperiodic | substitution | L | P1 |
 | 9 | Lançon–Billard binary tiling | Quasiperiodic | substitution | M | P1 |
 | 10 | Rep-tile siblings: T-tetromino, P-pentomino | Aperiodic | integer substitution | S–M each | P1 |
 | 11 | Jeandel–Rao 11 Wang tiles | Aperiodic | Sturmian/substitution | L | P1 |
@@ -368,7 +368,25 @@ confirm the diffraction claim during the spike before declaring.
   claim stays outside our verification reach, declare Aperiodic with
   a documented note (chair precedent).
 
-### 8. Socolar 12-fold (and the shield tiling)
+### 8. Socolar 12-fold (and the shield tiling) — shield DONE (M51) ✅
+
+- **Result (M51, 2026-11-15):** the **shield tiling (Gähler)** shipped
+  as `shield.rs` (feature `shield`, category Quasiperiodic). Pinned
+  rule: inflation **θ = (√6+√2)/2 = 2cos 15°**, θ² = 2+√3 = Perron
+  eigenvalue of the 8×8 kind-count matrix (char poly divisible by
+  x²−4x+1, PF vector positive); 4 prototiles (shield hexagon, square,
+  black/white triangle) × R/L matching labels = 8 substitution kinds
+  (shield → 13 children, square → 5, black tri → 1 shield, white tri →
+  3); children tile **kinked supertiles** (±¼-unit-square notches:
+  shield 6 in, square 4 in, black tri 3 out, white tri 2 out + 1 in)
+  on exact Q(√2,√3) anchors; 13-tile kinked-shield seed with centroid
+  √2/2 + √6/3 and covered-disk inradius (1+√3)/2. Verified in exact
+  Python before porting (per-kind disjointness + closed unit-edge
+  boundary + area law, growth 13→31→151→493→1981, published 10-tile
+  sequence, dodecagonal 12-direction frame; no local 30° center — the
+  12-fold is Bragg/MLD, window a regular dodecagon). Follow-up: the
+  **wheel tiling** (Nissen), shield's edge-orthogonal MLD dual, derives
+  from the same tables via the MLD map.
 
 - **Sprint allocation (updated 2026-11-14, coordinator):** Socolar-12
   itself is **BLOCKED ON SOURCE** — four attempts (two context-ceiling

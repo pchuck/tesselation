@@ -72,11 +72,11 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 ## Supported tilings
 
-55 built-in tilings, all discoverable in both UIs via the registry
+56 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
-**Wallpaper** (20), **Quasiperiodic** (7: Penrose family, Ammann–Beenker,
-Stampfli, girih Darb-i Imam), **Aperiodic** (7: einstein family, limit-periodic
+**Wallpaper** (20), **Quasiperiodic** (8: Penrose family, Ammann–Beenker,
+Stampfli, shield, girih Darb-i Imam), **Aperiodic** (7: einstein family, limit-periodic
 rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
 UIs group their lists by it. Categories are declared on the tiling
 (never derived from its symmetry), so the grouping is honest about
@@ -130,6 +130,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `penrose-pentagon` | Penrose Pentagon (5-tile φ-substitution) | aperiodic five-pentagon substitution tiling; 5-fold local symmetry | — | — |
 | `ammann-beenker` | Ammann-Beenker (A5) | aperiodic square+45°-rhombus by substitution; local 8-fold symmetry | — | — |
 | `stampfli` | Stampfli (12-fold) | aperiodic square+triangle+30°-rhombus by substitution (inflation 2+√3); exact dodecagonal seed star, local 12-fold symmetry | — | — |
+| `shield` | Gähler shield (12-fold) | aperiodic shield-hexagon+square+triangle substitution (Gähler; inflation √(2+√3), kinked supertiles, 4 protos / 8 labelled kinds); dodecagonal frame, Bragg 12-fold, no local 30° center | — | — |
 | `pinwheel` | Pinwheel (1–2–√5) | aperiodic Pythagorean; tiles in infinitely many orientations | — | — |
 | `chair` | Chair (L-tromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge | — | — |
 | `sphinx` | Sphinx (pentagonal hexiamond) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 12 orientations; non-edge-to-edge | — | — |
@@ -282,6 +283,20 @@ cross-check plus a ratio-sweep coverage test.
   to unit pieces with per-step culling; all anchors stay exact in
   Z[√3]/4, giving edge-to-edge, T-junction-free patches with exact
   12-fold symmetry about the seed at every generation.
+- **Gähler shield** (`shield.rs`) — the dodecagonal shield tiling
+  (Gähler 1988): shield hexagon, square and two unit triangles, each in
+  two labelled orientations R/L (the labels carry the matching rules,
+  so 8 substitution kinds collapse to 4 output prototiles). Inflation
+  θ = 2cos 15° = (√6+√2)/2, Perron eigenvalue of the 8×8 count matrix
+  θ² = 2+√3. Children tile a *kinked* supertile (±¼-unit-square
+  triangular notches; shield 6 in, square 4 in, black tri 3 out, white
+  tri 2 out + 1 in), verified per kind in exact `Q(√2,√3)` arithmetic.
+  Seeds with the 13-tile kinked-shield supertile (area centroid exact at
+  √2/2 + √6/3, covering a disk of inradius (1+√3)/2 per scale) and
+  deflates with per-step culling. All edges lie on the 12 dodecagonal
+  directions 15°·k (matching window: regular dodecagon); the 12-fold
+  character is Bragg/MLD — no local 30° rotation center exists (every
+  tile angle ≥ 60°).
 - **Pinwheel** (`pinwheel.rs`) — Conway–Radin tiling by the 1–2–√5
   right triangle; √5 inflation with an `arctan(1/2)` twist, so tiles
   occur in infinitely many orientations. Labeled-vertex child placement
@@ -402,7 +417,7 @@ and the search filter. The TUI and GUI are thin layers over it.
 
 ## Tests
 
-`cargo test --workspace` (currently 362 tests, all green, zero
+`cargo test --workspace` (currently 382 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

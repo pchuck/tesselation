@@ -70,6 +70,8 @@ pub mod turtle;
 pub mod spectre;
 #[cfg(feature = "stampfli")]
 pub mod stampfli;
+#[cfg(feature = "shield")]
+pub mod shield;
 #[cfg(feature = "square")]
 pub mod square;
 #[cfg(feature = "triangle")]
@@ -128,6 +130,10 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "ammann_beenker")]
     {
         r = r.register(ammann_beenker::AmmannBeenkerTiling);
+    }
+    #[cfg(feature = "shield")]
+    {
+        r = r.register(shield::ShieldTiling);
     }
     #[cfg(feature = "stampfli")]
     {
@@ -434,8 +440,8 @@ mod tests {
         let expect_counts: std::collections::BTreeMap<&str, usize> = [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-            ("Wallpaper", 20),
-            ("Quasiperiodic", 7),
+("Wallpaper", 20),
+            ("Quasiperiodic", 8),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
         ]
@@ -7102,4 +7108,74 @@ mod pentagon9_tests {
             assert_eq!(r.tiles.len(), want, "window census for {region:?}");
         }
     }
+}
+#[cfg(all(test, feature = "shield"))]
+mod shield_tests {
+    use super::tests::{check_coverage, check_det, check_rotated};
+    use crate::shield::ShieldTiling;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn shield_covers_region() {
+        let t = ShieldTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(
+            &t,
+            "shield",
+            &p,
+            BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)),
+        );
+    }
+
+    #[test]
+    fn shield_rotated_scaled() {
+        check_rotated(
+            &ShieldTiling,
+            "shield(rot25,scale0.6)",
+            BBox::new(v2(-7.0, -7.0), v2(7.0, 7.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn shield_deterministic() {
+        check_det(
+            &ShieldTiling,
+            "shield",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+
+    /// Proto census + seed-value sanity on a default-parameter view.
+    #[test]
+    fn shield_proto_census() {
+        let t = ShieldTiling;
+        let p = ParamSet::default_for(t.params());
+        let r = t.generate(&p, &Query { region: BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)) });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        let mut counts = [0usize; 4];
+        for tile in &r.tiles {
+            assert!((0..4).contains(&tile.proto), "proto out of range");
+            assert_eq!(tile.seed, u32::from(tile.proto), "seed must equal proto");
+            counts[tile.proto as usize] += 1;
+        }
+        // All four prototiles must appear (shields, squares, both
+        // triangles): the kinked seed contains 3 squares and 10
+        // triangles, and substitution preserves all kinds.
+        assert!(counts[0] >= 10, "shields: {counts:?}");
+        assert!(counts[1] >= 10, "squares: {counts:?}");
+        assert!(counts[2] >= 10, "black triangles: {counts:?}");
+        assert!(counts[3] >= 10, "white triangles: {counts:?}");
+        assert!(counts.iter().sum::<usize>() >= 100, "tile count");
+    }
+
+    use tess_core::tiling::Query;
 }

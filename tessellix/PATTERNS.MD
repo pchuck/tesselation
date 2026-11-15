@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (55 tilings)
+## Implemented (56 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -100,6 +100,7 @@ figures at the split midpoints, `2.4.4`).
 | `p-pentomino` | P-pentomino (rep-4 reptile) | λ = 2 rep-4 substitution; exactly two dissections of the inflated 20-cell P (exhaustive enumeration, class multisets {0,1,4,6} and {3,4,4,5}), canonical {0,1,4,6} used; 8 chiral orientation classes, doubly stochastic substitution matrix (rows/columns sum to 4); non-edge-to-edge (5 T-junctions per parent); 5×8 seed block, one tile per class (62 such tilings of the rectangle); octave-anchored like chair (M47) |
 | `ammann-beenker` | Ammann–Beenker A5 (octagonal aperiodic) | half-tile substitution (two rhombus halves + square) with per-level mirror flips; exact Q(√2) geometry; edge-to-edge; 8-fold finite patches |
 | `stampfli` | Stampfli 12-fold dodecagonal | squares + equilateral triangles + 30° rhombi; Stampfli substitution, inflation 2+√3 (Bielefeld encyclopedia rule); straddling unit children deduped by exact vertex set; 12-rhombus seed star, exact Z[√3]/4 anchors; edge-to-edge, T-junction-free, 12-fold symmetric at every generation |
+| `shield` | Shield tiling (Gähler, dodecagonal 12-fold) | shield hexagon + square + black/white triangles, each in two labelled orientations R/L — 4 prototiles / 8 substitution kinds carrying Gähler's matching rules; inflation θ = 2cos15° = (√6+√2)/2, PF Perron θ² = 2+√3; children tile kinked supertiles (±¼-unit-square notches); exact Q(√2,√3) geometry, all edges on the 12 dodecagonal directions; Bragg 12-fold (no local 30° center) |
 | `hat` | Hat (aperiodic monotile, "einstein") | SMKG 2023; H/T/P/F metatile substitution (29-rule patch, 22 kept), exact Eisenstein placements; inflation φ² only in the limit (iterated outlines drift by design); tiles only with its mirror image; per-view seeded lineage blobs with exact clipped-area acceptance; non-edge-to-edge (565 midpoint T-junctions at depth 3) |
 | `turtle` | Turtle ("hats in turtles", einstein family) | turtle (14 sides, area 10√3) + hat prototiles on Kaplan's exact hex lattice; 9-label 8+1 key-point substitution with per-level chirality flip; homochiral (no reflected tiles), edge-to-edge; turtle:hat ratio → 4+√15 |
 | `spectre` | Spectre (chiral einstein Tile(1,1)) | single equal-edge prototile, aperiodic *without* reflections; 9-label D12 substitution (spectre.js-identical), exact Q(√3) surd geometry; edge-to-edge |
@@ -953,6 +954,43 @@ arc's second pgg and its first edge-to-edge pentagon-level Rice type.
   brute-force culling cross-check.
 - **Status:** committed (M59). 55 tilings, 362 tests at the commit.
 
+
+### 19. Shield tiling — Gähler, dodecagonal ✅ (M51)
+
+- **What it is:** the dodecagonal (12-fold) substitution tiling of
+  Gähler (1988; popularized by Baake & Schmid's dodecagonal matching
+  rules): a "shield" hexagon, a unit square, and two unit equilateral
+  triangles ("black" and "white"), each carrying an R/L matching label —
+  8 labelled kinds collapsing to 4 output prototiles. Together with
+  Stampfli 12-fold it gives the repo a second, matching-rule-based
+  dodecagonal quasiperiodic.
+- **Rule:** inflation θ = 2cos 15° = (√6+√2)/2, θ² = 2+√3 (Perron root
+  of the 8×8 count matrix; char poly divisible by x²−4x+1). Children
+  (scale s/θ) do **not** tile the plain θ-parent: they tile a *kinked*
+  supertile — the θ-parent with ±¼-unit-square triangular notches
+  (shield 6 in, square 4 in, black triangle 3 out, white triangle
+  2 out + 1 in). Kind counts per parent: shield → 13, square → 5,
+  black tri → 1 shield, white tri → 3.
+- **Construction** (`shield.rs`, feature `shield`): exact Q(√2,√3)
+  anchors (dodecagonal 6-vectors via the recipe's `dod2orth`); seeds
+  with the 13-tile kinked-shield supertile at θ^n (area centroid exact
+  at √2/2 + √6/3, covering a disk of inradius (1+√3)/2 per scale) and
+  deflates with per-step culling (bound sin15°/(θ−1) ≈ 0.2778).
+- **Verification:** exact Python battery in Q(√2,√3) — per-kind
+  children pairwise interior-disjoint, closed unit-edge boundary equal
+  to the pinned kinked polygon, Σ areas = θ²·plain ± net-kink/4; PF
+  Perron 2+√3 (exact power iteration); growth totals 13→31→151→493→1981
+  and the published 10-tile seed sequence 10, 28, 112, 400, 1528, 5632,
+  21160, 78688, 294232 reproduced from the count matrix; all edges on
+  the 12 dodecagonal directions; honest negative: no local 30° rotation
+  center (tile angles ≥ 60°; probe over 493-tile patch finds none) —
+  the 12-fold character is Bragg/MLD, matching window a regular
+  dodecagon. Rust↔Python float diff ≤ 4e-15 through depth 4; Rust
+  battery: 8 per-kind tiling tests + coverage-once through depth 3 +
+  standard trio + proto census (16 + 4 tests).
+- **Status:** implemented (M51). Follow-up: the Socolar wheel tiling
+  (MLD-dual of the shield) remains proposed.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -1551,3 +1589,20 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   isohedral-class + pgg-symmetry + window-census tests (counts
   61/32/16/4 cross-checked against an independent Python emulation
   of the culling), culling cross-check green (55 tilings, 362 tests).
+- 2026-11-15 — M51 Shield tiling (Gähler, dodecagonal 12-fold) ✅: the
+  shield hexagon + square + black/white triangle substitution with
+  Gähler's R/L matching labels (4 prototiles, 8 labelled kinds;
+  inflation θ = (√6+√2)/2, PF Perron θ² = 2+√3) as exact-Q(√2,√3)
+  substitution code (`shield.rs`, feature `shield`); children tile
+  kinked supertiles (±¼ unit-square notches: shield 6 in, square 4 in,
+  black tri 3 out, white tri 2 out + 1 in), 13-tile kinked-shield seed
+  (centroid √2/2+√6/3, inradius (1+√3)/2) deflated with per-step
+  culling. Verified exactly in Python first: per-kind interior-disjoint
+  children + closed unit-edge boundary + area law Σ = θ²·plain ± kinks;
+  Perron 2+√3 with x²−4x+1 | char poly; growth 13→31→151→493→1981 and
+  the published 10-tile sequence (10, 28, 112, 400, …, 294232);
+  dodecagonal frame (12 edge directions, matching window a regular
+  dodecagon); honest negative re-confirmed: no local 30° center, so
+  12-fold is Bragg/MLD. Python↔Rust rule-table diff ≤ 4e-15 through
+  depth 4. 16 shield.rs tests + standard trio + proto census
+  (56 tilings, 382 tests).
