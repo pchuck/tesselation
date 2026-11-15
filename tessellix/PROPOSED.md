@@ -279,9 +279,9 @@ confirm the diffraction claim during the spike before declaring.
   0/1), group **pgg confirmed** (gauge-invariant quotient-table
   automorphism audit plus exact generator verification — half-turn
   c0 = (13, 4√3), perpendicular glides g1² = w2 and g2² = −w1, no
-  mirrors). Remaining (M56+), in the arc's priority
-  order: then 7/11/12 (parameterized 2-iso families), then
-  2/3/5/10, then 1 (p2 topology). Existing tilings likely cover 4
+  mirrors). Remaining (M63+), in the arc's priority
+  order: then 2/3/5/10, then 1 (p2 topology) (7 deferred with
+  evidence above; 11 and 12 implemented). Existing tilings likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
   verify the assignments at design time; implement only uncovered
   types. One type per task, delegated; all `pentagon1..15` features
@@ -310,6 +310,32 @@ confirm the diffraction claim during the spike before declaring.
   anchor-pair symmetry audit on the exact model (perpendicular glides
   g1²=w1, g2²=−w2, half-turns at c0=(−0.3716…, 0.7601…), no mirrors);
   PATTERNS.MD §19.
+  **Type 12: DONE (M62)** — Kershner 1968 family 2a = d = c + e,
+  A = 90°, 2B + C = 360° (⇒ C = 360 − 2B, D = 270 − B,
+  E = 2B − 180; convex 90° < B < 180°, b the second free
+  parameter); pinned to the B = 150° member at c = 1 — a surd
+  angle, so (unlike type 11) the shipped instance closes to exact
+  Q(√3): A = 90°, B = 150°, C = 60°, D = E = 120°, a = 1,
+  b = √3, c = 1, d = 2, e = 1 (area 3√3/2; runtime-computed
+  prototile from the closed forms
+  a = (sinB + cos2B)/(2cos2B − 2sinB + 1),
+  b = cosB − 2a·cosB − (2a − 1)·sin2B, d = 2a, e = 2a − 1,
+  surds pinned to 1e-12); 8-tile 2-iso rectangular unit (seeds 0/1:
+  {0,3,4,7} / {1,2,5,6}, orbits mixing chiralities), w1 =
+  (−3√3/2, −9/2) ⊥ w2 = (2√3, −2), det = 12√3 = 8·area;
+  NON-edge-to-edge — every d-side splits at its exact midpoint into
+  two unit halves, all other sides full-side matched (b↔b, c↔c,
+  e↔e); refined census over 215 tiles: 620 full + 153 split
+  (t = 1/2), no other T-junctions; vertex figures {90°,90°,180°} 8×,
+  {60°,120°,180°} 9×, {120°,120°,120°} 8×, {60°,150°,150°} 10×
+  (35 interior vertices). Group **pgg** by exact symmetry audit of
+  the quotient table: perpendicular glides g1 = (M1, (0,−3)),
+  g1² = w1, g2 = (M2, (−√3,1)), g2² = −w2, g2∘g1 = half-turn about
+  c0 = (√3/4, 5/4); no mirrors (22 negative candidates). 9
+  tess-tilings tests; the edge-census window was re-pinned to an
+  exact-count window ((−7.45, 13.55) × (−7.6, 11.4), min boundary
+  gap 0.0888 from any counted midpoint) after the ~1e-15 float noise
+  of the runtime-computed prototile was identified. PATTERNS.MD §21.
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 
