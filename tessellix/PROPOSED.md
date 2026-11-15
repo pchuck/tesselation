@@ -226,11 +226,11 @@ confirm the diffraction claim during the spike before declaring.
   | 4 | b=c, d=e, B=D=90° | p4 / p4g | 4 | iso | yes |
   | 5 | a=b, d=e, A=60°, D=120° | p6 | 6 | iso | yes |
   | 6 | a=d=e, b=c, B+D=180°, 2B=E | p2 | 4 | 2-iso | yes |
-  | 7 | b=c=d=e, B+2E=2C+D=360° | pgg/p2 | 8 | 2-iso | yes |
+  | 7 | b=c=d=e, B+2E=2C+D=360° | deferred (M58) | 8 | 2-iso | yes |
   | 8 | b=c=d=e, 2B+C=D+2E=360° | pgg/p2 | 8 | 2-iso | yes |
   | 9 | b=c=d=e, 2A+C=D+2E=360° | pgg (verified, M59) | 8 | 2-iso | yes |
   | 10 | a=b=c+e, A=90°, B+E=180°, B+2C=360° | p2 / cmm | 6 | 3-iso | **no** |
-  | 11 | 2a+c=d=e, A=90°, 2B+C=360°, C+E=180° | pgg/p2 | 8 | 2-iso | no |
+  | 11 | 2a+c=d=e, A=90°, 2B+C=360°, C+E=180° | pgg (verified, M60) | 8 | 2-iso | no |
   | 12 | 2a=d=c+e, A=90°, 2B+C=360°, C+E=180° | pgg/p2 | 8 | 2-iso | no |
   | 13 | d=2a=2e, B=E=90°, 2A+D=360° | pgg/p2 | 8 | 2-iso | no |
   | 14 | 2a=2c=d=e, A=90°, B≈145.34°, C≈69.32°, D≈124.66°, E≈110.68° | p2 | 6 | 3-iso | **no** |
