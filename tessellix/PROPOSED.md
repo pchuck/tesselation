@@ -377,6 +377,15 @@ confirm the diffraction claim during the spike before declaring.
 
 ### 8. Socolar 12-fold (and the shield tiling) — shield DONE (M51) ✅
 
+- **Sprint allocation (updated 2026-11-15, coordinator):** the **wheel
+  tiling (Nissen)** — shield's edge-orthogonal MLD dual — is **M61**,
+  feature `wheel` (registered in default). Construction path: derive the
+  wheel as the EXACT dual of the landed shield (`shield.rs`, 80693b5) —
+  each edge replaced by the equal-length edge orthogonal at its midpoint
+  (Bielefeld "MLD Class Shield and Socolar") — then verify MLD
+  consistency (dual tiles ↔ shield tiles at matched depth). Reference
+  assets in the task scratch (Bielefeld wheel pages + rule/patch images).
+
 - **Result (M51, 2026-11-15):** the **shield tiling (Gähler)** shipped
   as `shield.rs` (feature `shield`, category Quasiperiodic). Pinned
   rule: inflation **θ = (√6+√2)/2 = 2cos 15°**, θ² = 2+√3 = Perron
