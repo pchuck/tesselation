@@ -298,11 +298,18 @@ confirm the diffraction claim during the spike before declaring.
   learned: A = C − B/2 (not B/2 + C); the "B < D" clause is not a
   convexity condition. Future milestone: re-scope (reference-instance
   combinatorics first, pose-model audit, or periodicity-proof framing).
-  **Type 11 = M60, in progress** (fast-worker) — 2a+c=d=e, A=90°,
-  2B+C=360°, C+E=180° (⇒ C=360−2B, E=2B−180, D=270−B; convex 90°<B<180°);
-  8-tile 2-iso unit, NON-edge-to-edge (chair/pinwheel refined-census
-  policy); pin the REFERENCE animation's instance (M58 lesson) and derive
-  the glue combinatorics from the frames (M59's proven tint pipeline).
+  **Type 11: DONE (M60)** — Kershner 1968 family 2a+c=d=e, A=90°,
+  2B+C=360°, C+E=180° (⇒ C=360−2B, E=2B−180, D=270−B; convex
+  90°<B<180°); pinned the reference construction's B=156° member at
+  c=1 (A=90°, B=156°, C=48°, D=114°, E=132°, a=r=0.0946641…,
+  b=s=1.0568030…, d=e=1+2r=1.1893282…; runtime-computed prototile —
+  the arc's first bounded-precision instance, closure identities
+  pinned to ~1e-12); 8-tile 2-iso unit (seeds 0/1, orbits mixing
+  chiralities), NON-edge-to-edge — every d-side carries one c-side +
+  two a-sides; rectangular lattice det = 8·area; **pgg** by
+  anchor-pair symmetry audit on the exact model (perpendicular glides
+  g1²=w1, g2²=−w2, half-turns at c0=(−0.3716…, 0.7601…), no mirrors);
+  PATTERNS.MD §19.
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 

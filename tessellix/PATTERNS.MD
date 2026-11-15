@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (56 tilings)
+## Implemented (57 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -85,6 +85,7 @@ figures at the split midpoints, `2.4.4`).
 | `pentagon-14` | Stein pentagon, type 14 (completely determined) | p2 | 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, exact Q(√57, β) with β = √((11√57−25)/8); long sides split into two collinear unit fine edges — 7/5/6-vertex cells (M50) |
 | `pentagon-15` | Mann pentagon, type 15 (MMVD 2015) | pgg | 3-isohedral (seeds 0/1/2), 12 tiles per rectangular cell = 4 congruent 3-tile blocks, exact Q(√3) (a = 2, b = d = e = 1, c = √(2+√3), all vertices on the (p+q√3)/2 grid); non-edge-to-edge — 4 T-split edges per cell (M55) |
 | `pentagon-9` | Rice pentagon, type 9 (Rice 1977) | pgg | 2-isohedral (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3) (A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; vertices on the (Z+Z√3)/7 grid); edge-to-edge, vertex stars {A,A,C}, {D,E,E}, {B,B,C,D}; two perpendicular glide families squaring to the primitive translations, no mirrors (M59) |
+| `pentagon-11` | Kershner pentagon, type 11 (Kershner 1968) | pgg | 2-isohedral (seeds 0/1, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile with bounded-precision floats (A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, a = r = 0.0946641…, b = s = 1.0568030…, c = 1, d = e = 1 + 2r — the family conditions 2a + c = d = e, 2B + C = 360°, C + E = 180° hold to ~1e-12); non-edge-to-edge — every d-side carries one c-side and two a-sides; vertex stars {C,B,B}, {A,A,180°}, {D,D,E}, {C,E,180°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M60) |
 
 ### Aperiodic / nonperiodic
 
@@ -760,7 +761,7 @@ labels, which are out of chronological order.)
   counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
   306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
 - **Status:** implemented (M45).
-## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59 landed)
+## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60 landed)
 
 The PROPOSED.md #5 arc (all 15 convex pentagonal tiling types). Type 13
 (Rice) lands first: its 8-tile primitive unit is small enough for a
@@ -769,7 +770,11 @@ census's first exact-Q(√57) surd field; type 15 (Mann/McLoud-Mann/
 Von Derau 2015) third: a 12-tile rectangular unit in exact Q(√3) —
 the arc's first pgg — with two perpendicular glide families; type 9
 (Rice 1977) fourth: an 8-tile rectangular unit in exact Q(√3), the
-arc's second pgg and its first edge-to-edge pentagon-level Rice type.
+arc's second pgg and its first edge-to-edge pentagon-level Rice type;
+type 11 (Kershner 1968) fifth: the arc's first non-surd instance — a
+bounded-precision 8-tile rectangular unit pinned to the reference
+animation's B = 156° member of Kershner's family, and the arc's first
+non-edge-to-edge pgg.
 
 ### 15. Pentagon type 13 (Rice) ✅ (M49)
 
@@ -990,6 +995,77 @@ arc's second pgg and its first edge-to-edge pentagon-level Rice type.
   standard trio + proto census (16 + 4 tests).
 - **Status:** implemented (M51). Follow-up: the Socolar wheel tiling
   (MLD-dual of the shield) remains proposed.
+
+### 20. Pentagon type 11 (Kershner 1968) ✅ (M60)
+
+- **Motif:** Kershner's type-11 convex pentagonal tiling — the
+  two-parameter family with 2a + c = d = e, A = 90°, 2B + C = 360°,
+  C + E = 180° (so C = 360° − 2B, E = 2B − 180°, D = 270° − B;
+  convex for 90° < B < 180°, side b the second free parameter).
+  The shipped instance pins the reference construction's B = 156°
+  member at scale c = 1: A = 90°, B = 156°, C = 48°, D = 114°,
+  E = 132°, a = r = 0.0946641…, b = s = 1.0568030…,
+  d = e = 1 + 2r = 1.1893282… (tile area 0.9542866…).  156° is
+  not a surd angle — the arc's first bounded-precision instance:
+  the prototile is computed at runtime from the closed forms
+  r = (2 sin B − cos 2B)/(1 + 2 cos 2B − 2 sin B) and
+  s = −2r cos B − (1 + 2r) sin 2B, and every closure identity is
+  pinned by tests to ~1e-12.  2-isohedral: two full-group orbits
+  {cell 0, 2, 4, 7} / {cell 1, 3, 5, 6}, eight tiles per primitive
+  unit, each orbit mixing both chiralities (the glides identify
+  them).
+- **Geometry:** NON-edge-to-edge at the pentagon level — every long
+  side d = e is covered by one partner c-side plus two partner
+  a-sides, exactly the family condition 2a + c = d; every other
+  side is matched by exactly one full side of one neighbour.  The
+  refined census over 528 tiles: 1882 full edges + 210 d-sides
+  split at the parameters c/d and (c + a)/d, every resulting
+  sub-edge contained in exactly one partner edge, no other
+  T-junctions.  The four vertex stars are {C,B,B} = 48° + 2·156°,
+  {A,A,180°} = 2·90° + 180°, {D,D,E} = 2·114° + 132° and
+  {C,E,180°} = 48° + 132° + 180° — each exactly 360°.
+- **Unit cell:** 8 cells as (mirror, anchor, rotation) placements
+  of the runtime prototile (vertex A, the unique 90° corner, is
+  pinned by the anchor) on the rectangular lattice
+  w1 = (−2.1433083997208975, −1.3918807493424277),
+  w2 = (1.6269879260579216, −2.5053417038859127)
+  (w1 ⊥ w2 to 1e-12, det = 7.63429309180… = 8 × tile area).
+  Extracted from a verified construction and re-verified on the
+  model before porting: zero overlaps, exactly-once coverage, the
+  complete refined edge gluing with the four closed vertex figures,
+  and an exact symmetry audit of the quotient table.
+- **Group:** **pgg**, decided by anchor-pair symmetry enumeration
+  on the exact model (the 90° corner A is symmetry-distinguished):
+  exactly four classes mod lattice — identity, half-turn, and two
+  orientation-reversing classes.  Half-turns centred at
+  c0 = (−0.37157…, 0.76010…) and its images
+  (c0 + {0, w1/2, w2/2, (w1 + w2)/2}); two perpendicular glide
+  families g1 = (M1, anchor66) with axis ∥ w1 and g1² = w1, and
+  g2 = (M2, anchor246) with axis ∥ w2 and g2² = −w2, where
+  M_i = 2u_i u_iᵀ − I is reflection in the lattice direction; each
+  glide shifts exactly half a primitive translation along its axis,
+  so no conjugate of it is a pure reflection (no mirrors).  g2∘g1
+  is the half-turn about c0 itself.
+- **Verify:** standard trio (coverage, rotated-scaled,
+  deterministic) + unit-structure test (closure E = (0, a), angle
+  multiset {90°, 156°, 48°, 114°, 132°}, per-cell cyclic
+  (side, angle) fingerprints forward/reversed, det = 8·area) +
+  refined-edge census test (528-tile patch: full/split counts,
+  split parameters up to orientation, one covering edge per
+  sub-edge) + vertex-figure census (100 interior vertices:
+  {C,B,B} 24×, {A,A,180°} 25×, {D,D,E} 25×, {C,E,180°} 26×, via
+  corner- and through-edge rays merged at 1e-4 rad) +
+  isohedral-class test (closed mod-lattice permutations of the
+  three generators, two orbits = the two seeds) + pgg-symmetry test
+  (interior-AABB-filtered exact half-turn patch equality — the
+  boundary ring that AABB culling may include without true
+  intersection is excluded; glide containment with lattice shifts
+  and inverses; g1² = w1, g2² = −w2, centre(g2∘g1) = c0;
+  mirror-absence probes) + window-census test (238/213/116 tiles at
+  three fixed windows, cross-checked against an independent Python
+  emulation of the lattice.rs culling), plus the brute-force
+  culling cross-check.
+- **Status:** committed (M60). 56 tilings, 371 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -1605,4 +1681,34 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   dodecagon); honest negative re-confirmed: no local 30° center, so
   12-fold is Bragg/MLD. Python↔Rust rule-table diff ≤ 4e-15 through
   depth 4. 16 shield.rs tests + standard trio + proto census
-  (56 tilings, 382 tests).
+  (55 tilings, 373 tests).
+- 2026-11-15 — M60 Pentagon type 11 (Kershner 1968) ✅: Kershner's
+  two-parameter family (2a + c = d = e, A = 90°, 2B + C = 360°,
+  C + E = 180°) pinned to the reference construction's B = 156°
+  member at c = 1 — the pentagon-census arc's first bounded-precision
+  instance (156° is not a surd angle): the prototile is computed at
+  runtime from the closed forms r = (2 sin B − cos 2B)/(1 + 2cos 2B − 2 sin B),
+  s = −2r cos B − (1 + 2r) sin 2B and shipped as 8 (mirror, anchor,
+  rotation) placements (`pentagon11.rs`, feature `pentagon11`);
+  a = r = 0.0946641…, b = s = 1.0568030…, d = e = 1 + 2r, closure
+  identities pinned to ~1e-12.  Rectangular cell
+  w1 = (−2.14330839972…, −1.39188074934…) ⊥
+  w2 = (1.62698792605…, −2.50534170388…), det = 7.63429309… =
+  8 × area (0.9542866…).  NON-edge-to-edge: every d-side carries one
+  c-side + two a-sides (2a + c = d); refined census 1882 full + 210
+  split edges (parameters c/d, (c + a)/d up to orientation), vertex
+  stars {C,B,B}, {A,A,180°}, {D,D,E}, {C,E,180°} (100 interior
+  vertices 24/25/25/26).  Group **pgg** by anchor-pair symmetry
+  enumeration on the exact model: half-turns at c0 = (−0.37157…,
+  0.76010…) + half-lattice images; glides g1 (axis ∥ w1, g1² = w1)
+  and g2 (axis ∥ w2, g2² = −w2), each shifting half a primitive
+  period along its axis; no mirrors; g2∘g1 = half-turn about c0.
+  2-isohedral (seeds 0/1: {0,2,4,7} / {1,3,5,6}, orbits mixing
+  chiralities).  Model re-verified before porting (window counts,
+  vertex/edge censuses, symmetry audit — all green); standard trio +
+  unit structure + refined-edge census + vertex figures +
+  isohedral-class + pgg-symmetry (interior-AABB-filtered exact
+  half-turn equality, glide containment with inverses and lattice
+  shifts, mirror-absence probes) + window-census tests (counts
+  238/213/116 cross-checked against an independent Python emulation
+  of the culling), culling cross-check green (56 tilings, 371 tests).
