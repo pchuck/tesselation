@@ -336,6 +336,14 @@ confirm the diffraction claim during the spike before declaring.
   exact-count window ((−7.45, 13.55) × (−7.6, 11.4), min boundary
   gap 0.0888 from any counted midpoint) after the ~1e-15 float noise
   of the runtime-computed prototile was identified. PATTERNS.MD §21.
+  **Sprint allocation (2026-11-15): M63 = type 10** (a=b=c+e, A=90°,
+  B+E=180°, B+2C=360°; 6-tile 3-iso unit, p2/cmm, NON-edge-to-edge —
+  the last animation-bearing type; reference frames + M60/M62 pipeline),
+  **M64 = type 3** (a=b, d=c+e, A=C=D=120°, B+E=180°; 3-tile iso unit,
+  p3/p31m, edge-to-edge — conditions-first pin, no animation exists;
+  canonical instance c=e=1, B=E=90° candidate → Q(√3) field). Then
+  types 2, 5 (conditions-first, no animations), type 1 last (topology
+  zoo).
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 
@@ -402,6 +410,24 @@ confirm the diffraction claim during the spike before declaring.
   a documented note (chair precedent).
 
 ### 8. Socolar 12-fold (and the shield tiling) — shield DONE (M51) ✅
+
+- **Wheel tiling: PARKED (M61, 2026-11-15) with a proven negative.**
+  Attempt 1 (worker) pinned the edge-orthogonal dual map exactly in
+  Q(√2,√3) and produced a valid 2-prototile tiling family W_d (chiral
+  11-gon W11, area (2+√3)/4, and star 24-gon W24, area 3/2+√3; growth
+  → θ² per depth) — but **no substitution exists at any inflation**:
+  at θ an algebraic impossibility (n11 + 2√3·n24 = 2+√3 has no
+  non-negative integer solution — odd √3 coefficient, scale-free), at
+  θ² geometrically refuted (assignment-free union tests 0/270 and
+  0/849 at both phases, uniform exact deficits). The TE documents the
+  wheel only as a **windowed (cut-and-project) tiling** — no published
+  substitution exists to extract. Evidence pack:
+  /tmp/opencode/socolar/WHEEL_REPORT.md (248 lines) + m61_*.py.
+  Owner decision (2026-11-15): park; the shield remains the class's
+  substitution representative. Future options noted in the report:
+  CPS/windowed implementation (new engine path) or the static W_0
+  patch (both prototiles fully pinned); the inert `wheel = []` feature
+  stays registered for a future CPS milestone.
 
 - **Sprint allocation (updated 2026-11-15, coordinator):** the **wheel
   tiling (Nissen)** — shield's edge-orthogonal MLD dual — is **M61**,
