@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (59 tilings)
+## Implemented (60 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -88,6 +88,7 @@ figures at the split midpoints, `2.4.4`).
 | `pentagon-11` | Kershner pentagon, type 11 (Kershner 1968) | pgg | 2-isohedral (seeds 0/1, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile with bounded-precision floats (A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, a = r = 0.0946641…, b = s = 1.0568030…, c = 1, d = e = 1 + 2r — the family conditions 2a + c = d = e, 2B + C = 360°, C + E = 180° hold to ~1e-12); non-edge-to-edge — every d-side carries one c-side and two a-sides; vertex stars {C,B,B}, {A,A,180°}, {D,D,E}, {C,E,180°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M60) |
 | `pentagon-12` | Kershner pentagon, type 12 (Kershner 1968) | pgg | 2-isohedral (seeds 0/1: {0,3,4,7} / {1,2,5,6}, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile closed to exact Q(√3) surds at the shipped B = 150° member (A = 90°, B = 150°, C = 60°, D = E = 120°, a = 1, b = √3, c = 1, d = 2, e = 1 — the family conditions 2a = d = c + e, 2B + C = 360° hold to ~1e-12); non-edge-to-edge — every d-side splits at its exact midpoint into two unit halves, all other sides full-side matched (b↔b, c↔c, e↔e); vertex stars {90°,90°,180°}, {60°,120°,180°}, {120°,120°,120°}, {60°,150°,150°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M62) |
 | `pentagon-10` | Kershner pentagon, type 10 (Kershner 1968) | cmm | 3-isohedral (seeds 0/1/2: {0,2}, {1,3}, {4,5}), 6 tiles per oblique cell w1 = (5,−2), w2 = (8,1), det 21 = 6 × area (7/2); exact at the shipped B = 90° member (A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2; family a = b = c + e, A = 90°, B + E = 180° with d² = c² + e²); non-edge-to-edge — both length-2 sides split at their exact midpoints into two unit halves (integer T-junctions), all other sides full-side matched (c↔c, d↔d, e↔e); vertex figures {90°,135°,135°} 71×, {90°,90°,180°} 50×, {90°,90°,90°,90°} 13× (134 interior vertices); group cmm by exact audit — mirrors x+y = 3k and x−y = 7k, half-turn at the origin, genuine glide g = T(5,−2)∘R2 with g² = (7,−7) (axis x+y = 3/2, no pure-reflection conjugate), R90 negative; centered rectangular lattice (index-2 sublattice Z(3,3)+Z(−7,7) with centre (−2,5) ∈ L∖L', no orthogonal Z-basis for L) — cmm, not pmm (M63) |
+| `pentagon-3` | Reinhardt pentagon, type 3 (family 3, 1918) | p2 | 1-isohedral (single orbit), 2 tiles per oblique cell, exact Q(√3) (pinned integral member (a,b,c,d,e) = (2,2,1,4,3): A = B = C = D = 120°, E = 60° — a = b, d = c + e, B + E = 180°; area 5√3); non-edge-to-edge — only the d = 4 sides split, at their exact midpoints between two length-2 (a/b) partner sides, all other sides full-side matched; vertex stars {60°,120°,180°} (A/E-type) and {120°,120°,120°} (B/C/D-type); chiral prototile, one chirality used — the classical three-tile type-3 pinwheel admits no periodic cell for this member (complete det-15 closure search + norm-form x²+3y²=120), so the shipped structure is the discovered minimal 2-tile p2 cell, four half-turn classes d/2 + Λ/2, no mirrors or glides (M64) |
 
 ### Aperiodic / nonperiodic
 
@@ -763,7 +764,7 @@ labels, which are out of chronological order.)
   counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
   306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
 - **Status:** implemented (M45).
-## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60, M62, M63 landed)
+## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60, M62, M63, M64 landed)
 
 The PROPOSED.md #5 arc (all 15 convex pentagonal tiling types). Type 13
 (Rice) lands first: its 8-tile primitive unit is small enough for a
@@ -787,7 +788,10 @@ the B = 90° member of the a = b = c + e, d² = c² + e² family
 with det 21, non-edge-to-edge with both length-2 sides bisected; cmm
 proven by exact audit, mirrors and a half-turn ruling out p2 and the
 centered lattice L' = Z(3,3)+Z(−7,7) (centre (−2,5) ∈ L∖L') ruling
-out pmm.
+out pmm; type 3 (Reinhardt family 3) eighth: the pinned integral
+member (2, 2, 1, 4, 3) — the arc's first 2-tile unit and its first
+chiral one-orbit p2, after a complete search proved the classical
+three-tile 120° pinwheel admits no periodic cell for this member.
 
 Type 7 (Kershner 1968) remains **deferred (M58)** with a bounded
 negative: the 15°/30°-grid pin clause is provably unsatisfiable, the
@@ -795,7 +799,7 @@ valid 22.5°-grid pin admits no 8-tile periodic cell (22M-node search,
 0 solutions), and the reference instance ≈(148°, 133°) is off-grid —
 a **future milestone** to revive via the M60-lesson pipeline (pin the
 reference instance with bounded floats; see PROPOSED.md #5). Remaining
-in the arc: types 3 (in flight, M64), 2, 5, 1.
+in the arc: types 2, 5, 1.
 
 ### 15. Pentagon type 13 (Rice) ✅ (M49)
 
@@ -1251,6 +1255,67 @@ in the arc: types 3 (in flight, M64), 2, 5, 1.
   cross-checked against the independent Python emulation of the
   culling).
 - **Status:** committed (M63). 59 tilings, 409 tests at the commit.
+### 23. Pentagon type 3 (Reinhardt family 3) ✅ (M64)
+
+- **Motif:** Reinhardt's type-3 convex pentagonal tiling — the
+  one-parameter family `a = b`, `d = c + e`, `A = C = D = 120°`,
+  `B + E = 180°` — pinned to its integral member `(a, b, c, d, e) =
+  (2, 2, 1, 4, 3)` with `A = B = C = D = 120°`, `E = 60°` (area 5√3,
+  all vertices in Q(√3)).  The member is simultaneously type-1 under
+  the relabelling (A′,B′,C′,D′,E′) = (D,E,A,B,C); the type-3 identity
+  is what is registered.  The uncoloured group is **p2**, not the
+  brief's assumed p3/p31m: the classical three-tile 120° pinwheel
+  admits **no** periodic cell for this member — a complete closure
+  search over every lattice of determinant 15 in unit-side coordinates
+  (both chiralities, T-junctions admitted, ~1.7 × 10⁶ pairing trials)
+  is empty, the hexagonal-lattice routes die on the norm-form test
+  x² + 3y² = 120 (and its cell-6/9 scalings 240/360), and a parity
+  lemma kills the R120 pinwheel boundary for every type-3 tile.  The
+  shipped structure is the discovered minimal periodic cell: **2
+  tiles** — the prototile plus its half-turn image about the midpoint
+  c0 = (−3/4, 3√3/4) of the long side d — on the oblique lattice
+  w1 = (1/2, 3√3/2), w2 = (−13/2, √3/2) (xy: (0.5, 2.598076211353316),
+  (−6.5, 0.8660254037844386)), det = 10√3 = 2 × tile area.
+- **Group:** **p2** (orbifold 2222) by structure + exact audit: the
+  prototile is chiral (side cycle (2,2,1,4,3) differs from every
+  rotation of its reversal (3,4,1,2,2)) and the tiling uses one
+  chirality only, so no orientation-reversing isometry — mirror or
+  glide — can preserve it (144 negative probes: 4 mirror directions ×
+  9 candidate centres × 9 whole lattice shifts); realised tile
+  orientations are {0°, 180°}, excluding 3- and 4-folds.  The
+  half-turn centres are exactly the four classes d/2 + Λ/2 mod Λ
+  (c0 = (−0.75, 1.299038105676658) and c0 + w1/2, c0 + w2/2, c0 +
+  (w1+w2)/2); the lattice points and the other half-lattice points
+  are not centres (negative probes).
+- **Edge structure:** NON-edge-to-edge — only the d = 4 sides are
+  split, each at its exact midpoint t = 1/2 between the ends of two
+  length-2 partner sides (a- or b-sides); every other side is matched
+  by exactly one full side of one neighbour.  The vertex figures are
+  {60°, 120°, 180°} at the A-/E-type points and {120°, 120°, 120°} at
+  the B-/C-/D-type points (per cell: 2 + 4; the B- and D-classes
+  coincide mod Λ because D = B + w1).
+- **Verify:** standard trio (coverage, rotated-scaled, deterministic)
+  + unit-structure test (2 directly-congruent copies of the runtime
+  prototile: angles {120°, 120°, 120°, 120°, 60°}, sides 2, 2, 1, 4,
+  3 at 1e-12, closure E = (−3/2, 3√3/2), family identities a = b and
+  d = c + e, seeds [0, 0], lattice literals, det = 2·area = 10√3,
+  |w1|² = 7, |w2|² = 43, oblique) + refined-edge census test (60-tile
+  patch: 172 full + 46 d-sides split at t = 1/2, one covering edge per
+  sub-edge, no other T-junctions; the window (−9.4, 13.4) × (−7.4,
+  9.4) is an exact count with minimum boundary margin 0.0388 from any
+  counted midpoint, verified in exact Q(√3)) + vertex-figure census
+  (85 interior vertices: {60°, 120°, 180°} 46×, {120°, 120°, 120°}
+  39×) + p2-symmetry test (interior-AABB-filtered exact half-turn
+  patch equality about c0; all four d/2 + Λ/2 half-turn classes with
+  lattice shifts map the cell-0 tile onto tiles; lattice translations;
+  negative probes for the non-centre half-turns and every
+  orientation-reversing candidate) + isohedral test (half-turn permutes
+  the cell table as (0 1) mod lattice — a single orbit, seed 0 only;
+  generated patches keep the side multiset {1, 2, 2, 3, 4}) +
+  window-census test (19/26/44/70 tiles at four fixed windows,
+  cross-checked against the independent Python emulation of the
+  culling).
+- **Status:** committed (M64). 59 tilings, 409 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -1968,4 +2033,22 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   (3√2 × 7√2, det 42) has centre (−2,5) ∈ L\L' → cmm,
   not pmm; registered as Oblique since w1·w2 = 38 ≠ 0. The task
   premise "p2" is corrected: the tiling has mirrors and a half-turn.
+  9 tess-tilings tests (59 tilings, 409 tests).
+
+- 2026-11-16 — M64 Pentagon type 3 (Reinhardt family 3, 1918) ✅: the
+  pinned integral member (a,b,c,d,e) = (2,2,1,4,3), A = B = C =
+  D = 120°, E = 60° (a = b, d = c + e, B + E = 180°), exact Q(√3),
+  area 5√3 — the arc's first 2-tile unit and first chiral one-orbit
+  **p2** cell (prototile + half-turn about the d-midpoint; four
+  half-turn classes d/2 + Λ/2; no mirrors or glides, 144 negative
+  probes). NON-edge-to-edge: only the d = 4 sides split, at their
+  exact midpoints between two length-2 (a/b) partner sides. A
+  complete det-15 lattice closure search (0 solutions in 1,735,315
+  trials) plus the norm-form x²+3y²=120 insolubility and a parity
+  lemma proved the classical three-tile 120° type-3 pinwheel admits
+  NO periodic cell for this member — the discovery that resolved the
+  task (earlier attempts had also been refuting cells against a wrong
+  scratch polygon, voiding those negatives). Refined census: 172
+  full + 46 split edges (all d-midpoints exact tiling vertices),
+  vertex figures {60°,120°,180°} 46× + {120°,120°,120°} 39×.
   9 tess-tilings tests (59 tilings, 409 tests).

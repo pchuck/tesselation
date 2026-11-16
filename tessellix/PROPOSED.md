@@ -279,10 +279,9 @@ confirm the diffraction claim during the spike before declaring.
   0/1), group **pgg confirmed** (gauge-invariant quotient-table
   automorphism audit plus exact generator verification — half-turn
   c0 = (13, 4√3), perpendicular glides g1² = w2 and g2² = −w1, no
-  mirrors). Remaining (M64+), in the arc's priority
-  order: 3 (in flight — M64 attempt 3, re-scoped NON-edge-to-edge after
-  the e2e correction below), then 2, 5, and 1 (p2 topology zoo)
-  (7 deferred with evidence above; 9, 10, 11, 12 and 15
+  mirrors). Remaining (M65+), in the arc's priority
+  order: 2, 5, then 1 (p2 topology zoo)
+  (7 deferred with evidence above; 3, 9, 10, 11, 12 and 15
   implemented). Existing tilings likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
   verify the assignments at design time; implement only uncovered
@@ -345,21 +344,29 @@ confirm the diffraction claim during the spike before declaring.
   p3/p31m — conditions-first pin, no animation exists). Then
   types 2, 5 (conditions-first, no animations), type 1 last (topology
   zoo).
-  **Type 3 e2e correction (M64, 2026-11-16):** the e2e column for
-  type 3 above was WRONG — d = c+e forces a T-junction (exhibited
-  exactly; Bagina 2011 / Sugimoto 2012: only 8 edge-to-edge convex
-  types, and {3, 10, 11, 12, 13, 14, 15} are the seven non-e2e types).
-  M64 attempt 2 stood down per the honesty clause with the correction
-  + the exact pinned instance (a, b, c, d, e) = (2, 2, 1, 4, 3) at
-  angles {120°×4, 60°} in exact Q(√3) (uv-lattice, area² = 10,
-  3-tile cell det = 15, p3 rosette realizable) — report in the task
-  scratch. Re-scoped (R1): attempt 3 implements the NON-edge-to-edge
-  model with the proven M60/M62 partial-edge machinery; STEP 0
-  coverage check vs the Laves floret-pentagonal prototile ({120×4,
-  60°} profile) still required — the floret tiling is edge-to-edge
-  (Laves), so congruence would be a shape correspondence, not a
-  structural one; document either way.
-
+  **Type 3: DONE (M64)** — Reinhardt 1918 family 3 (a = b, d = c + e,
+  A = C = D = 120°, B + E = 180°); the dossier's e2e column was
+  corrected first (d = c+e forces a T-junction; Bagina 2011 /
+  Sugimoto 2012: only 8 edge-to-edge convex types, {3, 10, 11, 12,
+  13, 14, 15} non-e2e) — this verdict supersedes the earlier
+  re-scope note. Landed as `pentagon-3`, but
+  NOT as the assumed 3-tile p3/p31m edge-to-edge unit.  The pinned
+  instance is the integral member (a, b, c, d, e) = (2, 2, 1, 4, 3),
+  A = B = C = D = 120°, E = 60° (area 5√3, exact Q(√3); the β = 90°
+  candidate from the note is Cauchy-rigid against any 3-tile hexagonal
+  lattice — |w|² = 102 + 66√3 admits no pq + rs = 33).  The classical
+  three-tile 120° pinwheel admits **no periodic cell** for this
+  member: hexagonal cell-3 dies on the norm form x² + 3y² = 120
+  (cell-6/9: 240/360), a complete closure search over every lattice
+  of determinant 15 in unit-side coordinates (both chiralities,
+  T-junctions admitted, 1,735,315 pairing trials) is empty, and a
+  parity lemma kills the R120 pinwheel boundary for every type-3 tile.
+  The shipped structure is the discovered minimal periodic cell: **2
+  tiles on an oblique lattice, group p2, NON-edge-to-edge** (only the
+  d = 4 sides split, at their exact midpoints between two length-2
+  partner sides; vertex figures {60°,120°,180°} and {120°,120°,120°}),
+  1-isohedral, four half-turn classes d/2 + Λ/2, chiral prototile used
+  in one chirality (no mirrors/glides).  PATTERNS.MD §23.
    **Type 10: DONE (M63)** — Kershner 1968 family a = b = c + e,
    A = 90°, B + E = 180° (⇒ C = 180 − B/2, D = 90 + B/2,
    E = 180 − B; convex 90° < B < 180°, e/c the second free

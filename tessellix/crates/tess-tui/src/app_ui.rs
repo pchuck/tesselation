@@ -984,9 +984,9 @@ mod tests {
     fn registry_tabs_classify_every_tiling_once() {
         let tui = Tui::new();
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 59, "the registry has 59 tilings");
+        assert_eq!(total, 60, "the registry has 60 tilings");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 9, 23, 8, 7, 1]);
+        assert_eq!(counts, vec![11, 9, 24, 8, 7, 1]);
     }
 
     #[test]
@@ -1036,7 +1036,7 @@ mod tests {
         for (label, n) in [
             ("Uniform", 11),
             ("Laves (Catalan duals)", 9),
-            ("Wallpaper", 23),
+            ("Wallpaper", 24),
             ("Quasiperiodic", 8),
             ("Aperiodic", 7),
             ("Nonperiodic", 1),
