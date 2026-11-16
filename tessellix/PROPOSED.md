@@ -279,9 +279,11 @@ confirm the diffraction claim during the spike before declaring.
   0/1), group **pgg confirmed** (gauge-invariant quotient-table
   automorphism audit plus exact generator verification — half-turn
   c0 = (13, 4√3), perpendicular glides g1² = w2 and g2² = −w1, no
-  mirrors). Remaining (M63+), in the arc's priority
-  order: then 2/3/5, then 1 (p2 topology) (7 deferred with
-  evidence above; 10, 11 and 12 implemented). Existing tilings likely cover 4
+  mirrors). Remaining (M64+), in the arc's priority
+  order: 3 (in flight — M64 attempt 3, re-scoped NON-edge-to-edge after
+  the e2e correction below), then 2, 5, and 1 (p2 topology zoo)
+  (7 deferred with evidence above; 9, 10, 11, 12 and 15
+  implemented). Existing tilings likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
   verify the assignments at design time; implement only uncovered
   types. One type per task, delegated; all `pentagon1..15` features

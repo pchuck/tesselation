@@ -789,6 +789,14 @@ proven by exact audit, mirrors and a half-turn ruling out p2 and the
 centered lattice L' = Z(3,3)+Z(−7,7) (centre (−2,5) ∈ L∖L') ruling
 out pmm.
 
+Type 7 (Kershner 1968) remains **deferred (M58)** with a bounded
+negative: the 15°/30°-grid pin clause is provably unsatisfiable, the
+valid 22.5°-grid pin admits no 8-tile periodic cell (22M-node search,
+0 solutions), and the reference instance ≈(148°, 133°) is off-grid —
+a **future milestone** to revive via the M60-lesson pipeline (pin the
+reference instance with bounded floats; see PROPOSED.md #5). Remaining
+in the arc: types 3 (in flight, M64), 2, 5, 1.
+
 ### 15. Pentagon type 13 (Rice) ✅ (M49)
 
 - **Motif:** Rice's type-13 convex pentagonal tiling (d = 2a = 2e,
@@ -1271,8 +1279,12 @@ the "mixed floret/cairo/prismatic" patterns.
 
 ### Aperiodic substitution (each needs rule derivation first)
 
-- 🔭 **Socolar 12-fold shield tiling** — shield hexagons + rhombi +
-  squares; hard (rule geometry).
+- ✅ **Socolar 12-fold shield tiling (M51).** *Shield hexagons +
+  squares + black/white triangles on the dodecagonal frame; PF
+  Perron 2+√3; the class's substitution representative. The original
+  Socolar-12 decoration tables are blocked-on-source (PROPOSED.md #8);
+  the wheel tiling (shield's MLD dual) is parked (M61) — see the
+  Research entry below.*
 - 🔭 **Ammann sets A1–A4** — the rest of Ammann's aperiodic families;
   moderate each once the AB machinery exists.
 
@@ -1288,6 +1300,17 @@ the "mixed floret/cairo/prismatic" patterns.
 
 ### Research (no construction path chosen yet)
 
+- ❓ **Wheel tiling (Nissen)** — **parked (M61)** with a proven
+  negative: the edge-orthogonal dual of the shield substitution is
+  exact but admits no substitution at any inflation (algebraic killer
+  at θ; 0/849 union tests at θ²), and no published substitution exists
+  (the Tilings Encyclopedia documents the wheel as a windowed
+  tiling). W_0 is fully pinned — chiral 11-gon (area (2+√3)/4) and
+  star 24-gon (area 3/2+√3), all edges on the 15° frame in Q(√3);
+  evidence pack in the task scratch (WHEEL_REPORT.md). Revival paths:
+  the projection generator below (the wheel is canonically
+  cut-and-project) or a static W_0 patch; the inert `wheel = []`
+  feature stays registered for a future CPS milestone (PROPOSED.md #8).
 - ❓ **Projection (cut-and-project) generator class** — window-based
   generation for rhombus tilings (Penrose, AB, 12-fold) as an
   alternative to substitution; would validate patches independently.
