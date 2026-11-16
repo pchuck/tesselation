@@ -84,29 +84,38 @@ zoom. `Ctrl-C`/`Ctrl-Q` quit from any mode.
 
 ### GUI
 
-`cargo run -p tess-gui` opens an egui window (1024×640, dark theme):
+`cargo run -p tess-gui` opens an egui window (1024×640, dark theme).
+Like the TUI, it is a **single-pane, two-mode browser** over the shared
+`tess-core::browse` model — no side panel in either mode:
 
-- **Left panel** — the tab/card browser mirroring the TUI redesign on
-  the shared `tess-core::browse` model: a search field (name, id, and
-  description, case-insensitive, across all tabs; the tab row shows
-  per-tab match counts and the active tab jumps to the first tab with
-  a match), a category tab row with card counts, and a card grid
-  (crystal-system section headers on the Wallpaper tab, bold name,
-  `group · lattice` line, truncated description). Card previews are
-  rasterized at default parameters by the shared `tess-core::raster`
-  (same palette/proto-fallback semantics as the TUI thumbnails),
-  cached per (id, params, size), and generated lazily for the visible
-  cards only. Clicking a card selects it; per-tab selection is
-  remembered. Below the grid: parameter editors, color-mode selector
-  (single / pattern / proto), symmetry readout (wallpaper group,
-  lattice kind, basis vectors, notes), and a side-panel preview. The
-  readout is cached per tiling + parameter values and refreshed through
-  a tiny fixed probe region — panel rendering never triggers
-  view-sized tile generation.
-- **Canvas** — drag to pan, scroll to zoom (anchored at the cursor). The
-  tiling is regenerated for the current viewport on every frame; if the
-  view would exceed the tile budget (250 000 tiles), a
-  "too many tiles for this view — zoom in" message is shown instead.
+- **Browse mode** — the whole window is the card grid. A tab band
+  (the six category tabs with card counts + a search field, one
+  wrapping row) sits over a responsive card grid: the column count is
+  computed from the window width (target card ~240 px, clamped
+  1–4 columns) and the cards stretch to fill. Cards show crystal-
+  system section headers (Wallpaper tab), a lazily generated preview
+  (rasterized at default parameters by the shared `tess-core::raster`,
+  same palette/proto-fallback semantics as the TUI thumbnails, cached
+  per (id, params, size), generated for visible cards only), the bold
+  name, the `group · lattice` line, and a truncated description.
+  Search filters name/id/description case-insensitively; the tab row
+  shows per-tab match counts and the active tab jumps to the first
+  tab with a match. Clicking a card opens Render mode; per-tab
+  selection is remembered.
+- **Render mode** — the whole window is the canvas (drag to pan,
+  scroll to zoom anchored at the cursor). A top strip offers `← back`,
+  `◀`/`▶` prev/next (walking the current tab's order, wrapping), a
+  params toggle, and `⟲ reset`; **Escape** and `← back` both return to
+  Browse exactly as left (same tab + selection). A collapsible bottom
+  panel (expanded by default on entry) holds the parameter editors,
+  the color-mode selector (single / pattern / proto), and the
+  symmetry readout (wallpaper group, lattice kind, basis vectors,
+  notes) — the readout is cached per tiling + parameter values and
+  refreshed through a tiny fixed probe region, so panel rendering
+  never triggers view-sized tile generation. The tiling is
+  regenerated for the current viewport on every frame; if the view
+  would exceed the tile budget (250 000 tiles), a "too many tiles for
+  this view — zoom in" message is shown instead.
 
 ## Supported tilings
 
@@ -473,7 +482,7 @@ straight into `paint::PALETTE`).
 
 ## Tests
 
-`cargo test --workspace` (currently 448 tests, all green, zero
+`cargo test --workspace` (currently 451 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

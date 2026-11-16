@@ -1,12 +1,19 @@
-//! GUI application (egui).
+//! GUI application (egui) — a single-pane, two-mode browser mirroring
+//! the TUI (UI-3; the owner prefers the TUI layout):
 //!
-//! The left panel is a tab/card browser mirroring the TUI redesign
-//! (UI-1): a category tab row, a card grid with lazily generated
-//! previews (shared `tess_core::raster`), crystal-system section
-//! headers from `tess_core::browse::section_key`, per-tab selection
-//! memory, and a search field filtering name/id/description across
-//! all tabs. The canvas is the egui-native WYSIWYG counterpart of the
-//! TUI's render mode: selecting a card shows the tiling immediately.
+//! * **Browse** — the whole window is the card grid: a tab band (the
+//!   six category tabs + a search field, one wrapping row) over
+//!   crystal-system section headers and cards with lazily generated
+//!   previews (shared `tess_core::raster`). Clicking a card opens
+//!   Render mode.
+//! * **Render** — the whole window is the canvas (drag-pan,
+//!   wheel-zoom) with a top strip (`← back`, `◀`/`▶` prev/next in the
+//!   tab order, a params toggle, reset) and a collapsible bottom panel
+//!   holding the params, color mode, and symmetry readout. Escape or
+//!   `← back` returns to Browse exactly as left (same tab + selection).
+//!
+//! No fixed-width side panel in either mode: grid and canvas each own
+//! the full window, so the layout mirrors the TUI by construction.
 
 use std::collections::HashMap;
 
@@ -18,8 +25,13 @@ use tess_core::view::ColorMode;
 /// half-block cells = 40×32 px; the GUI uses a larger, crisper card).
 const CARD_IMG_W: u32 = 120;
 const CARD_IMG_H: u32 = 90;
-/// Left panel width: fits two 120-px card columns plus margins.
-const PANEL_W: f32 = 300.0;
+/// Target card width for the responsive browse grid: the column count
+/// is the number of these that fit in the window width (clamped
+/// 1..=4 by [`columns_for_width`]); the cards then stretch to fill
+/// their columns, landing around 220–260 px wide on typical windows.
+const CARD_TARGET_W: f32 = 240.0;
+/// Horizontal grid spacing between card columns, in pixels.
+const GRID_SPX: f32 = 10.0;
 /// Truncated-description fragment length in characters (the TUI uses
 /// ~40 chars for its 28-cell-wide cards).
 const DESC_CHARS: usize = 40;
@@ -35,17 +47,29 @@ const SECTION_COLOR: egui::Color32 = egui::Color32::from_rgb(148, 154, 176);
 const SYM_COLOR: egui::Color32 = egui::Color32::from_rgb(128, 134, 156);
 const DESC_COLOR: egui::Color32 = egui::Color32::from_rgb(110, 116, 138);
 
+/// The two modes of the single-pane browser (mirrors the TUI):
+/// Browse is the full-window card grid; Render is the full-window
+/// canvas of the selected tiling.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum GuiMode {
+    Browse,
+    Render,
+}
+
 pub struct GuiApp {
     pub app: tess_core::App,
-    /// Cached side-panel metadata: (tiling id, params fingerprint,
+    /// Current mode: Browse (full-window grid) or Render (full-window
+    /// canvas of the selected tiling).
+    mode: GuiMode,
+    /// Render mode: the collapsible params/color-mode/symmetry panel
+    /// is shown. Expanded by default on every entry to Render (the
+    /// user can collapse it; the next entry re-expands it).
+    params_open: bool,
+    /// Cached render-panel metadata: (tiling id, params fingerprint,
     /// symmetry, periodic basis). Regenerated only when the tiling or its
     /// parameter values change — never per frame — so panel rendering
     /// cannot trigger view-sized tile generation (e.g. Hirschhorn growth).
     meta: Option<Meta>,
-    /// Cached preview: tiles over a tiling-derived window (see
-    /// [`tess_core::App::preview_region`]), keyed like [`Meta`]. Never
-    /// regenerated per frame.
-    preview: Option<Preview>,
     /// The shared browser model (`tess_core::browse`), built once at
     /// startup: one bounded ±10-world-unit probe per tiling, the same
     /// cost the TUI pays for its tab bar.
@@ -80,13 +104,6 @@ struct Meta {
     key: String,
     symmetry: tess_core::SymmetryMeta,
     periodic: Option<[tess_core::Vec2; 2]>,
-}
-
-/// Cached preview patch shown in the side panel.
-struct Preview {
-    key: String,
-    window: tess_core::BBox,
-    tiles: Vec<tess_core::Tile>,
 }
 
 /// Layout fingerprint of a polygon's vertex list: equal exactly when two
@@ -217,6 +234,31 @@ fn entry_selection(tab: &tess_core::Tab, remembered: Option<&str>) -> Option<&'s
     tab.cards.first().map(|c| c.id)
 }
 
+/// Responsive column count for the browse grid: how many `card_w`-wide
+/// columns fit in `width` — at least one (a very narrow window still
+/// shows a single column) and at most four (wider cards beat more
+/// columns). Pure, unit-tested.
+fn columns_for_width(width: f32, card_w: f32) -> usize {
+    let raw = if width.is_finite() && card_w.is_finite() && card_w > 0.0 {
+        (width / card_w).floor() as usize
+    } else {
+        1
+    };
+    raw.clamp(1, 4)
+}
+
+/// Next card index when walking `step` (±1; any integer wraps the
+/// same way) from `cur` in a tab of `n` cards — the TUI's render-mode
+/// prev/next. `None` for an empty tab; a missing or out-of-range
+/// `cur` starts at the first card.
+fn walk_index(n: usize, cur: Option<usize>, step: i32) -> Option<usize> {
+    if n == 0 {
+        return None;
+    }
+    let cur = cur.unwrap_or(0).min(n - 1) as i32;
+    Some(((cur + step).rem_euclid(n as i32)) as usize)
+}
+
 /// Card-preview cache key: (id, params-string, size).
 fn card_key(id: &str, params: &str, w: u32, h: u32) -> String {
     format!("{id}|{params}|{w}x{h}")
@@ -259,8 +301,9 @@ impl GuiApp {
         tab_selected[active_tab] = Some(selected.clone());
         Self {
             app,
+            mode: GuiMode::Browse,
+            params_open: true,
             meta: None,
-            preview: None,
             tabs,
             active_tab,
             tab_selected,
@@ -300,79 +343,6 @@ impl GuiApp {
         self.meta.as_ref().unwrap()
     }
 
-    /// The side-panel preview: the selected tiling over a
-    /// tiling-derived window (never per-frame generation; the cache
-    /// key tracks tiling + parameter values). Colors follow the
-    /// canvas's color mode, except `Single` falls back to `Proto` —
-    /// one color for every tile would make the preview a featureless
-    /// slab.
-    fn draw_preview(&mut self, ui: &mut egui::Ui, rect: egui::Rect) {
-        let mut key = self.app.selected_id().to_string();
-        for spec in self.app.tiling().params() {
-            let v = self
-                .app
-                .param_value(spec.id)
-                .unwrap_or_else(|| spec.default_value());
-            key.push_str(&format!("|{}={:?}", spec.id, v));
-        }
-        if self.preview.as_ref().is_none_or(|p| p.key != key) {
-            let aspect = f64::from(rect.width()) / f64::from(rect.height().max(1.0));
-            let (result, window) = self.app.preview_result(aspect);
-            self.preview = Some(Preview {
-                key,
-                window,
-                tiles: result.tiles,
-            });
-        }
-        let preview = self.preview.as_ref().unwrap();
-
-        let (br, bg_, bb) = paint::rgb(paint::BORDER);
-        let (ar, ag, ab) = paint::rgb(paint::BACKGROUND);
-        let painter = ui.painter_at(rect);
-        painter.rect_filled(rect, 3.0, egui::Color32::from_rgb(ar, ag, ab));
-        if preview.tiles.is_empty() {
-            painter.text(
-                rect.center(),
-                egui::Align2::CENTER_CENTER,
-                "(no preview)",
-                egui::FontId::proportional(12.0),
-                egui::Color32::from_rgb(br, bg_, bb),
-            );
-            return;
-        }
-        let wx = (preview.window.max.x - preview.window.min.x).max(1e-9);
-        let wy = (preview.window.max.y - preview.window.min.y).max(1e-9);
-        let scale = (rect.width() / wx as f32).min(rect.height() / wy as f32);
-        let cx = (preview.window.min.x + preview.window.max.x) / 2.0;
-        let cy = (preview.window.min.y + preview.window.max.y) / 2.0;
-        let to_screen = |p: tess_core::Vec2| {
-            egui::pos2(
-                rect.center().x + (p.x - cx) as f32 * scale,
-                rect.center().y - (p.y - cy) as f32 * scale,
-            )
-        };
-        let border = egui::Stroke::new(0.8_f32, egui::Color32::from_rgb(br, bg_, bb));
-        let mode = self.app.color_mode.preview_mode();
-        for tile in &preview.tiles {
-            let pts = &tile.poly.pts;
-            if pts.len() < 3 {
-                continue;
-            }
-            let screen: Vec<egui::Pos2> = pts.iter().map(|&p| to_screen(p)).collect();
-            let (r, g, b) = paint::rgb(paint::tile_rgb(mode, tile));
-            let color = egui::Color32::from_rgb(r, g, b);
-            let tris = tile.poly.triangulate();
-            let mut mesh = egui::Mesh::with_texture(egui::TextureId::default());
-            for q in &screen {
-                mesh.colored_vertex(*q, color);
-            }
-            for t in tris {
-                mesh.add_triangle(t[0], t[1], t[2]);
-            }
-            painter.add(egui::Shape::Mesh(mesh));
-            painter.add(egui::Shape::closed_line(screen, border));
-        }
-    }
 }
 
 impl eframe::App for GuiApp {
@@ -385,106 +355,125 @@ impl eframe::App for GuiApp {
             });
         });
 
-        self.search_jump();
-        self.draw_side_panel(ctx);
-        self.draw_canvas(ctx);
+        match self.mode {
+            GuiMode::Browse => self.draw_browse(ctx),
+            GuiMode::Render => self.draw_render(ctx),
+        }
     }
 }
 
 impl GuiApp {
-    fn draw_side_panel(&mut self, ctx: &egui::Context) {
-        egui::SidePanel::left("panel")
-            .exact_width(PANEL_W)
-            .show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    ui.label("search");
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.text_edit_singleline(&mut self.search);
-                    });
+    /// Browse mode: the tab band (tabs + search, one wrapping row) over
+    /// the card grid filling the window.
+    fn draw_browse(&mut self, ctx: &egui::Context) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            self.search_jump();
+            self.draw_tab_row(ui);
+            ui.separator();
+            egui::ScrollArea::vertical().id_salt("browser").show(ui, |ui| {
+                self.draw_card_grid(ctx, ui);
+            });
+        });
+    }
+
+    /// Render mode: Escape/arrow handling, the top strip (back / prev /
+    /// next / params / reset), the full-window canvas, and the
+    /// collapsible bottom params / color-mode / symmetry panel.
+    fn draw_render(&mut self, ctx: &egui::Context) {
+        // Escape returns to Browse exactly as left (same tab +
+        // selection). Nothing in the render view can swallow the key:
+        // the search field is Browse-only, a focused param DragValue
+        // deliberately ignores left/right arrows in keyboard-edit mode
+        // (egui 0.29, drag_value.rs) and buttons never take focus on
+        // click, so Escape always reaches us.
+        if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
+            self.mode = GuiMode::Browse;
+        }
+        // Left/Right walk the tab order (the TUI's render-mode
+        // prev/next). No widget in this view consumes left/right
+        // arrows — a focused param DragValue only eats Up/Down — so
+        // the keys are safe to bind unconditionally (key_pressed
+        // respects widget consumption, so a consumer would silence
+        // the walk automatically).
+        if ctx.input(|i| i.key_pressed(egui::Key::ArrowLeft)) {
+            self.walk_render(-1);
+        }
+        if ctx.input(|i| i.key_pressed(egui::Key::ArrowRight)) {
+            self.walk_render(1);
+        }
+
+        egui::TopBottomPanel::top("render_bar").show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                if ui.button("← back").clicked() {
+                    self.mode = GuiMode::Browse;
+                }
+                ui.separator();
+                if ui.button("◀").clicked() {
+                    self.walk_render(-1);
+                }
+                if ui.button("▶").clicked() {
+                    self.walk_render(1);
+                }
+                let params_label = if self.params_open { "params ▾" } else { "params ▴" };
+                if ui.button(params_label).clicked() {
+                    self.params_open = !self.params_open;
+                }
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                    ui.label(self.app.tiling().name());
                 });
-                ui.separator();
-                self.draw_tabs(ui);
-                ui.separator();
-                egui::ScrollArea::vertical().id_salt("browser").show(ui, |ui| {
-                    self.draw_card_grid(ctx, ui);
-                    ui.separator();
-                    self.draw_params(ui);
-                    ui.separator();
-                    ui.label("Color mode");
-                    ui.horizontal(|ui| {
-                        for m in [ColorMode::Single, ColorMode::Pattern, ColorMode::Proto] {
-                            if ui
-                                .selectable_label(self.app.color_mode == m, m.label())
-                                .clicked()
-                            {
-                                self.app.color_mode = m;
-                            }
-                        }
-                    });
-                    ui.separator();
-                    let m = self.metadata();
-                    ui.label(format!("wallpaper group: {}", m.symmetry.group));
-                    ui.label(format!("lattice: {}", m.symmetry.lattice));
-                    if let Some([l1, l2]) = m.periodic {
-                        ui.label(format!(
-                            "basis: ({:.2},{:.2}) ({:.2},{:.2})",
-                            l1.x, l1.y, l2.x, l2.y
-                        ));
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if ui.button("⟲ reset").clicked() {
+                        self.app.reset_view();
                     }
-                    if let Some(n) = m.symmetry.notes {
-                        ui.label(n);
-                    }
-                    ui.separator();
-                    ui.label("preview");
-                    let size = egui::vec2(ui.available_width(), 110.0);
-                    let (prect, _) = ui.allocate_exact_size(size, egui::Sense::hover());
-                    self.draw_preview(ui, prect);
                 });
             });
+        });
+
+        if self.params_open {
+            egui::TopBottomPanel::bottom("render_params").show(ctx, |ui| {
+                self.draw_params(ui);
+                ui.separator();
+                ui.label("Color mode");
+                ui.horizontal(|ui| {
+                    for m in [ColorMode::Single, ColorMode::Pattern, ColorMode::Proto] {
+                        if ui
+                            .selectable_label(self.app.color_mode == m, m.label())
+                            .clicked()
+                        {
+                            self.app.color_mode = m;
+                        }
+                    }
+                });
+                ui.separator();
+                let m = self.metadata();
+                ui.horizontal(|ui| {
+                    ui.label(format!("wallpaper group: {}", m.symmetry.group));
+                    ui.label(format!("lattice: {}", m.symmetry.lattice));
+                });
+                if let Some([l1, l2]) = m.periodic {
+                    ui.label(format!(
+                        "basis: ({:.2},{:.2}) ({:.2},{:.2})",
+                        l1.x, l1.y, l2.x, l2.y
+                    ));
+                }
+                if let Some(n) = m.symmetry.notes {
+                    ui.label(n);
+                }
+            });
+        }
+
+        self.draw_canvas(ctx);
     }
 
-    /// The TUI's search jump: when the search text changes, the active
-    /// tab moves to the first tab with at least one match. The
-    /// selection itself is untouched (the user picks a card explicitly);
-    /// an empty query never jumps.
-    fn search_jump(&mut self) {
-        if self.search.trim() == self.search_at_jump.trim() {
-            return;
-        }
-        if let Some(idx) = first_matching_tab(&self.tabs, &self.search) {
-            self.active_tab = idx;
-        }
-        self.search_at_jump = self.search.clone();
-    }
-
-    /// Select a tiling from the card grid: the app selection plus the
-    /// active tab's selection memory.
-    fn select_card(&mut self, id: &str) {
-        self.app.select_id(id);
-        self.tab_selected[self.active_tab] = Some(id.to_string());
-    }
-
-    /// Switch the active tab, restoring that tab's remembered card
-    /// (per-tab selection memory; WYSIWYG, the canvas follows).
-    fn select_tab(&mut self, idx: usize) {
-        if idx == self.active_tab {
-            return;
-        }
-        self.active_tab = idx;
-        if let Some(id) = entry_selection(&self.tabs[idx], self.tab_selected[idx].as_deref()) {
-            self.app.select_id(id);
-            self.tab_selected[idx] = Some(id.to_string());
-        }
-    }
-
-    /// The tab selector row: one selectable label per category in
-    /// `TilingCategory::ALL` order with the card count (the match count
-    /// while a search is active), horizontal and wrapping.
-    fn draw_tabs(&mut self, ui: &mut egui::Ui) {
+    /// The full-width tab band: one selectable label per category in
+    /// `TilingCategory::ALL` order with the card count (the match
+    /// count while a search is active), then the search field, all in
+    /// one wrapping row.
+    fn draw_tab_row(&mut self, ui: &mut egui::Ui) {
         let searching = !self.search.trim().is_empty();
-        // Two-phase: read tab state in the row, apply the click after,
-        // so the row loop's borrow of `self.tabs` does not collide with
-        // the mutable `select_tab` call.
+        // Two-phase: read tab state in the band, apply the click after,
+        // so the band loop's borrow of `self.tabs` does not collide
+        // with the mutable `select_tab` call.
         let mut clicked: Option<usize> = None;
         ui.horizontal_wrapped(|ui| {
             for (i, tab) in self.tabs.iter().enumerate() {
@@ -503,16 +492,87 @@ impl GuiApp {
                     clicked = Some(i);
                 }
             }
+            ui.add(
+                egui::TextEdit::singleline(&mut self.search)
+                    .hint_text("search")
+                    .desired_width(160.0),
+            );
         });
         if let Some(i) = clicked {
             self.select_tab(i);
         }
     }
 
-    /// The card grid: crystal-system section headers (from
-    /// `tess_core::section_key`) between rows of cards, each card =
-    /// preview image + bold name + "group · lattice" line + truncated
-    /// description. 2-3 columns depending on panel width.
+    /// Prev/next in the selected tiling's own tab (the tab you entered
+    /// render from), wrapping — mirrors the TUI's `walk`, which
+    /// follows the selected tiling's category. Updates the selection
+    /// and that tab's selection memory so returning to Browse lands on
+    /// the walked card.
+    fn walk_render(&mut self, step: i32) {
+        let ci = self
+            .tabs
+            .iter()
+            .position(|t| t.card_index_of(self.app.selected_id()).is_some())
+            .unwrap_or(self.active_tab);
+        let tab = &self.tabs[ci];
+        let next = match walk_index(
+            tab.cards.len(),
+            tab.card_index_of(self.app.selected_id()),
+            step,
+        ) {
+            Some(i) => i,
+            None => return,
+        };
+        let id = tab.cards[next].id;
+        self.app.select_id(id);
+        self.tab_selected[ci] = Some(id.to_string());
+    }
+
+    /// The TUI's search jump: when the search text changes, the active
+    /// tab moves to the first tab with at least one match. The
+    /// selection itself is untouched (the user picks a card explicitly);
+    /// an empty query never jumps.
+    fn search_jump(&mut self) {
+        if self.search.trim() == self.search_at_jump.trim() {
+            return;
+        }
+        if let Some(idx) = first_matching_tab(&self.tabs, &self.search) {
+            self.active_tab = idx;
+        }
+        self.search_at_jump = self.search.clone();
+    }
+
+    /// Select a tiling from the card grid: the app selection plus the
+    /// active tab's selection memory, then enter Render mode (the
+    /// full-window canvas), with the params panel re-expanded — the
+    /// TUI's `open_render` (cursor kept in sync so `Esc` returns to
+    /// this card).
+    fn select_card(&mut self, id: &str) {
+        self.app.select_id(id);
+        self.tab_selected[self.active_tab] = Some(id.to_string());
+        self.mode = GuiMode::Render;
+        self.params_open = true;
+    }
+
+    /// Switch the active tab, restoring that tab's remembered card
+    /// (per-tab selection memory; the canvas shows it on the next
+    /// entry to Render).
+    fn select_tab(&mut self, idx: usize) {
+        if idx == self.active_tab {
+            return;
+        }
+        self.active_tab = idx;
+        if let Some(id) = entry_selection(&self.tabs[idx], self.tab_selected[idx].as_deref()) {
+            self.app.select_id(id);
+            self.tab_selected[idx] = Some(id.to_string());
+        }
+    }
+
+    /// The card grid filling the window: crystal-system section
+    /// headers (from `tess_core::section_key`) between rows of cards,
+    /// each card = preview image + bold name + "group · lattice" line
+    /// + truncated description. Responsive column count ([`
+    /// columns_for_width`]) with the cards stretched to fill.
     fn draw_card_grid(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
         let tab = &self.tabs[self.active_tab];
         // Owned snapshot of the filtered, in-order cards. The grid
@@ -543,15 +603,20 @@ impl GuiApp {
             });
             return;
         }
-        let cols =
-            ((ui.available_width() / (CARD_IMG_W as f32 + 14.0)) as usize).clamp(1, 3);
+        // Responsive columns over the full window width ([`
+        // columns_for_width`], clamped 1..=4); the cards stretch to
+        // the column width (minus the grid's horizontal spacing) so
+        // the grid fills the window edge to edge.
+        let avail = ui.available_width();
+        let cols = columns_for_width(avail, CARD_TARGET_W);
+        let col_w = (avail - (cols - 1) as f32 * GRID_SPX) / cols as f32;
         // Scroll the selection into view only when (tab, selection)
         // actually changed since the last frame — the TUI's
         // last_highlighted guard; without it, manual scrolling would
         // be snapped back on every render.
         let changed = self.last_highlighted.0 != self.active_tab
             || self.last_highlighted.1 != self.app.selected_id();
-        egui::Grid::new("card_grid").spacing([10.0, 8.0]).show(ui, |ui| {
+        egui::Grid::new("card_grid").spacing([GRID_SPX, 8.0]).show(ui, |ui| {
             // Section the (already-ordered) card snapshot by
             // `section_key`; the snapshot is a local, so the closure
             // holds no borrows of `self` besides the `&mut` it needs
@@ -568,7 +633,7 @@ impl GuiApp {
                 }
                 for row in section.cards.chunks(cols) {
                     for card in row {
-                        self.draw_card(ctx, ui, card, changed);
+                        self.draw_card(ctx, ui, card, col_w, changed);
                     }
                     ui.end_row();
                 }
@@ -584,13 +649,16 @@ impl GuiApp {
 
     /// One card: bordered frame with the preview texture (generated
     /// lazily, visible cards only), the bold name, the "group ·
-    /// lattice" symmetry line, and a truncated description. Clicking
-    /// selects the tiling; the selected card gets a highlight stroke.
+    /// lattice" symmetry line, and a truncated description. The frame
+    /// is `col_w` wide (the responsive column width); clicking selects
+    /// the tiling and opens Render mode; the selected card gets a
+    /// highlight stroke.
     fn draw_card(
         &mut self,
         ctx: &egui::Context,
         ui: &mut egui::Ui,
         card: &tess_core::CardMeta,
+        col_w: f32,
         scroll_to_selected: bool,
     ) {
         let selected = card.id == self.app.selected_id();
@@ -614,7 +682,7 @@ impl GuiApp {
                 if selected { SELECTED_STROKE } else { CARD_STROKE },
             ));
         let frame_resp = frame.show(ui, |ui| {
-            ui.set_width(CARD_IMG_W as f32);
+            ui.set_width(col_w);
             match &handle {
                 Some(h) => {
                     ui.add(egui::Image::from_texture(h).fit_to_exact_size(img_size));
@@ -1372,5 +1440,85 @@ mod tests {
         let s = "Ammann–Beenker tiling";
         assert_eq!(super::truncate_text(s, 6), "Amman…");
         assert_eq!(super::truncate_text(s, s.chars().count()), s);
+    }
+
+    // ---- Single-pane browser pure logic (UI-3) ----------------------
+
+    /// `columns_for_width` fits whole target-width cards, clamps to
+    /// 1..=4, and degrades to a single column on degenerate widths.
+    #[test]
+    fn columns_for_width_fits_and_clamps() {
+        assert_eq!(super::columns_for_width(1000.0, 240.0), 4, "4.16 → 4");
+        assert_eq!(super::columns_for_width(960.0, 240.0), 4, "exactly 4");
+        assert_eq!(super::columns_for_width(959.0, 240.0), 3, "just under 4");
+        assert_eq!(super::columns_for_width(480.0, 240.0), 2, "exactly 2");
+        assert_eq!(super::columns_for_width(479.0, 240.0), 1);
+        assert_eq!(super::columns_for_width(239.0, 240.0), 1, "lower clamp");
+        assert_eq!(super::columns_for_width(0.0, 240.0), 1, "zero width");
+        assert_eq!(super::columns_for_width(100_000.0, 240.0), 4, "upper clamp");
+        assert_eq!(super::columns_for_width(f32::NAN, 240.0), 1, "non-finite width");
+        assert_eq!(super::columns_for_width(1000.0, 0.0), 1, "non-positive card width");
+    }
+
+    /// `walk_index` wraps at both ends, handles empty tabs, and
+    /// tolerates a missing or out-of-range cursor.
+    #[test]
+    fn walk_index_wraps_and_degrades() {
+        assert_eq!(super::walk_index(5, Some(0), -1), Some(4), "prev wraps to last");
+        assert_eq!(super::walk_index(5, Some(4), 1), Some(0), "next wraps to first");
+        assert_eq!(super::walk_index(5, Some(2), 1), Some(3));
+        assert_eq!(super::walk_index(5, Some(2), -1), Some(1));
+        assert_eq!(super::walk_index(1, Some(0), 1), Some(0), "single card: stays");
+        assert_eq!(super::walk_index(0, Some(0), 1), None, "empty tab");
+        assert_eq!(super::walk_index(5, None, 1), Some(1), "missing cursor starts at 0");
+        assert_eq!(super::walk_index(5, None, -1), Some(4));
+        assert_eq!(
+            super::walk_index(5, Some(9), 1),
+            Some(0),
+            "out-of-range cursor clamps to last, then wraps"
+        );
+    }
+
+    /// Render-mode prev/next walks the selected tiling's tab order and
+    /// updates the per-tab selection memory, wrapping — so returning
+    /// to Browse lands on the walked card (mirrors the TUI's `walk`).
+    /// Also pins the mode switch on card selection.
+    #[test]
+    fn walk_render_walks_tab_order_and_updates_memory() {
+        let mut gui = super::GuiApp::new();
+        let at = gui.active_tab;
+        // Copy the &'static str ids out first: the walks below need
+        // `&mut gui`, so no borrow of `gui.tabs` may survive.
+        let (n, first_id, second_id, last_id): (usize, &'static str, &'static str, &'static str) =
+            (
+                gui.tabs[at].cards.len(),
+                gui.tabs[at].cards[0].id,
+                gui.tabs[at].cards[1].id,
+                gui.tabs[at].cards.last().unwrap().id,
+            );
+        assert!(n >= 3, "initial tab has several cards");
+
+        // Clicking a card enters Render mode with the panel expanded.
+        gui.select_card(first_id);
+        assert_eq!(gui.mode, super::GuiMode::Render);
+        assert!(gui.params_open);
+        assert_eq!(gui.app.selected_id(), first_id);
+
+        // Walk forward: the selection and the tab memory follow.
+        gui.walk_render(1);
+        assert_eq!(gui.app.selected_id(), second_id, "next card in tab order");
+        assert_eq!(gui.tab_selected[at].as_deref(), Some(second_id));
+
+        // Step back, then walk all the way to the last card and
+        // across the wrap to the first.
+        gui.walk_render(-1);
+        assert_eq!(gui.app.selected_id(), first_id);
+        for _ in 1..n {
+            gui.walk_render(1);
+        }
+        assert_eq!(gui.app.selected_id(), last_id, "walked to the last card");
+        gui.walk_render(1);
+        assert_eq!(gui.app.selected_id(), first_id, "wraps to the first card");
+        assert_eq!(gui.tab_selected[at].as_deref(), Some(first_id));
     }
 }
