@@ -39,11 +39,11 @@ const GRID_SPX: f32 = 10.0;
 /// `truncate()` (ellipsis at the card's width), which kicks in
 /// first.
 const DESC_CHARS: usize = 40;
-/// Card frame inner margin (inset on all four sides), in pixels.
-/// The card's inner ui is constrained to
-/// `card_inner_w(col_w, CARD_INNER_MARGIN)`, so the frame's outer
-/// rect — the grid cell — is exactly the column width and the grid
-/// fills the window width without overflowing.
+/// Card inner margin (inset on all four sides), in pixels. The card's
+/// content child is bounded by [`card_inner_w`] × [`CARD_INNER_H`],
+/// inset by this margin from the card's allocated rect — which IS the
+/// grid cell, exactly the column width, so the grid fills the window
+/// width without overflowing.
 const CARD_INNER_MARGIN: f32 = 5.0;
 /// Vertical spacing between card rows (image → name → description →
 /// symmetry line), in pixels.
@@ -64,6 +64,12 @@ const CARD_SYM_LINE_H: f32 = 14.0;
 /// test).
 const CARD_INNER_H: f32 =
     CARD_IMG_H as f32 + CARD_NAME_LINE_H + CARD_DESC_LINE_H + CARD_SYM_LINE_H + 3.0 * CARD_ROW_SPX;
+/// Total card height — the inner content plus the two vertical margins.
+/// `draw_card` allocates exactly `col_w` × [`CARD_TOTAL_H`] per cell, so
+/// every card is identical and the grid's cell sizes never depend on
+/// how the content lays out inside (the LTR-inheritance bug grew cells
+/// sideways).
+const CARD_TOTAL_H: f32 = CARD_INNER_H + 2.0 * CARD_INNER_MARGIN;
 
 // Card frame colors (dark theme): neutral outline, hover outline, and
 // the selected card's fill + cyan stroke (the TUI's cyan-border
@@ -126,6 +132,15 @@ pub struct GuiApp {
     /// Kept in GuiApp rather than `app.search` because the TUI and the
     /// tess-core App.search filter on different fields.
     search: String,
+    /// Diagnostics for the headless geometry test: the card rects
+    /// allocated by the last `draw_card_grid` pass (cleared at its top,
+    /// pushed per card), plus the column width `col_w` that pass used.
+    /// Production code never reads these — the `allow(dead_code)` keeps
+    /// the 0-warning bar outside `cfg(test)` (the UI-1 precedent).
+    #[cfg_attr(not(test), allow(dead_code))]
+    card_rects: Vec<egui::Rect>,
+    #[cfg_attr(not(test), allow(dead_code))]
+    card_grid_col_w: f32,
 }
 
 /// Region-independent metadata shown in the side panel.
@@ -374,6 +389,8 @@ impl GuiApp {
             last_highlighted: (active_tab, selected),
             card_textures: HashMap::new(),
             search: String::new(),
+            card_rects: Vec::new(),
+            card_grid_col_w: 0.0,
         }
     }
 
@@ -638,9 +655,13 @@ impl GuiApp {
     /// ([`columns_for_width`]) with the cards stretched to fill: the
     /// column width is the available width minus the inter-column
     /// spacing, split among the columns ([`card_col_w`]), and each
-    /// card's outer rect is exactly the column width — the grid
-    /// fills the window edge to edge without overflowing.
+    /// card allocates exactly that width ([`draw_card`]'s explicit
+    /// allocation), so the grid fills the window edge to edge without
+    /// overflowing.
     fn draw_card_grid(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
+        // Geometry diagnostics for the headless pass test: record the
+        // rects of THIS pass only, so assertions read the last pass.
+        self.card_rects.clear();
         let tab = &self.tabs[self.active_tab];
         // Owned snapshot of the filtered, in-order cards. The grid
         // closure below needs `&mut self` (texture cache, selection),
@@ -677,6 +698,7 @@ impl GuiApp {
         let avail = ui.available_width();
         let cols = columns_for_width(avail, CARD_TARGET_W);
         let col_w = card_col_w(avail, cols, GRID_SPX);
+        self.card_grid_col_w = col_w;
         // Scroll the selection into view only when (tab, selection)
         // actually changed since the last frame — the TUI's
         // last_highlighted guard; without it, manual scrolling would
@@ -714,18 +736,26 @@ impl GuiApp {
         }
     }
 
-    /// One card: bordered frame with the preview texture (generated
-    /// lazily, visible cards only), the name, a truncated
-    /// description, and a small "group · lattice" symmetry line.
-    /// The text rows are single-line (ellipsized at the card's
-    /// width, never wrapped) and the card has a fixed size
-    /// ([`CARD_INNER_H`] inner + 2·[`CARD_INNER_MARGIN`]), so every
-    /// card in the grid is the same size and the rows align. The
-    /// frame's outer rect — the grid cell — is exactly `col_w`
-    /// (the responsive column width: its inner ui is constrained to
-    /// [`card_inner_w`], so outer = inner + 2·margin fills the
-    /// column exactly); clicking selects the tiling and opens
-    /// Render mode; the selected card gets a highlight stroke.
+    /// One card: preview texture (generated lazily, visible cards
+    /// only), the name, a truncated description, and a small
+    /// "group · lattice" symmetry line — all STACKED vertically.
+    ///
+    /// The body is built with explicit geometry, no inherited layout:
+    /// egui's `Grid` places cells inside a left-to-right ui, and
+    /// `Frame::show`'s content child inherits that layout (`Ui::new_child`
+    /// keeps the parent's `Layout` when the builder gives none), which
+    /// flowed image + name + description + symmetry sideways — the
+    /// description truncated to "…" and each card's min_rect grew past
+    /// its column, overflowing the row. So instead of a Frame: the card
+    /// allocates its exact cell rect ([`col_w`] × [`CARD_TOTAL_H`]) up
+    /// front, paints fill/stroke on that rect (rounding 6.0 — the
+    /// look the old `Frame` had), and draws the content in an explicit
+    /// [`egui::Layout::top_down`] child inset by [`CARD_INNER_MARGIN`],
+    /// where each single-line (ellipsized, never wrapped) label
+    /// truncates at the full inner width. Every card gets the identical
+    /// rect, so the grid stays orthogonal. Clicking selects the tiling
+    /// and opens Render mode; the selected card gets the highlight fill
+    /// and stroke.
     fn draw_card(
         &mut self,
         ctx: &egui::Context,
@@ -736,81 +766,97 @@ impl GuiApp {
     ) {
         let selected = card.id == self.app.selected_id();
         let img_size = egui::vec2(CARD_IMG_W as f32, CARD_IMG_H as f32);
-        // Lazy texture generation: the image allocates at the cursor;
-        // generate (or reuse) the texture only when that rect is near
-        // the scroll area's clip rect, so the first frame pays only
-        // for the cards actually in view.
-        let predicted = egui::Rect::from_min_size(
-            ui.cursor().min + egui::vec2(CARD_INNER_MARGIN, CARD_INNER_MARGIN),
-            img_size,
-        );
-        let handle = if ui.clip_rect().expand(32.0).intersects(predicted) {
+        // The exact cell. Inside the grid, `next_cell` = max(allocated,
+        // prev_col_width) = col_w, so the cell size — and the grid's
+        // total width — are decided here, independent of the content.
+        let (card_rect, _cell) =
+            ui.allocate_exact_size(egui::vec2(col_w, CARD_TOTAL_H), egui::Sense::hover());
+        self.card_rects.push(card_rect);
+        // Lazy texture generation: generate (or reuse) the texture only
+        // when the card's rect is near the scroll area's clip rect, so
+        // the first frame pays only for the cards actually in view.
+        let handle = if ui.clip_rect().expand(32.0).intersects(card_rect) {
             Some(self.card_texture(ctx, card, CARD_IMG_W, CARD_IMG_H))
         } else {
             None
         };
-        let frame = egui::Frame::none()
-            .fill(if selected { SELECTED_FILL } else { egui::Color32::TRANSPARENT })
-            .rounding(6.0)
-            .inner_margin(CARD_INNER_MARGIN)
-            .stroke(egui::Stroke::new(
+        // The card's look, painted straight onto the allocated rect:
+        // fill + outline with the old Frame's rounding and colors
+        // (selected: highlight fill + thicker cyan stroke).
+        ui.painter().rect_filled(
+            card_rect,
+            6.0,
+            if selected { SELECTED_FILL } else { egui::Color32::TRANSPARENT },
+        );
+        ui.painter().rect_stroke(
+            card_rect,
+            6.0,
+            egui::Stroke::new(
                 if selected { 2.0_f32 } else { 1.0_f32 },
                 if selected { SELECTED_STROKE } else { CARD_STROKE },
-            ));
-        let frame_resp = frame.show(ui, |ui| {
-            // Inner width = column width minus the frame's two inner
-            // margins, so the frame's outer rect is exactly the
-            // column width: the grid fills the window width exactly
-            // (a wider outer rect is what used to clip the right-most
-            // column). The fixed inner height keeps every card the
-            // same size.
-            ui.set_width(card_inner_w(col_w, CARD_INNER_MARGIN));
-            ui.set_min_height(CARD_INNER_H);
-            // Explicit row spacing (not the style's item spacing):
-            // the card's content height is a constant, so all cards
-            // line up in an orthogonal grid.
-            ui.spacing_mut().item_spacing.y = 0.0;
-            match &handle {
-                Some(h) => {
-                    ui.add(egui::Image::from_texture(h).fit_to_exact_size(img_size));
-                }
-                None => {
-                    ui.allocate_exact_size(img_size, egui::Sense::hover());
-                }
+            ),
+        );
+        // The content: an explicit TopDown child inset by the margin.
+        // (Explicit `layout` is the whole point — without it, `new_child`
+        // inherits the grid's horizontal flow.) Detached from the
+        // parent's layout on purpose: the cell was already allocated,
+        // and the child's painter shares the context's shape list, so
+        // its shapes paint without merging min_rects back.
+        let mut content = ui.new_child(
+            egui::UiBuilder::new()
+                .id_salt(card.id)
+                .max_rect(egui::Rect::from_min_size(
+                    card_rect.min + egui::vec2(CARD_INNER_MARGIN, CARD_INNER_MARGIN),
+                    egui::vec2(card_inner_w(col_w, CARD_INNER_MARGIN), CARD_INNER_H),
+                ))
+                .layout(egui::Layout::top_down(egui::Align::LEFT)),
+        );
+        // Explicit row spacing (not the style's item spacing): the
+        // card's content height is a constant, so all cards line up in
+        // an orthogonal grid.
+        content.spacing_mut().item_spacing.y = 0.0;
+        match &handle {
+            Some(h) => {
+                content.add(egui::Image::from_texture(h).fit_to_exact_size(img_size));
             }
-            ui.add_space(CARD_ROW_SPX);
-            ui.add(
-                egui::Label::new(egui::RichText::new(card.name.to_string()).strong().size(16.0))
-                    .truncate(),
-            );
-            ui.add_space(CARD_ROW_SPX);
-            // The description sits directly under the name. An empty
-            // label still reserves the row's height, so a card
-            // without a description keeps the uniform card size.
-            let desc = if card.description.is_empty() {
-                card.notes.unwrap_or("").to_string()
-            } else {
-                truncate_text(card.description, DESC_CHARS)
-            };
-            ui.add(
-                egui::Label::new(egui::RichText::new(desc).size(13.0).color(DESC_COLOR))
-                    .truncate(),
-            );
-            ui.add_space(CARD_ROW_SPX);
-            ui.add(
-                egui::Label::new(
-                    egui::RichText::new(format!(
-                        "{} · {}",
-                        card.group_str(),
-                        card.lattice_str()
-                    ))
-                    .size(12.0)
-                    .color(SYM_COLOR),
-                )
+            None => {
+                content.allocate_exact_size(img_size, egui::Sense::hover());
+            }
+        }
+        content.add_space(CARD_ROW_SPX);
+        content.add(
+            egui::Label::new(egui::RichText::new(card.name.to_string()).strong().size(16.0))
                 .truncate(),
-            );
-        });
-        let card_rect = frame_resp.response.rect;
+        );
+        content.add_space(CARD_ROW_SPX);
+        // The description sits directly under the name. An empty
+        // label still reserves the row's height, so a card
+        // without a description keeps the uniform card size.
+        let desc = if card.description.is_empty() {
+            card.notes.unwrap_or("").to_string()
+        } else {
+            truncate_text(card.description, DESC_CHARS)
+        };
+        content.add(
+            egui::Label::new(egui::RichText::new(desc).size(13.0).color(DESC_COLOR))
+                .truncate(),
+        );
+        content.add_space(CARD_ROW_SPX);
+        content.add(
+            egui::Label::new(
+                egui::RichText::new(format!(
+                    "{} · {}",
+                    card.group_str(),
+                    card.lattice_str()
+                ))
+                .size(12.0)
+                .color(SYM_COLOR),
+            )
+            .truncate(),
+        );
+        drop(content);
+        // Click/hover on the exact cell rect, with a stable explicit id
+        // (survives search/filter changes re-ordering the auto ids).
         let resp = ui.interact(card_rect, ui.id().with(card.id), egui::Sense::click());
         if resp.hovered() && !selected {
             ui.painter()
@@ -1681,6 +1727,176 @@ mod tests {
             "symmetry line {} < galley row height at 12 px",
             super::CARD_SYM_LINE_H
         );
+    }
+
+    /// Global-space rects of all painted text. In epaint 0.29 a galley
+    /// is painted as `Shape::Text` whose `galley.rect` is relative to
+    /// the shape's `pos`; `Shape::Vec` is walked recursively for
+    /// robustness.
+    fn painted_text_rects(shapes: &[egui::epaint::ClippedShape]) -> Vec<egui::Rect> {
+        fn walk(shape: &egui::Shape, out: &mut Vec<egui::Rect>) {
+            match shape {
+                egui::Shape::Text(ts) => out.push(ts.galley.rect.translate(ts.pos.to_vec2())),
+                egui::Shape::Vec(inner) => inner.iter().for_each(|s| walk(s, out)),
+                _ => {}
+            }
+        }
+        let mut out = Vec::new();
+        for cs in shapes {
+            walk(&cs.shape, &mut out);
+        }
+        out
+    }
+
+    /// Run the real browse grid through real headless egui passes at
+    /// `w`×`h`; return the LAST pass's `FullOutput` plus the card rects
+    /// and column width that pass recorded.
+    ///
+    /// The Grid runs an invisible sizing pass and `request_discard`s on
+    /// its first frame (`ctx.run` loops internally up to `max_passes`,
+    /// default 2, and `FullOutput::append` keeps only the newest pass's
+    /// shapes) — three whole runs anyway, so every asserted pass is far
+    /// past any first-frame sizing behavior. `GuiApp::new()` is
+    /// display-free (pure `tess_core` browser state), and the card
+    /// textures raster through `tess_core::raster` +
+    /// `ctx.load_texture` — all fine with no window.
+    fn headless_grid_at(w: f32, h: f32) -> (egui::FullOutput, Vec<egui::Rect>, f32) {
+        let ctx = egui::Context::default();
+        let mut gui = super::GuiApp::new();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(w, h));
+        let mut out = egui::FullOutput::default();
+        for _ in 0..3 {
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            out = ctx.run(input, |ctx| {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    egui::ScrollArea::vertical().id_salt("browser").show(ui, |ui| {
+                        gui.draw_card_grid(ctx, ui);
+                    });
+                });
+            });
+        }
+        (out, gui.card_rects.clone(), gui.card_grid_col_w)
+    }
+
+    /// The owner's complaints — rows overflowing the window, and the
+    /// description rendering as "…" to the right of the name instead of
+    /// below it — came from egui's Grid handing the card a left-to-right
+    /// layout that `Frame::show`'s content child inherited. Arithmetic
+    /// property tests failed twice to predict egui, so this test runs a
+    /// REAL headless egui pass (no model of egui's layout math) and
+    /// asserts on the actually-painted geometry at two window sizes:
+    ///
+    /// 1. No horizontal overflow: no painted shape's visible rect
+    ///    (clipped) crosses the screen's right edge (+1 px slack).
+    /// 2. Orthogonal grid: all recorded card rects share one width and
+    ///    one height (±0.5), the exact allocated [`CARD_TOTAL_H`], and
+    ///    a width equal to the pass's column width (±1.0).
+    /// 3. Text stacks vertically: every galley centered inside a card
+    ///    ends at or before the card's right edge (+1 px), and at least
+    ///    one card holds ≥3 galleys whose left edges sit at the inner
+    ///    left margin with strictly increasing min.y — name above
+    ///    description above symmetry line (an LTR flow puts only the
+    ///    name at the margin and drags the rest rightward).
+    #[test]
+    fn headless_egui_pass_grid_geometry() {
+        for &(w, h) in &[(1200.0f32, 900.0f32), (640.0, 800.0)] {
+            let (out, card_rects, col_w) = headless_grid_at(w, h);
+            let tag = format!("{w}x{h}");
+
+            // (1) Nothing paints beyond the screen's right edge.
+            for cs in &out.shapes {
+                let vis = cs.clip_rect.intersect(cs.shape.visual_bounding_rect());
+                assert!(
+                    !vis.is_positive() || vis.right() <= w + 1.0,
+                    "{tag}: shape paints past the screen's right edge: {:?}",
+                    cs.shape
+                );
+            }
+
+            // (2) Uniform, exactly-sized cards.
+            assert!(
+                card_rects.len() >= 3,
+                "{tag}: the default tab shows several cards, got {}",
+                card_rects.len()
+            );
+            let first = card_rects[0];
+            for r in &card_rects {
+                assert!(
+                    (r.width() - first.width()).abs() <= 0.5
+                        && (r.height() - first.height()).abs() <= 0.5,
+                    "{tag}: card rects are not uniform: {first:?} vs {r:?}"
+                );
+                assert!(
+                    (r.width() - col_w).abs() <= 1.0,
+                    "{tag}: card width {} != col_w {col_w}",
+                    r.width()
+                );
+                assert!(
+                    (r.height() - super::CARD_TOTAL_H).abs() <= 0.01,
+                    "{tag}: card height {} != CARD_TOTAL_H {}",
+                    r.height(),
+                    super::CARD_TOTAL_H
+                );
+            }
+
+            // (3) Text stacks vertically inside each card. Two parts:
+            // every galley that lies in a card ends at/before its right
+            // edge, AND — the stacking proof — each card shows ≥3
+            // galleys whose left edge sits at the inner-left margin
+            // (TopDown+LEFT puts every row there; an LTR-inherited flow
+            // puts the name there and drags the description/symmetry
+            // line to its right, where they truncate to "…") and whose
+            // vertical center lies in the card, at strictly increasing
+            // min.y: name above description above symmetry line.
+            let galleys = painted_text_rects(&out.shapes);
+            let mut cards_stacked = 0;
+            for cr in &card_rects {
+                let contained: Vec<egui::Rect> = galleys
+                    .iter()
+                    .copied()
+                    .filter(|g| cr.contains(g.center()))
+                    .collect();
+                for g in &contained {
+                    assert!(
+                        g.right() <= cr.right() + 1.0,
+                        "{tag}: text galley {g:?} sticks out right of card {cr:?}"
+                    );
+                }
+                let left_rows: Vec<egui::Rect> = galleys
+                    .iter()
+                    .copied()
+                    .filter(|g| {
+                        g.left() >= cr.left() - 0.5
+                            && g.left() <= cr.left() + super::CARD_INNER_MARGIN + 1.0
+                            && g.center().y > cr.top()
+                            && g.center().y < cr.bottom()
+                    })
+                    .collect();
+                if left_rows.len() >= 3 {
+                    cards_stacked += 1;
+                    let mut tops: Vec<f32> = left_rows.iter().map(|g| g.min.y).collect();
+                    tops.sort_by(|a, b| a.total_cmp(b));
+                    for pair in tops.windows(2) {
+                        assert!(
+                            pair[0] < pair[1],
+                            "{tag}: text rows are not stacked: min.y {} !< {}",
+                            pair[0],
+                            pair[1]
+                        );
+                    }
+                }
+            }
+            assert!(
+                cards_stacked >= 1,
+                "{tag}: no card stacks the 3-line name/description/symmetry \
+                 stack at its inner-left margin ({} cards, {} galleys painted)",
+                card_rects.len(),
+                galleys.len()
+            );
+        }
     }
 
     /// Render-mode prev/next walks the selected tiling's tab order and
