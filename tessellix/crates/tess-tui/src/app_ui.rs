@@ -1272,7 +1272,7 @@ mod tests {
         let counts = tui.match_counts();
         assert!(counts.iter().any(|&c| c > 0), "penrose must match");
         assert_eq!(tui.tab_idx, counts.iter().position(|&c| c > 0).unwrap());
-        assert_eq!(counts[tui.tab_idx] > 0, true);
+        assert!(counts[tui.tab_idx] > 0);
         term.draw(|f| render(f, &mut tui)).unwrap();
         let text = buffer_text(&term);
         assert!(

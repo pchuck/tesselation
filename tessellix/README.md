@@ -473,7 +473,7 @@ straight into `paint::PALETTE`).
 
 ## Tests
 
-`cargo test --workspace` (currently 439 tests, all green, zero
+`cargo test --workspace` (currently 448 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
