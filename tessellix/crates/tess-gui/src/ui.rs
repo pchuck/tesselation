@@ -32,9 +32,38 @@ const CARD_IMG_H: u32 = 90;
 const CARD_TARGET_W: f32 = 240.0;
 /// Horizontal grid spacing between card columns, in pixels.
 const GRID_SPX: f32 = 10.0;
-/// Truncated-description fragment length in characters (the TUI uses
-/// ~40 chars for its 28-cell-wide cards).
+/// Character cap applied to descriptions before they reach the
+/// card's label: a backstop that keeps the text-layout job short
+/// (it matters on very wide single-column windows). Width overflow
+/// at normal column widths is handled by the label's own
+/// `truncate()` (ellipsis at the card's width), which kicks in
+/// first.
 const DESC_CHARS: usize = 40;
+/// Card frame inner margin (inset on all four sides), in pixels.
+/// The card's inner ui is constrained to
+/// `card_inner_w(col_w, CARD_INNER_MARGIN)`, so the frame's outer
+/// rect — the grid cell — is exactly the column width and the grid
+/// fills the window width without overflowing.
+const CARD_INNER_MARGIN: f32 = 5.0;
+/// Vertical spacing between card rows (image → name → description →
+/// symmetry line), in pixels.
+const CARD_ROW_SPX: f32 = 3.0;
+/// Fixed heights of the card's three single-line text rows, in
+/// pixels: name (16 px strong), description (13 px), symmetry line
+/// (12 px). Each is the galley row height of egui's default
+/// proportional font at that size, plus headroom, so the text
+/// content always fits the fixed card height ([`CARD_INNER_H`])
+/// (pinned by a unit test against the real galley row heights).
+const CARD_NAME_LINE_H: f32 = 18.5;
+const CARD_DESC_LINE_H: f32 = 15.0;
+const CARD_SYM_LINE_H: f32 = 14.0;
+/// Fixed inner content height of a card: image + the three text
+/// rows + the row spacings between them. Every card is at least
+/// this tall, so all card boxes are the same size and the grid is
+/// orthogonal — every card in every row aligns (pinned by a unit
+/// test).
+const CARD_INNER_H: f32 =
+    CARD_IMG_H as f32 + CARD_NAME_LINE_H + CARD_DESC_LINE_H + CARD_SYM_LINE_H + 3.0 * CARD_ROW_SPX;
 
 // Card frame colors (dark theme): neutral outline, hover outline, and
 // the selected card's fill + cyan stroke (the TUI's cyan-border
@@ -245,6 +274,40 @@ fn columns_for_width(width: f32, card_w: f32) -> usize {
         1
     };
     raw.clamp(1, 4)
+}
+
+/// Column width for a browse grid of `cols` columns given `avail`
+/// available width: budget the inter-column spacing and split the
+/// rest among the columns. Each card's outer rect (the grid cell,
+/// [`card_outer_w`]) is exactly this wide, so the grid's total width
+/// `cols·col_w + (cols−1)·spacing` equals `avail` — the grid fills
+/// the window width exactly instead of overflowing. Pure,
+/// unit-tested.
+fn card_col_w(avail: f32, cols: usize, spacing: f32) -> f32 {
+    if cols == 0 {
+        return 0.0;
+    }
+    ((avail - (cols - 1) as f32 * spacing) / cols as f32).max(0.0)
+}
+
+/// The card's inner ui width for a `col_w`-wide column: the column
+/// minus the frame's two inner margins. Constraining the inner ui to
+/// this width makes the frame's outer rect — which egui computes as
+/// inner + 2·margin — exactly `col_w` (the inverse of
+/// [`card_col_w`]'s budget), so no card is wider than its column.
+/// Pure, unit-tested.
+fn card_inner_w(col_w: f32, margin: f32) -> f32 {
+    (col_w - 2.0 * margin).max(0.0)
+}
+
+/// The card frame's outer (grid-cell) width for an inner ui width:
+/// the inner width plus the frame's two inner margins — the inverse
+/// of [`card_inner_w`] (for widths not clamped at zero). Used by the
+/// width-math unit tests; the production path consumes
+/// [`card_inner_w`] directly.
+#[allow(dead_code)] // only the unit tests reference this inverse
+fn card_outer_w(inner_w: f32, margin: f32) -> f32 {
+    inner_w + 2.0 * margin
 }
 
 /// Next card index when walking `step` (±1; any integer wraps the
@@ -570,9 +633,13 @@ impl GuiApp {
 
     /// The card grid filling the window: crystal-system section
     /// headers (from `tess_core::section_key`) between rows of cards,
-    /// each card = preview image + bold name + "group · lattice" line
-    /// + truncated description. Responsive column count ([`
-    /// columns_for_width`]) with the cards stretched to fill.
+    /// each card = preview image + name + truncated description +
+    /// small "group · lattice" line. Responsive column count
+    /// ([`columns_for_width`]) with the cards stretched to fill: the
+    /// column width is the available width minus the inter-column
+    /// spacing, split among the columns ([`card_col_w`]), and each
+    /// card's outer rect is exactly the column width — the grid
+    /// fills the window edge to edge without overflowing.
     fn draw_card_grid(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
         let tab = &self.tabs[self.active_tab];
         // Owned snapshot of the filtered, in-order cards. The grid
@@ -604,12 +671,12 @@ impl GuiApp {
             return;
         }
         // Responsive columns over the full window width ([`
-        // columns_for_width`], clamped 1..=4); the cards stretch to
-        // the column width (minus the grid's horizontal spacing) so
-        // the grid fills the window edge to edge.
+        // columns_for_width`], clamped 1..=4); the column width is
+        // the available width minus the grid's horizontal spacing,
+        // split among the columns ([`card_col_w`]).
         let avail = ui.available_width();
         let cols = columns_for_width(avail, CARD_TARGET_W);
-        let col_w = (avail - (cols - 1) as f32 * GRID_SPX) / cols as f32;
+        let col_w = card_col_w(avail, cols, GRID_SPX);
         // Scroll the selection into view only when (tab, selection)
         // actually changed since the last frame — the TUI's
         // last_highlighted guard; without it, manual scrolling would
@@ -648,11 +715,17 @@ impl GuiApp {
     }
 
     /// One card: bordered frame with the preview texture (generated
-    /// lazily, visible cards only), the bold name, the "group ·
-    /// lattice" symmetry line, and a truncated description. The frame
-    /// is `col_w` wide (the responsive column width); clicking selects
-    /// the tiling and opens Render mode; the selected card gets a
-    /// highlight stroke.
+    /// lazily, visible cards only), the name, a truncated
+    /// description, and a small "group · lattice" symmetry line.
+    /// The text rows are single-line (ellipsized at the card's
+    /// width, never wrapped) and the card has a fixed size
+    /// ([`CARD_INNER_H`] inner + 2·[`CARD_INNER_MARGIN`]), so every
+    /// card in the grid is the same size and the rows align. The
+    /// frame's outer rect — the grid cell — is exactly `col_w`
+    /// (the responsive column width: its inner ui is constrained to
+    /// [`card_inner_w`], so outer = inner + 2·margin fills the
+    /// column exactly); clicking selects the tiling and opens
+    /// Render mode; the selected card gets a highlight stroke.
     fn draw_card(
         &mut self,
         ctx: &egui::Context,
@@ -667,7 +740,10 @@ impl GuiApp {
         // generate (or reuse) the texture only when that rect is near
         // the scroll area's clip rect, so the first frame pays only
         // for the cards actually in view.
-        let predicted = egui::Rect::from_min_size(ui.cursor().min + egui::vec2(5.0, 5.0), img_size);
+        let predicted = egui::Rect::from_min_size(
+            ui.cursor().min + egui::vec2(CARD_INNER_MARGIN, CARD_INNER_MARGIN),
+            img_size,
+        );
         let handle = if ui.clip_rect().expand(32.0).intersects(predicted) {
             Some(self.card_texture(ctx, card, CARD_IMG_W, CARD_IMG_H))
         } else {
@@ -676,13 +752,24 @@ impl GuiApp {
         let frame = egui::Frame::none()
             .fill(if selected { SELECTED_FILL } else { egui::Color32::TRANSPARENT })
             .rounding(6.0)
-            .inner_margin(5.0)
+            .inner_margin(CARD_INNER_MARGIN)
             .stroke(egui::Stroke::new(
                 if selected { 2.0_f32 } else { 1.0_f32 },
                 if selected { SELECTED_STROKE } else { CARD_STROKE },
             ));
         let frame_resp = frame.show(ui, |ui| {
-            ui.set_width(col_w);
+            // Inner width = column width minus the frame's two inner
+            // margins, so the frame's outer rect is exactly the
+            // column width: the grid fills the window width exactly
+            // (a wider outer rect is what used to clip the right-most
+            // column). The fixed inner height keeps every card the
+            // same size.
+            ui.set_width(card_inner_w(col_w, CARD_INNER_MARGIN));
+            ui.set_min_height(CARD_INNER_H);
+            // Explicit row spacing (not the style's item spacing):
+            // the card's content height is a constant, so all cards
+            // line up in an orthogonal grid.
+            ui.spacing_mut().item_spacing.y = 0.0;
             match &handle {
                 Some(h) => {
                     ui.add(egui::Image::from_texture(h).fit_to_exact_size(img_size));
@@ -691,22 +778,37 @@ impl GuiApp {
                     ui.allocate_exact_size(img_size, egui::Sense::hover());
                 }
             }
-            ui.add(egui::Label::new(egui::RichText::new(card.name.to_string()).strong()));
-            ui.add(egui::Label::new(egui::RichText::new(format!(
-                "{} · {}",
-                card.group_str(),
-                card.lattice_str()
-            ))
-            .small()
-            .color(SYM_COLOR)));
+            ui.add_space(CARD_ROW_SPX);
+            ui.add(
+                egui::Label::new(egui::RichText::new(card.name.to_string()).strong().size(16.0))
+                    .truncate(),
+            );
+            ui.add_space(CARD_ROW_SPX);
+            // The description sits directly under the name. An empty
+            // label still reserves the row's height, so a card
+            // without a description keeps the uniform card size.
             let desc = if card.description.is_empty() {
                 card.notes.unwrap_or("").to_string()
             } else {
                 truncate_text(card.description, DESC_CHARS)
             };
-            if !desc.is_empty() {
-                ui.add(egui::Label::new(egui::RichText::new(desc).small().color(DESC_COLOR)));
-            }
+            ui.add(
+                egui::Label::new(egui::RichText::new(desc).size(13.0).color(DESC_COLOR))
+                    .truncate(),
+            );
+            ui.add_space(CARD_ROW_SPX);
+            ui.add(
+                egui::Label::new(
+                    egui::RichText::new(format!(
+                        "{} · {}",
+                        card.group_str(),
+                        card.lattice_str()
+                    ))
+                    .size(12.0)
+                    .color(SYM_COLOR),
+                )
+                .truncate(),
+            );
         });
         let card_rect = frame_resp.response.rect;
         let resp = ui.interact(card_rect, ui.id().with(card.id), egui::Sense::click());
@@ -1476,6 +1578,108 @@ mod tests {
             super::walk_index(5, Some(9), 1),
             Some(0),
             "out-of-range cursor clamps to last, then wraps"
+        );
+    }
+
+    // ---- Browse grid width/height math (UI-4) -----------------------
+
+    /// The width math fills the window exactly: with
+    /// `col_w = card_col_w(avail, cols, GRID_SPX)` each card's outer
+    /// (grid-cell) width is exactly `col_w`, so
+    /// `cols·col_w + (cols−1)·GRID_SPX == avail` — this is what keeps
+    /// the right-most column from being clipped.
+    #[test]
+    fn card_grid_fills_the_width_exactly() {
+        for &avail in &[800.0, 960.0, 1280.0, 1920.0, 100_000.0] {
+            let cols = super::columns_for_width(avail, super::CARD_TARGET_W);
+            assert!((1..=4).contains(&cols));
+            let col_w = super::card_col_w(avail, cols, super::GRID_SPX);
+            let cell_w = super::card_outer_w(
+                super::card_inner_w(col_w, super::CARD_INNER_MARGIN),
+                super::CARD_INNER_MARGIN,
+            );
+            let total = cols as f32 * cell_w + (cols - 1) as f32 * super::GRID_SPX;
+            assert!(
+                (total - avail).abs() < 1e-3,
+                "avail={avail} cols={cols}: total {total} must equal avail"
+            );
+        }
+    }
+
+    /// `card_inner_w` and `card_outer_w` are inverses (the inner
+    /// width clamps at zero when the column is narrower than the two
+    /// margins).
+    #[test]
+    fn card_width_inner_outer_round_trip() {
+        for &col_w in &[20.0, 100.0, 240.0, 230.5, 1000.0] {
+            let w = super::card_inner_w(col_w, super::CARD_INNER_MARGIN);
+            assert!(w >= 0.0);
+            assert!(
+                (super::card_outer_w(w, super::CARD_INNER_MARGIN) - col_w).abs() < 1e-6,
+                "col_w={col_w}"
+            );
+        }
+        // A column narrower than the two margins clamps the inner
+        // width to 0; the frame keeps its margins.
+        assert_eq!(super::card_inner_w(4.0, super::CARD_INNER_MARGIN), 0.0);
+        assert_eq!(
+            super::card_outer_w(0.0, super::CARD_INNER_MARGIN),
+            2.0 * super::CARD_INNER_MARGIN
+        );
+    }
+
+    /// The fixed card height is factored purely from constants:
+    /// image, three text rows, and the three row spacings, with the
+    /// line heights ordered name ≥ description ≥ symmetry. The
+    /// pinned literal catches a card-height constant edited without
+    /// re-deriving the sum.
+    #[test]
+    fn card_inner_h_is_factored_from_constants() {
+        assert_eq!(
+            super::CARD_INNER_H,
+            super::CARD_IMG_H as f32
+                + super::CARD_NAME_LINE_H
+                + super::CARD_DESC_LINE_H
+                + super::CARD_SYM_LINE_H
+                + 3.0 * super::CARD_ROW_SPX
+        );
+        assert_eq!(super::CARD_INNER_H, 146.5);
+        assert!(
+            super::CARD_INNER_H > super::CARD_IMG_H as f32,
+            "text rows must add height below the image"
+        );
+        // Ordering of the line heights (local copies keep the
+        // comparison non-const, so this is a real runtime check).
+        let (name_h, desc_h, sym_h) =
+            (super::CARD_NAME_LINE_H, super::CARD_DESC_LINE_H, super::CARD_SYM_LINE_H);
+        assert!(name_h >= desc_h, "name row is the tallest text row");
+        assert!(desc_h >= sym_h);
+    }
+
+    /// The line-height constants must cover the actual galley row
+    /// heights at the card's font sizes; otherwise the text content
+    /// would exceed the fixed card height and the cards would no
+    /// longer be uniform. The default font is the embedded
+    /// Ubuntu-Light, so the comparison is deterministic.
+    #[test]
+    fn card_line_heights_cover_the_galley_rows() {
+        let ctx = egui::Context::default();
+        let _ = ctx.run(egui::RawInput::default(), |_| {});
+        let row_h = |size: f32| ctx.fonts(|f| f.row_height(&egui::FontId::proportional(size)));
+        assert!(
+            super::CARD_NAME_LINE_H >= row_h(16.0),
+            "name line {} < galley row height at 16 px",
+            super::CARD_NAME_LINE_H
+        );
+        assert!(
+            super::CARD_DESC_LINE_H >= row_h(13.0),
+            "description line {} < galley row height at 13 px",
+            super::CARD_DESC_LINE_H
+        );
+        assert!(
+            super::CARD_SYM_LINE_H >= row_h(12.0),
+            "symmetry line {} < galley row height at 12 px",
+            super::CARD_SYM_LINE_H
         );
     }
 
