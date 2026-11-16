@@ -11,8 +11,10 @@
 //! * [`paint`] — shared color palette
 //! * [`app`] — shared application state for the TUI and GUI
 //! * [`svg`] — SVG export
+//! * [`browse`] — the shared tab/card browser model for both UIs
 
 pub mod app;
+pub mod browse;
 pub mod category;
 pub mod geometry;
 pub mod paint;
@@ -28,6 +30,7 @@ pub use app::App;
 pub use category::TilingCategory;
 pub use geometry::{Affine, BBox, Point, Polygon, Vec2};
 pub use params::{ParamId, ParamKind, ParamSet, ParamSpec, ParamValue};
+pub use browse::{browse_tabs, card_meta, section_key, CardMeta, Tab};
 pub use registry::Registry;
 pub use symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
 pub use tiling::{Query, Tile, Tiling, TilingResult};

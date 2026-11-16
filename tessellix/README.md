@@ -24,8 +24,9 @@ cargo run -p tess-gui       # desktop GUI (egui window)
 
 ### TUI / CLI
 
-`cargo run -p tess-tui` starts the terminal UI. With arguments it acts as
-a CLI:
+`cargo run -p tess-tui` starts the terminal UI: a two-mode browser with a
+**Browse** mode (category tabs + card grid) and a full-screen **Render**
+mode with back navigation. With arguments it acts as a CLI:
 
 ```sh
 cargo run -p tess-tui -- list
@@ -46,10 +47,40 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--strapwork DEG` | off | overlay the Hankin PIC strapwork walls at contact angle DEG (measured from each tile edge) on any tiling — layer mode of the polygons-in-contact engine (`tess-core::strapwork`) |
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
-**TUI keys:** `↑`/`↓` select tiling (wraps, respects the search filter) ·
-`Tab` switch list ↔ params · `←`/`→` adjust the parameter under the cursor
-· `h`/`j`/`k`/`l` pan · `+`/`-` zoom · `c` cycle color mode · `r` reset view
-· `/` search · `q` quit (from the list; first exits params mode).
+**Browse mode** — the tab bar lists the six display categories with card
+counts (`Uniform (11)   Laves (9)   Wallpaper (23)   ...`); below it a
+responsive card grid shows the active tab's tilings as blocks with a
+half-block raster thumbnail, the tiling name, a `group · lattice` line
+(wallpaper tilings), a short description fragment, and `params: n` when
+the tiling has adjustable parameters. In the Wallpaper tab the cards are
+grouped under crystal-system section headers (Oblique, Rectangular,
+Centered, Square, Hexagonal), ordered by lattice kind then wallpaper
+group; all other tabs appear in registry order. Keys: `Tab`/`Shift-Tab`
+or `1`–`6` switch tabs (per-tab cursor and scroll position are
+remembered), `↑↓←→` or `hjkl` move the cursor (wraps), `PgUp`/`PgDn` or
+the mouse wheel scroll the grid, `Enter`/`Space` open the selected
+tiling in Render mode, `/` starts a search, `q` quits.
+
+**Search** — `/` opens a prompt in the status bar; the query filters
+cards by name, id, and description (case-insensitive) across all tabs.
+The tab bar shows per-tab match counts and the active tab jumps to the
+first tab with a match. `Enter` opens the highlighted match, `Esc`
+cancels, `Tab`/`1`–`6` still switch tabs, `Backspace` deletes.
+
+**Render mode** — the selected tiling fills the whole terminal (one
+character cell = one pixel, no chrome but the status bar):
+` name [id] · group · tiles n │ esc back · ←/→ prev/next · hjkl pan ·
++/- zoom · c color · r reset · p params `. `←`/`→` walk to the
+previous/next tiling in the current tab's order (the Browse grid cursor
+follows), `hjkl` pan, `+`/`-` or the mouse wheel zoom, `c` cycles the
+color mode, `r` resets the view, `p` toggles a parameter overlay (when
+the tiling has parameters) — while it is open, `←`/`→` step the parameter
+under the cursor and `↑`/`↓` move the cursor. `Esc` or `b` returns to
+Browse with the exact prior tab, cursor, and scroll position.
+
+**Mouse** — in Browse: left-click a tab to switch, left-click a card to
+select it and open Render, wheel to scroll the grid. In Render: wheel to
+zoom. `Ctrl-C`/`Ctrl-Q` quit from any mode.
 
 ### GUI
 
@@ -409,6 +440,18 @@ parameter sets (parameters are remembered per tiling within a session),
 the viewport (center + zoom, with cursor-anchored zoom), the color mode,
 and the search filter. The TUI and GUI are thin layers over it.
 
+`tess-core::browse` is the generic browser model both UIs consume:
+`CardMeta` (a card's static display data — name, category, wallpaper
+group, lattice kind, notes, parameter count, description), `Tab` (a
+category and its cards), `browse_tabs` (one tab per display category in
+`TilingCategory::ALL` order, Wallpaper cards ordered by crystal system
+then wallpaper group, the other tabs in registry order), and
+`section_key` (a card's crystal-system section header, used by the
+TUI's card grid for the oblique/rectangular/centered/square/hexagonal
+grouping). The model knows nothing about tiling ids or rendering — the
+TUI renders these tabs and cards directly, and the egui GUI's browser
+reuses the same model (UI-2 follow-up).
+
 ### Rendering
 
 - **Color modes** — `single` (one flat color), `pattern` (color by tile
@@ -420,7 +463,7 @@ and the search filter. The TUI and GUI are thin layers over it.
 
 ## Tests
 
-`cargo test --workspace` (currently 409 tests, all green, zero
+`cargo test --workspace` (currently 430 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
