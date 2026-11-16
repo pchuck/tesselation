@@ -26,9 +26,11 @@ use tess_core::view::ColorMode;
 const CARD_IMG_W: u32 = 120;
 const CARD_IMG_H: u32 = 90;
 /// Target card width for the responsive browse grid: the column count
-/// is the number of these that fit in the window width (clamped
-/// 1..=4 by [`columns_for_width`]); the cards then stretch to fill
-/// their columns, landing around 220–260 px wide on typical windows.
+/// is the number of these that fit in the window width — fully
+/// dynamic, no upper bound ([`columns_for_width`]), with this width
+/// as the squash floor that keeps the preview and title text
+/// comfortable; the cards then stretch to fill their columns,
+/// landing around 220–260 px wide on typical windows.
 const CARD_TARGET_W: f32 = 240.0;
 /// Horizontal grid spacing between card columns, in pixels.
 const GRID_SPX: f32 = 10.0;
@@ -279,16 +281,17 @@ fn entry_selection(tab: &tess_core::Tab, remembered: Option<&str>) -> Option<&'s
 }
 
 /// Responsive column count for the browse grid: how many `card_w`-wide
-/// columns fit in `width` — at least one (a very narrow window still
-/// shows a single column) and at most four (wider cards beat more
-/// columns). Pure, unit-tested.
+/// columns fit in `width` — fully dynamic, with no upper bound (`card_w`
+/// is the squash floor: wider windows get more columns, not ever
+/// wider cards); at least one (a very narrow window still shows a
+/// single column). Pure, unit-tested.
 fn columns_for_width(width: f32, card_w: f32) -> usize {
     let raw = if width.is_finite() && card_w.is_finite() && card_w > 0.0 {
         (width / card_w).floor() as usize
     } else {
         1
     };
-    raw.clamp(1, 4)
+    raw.max(1)
 }
 
 /// Column width for a browse grid of `cols` columns given `avail`
@@ -692,9 +695,10 @@ impl GuiApp {
             return;
         }
         // Responsive columns over the full window width ([`
-        // columns_for_width`], clamped 1..=4); the column width is
-        // the available width minus the grid's horizontal spacing,
-        // split among the columns ([`card_col_w`]).
+        // columns_for_width`], fully dynamic — at least one, no
+        // upper bound); the column width is the available width
+        // minus the grid's horizontal spacing, split among the
+        // columns ([`card_col_w`]).
         let avail = ui.available_width();
         let cols = columns_for_width(avail, CARD_TARGET_W);
         let col_w = card_col_w(avail, cols, GRID_SPX);
@@ -1592,18 +1596,21 @@ mod tests {
 
     // ---- Single-pane browser pure logic (UI-3) ----------------------
 
-    /// `columns_for_width` fits whole target-width cards, clamps to
-    /// 1..=4, and degrades to a single column on degenerate widths.
+    /// `columns_for_width` fits whole target-width cards with no
+    /// upper bound (the target width is the squash floor, not a
+    /// column cap), and degrades to a single column on degenerate
+    /// widths.
     #[test]
-    fn columns_for_width_fits_and_clamps() {
-        assert_eq!(super::columns_for_width(1000.0, 240.0), 4, "4.16 → 4");
-        assert_eq!(super::columns_for_width(960.0, 240.0), 4, "exactly 4");
-        assert_eq!(super::columns_for_width(959.0, 240.0), 3, "just under 4");
+    fn columns_for_width_is_fully_dynamic() {
+        assert_eq!(super::columns_for_width(240.0, 240.0), 1, "exactly one target width");
+        assert_eq!(super::columns_for_width(239.0, 240.0), 1, "narrow → 1");
         assert_eq!(super::columns_for_width(480.0, 240.0), 2, "exactly 2");
         assert_eq!(super::columns_for_width(479.0, 240.0), 1);
-        assert_eq!(super::columns_for_width(239.0, 240.0), 1, "lower clamp");
+        assert_eq!(super::columns_for_width(640.0, 240.0), 2, "mid-size unchanged");
+        assert_eq!(super::columns_for_width(1200.0, 240.0), 5, "previously clamped to 4");
+        assert_eq!(super::columns_for_width(4000.0, 240.0), 16, "ultra-wide");
+        assert_eq!(super::columns_for_width(100_000.0, 240.0), 416, "no upper clamp");
         assert_eq!(super::columns_for_width(0.0, 240.0), 1, "zero width");
-        assert_eq!(super::columns_for_width(100_000.0, 240.0), 4, "upper clamp");
         assert_eq!(super::columns_for_width(f32::NAN, 240.0), 1, "non-finite width");
         assert_eq!(super::columns_for_width(1000.0, 0.0), 1, "non-positive card width");
     }
@@ -1638,7 +1645,9 @@ mod tests {
     fn card_grid_fills_the_width_exactly() {
         for &avail in &[800.0, 960.0, 1280.0, 1920.0, 100_000.0] {
             let cols = super::columns_for_width(avail, super::CARD_TARGET_W);
-            assert!((1..=4).contains(&cols));
+            // Fully dynamic: the count is exactly the floor of
+            // `avail / CARD_TARGET_W` (≥1), not a clamped range.
+            assert_eq!(cols, (avail / super::CARD_TARGET_W).floor() as usize);
             let col_w = super::card_col_w(avail, cols, super::GRID_SPX);
             let cell_w = super::card_outer_w(
                 super::card_inner_w(col_w, super::CARD_INNER_MARGIN),
@@ -1787,7 +1796,9 @@ mod tests {
     /// layout that `Frame::show`'s content child inherited. Arithmetic
     /// property tests failed twice to predict egui, so this test runs a
     /// REAL headless egui pass (no model of egui's layout math) and
-    /// asserts on the actually-painted geometry at two window sizes:
+    /// asserts on the actually-painted geometry at three window sizes —
+    /// including a wide one (~10 columns), the regression guard for a
+    /// fully dynamic column count at high counts:
     ///
     /// 1. No horizontal overflow: no painted shape's visible rect
     ///    (clipped) crosses the screen's right edge (+1 px slack).
@@ -1802,7 +1813,7 @@ mod tests {
     ///    name at the margin and drags the rest rightward).
     #[test]
     fn headless_egui_pass_grid_geometry() {
-        for &(w, h) in &[(1200.0f32, 900.0f32), (640.0, 800.0)] {
+        for &(w, h) in &[(1200.0f32, 900.0f32), (640.0, 800.0), (2560.0, 900.0)] {
             let (out, card_rects, col_w) = headless_grid_at(w, h);
             let tag = format!("{w}x{h}");
 
@@ -1896,6 +1907,19 @@ mod tests {
                 card_rects.len(),
                 galleys.len()
             );
+
+            // Wide case only: with a fully dynamic column count the
+            // wide window runs ~10 columns — the tab's cards must
+            // span more than one row of them (the `chunks(cols)`
+            // path exercised at high column counts).
+            if w >= 2560.0 {
+                let cols = super::columns_for_width(w, super::CARD_TARGET_W);
+                assert!(
+                    card_rects.len() > cols,
+                    "{tag}: {} cards do not span >1 row of {cols} columns",
+                    card_rects.len()
+                );
+            }
         }
     }
 
