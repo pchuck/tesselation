@@ -229,7 +229,7 @@ confirm the diffraction claim during the spike before declaring.
   | 7 | b=c=d=e, B+2E=2C+D=360° | deferred (M58) | 8 | 2-iso | yes |
   | 8 | b=c=d=e, 2B+C=D+2E=360° | pgg/p2 | 8 | 2-iso | yes |
   | 9 | b=c=d=e, 2A+C=D+2E=360° | pgg (verified, M59) | 8 | 2-iso | yes |
-  | 10 | a=b=c+e, A=90°, B+E=180°, B+2C=360° | p2 / cmm | 6 | 3-iso | **no** |
+  | 10 | a=b=c+e, A=90°, B+E=180°, B+2C=360° | cmm (verified, M63) | 6 | 3-iso | **no** |
   | 11 | 2a+c=d=e, A=90°, 2B+C=360°, C+E=180° | pgg (verified, M60) | 8 | 2-iso | no |
   | 12 | 2a=d=c+e, A=90°, 2B+C=360°, C+E=180° | pgg/p2 | 8 | 2-iso | no |
   | 13 | d=2a=2e, B=E=90°, 2A+D=360° | pgg/p2 | 8 | 2-iso | no |
@@ -280,8 +280,8 @@ confirm the diffraction claim during the spike before declaring.
   automorphism audit plus exact generator verification — half-turn
   c0 = (13, 4√3), perpendicular glides g1² = w2 and g2² = −w1, no
   mirrors). Remaining (M63+), in the arc's priority
-  order: then 2/3/5/10, then 1 (p2 topology) (7 deferred with
-  evidence above; 11 and 12 implemented). Existing tilings likely cover 4
+  order: then 2/3/5, then 1 (p2 topology) (7 deferred with
+  evidence above; 10, 11 and 12 implemented). Existing tilings likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
   verify the assignments at design time; implement only uncovered
   types. One type per task, delegated; all `pentagon1..15` features
@@ -357,6 +357,34 @@ confirm the diffraction claim during the spike before declaring.
   60°} profile) still required — the floret tiling is edge-to-edge
   (Laves), so congruence would be a shape correspondence, not a
   structural one; document either way.
+
+   **Type 10: DONE (M63)** — Kershner 1968 family a = b = c + e,
+   A = 90°, B + E = 180° (⇒ C = 180 − B/2, D = 90 + B/2,
+   E = 180 − B; convex 90° < B < 180°, e/c the second free
+   parameter) pinned to the B = 90° member at c = 1: A = B = E =
+   90°, C = D = 135°, a = b = 2, c = e = 1, d = √2
+   (d² = c² + e²; area 7/2) — isosceles, so the two
+   chiralities coincide as vertex sets. 6-tile oblique unit
+   w1 = (5,−2), w2 = (8,1), det = 21 = 6·area; 3-isohedral
+   (seeds 0/1/2: {0,2}, {1,3}, {4,5}); NON-edge-to-edge — both
+   length-2 sides split at their exact midpoints (integer
+   T-junctions), refined census over 164 tiles: 518 full + 76 split
+   at t = 1/2; vertex figures {90°,135°,135°} 71×,
+   {90°,90°,180°} 50×, {90°,90°,90°,90°}
+   13× (134 interior vertices). Group **cmm** (the premise "p2"
+   was wrong: the tiling has mirrors and a half-turn) by exact
+   symmetry audit — point group {I, −I, R1(y=x), R2(y=−x)}
+   all four realised (104/104), mirror lines x+y = 3k and
+   x−y = 7k, genuine glide g = T(5,−2)∘R2 with
+   g² = (7,−7) = 3w1−w2 (axis x+y = 3/2, perpendicular
+   offset (3/4,3/4), no pure-reflection conjugate), R90 negative
+   (M90@(1,2) unplaced / D0 placed). Centered rectangular lattice:
+   L = Z(5,−2)+Z(8,1) = {x−8y ≡ 0 mod 21} has no
+   orthogonal Z-basis (min orthogonal pair det 42), while the
+   index-2 sublattice L' = Z(3,3)+Z(−7,7) (3√2 × 7√2,
+   det 42) has centre (−2,5) ∈ L\L' → cmm, not pmm;
+   registered as Oblique since w1·w2 = 38 ≠ 0. 9 tess-tilings
+   tests (59 tilings, 409 tests). PATTERNS.MD §22.
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 

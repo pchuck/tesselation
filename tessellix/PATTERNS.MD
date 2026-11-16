@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (58 tilings)
+## Implemented (59 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -87,6 +87,7 @@ figures at the split midpoints, `2.4.4`).
 | `pentagon-9` | Rice pentagon, type 9 (Rice 1977) | pgg | 2-isohedral (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3) (A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; vertices on the (Z+Z√3)/7 grid); edge-to-edge, vertex stars {A,A,C}, {D,E,E}, {B,B,C,D}; two perpendicular glide families squaring to the primitive translations, no mirrors (M59) |
 | `pentagon-11` | Kershner pentagon, type 11 (Kershner 1968) | pgg | 2-isohedral (seeds 0/1, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile with bounded-precision floats (A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, a = r = 0.0946641…, b = s = 1.0568030…, c = 1, d = e = 1 + 2r — the family conditions 2a + c = d = e, 2B + C = 360°, C + E = 180° hold to ~1e-12); non-edge-to-edge — every d-side carries one c-side and two a-sides; vertex stars {C,B,B}, {A,A,180°}, {D,D,E}, {C,E,180°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M60) |
 | `pentagon-12` | Kershner pentagon, type 12 (Kershner 1968) | pgg | 2-isohedral (seeds 0/1: {0,3,4,7} / {1,2,5,6}, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile closed to exact Q(√3) surds at the shipped B = 150° member (A = 90°, B = 150°, C = 60°, D = E = 120°, a = 1, b = √3, c = 1, d = 2, e = 1 — the family conditions 2a = d = c + e, 2B + C = 360° hold to ~1e-12); non-edge-to-edge — every d-side splits at its exact midpoint into two unit halves, all other sides full-side matched (b↔b, c↔c, e↔e); vertex stars {90°,90°,180°}, {60°,120°,180°}, {120°,120°,120°}, {60°,150°,150°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M62) |
+| `pentagon-10` | Kershner pentagon, type 10 (Kershner 1968) | cmm | 3-isohedral (seeds 0/1/2: {0,2}, {1,3}, {4,5}), 6 tiles per oblique cell w1 = (5,−2), w2 = (8,1), det 21 = 6 × area (7/2); exact at the shipped B = 90° member (A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2; family a = b = c + e, A = 90°, B + E = 180° with d² = c² + e²); non-edge-to-edge — both length-2 sides split at their exact midpoints into two unit halves (integer T-junctions), all other sides full-side matched (c↔c, d↔d, e↔e); vertex figures {90°,135°,135°} 71×, {90°,90°,180°} 50×, {90°,90°,90°,90°} 13× (134 interior vertices); group cmm by exact audit — mirrors x+y = 3k and x−y = 7k, half-turn at the origin, genuine glide g = T(5,−2)∘R2 with g² = (7,−7) (axis x+y = 3/2, no pure-reflection conjugate), R90 negative; centered rectangular lattice (index-2 sublattice Z(3,3)+Z(−7,7) with centre (−2,5) ∈ L∖L', no orthogonal Z-basis for L) — cmm, not pmm (M63) |
 
 ### Aperiodic / nonperiodic
 
@@ -762,7 +763,7 @@ labels, which are out of chronological order.)
   counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
   306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
 - **Status:** implemented (M45).
-## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60, M62 landed)
+## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60, M62, M63 landed)
 
 The PROPOSED.md #5 arc (all 15 convex pentagonal tiling types). Type 13
 (Rice) lands first: its 8-tile primitive unit is small enough for a
@@ -779,7 +780,14 @@ non-edge-to-edge pgg; type 12 (Kershner 1968) sixth: the arc's first
 surd-pinnable Kershner instance — the B = 150° member of the
 2a = d = c + e family closes to exact Q(√3) (a = 1, b = √3, c = 1,
 d = 2, e = 1), 8-tile rectangular unit, group pgg, non-edge-to-edge
-with every d-side bisected by a T-junction.
+with every d-side bisected by a T-junction; type 10 (Kershner 1968)
+seventh: the arc's first cmm and first centered-rectangular lattice —
+the B = 90° member of the a = b = c + e, d² = c² + e² family
+(isosceles, chiralities coincide as vertex sets), 6-tile oblique unit
+with det 21, non-edge-to-edge with both length-2 sides bisected; cmm
+proven by exact audit, mirrors and a half-turn ruling out p2 and the
+centered lattice L' = Z(3,3)+Z(−7,7) (centre (−2,5) ∈ L∖L') ruling
+out pmm.
 
 ### 15. Pentagon type 13 (Rice) ✅ (M49)
 
@@ -1147,6 +1155,94 @@ with every d-side bisected by a T-junction.
   tiles at three fixed windows, cross-checked against the
   independent Python emulation of the culling).
 - **Status:** committed (M62). 58 tilings, 400 tests at the commit.
+
+### 22. Pentagon type 10 (Kershner 1968) ✅ (M63)
+
+- **Motif:** Kershner's type-10 convex pentagonal tiling — the
+  two-parameter family with a = b = c + e, A = 90°, B + E = 180°
+  (so E = 180° − B, C = 180° − B/2, D = 90° + B/2; convex for
+  90° < B < 180°, e/c the second free parameter, side a running
+  E→A).  The shipped instance pins the B = 90° member at scale
+  c = 1 — exact, no surd angles: A = B = E = 90°, C = D = 135°,
+  a = b = 2, c = e = 1, d = √2 (d² = c² + e² closes the right
+  angle at corner C; tile area 7/2, and 6·area = 21 = the lattice
+  determinant).  At B = 90° the prototile is isosceles — symmetric
+  in the line y = x, with vertex A (where the two length-2 sides
+  meet) fixed and the axis crossing the midpoint of side d — so the
+  two chiralities coincide as vertex sets: an M-cell and the D-cell at
+  the same anchor with matching rotation span exactly the same region.
+  The mirrored M-prototile is nonetheless built explicitly (reflected
+  in y = x, stored reversed to stay CCW) so the cell table records
+  which chirality each tile carries.  3-isohedral: the three
+  full-group orbits are {cell 0, cell 2} (seed 0), {cell 1, cell 3}
+  (seed 1) and {cell 4, cell 5} (seed 2); six tiles per primitive unit.
+- **Geometry:** NON-edge-to-edge at the pentagon level — the two
+  length-2 sides a and b are each split at their exact midpoint (an
+  integer T-junction) into two unit halves, each half matched by
+  exactly one unit partner side; the c, d and e sides are matched by
+  exactly one full side of one neighbour (c↔c, d↔d, e↔e).
+  The refined census over a 164-tile patch: 518 full edges + 76 split
+  at t = 1/2 (594 edges with midpoints in the count window), every
+  sub-edge contained in exactly one partner edge, no other T-junctions.
+  Interior vertex stars: 134 vertices = 71× {90°, 135°, 135°}
+  + 50× {90°, 90°, 180°} (the T-junctions) + 13×
+  {90°, 90°, 90°, 90°}; every figure sums to 360°.
+- **Unit cell:** 6 cells as (mirror, anchor, rotation) placements of
+  the runtime prototile (vertex A is pinned by the anchor): the four
+  D-rotations 0°/90°/180°/270° at the origin, plus M90 at
+  (1, 2) and M270 at (−1, −2), on the oblique lattice
+  w1 = (5, −2), w2 = (8, 1) with |det(w1, w2)| = 21 = 6 × area.
+  Extracted from a verified exact construction and re-verified on the
+  model before porting: zero overlaps, exactly-once coverage, the
+  complete refined edge gluing, and an exact symmetry audit of the
+  quotient table.
+- **Group:** **cmm**, decided by the exact symmetry audit: point
+  group D2 = {I, −I, R1(y = x), R2(y = −x)} — all four realised
+  exactly (104/104 interior-AABB-filtered patch equality); R90 is *not*
+  a symmetry (R90(M90@(1,2)) lands on a region no placed tile
+  occupies, while R90(D0) is placed).  Mirror lines: x + y = 3k (R2,
+  including the origin axis y = −x) and x − y = 7k (R1, including
+  y = x); the glide axes fill the families x + y = 3k/2 \ 3k and
+  x − y = 7k/2.  The representative genuine glide g = T(5,−2)∘R2
+  has axis x + y = 3/2 at perpendicular offset (3/4, 3/4) from the
+  origin, g² = T_{(7,−7)} = 3w1 − w2 ∈ L, and no conjugate of
+  g is a pure reflection.  Since w1 ∈ L, the symmetry coset of g is
+  w1 + L = L: every (R, s) with s ∈ L is a symmetry.  True negatives
+  (images verified unplaced on the 164-tile patch): the reflection in
+  the glide axis itself, (R2, (3/2, 3/2)), (R1, (1, 1)) with
+  (1, 1) ∉ L, and the R90 chiral pair.  The translation lattice
+  L = Z(5,−2) + Z(8,1) = {x − 8y ≡ 0 (mod 21)} is **centered
+  rectangular**: the index-2 sublattice L' = Z(3,3) + Z(−7,7) is a
+  primitive rectangle (sides 3√2 × 7√2, det 42) whose centre
+  (−2, 5) = ((3,3) + (−7,7))/2 lies in L \ L'; L itself has no
+  orthogonal Z-basis (the minimum determinant over orthogonal integer
+  pairs is 42, never 21).  That centered lattice is what separates cmm
+  from pmm, and the mirrors (plus the half-turn) rule out p2.  The
+  primitive basis L (det 21, w1·w2 = 38 ≠ 0) is registered as
+  `Oblique`; the centered-rectangular structure lives in L'.
+- **Verify:** standard trio (coverage, rotated-scaled, deterministic)
+  + unit-structure test (6 cells: four D + two M, seed pattern
+  [0,1,0,1,2,2], all angles 90°/135° exact, side multiset
+  {1, 1, √2, 2, 2}, closure E = (0, 2) at 1e-12, cyclic (side, angle)
+  fingerprints forward/reversed, lattice literals, w1·w2 = 38
+  (oblique), det = 6·area = 21) + refined-edge census test (164-tile
+  patch: 518 full + 76 split at t = 1/2, one covering edge per
+  sub-edge; the midpoint window (−7.75, 13.75) × (−7.75, 11.75)
+  is an exact count with a minimum boundary gap of 1/4) +
+  vertex-figure census (134 interior vertices: {90°,135°,135°}
+  71×, {90°,90°,180°} 50×, {90°,90°,90°,90°}
+  13×) + isohedral-class test (locked cell permutations of the
+  generators, three orbits = the three seeds; the 73-tile patch
+  (−5,−4,9,8) shows all three seeds; side multiset {1, 1, √2, 2, 2})
+  + cmm-symmetry test (interior-AABB-filtered exact patch equality for
+  −I, R1, R2 at 104/104; glide containment for g and g⁻¹ on the
+  164-tile patch, 0 missing; g² = 3w1 − w2 and the perpendicular
+  part pinned to 1e-9; negative probes (R2, (1.5, 1.5)) and
+  (R1, (1, 1)) unplaced, R90 chiral pair M90@(1,2) unplaced / D0
+  placed) + window-census test (77/73/41 tiles at three fixed windows,
+  cross-checked against the independent Python emulation of the
+  culling).
+- **Status:** committed (M63). 59 tilings, 409 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -1823,3 +1919,30 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   count with minimum boundary gap 0.0888 from any counted midpoint
   (verified in Q(√3)), robust against that float noise. 9
   tess-tilings tests + standard trio (58 tilings, 400 tests).
+
+- 2026-11-16 — M63 Pentagon type 10 (Kershner 1968) ✅: Kershner's
+  two-parameter family (a = b = c + e, A = 90°, B + E = 180° ⇒
+  C = 180 − B/2, D = 90 + B/2, E = 180 − B; convex 90° < B <
+  180°, e/c the second free parameter) pinned to the B = 90° member
+  at c = 1: A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1,
+  d = √2 (d² = c² + e²; area 7/2) — isosceles, so the two
+  chiralities coincide as vertex sets. 6-tile oblique unit
+  w1 = (5,−2), w2 = (8,1), det = 21 = 6 × area; 3-isohedral (seeds
+  0/1/2: {0,2}, {1,3}, {4,5}). NON-edge-to-edge: both length-2 sides
+  split at their exact midpoints (integer T-junctions); the c, d, e
+  sides full-side matched; refined census over 164 tiles: 518 full +
+  76 split edges at t = 1/2, no other T-junctions; vertex figures
+  {90°,135°,135°} 71×, {90°,90°,180°} 50×,
+  {90°,90°,90°,90°} 13× (134 interior vertices). Group
+  **cmm** by exact symmetry audit: point group {I, −I, R1(y=x),
+  R2(y=−x)} all four realised (104/104), mirror lines x+y = 3k and
+  x−y = 7k, genuine glide g = T(5,−2)∘R2 with g² = (7,−7)
+  = 3w1−w2 (axis x+y = 3/2, perpendicular offset (3/4,3/4), no
+  pure-reflection conjugate), R90 negative (M90@(1,2) unplaced / D0
+  placed). Centered rectangular lattice: L = Z(5,−2)+Z(8,1) =
+  {x−8y ≡ 0 mod 21} has no orthogonal Z-basis (min orthogonal
+  pair det 42), while the index-2 sublattice L' = Z(3,3)+Z(−7,7)
+  (3√2 × 7√2, det 42) has centre (−2,5) ∈ L\L' → cmm,
+  not pmm; registered as Oblique since w1·w2 = 38 ≠ 0. The task
+  premise "p2" is corrected: the tiling has mirrors and a half-turn.
+  9 tess-tilings tests (59 tilings, 409 tests).
