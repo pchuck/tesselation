@@ -344,6 +344,15 @@ confirm the diffraction claim during the spike before declaring.
   p3/p31m — conditions-first pin, no animation exists). Then
   types 2, 5 (conditions-first, no animations), type 1 last (topology
   zoo).
+
+  **Sprint allocation (2026-11-16): M65 = type 2** (c = e, d = b,
+  B + D = 180° — the edge-to-edge variation; the Wikipedia type-2
+  section shows two isohedral pgg 4-tile-primitive-unit forms and marks
+  the d = b one edge-to-edge; p2 when mirror tiles are counted
+  distinct; conditions-first pin, no animation exists). M66–M71 (UI
+  rework: TUI + GUI browser, single-pane mirror, grid fixes, dynamic
+  columns) landed and pushed through 16300e1 in the same sprint. Then
+  type 5, then type 1 (topology zoo).
   **Type 3: DONE (M64)** — Reinhardt 1918 family 3 (a = b, d = c + e,
   A = C = D = 120°, B + E = 180°); the dossier's e2e column was
   corrected first (d = c+e forces a T-junction; Bagina 2011 /
