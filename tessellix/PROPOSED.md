@@ -222,7 +222,7 @@ confirm the diffraction claim during the spike before declaring.
   |---|---|---|---|---|---|
   | 1 | B+C=180°, A+D+E=360° | p2/cmm/cm/pmg/pgg/p1 topologies | 2–4 | iso–3-iso | yes |
   | 2 | c=e, B+D=180° | pgg | 4 | iso | yes |
-  | 3 | a=b, d=c+e, A=C=D=120° | p3 / p31m | 3 | iso | yes |
+  | 3 | a=b, d=c+e, A=C=D=120° | p3 / p31m | 3 | iso | **no** |
   | 4 | b=c, d=e, B=D=90° | p4 / p4g | 4 | iso | yes |
   | 5 | a=b, d=e, A=60°, D=120° | p6 | 6 | iso | yes |
   | 6 | a=d=e, b=c, B+D=180°, 2B=E | p2 | 4 | 2-iso | yes |
@@ -340,10 +340,23 @@ confirm the diffraction claim during the spike before declaring.
   B+E=180°, B+2C=360°; 6-tile 3-iso unit, p2/cmm, NON-edge-to-edge —
   the last animation-bearing type; reference frames + M60/M62 pipeline),
   **M64 = type 3** (a=b, d=c+e, A=C=D=120°, B+E=180°; 3-tile iso unit,
-  p3/p31m, edge-to-edge — conditions-first pin, no animation exists;
-  canonical instance c=e=1, B=E=90° candidate → Q(√3) field). Then
+  p3/p31m — conditions-first pin, no animation exists). Then
   types 2, 5 (conditions-first, no animations), type 1 last (topology
   zoo).
+  **Type 3 e2e correction (M64, 2026-11-16):** the e2e column for
+  type 3 above was WRONG — d = c+e forces a T-junction (exhibited
+  exactly; Bagina 2011 / Sugimoto 2012: only 8 edge-to-edge convex
+  types, and {3, 10, 11, 12, 13, 14, 15} are the seven non-e2e types).
+  M64 attempt 2 stood down per the honesty clause with the correction
+  + the exact pinned instance (a, b, c, d, e) = (2, 2, 1, 4, 3) at
+  angles {120°×4, 60°} in exact Q(√3) (uv-lattice, area² = 10,
+  3-tile cell det = 15, p3 rosette realizable) — report in the task
+  scratch. Re-scoped (R1): attempt 3 implements the NON-edge-to-edge
+  model with the proven M60/M62 partial-edge machinery; STEP 0
+  coverage check vs the Laves floret-pentagonal prototile ({120×4,
+  60°} profile) still required — the floret tiling is edge-to-edge
+  (Laves), so congruence would be a shape correspondence, not a
+  structural one; document either way.
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 
