@@ -9731,7 +9731,7 @@ mod pentagon3_tests {
         }
         // The four half-turn classes d/2 + Λ/2: 2c ≡ d mod Λ where d = E−A
         // = cell_table()[1].1, so (M, 2c) is a symmetry for every such c.
-        let d = cell_table()[1].1;
+        let _d = cell_table()[1].1;
         let halves = [v2(0.0, 0.0), w1 * 0.5, w2 * 0.5, (w1 + w2) * 0.5];
         for h in halves {
             let c = c0 + h;
