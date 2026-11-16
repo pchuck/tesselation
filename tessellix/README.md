@@ -86,16 +86,23 @@ zoom. `Ctrl-C`/`Ctrl-Q` quit from any mode.
 
 `cargo run -p tess-gui` opens an egui window (1024×640, dark theme):
 
-- **Left panel** — filter box, tiling list grouped into collapsible
-  categories (Uniform, Laves/Catalan duals, Wallpaper, Quasiperiodic,
-  Aperiodic, Nonperiodic — declared per tiling, so new tilings sort
-  themselves; the search filter also matches category names and shows
-  flat results), parameter editors (drag
-  values within each parameter's declared range), color-mode selector
-  (single / pattern / proto), and symmetry readout (wallpaper group,
-  lattice kind, basis vectors, notes). The readout is cached per tiling
-  + parameter values and refreshed through a tiny fixed probe region —
-  panel rendering never triggers view-sized tile generation.
+- **Left panel** — the tab/card browser mirroring the TUI redesign on
+  the shared `tess-core::browse` model: a search field (name, id, and
+  description, case-insensitive, across all tabs; the tab row shows
+  per-tab match counts and the active tab jumps to the first tab with
+  a match), a category tab row with card counts, and a card grid
+  (crystal-system section headers on the Wallpaper tab, bold name,
+  `group · lattice` line, truncated description). Card previews are
+  rasterized at default parameters by the shared `tess-core::raster`
+  (same palette/proto-fallback semantics as the TUI thumbnails),
+  cached per (id, params, size), and generated lazily for the visible
+  cards only. Clicking a card selects it; per-tab selection is
+  remembered. Below the grid: parameter editors, color-mode selector
+  (single / pattern / proto), symmetry readout (wallpaper group,
+  lattice kind, basis vectors, notes), and a side-panel preview. The
+  readout is cached per tiling + parameter values and refreshed through
+  a tiny fixed probe region — panel rendering never triggers
+  view-sized tile generation.
 - **Canvas** — drag to pan, scroll to zoom (anchored at the cursor). The
   tiling is regenerated for the current viewport on every frame; if the
   view would exceed the tile budget (250 000 tiles), a
@@ -447,11 +454,13 @@ group, lattice kind, notes, parameter count, description), `Tab` (a
 category and its cards), `browse_tabs` (one tab per display category in
 `TilingCategory::ALL` order, Wallpaper cards ordered by crystal system
 then wallpaper group, the other tabs in registry order), and
-`section_key` (a card's crystal-system section header, used by the
-TUI's card grid for the oblique/rectangular/centered/square/hexagonal
+`section_key` (a card's crystal-system section header, used by both
+UIs' card grids for the oblique/rectangular/centered/square/hexagonal
 grouping). The model knows nothing about tiling ids or rendering — the
-TUI renders these tabs and cards directly, and the egui GUI's browser
-reuses the same model (UI-2 follow-up).
+TUI and the egui GUI render these tabs and cards; card previews
+rasterize through the shared `tess-core::raster` (the TUI to character
+cells over its 256-cube palette, the GUI to texture pixels mapped
+straight into `paint::PALETTE`).
 
 ### Rendering
 

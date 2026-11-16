@@ -1,8 +1,39 @@
 //! GUI application (egui).
+//!
+//! The left panel is a tab/card browser mirroring the TUI redesign
+//! (UI-1): a category tab row, a card grid with lazily generated
+//! previews (shared `tess_core::raster`), crystal-system section
+//! headers from `tess_core::browse::section_key`, per-tab selection
+//! memory, and a search field filtering name/id/description across
+//! all tabs. The canvas is the egui-native WYSIWYG counterpart of the
+//! TUI's render mode: selecting a card shows the tiling immediately.
+
+use std::collections::HashMap;
 
 use tess_core::paint;
-use tess_core::params::{ParamKind, ParamValue};
+use tess_core::params::{ParamKind, ParamSet, ParamSpec, ParamValue};
 use tess_core::view::ColorMode;
+
+/// Card preview image size in pixels (the TUI thumbnail is 20×16
+/// half-block cells = 40×32 px; the GUI uses a larger, crisper card).
+const CARD_IMG_W: u32 = 120;
+const CARD_IMG_H: u32 = 90;
+/// Left panel width: fits two 120-px card columns plus margins.
+const PANEL_W: f32 = 300.0;
+/// Truncated-description fragment length in characters (the TUI uses
+/// ~40 chars for its 28-cell-wide cards).
+const DESC_CHARS: usize = 40;
+
+// Card frame colors (dark theme): neutral outline, hover outline, and
+// the selected card's fill + cyan stroke (the TUI's cyan-border
+// highlight); section headers in bold gray.
+const CARD_STROKE: egui::Color32 = egui::Color32::from_rgb(72, 76, 94);
+const HOVER_STROKE: egui::Color32 = egui::Color32::from_rgb(122, 130, 154);
+const SELECTED_STROKE: egui::Color32 = egui::Color32::from_rgb(94, 186, 255);
+const SELECTED_FILL: egui::Color32 = egui::Color32::from_rgb(38, 54, 76);
+const SECTION_COLOR: egui::Color32 = egui::Color32::from_rgb(148, 154, 176);
+const SYM_COLOR: egui::Color32 = egui::Color32::from_rgb(128, 134, 156);
+const DESC_COLOR: egui::Color32 = egui::Color32::from_rgb(110, 116, 138);
 
 pub struct GuiApp {
     pub app: tess_core::App,
@@ -15,6 +46,33 @@ pub struct GuiApp {
     /// [`tess_core::App::preview_region`]), keyed like [`Meta`]. Never
     /// regenerated per frame.
     preview: Option<Preview>,
+    /// The shared browser model (`tess_core::browse`), built once at
+    /// startup: one bounded ±10-world-unit probe per tiling, the same
+    /// cost the TUI pays for its tab bar.
+    tabs: Vec<tess_core::Tab>,
+    /// Active tab: position in `TilingCategory::ALL` order.
+    active_tab: usize,
+    /// Per-tab selection memory: the last-selected tiling id per tab,
+    /// so switching back to a tab restores that tab's card (and,
+    /// WYSIWYG, the canvas shows it immediately).
+    tab_selected: Vec<Option<String>>,
+    /// The search text the active tab was last auto-jumped for. A
+    /// different text re-jumps the active tab to the first tab with a
+    /// match (the TUI's search behavior); clearing does not jump.
+    search_at_jump: String,
+    /// (active tab, selected id) at the last scroll-to-visible, so the
+    /// scroll happens only when the selection actually changes
+    /// (the TUI's `last_highlighted` guard; without it, manual
+    /// scrolling would be snapped back on every render).
+    last_highlighted: (usize, String),
+    /// Lazily built card preview textures, keyed by (id, params-string,
+    /// size). Textures are generated in the draw pass for visible cards
+    /// only — generating all 59 up front would stall the first frame.
+    card_textures: HashMap<String, egui::TextureHandle>,
+    /// The browser's search text (name/id/description, all tabs).
+    /// Kept in GuiApp rather than `app.search` because the TUI and the
+    /// tess-core App.search filter on different fields.
+    search: String,
 }
 
 /// Region-independent metadata shown in the side panel.
@@ -85,12 +143,131 @@ fn layout_fingerprint(pts: &[tess_core::Vec2]) -> u64 {
     h
 }
 
+// ---------------------------------------------------------------------------
+// Pure browser logic (the egui-free core of the tab/card browser; the TUI
+// has its own copies of the equivalent decisions). These are unit-tested
+// below without constructing any egui types.
+// ---------------------------------------------------------------------------
+
+/// Case-insensitive card search over name, id, and description — the
+/// same three fields the TUI search filters on. An empty (whitespace)
+/// query matches everything.
+fn search_matches(card: &tess_core::CardMeta, query: &str) -> bool {
+    let q = query.trim().to_lowercase();
+    if q.is_empty() {
+        return true;
+    }
+    card.name.to_lowercase().contains(&q)
+        || card.id.to_lowercase().contains(&q)
+        || card.description.to_lowercase().contains(&q)
+}
+
+/// Number of cards in `tab` matching `query`.
+fn tab_match_count(tab: &tess_core::Tab, query: &str) -> usize {
+    tab.cards.iter().filter(|c| search_matches(c, query)).count()
+}
+
+/// Index (position in `TilingCategory::ALL` order) of the first tab
+/// with at least one match for `query`; `None` for an empty query or
+/// when nothing matches anywhere.
+fn first_matching_tab(tabs: &[tess_core::Tab], query: &str) -> Option<usize> {
+    if query.trim().is_empty() {
+        return None;
+    }
+    tabs.iter().position(|t| t.cards.iter().any(|c| search_matches(c, query)))
+}
+
+/// One maximal run of a card list sharing one `section_key`.
+/// `header` is `""` for runs without a header (every non-Wallpaper
+/// card, and any Wallpaper card without a lattice).
+struct CardSection<'a> {
+    header: &'static str,
+    cards: &'a [tess_core::CardMeta],
+}
+
+/// Split a card list into maximal runs of equal
+/// [`tess_core::section_key`], in first-appearance order. On the
+/// Wallpaper tab this yields the crystal-system sections
+/// (oblique/rectangular/centered/square/hexagonal, in that order);
+/// every other tab is a single headerless run.
+fn sectionize<'a>(cards: &'a [tess_core::CardMeta]) -> Vec<CardSection<'a>> {
+    let mut out: Vec<CardSection<'a>> = Vec::new();
+    let mut i = 0;
+    while i < cards.len() {
+        let key = tess_core::section_key(&cards[i]);
+        let mut j = i + 1;
+        while j < cards.len() && tess_core::section_key(&cards[j]) == key {
+            j += 1;
+        }
+        out.push(CardSection { header: key, cards: &cards[i..j] });
+        i = j;
+    }
+    out
+}
+
+/// The card to select when (re-)entering a tab: the remembered
+/// selection if it is still in the tab, else the first card, else
+/// `None` (empty tab — the caller keeps the current selection).
+fn entry_selection(tab: &tess_core::Tab, remembered: Option<&str>) -> Option<&'static str> {
+    if let Some(r) = remembered {
+        if tab.card_index_of(r).is_some() {
+            return Some(tab.cards[tab.card_index_of(r).unwrap()].id);
+        }
+    }
+    tab.cards.first().map(|c| c.id)
+}
+
+/// Card-preview cache key: (id, params-string, size).
+fn card_key(id: &str, params: &str, w: u32, h: u32) -> String {
+    format!("{id}|{params}|{w}x{h}")
+}
+
+/// The tiling's default parameter values as a params-string. Card
+/// previews always render the tiling at its default parameters (the
+/// TUI cards do the same), so this is the key's params component.
+fn default_params_str(specs: &[ParamSpec]) -> String {
+    specs
+        .iter()
+        .map(|s| format!("{}={}", s.id.as_str(), s.default_value().display()))
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+/// Character-safe truncation with an ellipsis (descriptions contain
+/// non-ASCII characters, e.g. the en dash in "Ammann–Beenker", so byte
+/// slicing is not allowed).
+fn truncate_text(s: &str, max: usize) -> String {
+    let chars: Vec<char> = s.chars().collect();
+    if chars.len() <= max {
+        return s.to_string();
+    }
+    let mut out: String = chars[..max - 1].iter().collect();
+    out.push('…');
+    out
+}
+
 impl GuiApp {
     pub fn new() -> Self {
+        let app = tess_core::App::new(tess_tilings::registry(), 60.0);
+        let tabs = tess_core::browse_tabs(app.registry());
+        let selected = app.selected_id().to_string();
+        let active_tab = tabs
+            .iter()
+            .position(|t| t.cards.iter().any(|c| c.id == selected))
+            .unwrap_or(0);
+        let mut tab_selected = vec![None; tabs.len()];
+        tab_selected[active_tab] = Some(selected.clone());
         Self {
-            app: tess_core::App::new(tess_tilings::registry(), 60.0),
+            app,
             meta: None,
             preview: None,
+            tabs,
+            active_tab,
+            tab_selected,
+            search_at_jump: String::new(),
+            last_highlighted: (active_tab, selected),
+            card_textures: HashMap::new(),
+            search: String::new(),
         }
     }
 
@@ -208,6 +385,7 @@ impl eframe::App for GuiApp {
             });
         });
 
+        self.search_jump();
         self.draw_side_panel(ctx);
         self.draw_canvas(ctx);
     }
@@ -216,69 +394,19 @@ impl eframe::App for GuiApp {
 impl GuiApp {
     fn draw_side_panel(&mut self, ctx: &egui::Context) {
         egui::SidePanel::left("panel")
-            .exact_width(272.0)
+            .exact_width(PANEL_W)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    ui.label("filter");
+                    ui.label("search");
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.text_edit_singleline(&mut self.app.search);
+                        ui.text_edit_singleline(&mut self.search);
                     });
                 });
                 ui.separator();
-                egui::ScrollArea::vertical().show(ui, |ui| {
-                    ui.label("Tilings");
-                    // Owned snapshot of the grouped list: sections in
-                    // canonical category order (categories with no
-                    // matches are omitted by the grouping helper).
-                    // While the search filter is active the matches
-                    // render flat — they are usually scattered across
-                    // categories, and collapsing sections would
-                    // fragment the result list.
-                    let searching = !self.app.search.trim().is_empty();
-                    let sections: Vec<(tess_core::TilingCategory, Vec<(String, String)>)> = self
-                        .app
-                        .visible_grouped()
-                        .into_iter()
-                        .map(|(cat, tilings)| {
-                            (
-                                cat,
-                                tilings
-                                    .into_iter()
-                                    .map(|t| (t.id().to_string(), t.name().to_string()))
-                                    .collect(),
-                            )
-                        })
-                        .collect();
-                    let selected_id = self.app.selected_id().to_string();
-                    let mut clicked: Option<String> = None;
-                    for (cat, tilings) in &sections {
-                        let mut entries = |ui: &mut egui::Ui| {
-                            for (id, name) in tilings {
-                                if ui
-                                    .selectable_label(
-                                        *id == selected_id,
-                                        format!("{name}  ({id})"),
-                                    )
-                                    .clicked()
-                                {
-                                    clicked = Some(id.clone());
-                                }
-                            }
-                        };
-                        if searching {
-                            entries(ui);
-                        } else {
-                            // Open-state is remembered per section in
-                            // egui's memory across frames/switches;
-                            // default_open only applies the first time.
-                            egui::CollapsingHeader::new(format!("{} ({})", cat, tilings.len()))
-                                .default_open(true)
-                                .show(ui, entries);
-                        }
-                    }
-                    if let Some(id) = clicked {
-                        self.app.select_id(&id);
-                    }
+                self.draw_tabs(ui);
+                ui.separator();
+                egui::ScrollArea::vertical().id_salt("browser").show(ui, |ui| {
+                    self.draw_card_grid(ctx, ui);
                     ui.separator();
                     self.draw_params(ui);
                     ui.separator();
@@ -313,6 +441,318 @@ impl GuiApp {
                     self.draw_preview(ui, prect);
                 });
             });
+    }
+
+    /// The TUI's search jump: when the search text changes, the active
+    /// tab moves to the first tab with at least one match. The
+    /// selection itself is untouched (the user picks a card explicitly);
+    /// an empty query never jumps.
+    fn search_jump(&mut self) {
+        if self.search.trim() == self.search_at_jump.trim() {
+            return;
+        }
+        if let Some(idx) = first_matching_tab(&self.tabs, &self.search) {
+            self.active_tab = idx;
+        }
+        self.search_at_jump = self.search.clone();
+    }
+
+    /// Select a tiling from the card grid: the app selection plus the
+    /// active tab's selection memory.
+    fn select_card(&mut self, id: &str) {
+        self.app.select_id(id);
+        self.tab_selected[self.active_tab] = Some(id.to_string());
+    }
+
+    /// Switch the active tab, restoring that tab's remembered card
+    /// (per-tab selection memory; WYSIWYG, the canvas follows).
+    fn select_tab(&mut self, idx: usize) {
+        if idx == self.active_tab {
+            return;
+        }
+        self.active_tab = idx;
+        if let Some(id) = entry_selection(&self.tabs[idx], self.tab_selected[idx].as_deref()) {
+            self.app.select_id(id);
+            self.tab_selected[idx] = Some(id.to_string());
+        }
+    }
+
+    /// The tab selector row: one selectable label per category in
+    /// `TilingCategory::ALL` order with the card count (the match count
+    /// while a search is active), horizontal and wrapping.
+    fn draw_tabs(&mut self, ui: &mut egui::Ui) {
+        let searching = !self.search.trim().is_empty();
+        // Two-phase: read tab state in the row, apply the click after,
+        // so the row loop's borrow of `self.tabs` does not collide with
+        // the mutable `select_tab` call.
+        let mut clicked: Option<usize> = None;
+        ui.horizontal_wrapped(|ui| {
+            for (i, tab) in self.tabs.iter().enumerate() {
+                let count = if searching {
+                    tab_match_count(tab, &self.search)
+                } else {
+                    tab.card_count()
+                };
+                if ui
+                    .selectable_label(
+                        i == self.active_tab,
+                        format!("{} ({})", tab.category, count),
+                    )
+                    .clicked()
+                {
+                    clicked = Some(i);
+                }
+            }
+        });
+        if let Some(i) = clicked {
+            self.select_tab(i);
+        }
+    }
+
+    /// The card grid: crystal-system section headers (from
+    /// `tess_core::section_key`) between rows of cards, each card =
+    /// preview image + bold name + "group · lattice" line + truncated
+    /// description. 2-3 columns depending on panel width.
+    fn draw_card_grid(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
+        let tab = &self.tabs[self.active_tab];
+        // Owned snapshot of the filtered, in-order cards. The grid
+        // closure below needs `&mut self` (texture cache, selection),
+        // so no borrow of `self.tabs` may survive into it: every field
+        // of `CardMeta` is `Copy`, so a struct literal copies each card
+        // without requiring a `Clone` impl on the shared type.
+        let cards: Vec<tess_core::CardMeta> = tab
+            .cards
+            .iter()
+            .filter(|c| search_matches(c, &self.search))
+            .map(|c| tess_core::CardMeta {
+                id: c.id,
+                name: c.name,
+                description: c.description,
+                category: c.category,
+                group: c.group,
+                lattice: c.lattice,
+                notes: c.notes,
+                params: c.params,
+            })
+            .collect();
+        if cards.is_empty() {
+            ui.label(if self.search.trim().is_empty() {
+                "(no tilings in this tab)"
+            } else {
+                "(no matches)"
+            });
+            return;
+        }
+        let cols =
+            ((ui.available_width() / (CARD_IMG_W as f32 + 14.0)) as usize).clamp(1, 3);
+        // Scroll the selection into view only when (tab, selection)
+        // actually changed since the last frame — the TUI's
+        // last_highlighted guard; without it, manual scrolling would
+        // be snapped back on every render.
+        let changed = self.last_highlighted.0 != self.active_tab
+            || self.last_highlighted.1 != self.app.selected_id();
+        egui::Grid::new("card_grid").spacing([10.0, 8.0]).show(ui, |ui| {
+            // Section the (already-ordered) card snapshot by
+            // `section_key`; the snapshot is a local, so the closure
+            // holds no borrows of `self` besides the `&mut` it needs
+            // for the texture cache and click handling.
+            for section in sectionize(&cards) {
+                if !section.header.is_empty() {
+                    ui.end_row();
+                    ui.add(egui::Label::new(egui::RichText::new(
+                        section.header.to_string(),
+                    )
+                    .strong()
+                    .color(SECTION_COLOR)));
+                    ui.end_row();
+                }
+                for row in section.cards.chunks(cols) {
+                    for card in row {
+                        self.draw_card(ctx, ui, card, changed);
+                    }
+                    ui.end_row();
+                }
+            }
+        });
+        if changed {
+            self.last_highlighted = (
+                self.active_tab,
+                self.app.selected_id().to_string(),
+            );
+        }
+    }
+
+    /// One card: bordered frame with the preview texture (generated
+    /// lazily, visible cards only), the bold name, the "group ·
+    /// lattice" symmetry line, and a truncated description. Clicking
+    /// selects the tiling; the selected card gets a highlight stroke.
+    fn draw_card(
+        &mut self,
+        ctx: &egui::Context,
+        ui: &mut egui::Ui,
+        card: &tess_core::CardMeta,
+        scroll_to_selected: bool,
+    ) {
+        let selected = card.id == self.app.selected_id();
+        let img_size = egui::vec2(CARD_IMG_W as f32, CARD_IMG_H as f32);
+        // Lazy texture generation: the image allocates at the cursor;
+        // generate (or reuse) the texture only when that rect is near
+        // the scroll area's clip rect, so the first frame pays only
+        // for the cards actually in view.
+        let predicted = egui::Rect::from_min_size(ui.cursor().min + egui::vec2(5.0, 5.0), img_size);
+        let handle = if ui.clip_rect().expand(32.0).intersects(predicted) {
+            Some(self.card_texture(ctx, card, CARD_IMG_W, CARD_IMG_H))
+        } else {
+            None
+        };
+        let frame = egui::Frame::none()
+            .fill(if selected { SELECTED_FILL } else { egui::Color32::TRANSPARENT })
+            .rounding(6.0)
+            .inner_margin(5.0)
+            .stroke(egui::Stroke::new(
+                if selected { 2.0_f32 } else { 1.0_f32 },
+                if selected { SELECTED_STROKE } else { CARD_STROKE },
+            ));
+        let frame_resp = frame.show(ui, |ui| {
+            ui.set_width(CARD_IMG_W as f32);
+            match &handle {
+                Some(h) => {
+                    ui.add(egui::Image::from_texture(h).fit_to_exact_size(img_size));
+                }
+                None => {
+                    ui.allocate_exact_size(img_size, egui::Sense::hover());
+                }
+            }
+            ui.add(egui::Label::new(egui::RichText::new(card.name.to_string()).strong()));
+            ui.add(egui::Label::new(egui::RichText::new(format!(
+                "{} · {}",
+                card.group_str(),
+                card.lattice_str()
+            ))
+            .small()
+            .color(SYM_COLOR)));
+            let desc = if card.description.is_empty() {
+                card.notes.unwrap_or("").to_string()
+            } else {
+                truncate_text(card.description, DESC_CHARS)
+            };
+            if !desc.is_empty() {
+                ui.add(egui::Label::new(egui::RichText::new(desc).small().color(DESC_COLOR)));
+            }
+        });
+        let card_rect = frame_resp.response.rect;
+        let resp = ui.interact(card_rect, ui.id().with(card.id), egui::Sense::click());
+        if resp.hovered() && !selected {
+            ui.painter()
+                .rect_stroke(card_rect, 6.0, egui::Stroke::new(1.0_f32, HOVER_STROKE));
+        }
+        if scroll_to_selected && selected {
+            ui.scroll_to_rect(card_rect, Some(egui::Align::Center));
+        }
+        if resp.clicked() {
+            let id = card.id.to_string();
+            self.select_card(&id);
+        }
+    }
+
+    /// The card preview texture for `card` at `w`×`h` pixels, lazily
+    /// generated on first use and cached per (id, params-string, size).
+    ///
+    /// Window derivation is the TUI thumbnail's two-pass approach,
+    /// shared via `tess_core::app`: a bounded ±10-world-unit probe
+    /// captures the lattice basis (or the mean tile extent for
+    /// aperiodic patches), `preview_window` fits the card aspect, and
+    /// the generation retries with a shrinking window on refusal.
+    /// Rasterization uses the shared `tess_core::raster` with the
+    /// identity palette, so pixel indices are positions in
+    /// `paint::PALETTE` (full 8-bit colors; the TUI maps the same
+    /// indices to xterm-256). Colors follow the tiling's default
+    /// preview mode (proto fallback for `Single`, which would render a
+    /// featureless slab) — the TUI thumb semantics.
+    fn card_texture(
+        &mut self,
+        ctx: &egui::Context,
+        card: &tess_core::CardMeta,
+        w: u32,
+        h: u32,
+    ) -> egui::TextureHandle {
+        let tiling = self
+            .app
+            .registry()
+            .get(card.id)
+            .expect("card id must be registered");
+        let params_str = default_params_str(tiling.params());
+        let key = card_key(card.id, &params_str, w, h);
+        if let Some(t) = self.card_textures.get(&key) {
+            return t.clone();
+        }
+        let params = ParamSet::default_for(tiling.params());
+        let aspect = f64::from(w) / f64::from(h.max(1));
+        let probe = tiling.generate(&params, &tess_core::Query {
+            region: tess_core::BBox::new(
+                tess_core::Vec2::new(-10.0, -10.0),
+                tess_core::Vec2::new(10.0, 10.0),
+            ),
+        });
+        let mut window = tess_core::app::preview_window(
+            probe.periodic,
+            tess_core::app::mean_tile_side(&probe.tiles),
+            aspect,
+        );
+        let mut result = tiling.generate(&params, &tess_core::Query { region: window });
+        let mut shrink = 0.4;
+        while result.message.is_some() && shrink > 0.05 {
+            let cx = (window.min.x + window.max.x) / 2.0;
+            let cy = (window.min.y + window.max.y) / 2.0;
+            let hx = (window.max.x - window.min.x) / 2.0 * shrink;
+            let hy = (window.max.y - window.min.y) / 2.0 * shrink;
+            window = tess_core::BBox::new(
+                tess_core::Vec2::new(cx - hx, cy - hy),
+                tess_core::Vec2::new(cx + hx, cy + hy),
+            );
+            result = tiling.generate(&params, &tess_core::Query { region: window });
+            shrink *= 0.4;
+        }
+        let mode = tiling.default_color_mode().preview_mode();
+        let raster = if result.tiles.is_empty() {
+            None
+        } else {
+            Some(tess_core::raster::raster(
+                &result.tiles,
+                &window,
+                w,
+                h,
+                mode,
+                &[0, 1, 2, 3, 4, 5, 6, 7],
+            ))
+        };
+        let (br, bgr, bb) = paint::rgb(paint::BORDER);
+        let (ar, ag, ab) = paint::rgb(paint::BACKGROUND);
+        let mut pixels = vec![0u8; (w * h * 4) as usize];
+        for y in 0..h {
+            for x in 0..w {
+                let idx = raster
+                    .as_ref()
+                    .map_or(tess_core::raster::GAP, |r| r.at(x, y));
+                let (r, g, b) = match idx {
+                    tess_core::raster::BORDER => (br, bgr, bb),
+                    tess_core::raster::GAP => (ar, ag, ab),
+                    i => paint::rgb(paint::PALETTE[i as usize]),
+                };
+                let o = ((y * w + x) as usize) * 4;
+                pixels[o] = r;
+                pixels[o + 1] = g;
+                pixels[o + 2] = b;
+                pixels[o + 3] = 255;
+            }
+        }
+        let handle = ctx.load_texture(
+            key.clone(),
+            egui::ColorImage::from_rgba_unmultiplied([w as usize, h as usize], &pixels),
+            egui::TextureOptions::LINEAR,
+        );
+        self.card_textures.insert(key, handle.clone());
+        handle
     }
 }
 
@@ -675,5 +1115,262 @@ mod tests {
         // Mirror: conjugate ratios — must not share.
         let mirrored: Vec<tess_core::Vec2> = a.iter().map(|p| v2(p.x, -p.y)).collect();
         assert_ne!(layout_fingerprint(&a), layout_fingerprint(&mirrored));
+    }
+
+    // ---- Tab/card browser pure logic (UI-2) -------------------------
+
+    fn card_fix(
+        id: &'static str,
+        category: tess_core::TilingCategory,
+        group: Option<tess_core::WallpaperGroup>,
+        lattice: Option<tess_core::LatticeKind>,
+    ) -> tess_core::CardMeta {
+        tess_core::CardMeta {
+            id,
+            name: id,
+            description: "",
+            category,
+            group,
+            lattice,
+            notes: None,
+            params: 0,
+        }
+    }
+
+    /// Search matches on name, id, or description, case-insensitively;
+    /// an empty (whitespace) query matches everything.
+    #[test]
+    fn search_matches_fields_and_empty_query() {
+        let tabs = tess_core::browse_tabs(&tess_tilings::registry());
+        let real = tabs
+            .iter()
+            .find_map(|t| t.cards.iter().find(|c| c.id == "penrose"))
+            .expect("penrose card");
+        assert!(super::search_matches(real, ""), "empty query must match");
+        assert!(super::search_matches(real, "   "), "whitespace query must match");
+        let name = real.name.to_lowercase();
+        assert!(super::search_matches(real, &name), "name match");
+        assert!(
+            super::search_matches(real, real.name.to_uppercase().as_str()),
+            "case-insensitive name match"
+        );
+        assert!(super::search_matches(real, "PENROSE"), "id match (case-insensitive)");
+        // A description fragment (char-safe, not a byte slice).
+        let desc: String = real.description.chars().take(5).collect();
+        assert!(!desc.is_empty(), "penrose must have a description");
+        assert!(super::search_matches(real, &desc), "description match");
+        assert!(!super::search_matches(real, "zzz-no-match"), "no field contains it");
+        let other = card_fix("other", tess_core::TilingCategory::Uniform, None, None);
+        assert!(!super::search_matches(&other, "penrose"));
+    }
+
+    /// `tab_match_count` counts exactly the matching cards in a tab.
+    #[test]
+    fn tab_match_count_counts_only_matches() {
+        let cards = vec![
+            card_fix("a", tess_core::TilingCategory::Uniform, None, None),
+            card_fix(
+                "b",
+                tess_core::TilingCategory::Uniform,
+                None,
+                None,
+            ),
+        ];
+        let mut tab = tess_core::Tab {
+            category: tess_core::TilingCategory::Uniform,
+            cards,
+        };
+        tab.cards[1].name = "needle";
+        assert_eq!(super::tab_match_count(&tab, "needle"), 1);
+        assert_eq!(super::tab_match_count(&tab, ""), 2, "empty query: all");
+        assert_eq!(super::tab_match_count(&tab, "zzz"), 0);
+    }
+
+    /// The search jump target is the FIRST tab with a match, in tab
+    /// order; empty query or no match anywhere is `None`.
+    #[test]
+    fn first_matching_tab_is_the_first_tab_with_a_match() {
+        let mk = |cat: tess_core::TilingCategory, id: &'static str| tess_core::Tab {
+            category: cat,
+            cards: vec![card_fix(id, cat, None, None)],
+        };
+        let mut tabs = vec![
+            mk(tess_core::TilingCategory::Uniform, "alpha"),
+            mk(tess_core::TilingCategory::Laves, "beta"),
+            mk(
+                tess_core::TilingCategory::Quasiperiodic,
+                "gamma",
+            ),
+        ];
+        // Give tabs 1 and 2 a shared name fragment that tab 0 lacks.
+        tabs[1].cards[0].name = "betta-hunter";
+        tabs[2].cards[0].name = "betta-fighter";
+        assert_eq!(
+            super::first_matching_tab(&tabs, "betta"),
+            Some(1),
+            "first matching tab wins"
+        );
+        assert_eq!(super::first_matching_tab(&tabs, ""), None);
+        assert_eq!(super::first_matching_tab(&tabs, "zzz"), None);
+    }
+
+    /// Sectioning is by maximal runs of equal `section_key` in
+    /// first-appearance order (non-contiguous repeats get their own
+    /// runs), preserving card order.
+    #[test]
+    fn sectionize_runs_preserve_order_and_split_noncontiguous_keys() {
+        let wp = tess_core::TilingCategory::Wallpaper;
+        let p1 = tess_core::WallpaperGroup::P1;
+        let cmm = tess_core::WallpaperGroup::Cmm;
+        let cards = vec![
+            card_fix("o1", wp, Some(p1), Some(tess_core::LatticeKind::Oblique)),
+            card_fix("r1", wp, Some(p1), Some(tess_core::LatticeKind::Rectangular)),
+            card_fix("c1", wp, Some(cmm), Some(tess_core::LatticeKind::Rectangular)),
+            card_fix("r2", wp, Some(p1), Some(tess_core::LatticeKind::Rectangular)),
+            card_fix("s1", wp, Some(p1), Some(tess_core::LatticeKind::Square)),
+            card_fix("h1", wp, Some(p1), Some(tess_core::LatticeKind::Hexagonal)),
+            card_fix(
+                "n1",
+                tess_core::TilingCategory::Uniform,
+                None,
+                None,
+            ),
+        ];
+        let sections = super::sectionize(&cards);
+        let headers: Vec<&str> = sections.iter().map(|s| s.header).collect();
+        assert_eq!(
+            headers,
+            vec!["oblique", "rectangular", "centered", "rectangular", "square", "hexagonal", ""]
+        );
+        // Every card exactly once, in order.
+        let flat: Vec<&str> = sections
+            .iter()
+            .flat_map(|s| s.cards.iter())
+            .map(|c| c.id)
+            .collect();
+        assert_eq!(flat, vec!["o1", "r1", "c1", "r2", "s1", "h1", "n1"]);
+    }
+
+    /// On the real Wallpaper tab the sections are the crystal-system
+    /// runs in `browse_tabs` order; the first card of each section sets
+    /// the header, and every card is covered exactly once.
+    #[test]
+    fn sectionize_real_wallpaper_tab() {
+        let tabs = tess_core::browse_tabs(&tess_tilings::registry());
+        let wp = tabs
+            .iter()
+            .find(|t| t.category == tess_core::TilingCategory::Wallpaper)
+            .expect("wallpaper tab");
+        assert!(!wp.cards.is_empty(), "wallpaper tab must not be empty");
+        let sections = super::sectionize(&wp.cards);
+        let mut covered = 0usize;
+        for s in &sections {
+            assert!(!s.cards.is_empty());
+            if !s.header.is_empty() {
+                assert_eq!(
+                    s.header,
+                    tess_core::section_key(&s.cards[0]),
+                    "header must come from the section's first card"
+                );
+            }
+            covered += s.cards.len();
+        }
+        assert_eq!(covered, wp.cards.len());
+        // Crystal-system order: no section may re-appear before a later
+        // crystal system (oblique before rectangular before square
+        // before hexagonal).
+        let rank = |h: &str| match h {
+            "" => 9,
+            "oblique" => 0,
+            "rectangular" => 1,
+            "centered" => 1,
+            "square" => 2,
+            "hexagonal" => 3,
+            _ => panic!("unexpected header {h:?}"),
+        };
+        let mut max_rank = 0u8;
+        for s in &sections {
+            let r = rank(s.header);
+            assert!(
+                r >= max_rank,
+                "section order violated: {:?}",
+                sections.iter().map(|x| x.header).collect::<Vec<_>>()
+            );
+            max_rank = r;
+        }
+    }
+
+    /// Entering a tab restores the remembered card if it is still in
+    /// the tab, else the first card.
+    #[test]
+    fn entry_selection_restores_remembered_or_first() {
+        let cat = tess_core::TilingCategory::Uniform;
+        let mut tab = tess_core::Tab {
+            category: cat,
+            cards: vec![
+                card_fix("first", cat, None, None),
+                card_fix("second", cat, None, None),
+            ],
+        };
+        assert_eq!(
+            super::entry_selection(&tab, Some("second")),
+            Some("second"),
+            "remembered card in tab is restored"
+        );
+        assert_eq!(
+            super::entry_selection(&tab, Some("missing")),
+            Some("first"),
+            "remembered card gone: fall back to first"
+        );
+        assert_eq!(super::entry_selection(&tab, None), Some("first"));
+        // A tab with no cards at all.
+        tab.cards.clear();
+        assert_eq!(super::entry_selection(&tab, None), None);
+    }
+
+    /// The texture cache key distinguishes (id, params, size).
+    #[test]
+    fn card_key_distinguishes_id_params_size() {
+        assert_eq!(
+            super::card_key("chair", "scale=1", 120, 90),
+            "chair|scale=1|120x90"
+        );
+        assert_ne!(super::card_key("chair", "scale=1", 120, 90), super::card_key("chair", "scale=2", 120, 90));
+        assert_ne!(super::card_key("chair", "scale=1", 120, 90), super::card_key("chair", "scale=1", 121, 90));
+        assert_ne!(super::card_key("chair", "scale=1", 120, 90), super::card_key("other", "scale=1", 120, 90));
+    }
+
+    /// The params component of the cache key is the tiling's default
+    /// values in declaration order — pinned so the preview cache key is
+    /// stable across runs (the determinism contract).
+    #[test]
+    fn default_params_str_pinned() {
+        let registry = tess_tilings::registry();
+        let star = registry.get("star-cross").expect("star-cross registered");
+        let specs = star.params();
+        assert_eq!(specs.len(), 3);
+        assert_eq!(
+            specs.iter().map(|s| s.id.as_str()).collect::<Vec<_>>(),
+            vec!["scale", "rotation", "star_radius"]
+        );
+        let got = super::default_params_str(specs);
+        assert_eq!(got, "scale=1,rotation=0°,star_radius=0.50");
+        assert_eq!(got, super::default_params_str(specs), "deterministic");
+        // A parameterless declaration yields the empty params-string.
+        assert_eq!(super::default_params_str(&[]), "");
+    }
+
+    /// Truncation is char-safe (descriptions hold non-ASCII, e.g. the
+    /// en dash) and appends an ellipsis only when it cuts.
+    #[test]
+    fn truncate_text_char_safe() {
+        assert_eq!(super::truncate_text("abc", 5), "abc");
+        assert_eq!(super::truncate_text("abcd", 4), "abcd");
+        assert_eq!(super::truncate_text("abcdef", 4), "abc…");
+        assert_eq!(super::truncate_text("abcdef", 1), "…");
+        // The en dash in the Ammann–Beenker name: no byte-slice panic.
+        let s = "Ammann–Beenker tiling";
+        assert_eq!(super::truncate_text(s, 6), "Amman…");
+        assert_eq!(super::truncate_text(s, s.chars().count()), s);
     }
 }

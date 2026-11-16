@@ -12,6 +12,7 @@
 //! * [`app`] — shared application state for the TUI and GUI
 //! * [`svg`] — SVG export
 //! * [`browse`] — the shared tab/card browser model for both UIs
+//! * [`raster`] — shared per-pixel rasterizer (TUI cells, GUI previews)
 
 pub mod app;
 pub mod browse;
@@ -19,6 +20,7 @@ pub mod category;
 pub mod geometry;
 pub mod paint;
 pub mod params;
+pub mod raster;
 pub mod registry;
 pub mod strapwork;
 pub mod symmetry;
