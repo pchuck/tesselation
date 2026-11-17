@@ -979,16 +979,17 @@ confirm the diffraction claim during the spike before declaring.
 
 ---
 
-### 21. Wallpaper group completion — the 5 un-realized groups (M76 roadmap queue)
+### 21. Wallpaper group completion — the 4 un-realized groups (M76 roadmap queue)
 
-- **Motif:** M76 made the Wallpaper tab a group catalog: 12 of the 17
+- **Motif:** M76 made the Wallpaper tab a group catalog: 13 of the 17
   wallpaper groups have a registered realizer (pg → glide-hexagon-strips,
-  pm → trapezoid-courses, p1 → stepped-hexominoes, p2 → pentagon-3,
+  pm → trapezoid-courses, pmg → shifted-trapezoid-courses,
+  p1 → stepped-hexominoes, p2 → pentagon-3,
   pmm → kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
   truncated-square, p4g → snub-square, p6 → snub-trihexagonal,
   p6m → hexagon, cmm → elongated-triangular). A
   shared gap note (`tess_core::browse::wallpaper_gap_note`) rendered
-  at the top of the tab in both UIs names the 5 absent groups. (The
+  at the top of the tab in both UIs names the 4 absent groups. (The
   17th group is pmg — the old `WallpaperGroup::Cmc` variant was a 3D
   space group misnamed as a 2D group; M76 renamed it `Pmg`.)
 - **Queue (difficulty per audit §4d):** pm, pg (easy); pmg, cm
@@ -1030,8 +1031,18 @@ confirm the diffraction claim during the spike before declaring.
     M76's `LatticeKind::CenteredRectangular` was built for; a 2-tile
     motif with one mirror through the lattice points on the centered
     cell.
-  - pmg (rectangular): a mirror pair plus perpendicular glides — the
-    17th group.
+  - pmg ✅ **landed (M81)**: the catalog's first pmg realizer —
+    shifted trapezoid courses: two courses of M79's trapezoid classes
+    per 2×2 cell on the rectangular lattice Λ = ⟨(2,0),(0,2)⟩ (det 4 =
+    area, 8 tiles per cell): row 0 (y∈[0,1]) is M79's courses (P, mP,
+    P', mP'), row 1 (y∈[1,2]) their mirror F(x,y) = (x, 2−y) shifted
+    by (1,0) (R0, R1, R2, R3), two congruence classes. Group: vertical
+    mirrors x = k, horizontal glides g(x,y) = (x+1, −y) (glide 1,
+    g² = (2,0) ∈ Λ, two Λ-orbits y ∈ 2ℤ and y = 1+2ℤ), and half-turns
+    about every (m+1/2, n) (two Λ-orbits, even-y/odd-y, exchanged by
+    the mirrors); the horizontal mirrors are dead (F(P) = R0+(−1,0) is
+    half a period off Λ) — what makes it pmg and not pmm (exact
+    128-coset probe: exactly 4 of the 16 cosets positive).
   - p3 (hexagonal): first 3-fold group — a chiral 3-tile motif on the
     hexagonal lattice, no mirrors.
   - p3m1 (hexagonal): 3-folds + mirrors through the vertices; the
@@ -1049,8 +1060,9 @@ confirm the diffraction claim during the spike before declaring.
   `registry_groups_are_complete_and_canonically_ordered` must be
   extended with the new tab sizes, and the shared gap note (both UIs)
   drops one group name per landing.
-- **Status:** p1 landed (M78), pm landed (M79), pg landed (M80);
-  5 remain — one group per milestone; each landing flips one token in
+- **Status:** p1 landed (M78), pm landed (M79), pg landed (M80),
+  pmg landed (M81); 4 remain — one group per milestone; each landing
+  flips one token in
   `wallpaper_gap_note` and the gap note is re-verified in both UIs'
   tests.
 

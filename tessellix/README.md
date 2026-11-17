@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (2)   Laves (11)   Wallpaper (12)   Pentagon
+counts (`Uniform (11)   Two-Uniform (2)   Laves (11)   Wallpaper (13)   Pentagon
 Types (12)   Islamic (9)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (4)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -57,7 +57,7 @@ fragment, and `params: n` when the tiling has adjustable parameters. A
 tiling can belong to more than one tab: its primary category (its family)
 plus declared secondaries — the Wallpaper tab is one card per wallpaper
 group (the group catalog) built purely from secondaries, so it opens with an
-explicit note listing the five groups that have no registered realizer.
+explicit note listing the four groups that have no registered realizer.
 In the Wallpaper tab the cards are grouped under crystal-system section
 headers (Oblique, Rectangular, Centered, Square, Hexagonal), ordered by
 lattice kind then wallpaper group; all other tabs appear in registry order.
@@ -99,7 +99,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
   computed from the window width (target card ~240 px, fully dynamic
   — no upper bound) and the cards stretch to fill. The Wallpaper tab
   (one card per wallpaper group — the group catalog) opens with an
-  explicit note listing the five groups that have no registered
+  explicit note listing the four groups that have no registered
   realizer. Cards show crystal-system section headers (Wallpaper
   tab), a lazily generated preview (rasterized at default parameters
   by the shared `tess-core::raster`, same palette/proto-fallback
@@ -127,14 +127,14 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-66 built-in tilings (78 tab memberships), all discoverable in both UIs
+67 built-in tilings (79 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
-self-dual regular tilings also appear in Laves, and twelve periodic
+self-dual regular tilings also appear in Laves, and thirteen periodic
 tilings anchor the per-group Wallpaper catalog). The ten tabs:
 **Uniform** (11), **Two-Uniform** (2), **Laves / Catalan duals** (11,
-8 primary + 3 self-dual secondaries), **Wallpaper** (12: one card per
-wallpaper group, 5 of the 17 groups still unrepresented),
+8 primary + 3 self-dual secondaries), **Wallpaper** (13: one card per
+wallpaper group, 4 of the 17 groups still unrepresented),
 **Pentagon Types** (12), **Islamic** (9), **Arrangements** (5),
 **Quasiperiodic** (8: Penrose family, Ammann–Beenker, Stampfli, shield,
 girih Darb-i Imam), **Aperiodic** (4: einstein family, pinwheel), and
@@ -179,6 +179,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `stepped-hexominoes` | Stepped hexominoes | paver tiling: asymmetric 2-step staircase hexomino, one tile per cell on the centered rectangular lattice ⟨(3,1),(0,2)⟩ (primitive cell; centered cell 6×2 with center (−3,1) in the lattice), edge-to-edge with 180° at the four collinear corners; the catalog's first p1 realizer — the centered-rectangular normalizer {I, R180, Mx, My} is broken by the asymmetric staircase | p1 | centered |
 | `trapezoid-courses` | Trapezoid courses | paver tiling: two courses of trapezoids per 2×1 cell on the rectangular lattice ⟨(2,0),(0,1)⟩ (det 2): four trapezoids, two incongruent shapes (areas 3/5 and 2/5) each with its mirror in x = 1, edge-to-edge (slant slope 1/5); the catalog's first pm realizer — vertical mirror lines x = integer, no horizontal mirrors or half-turns (the incongruent prototile classes kill pmm) | pm | rectangular |
 | `glide-hexagon-strips` | Glide hexagon strips | paver tiling: two interlocking hexagon strips per 1×2 cell on the rectangular lattice ⟨(1,0),(0,2)⟩ (det 2): fat (area 29/40) and waist (area 11/40) hexagons, strip 1 the glide image of strip 0 under g(x,y) = (x+1/2, −y) with g² = (1,0); edge-to-edge, five edge directions, no verticals; the catalog's first pg realizer — one horizontal glide family (glide 1/2; axes y ∈ ℤ in two orbits, y ∈ 2ℤ and y = 1+2ℤ), no mirrors, no rotations | pg | rectangular |
+| `shifted-trapezoid-courses` | Shifted trapezoid courses | paver tiling: the trapezoid-course row stacked in rows of height 1 per 2×2 cell on the rectangular lattice ⟨(2,0),(0,2)⟩ (det 4), alternate rows reflected in y = 1 and shifted by (1,0): eight trapezoids, two incongruent shapes (areas 3/5 and 2/5) × mirror × row-flip; edge-to-edge (slant slope 1/5); the catalog's first pmg realizer — vertical mirror lines x ∈ ℤ, one horizontal glide family (glide 1, axes y ∈ ℤ), half-turns at (m+1/2, n) for all m, n ∈ ℤ; the (1,0) row shift kills the horizontal mirrors that would make it pmm | pmg | rectangular |
 | `pythagorean` | Pythagorean (two squares) | periodic two-square family (one-parameter ratio); square on the hypotenuse per cell | p4 | square |
 | `windmill` | Periodic pinwheel arrangement (p4) | Conway's periodic "spin" of the pinwheel motif: 1–2–√5 triangles around squares; homochiral, non-edge-to-edge | p4 | square |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | 2-uniform k-uniform: hexagonal tiling with one of every three hexagons dissected into six-triangle fans (Wikipedia `2-uniform n10`) | p6m | hexagonal |
@@ -507,7 +508,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 509 tests, all green, zero
+`cargo test --workspace` (currently 513 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
