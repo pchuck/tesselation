@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (64 tilings)
+## Implemented (65 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -116,17 +116,17 @@ figures at the split midpoints, `2.4.4`).
 
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (2) ·
-**Laves (Catalan duals)** (11) · **Wallpaper** (10) · **Pentagon
+**Laves (Catalan duals)** (11) · **Wallpaper** (11) · **Pentagon
 Types** (12) · **Islamic** (9) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (4) · **Nonperiodic** (4) —
-76 memberships over the 64 implemented tilings; the 12 extra are
+77 memberships over the 65 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
-M74/M77/M78 and is updated in M78.)
+M74/M77/M78/M79 and is updated in M79.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
   `square` and `hexagon` also appear under Laves (self-dual regular
-  patterns), and ten tilings appear under the Wallpaper catalog.
+  patterns), and eleven tilings appear under the Wallpaper catalog.
   `browse_tabs` appends secondary categories to each card's tabs and
   sorts each tab by `section_key`, which now guards on the *tab's*
   category, not the card's (a Wallpaper tab is all-secondary).
@@ -134,11 +134,12 @@ M74/M77/M78 and is updated in M78.)
   egui geometry test pins the new card budget (2-line card titles,
   no clipping at 1200×900, 640×800 and 2560×900).
 - **Wallpaper catalog.** The Wallpaper tab is a group catalog, not a
-  motif list: one card per realized wallpaper group — 10 of the 17:
-  p1 → stepped-hexominoes, p2 → pentagon-3, pmm → kuniform-pmm,
-  pgg → herringbone, p4 → windmill, p4m → truncated-square,
-  p4g → snub-square, p6 → snub-trihexagonal, p6m → hexagon, cmm →
-  elongated-triangular. The seven un-realized groups — pm, pg, cm,
+  motif list: one card per realized wallpaper group — 11 of the 17:
+  p1 → stepped-hexominoes, p2 → pentagon-3, pm → trapezoid-courses,
+  pmm → kuniform-pmm, pgg → herringbone, p4 → windmill,
+  p4m → truncated-square, p4g → snub-square, p6 →
+  snub-trihexagonal, p6m → hexagon, cmm →
+  elongated-triangular. The six un-realized groups — pg, cm,
   pmg, p3, p3m1, p31m —
   are named in a shared gap note
   (`tess_core::browse::wallpaper_gap_note`) rendered at the top of
@@ -1791,6 +1792,66 @@ documentation pending).
   270°×2, sum 1800 = 180°·(12−2)).
 - **Status:** committed (M78). 64 tilings, 501 tests at the commit.
 
+### 29. Trapezoid courses ✅ (M79)
+
+- **Motif:** two courses of trapezoids per 2×1 cell on the
+  rectangular lattice `Λ = ⟨(2,0),(0,1)⟩` (det 2): the upper course
+  `P = (0,3/10),(1,1/2),(1,1),(0,1)` (area 6/10) and its mirror `mP`
+  in `x = 1` (area 6/10), the lower course `P' = (0,0),(1,0),(1,1/2),
+  (0,3/10)` (area 4/10) and its mirror `mP'` (area 4/10). The courses
+  meet along slants of slope `±1/5` (intercept `3/10`). The catalog's
+  first **pm** realizer — the eleventh represented card of the
+  Wallpaper group catalog (6 of the 17 groups still unrepresented).
+- **Group:** **pm** by structure plus exact probe: the mirror lines
+  are exactly the vertical lines `x = k`, `k ∈ ℤ` — `x = 1` exchanges
+  `P ↔ mP` and `P' ↔ mP'` within one cell, `x = 0` does the same
+  across a cell boundary (a lattice translate). No horizontal mirror
+  and no half-turn: a horizontal mirror or a half-turn centered on
+  `y = 1/2 + n` would send the upper course (area 6/10, horizontal
+  top at `y = 1`) to the lower course (area 4/10) — impossible by
+  area — and the `y = 1 + n` centers map a trapezoid to a slant-
+  reversed copy that is not a tile (exact vertex-set probe). The
+  structural reason is the **incongruence of the two prototile
+  classes** (areas 6/10 vs 4/10; squared-edge multisets differ): a
+  pmm tiling would need a half-turn or a second mirror family, and
+  both are killed. The shape parameters are chosen for this: slope
+  `m = 1/5 ∉ {0, ±1}` (no parallelogram/axis degeneracy) and
+  intercept `c = 3/10 ≠ (1 − m)/2 = 2/5` — with `c = (1 − m)/2` the
+  two trapezoids would be congruent, half-turns would appear, and
+  the group would be pmm.
+- **Lattice & cell:** 4 tiles per **rectangular** (primitive) cell,
+  basis `(2,0)`, `(0,1)`, det 2 = total tile area; measured kind
+  Rectangular, matching the declaration (legality test
+  `declared_symmetry_is_legal_and_matches_the_measured_lattice`).
+- **Edge structure:** **EDGE-TO-EDGE**: every edge paired exactly
+  twice, no T-junctions (exact segment census over windows
+  W = 2/3/5). Edge classes: the slants (slope `±1/5`, length
+  `√65/5`), each pairing one upper with one lower trapezoid; the
+  horizontal unit edges at `y = 0`/`y = 1` (paired between vertical
+  cell translates); the vertical edges at `x ∈ {0,1,2}` of lengths
+  `3/10`, `1/2`, `7/10`.
+- **Vertex stars:** every interior vertex figure sums to 360°:
+  `{arctan(5) = 78.6901° × 2, 180° − arctan(5) = 101.3099° × 2}` at
+  the slant endpoints, `{90° × 4}` at the horizontal-line vertices
+  (121 interior vertices in the W = 3 window).
+- **Verify:** standard trio (coverage, rotated-scaled,
+  deterministic) + the exact pm probe
+  (`trapezoid_courses_wallpaper_group_is_pm`, mirroring the full
+  Python battery `m79_verify.py`: 15 positive candidates — lattice
+  translations and the vertical mirrors `x = k` with lattice-
+  translate composites — against 53 negative candidates: 5 off-
+  lattice translations, 3 half-integer vertical mirrors, 18 half-
+  turn centers, 9 horizontal mirrors/glides, 8 rot90/rot270, 3
+  diagonal + 3 anti-diagonal mirrors/glides, 4 vertical glides;
+  plus the structural mirror sanity `x = 1` pairing `P ↔ mP`,
+  `P' ↔ mP'` with no translate) + the brute-force culling
+  cross-check + the legality test + the Python transcript: convex
+  CCW polygons, areas 6/10·6/10·4/10·4/10 summing to det 2,
+  boundary-only cell partition with union = cell, e2e at W = 2/3/5,
+  the vertex-star census above, P/P' incongruent (area +
+  squared-edge multisets), rot60/rot120 lattice-kill.
+- **Status:** committed (M79). 65 tilings, 505 tests at the commit.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -2726,3 +2787,25 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   pre-dated M74/M77/M78 (9 Wallpaper / 10 Pentagon Types / 73
   memberships / 61 tilings) — updated to the at-commit census
   (10 / 12 / 76 / 64). 64 tilings, 501 tests at the commit.
+- 2026-11-17 — M79 Trapezoid courses (pm) ✅: two courses of
+  trapezoids per 2×1 cell on the rectangular lattice
+  Λ = ⟨(2,0),(0,1)⟩ (det 2 = area) — four tiles, two incongruent
+  trapezoid classes (areas 6/10 and 4/10, slant slope ±1/5,
+  intercept 3/10) each with its mirror in x = 1 — the catalog's
+  first **pm** realizer (11 of the 17 groups now represented).
+  Group pm by exact probe: the mirror lines are exactly the
+  vertical lines x = k (x = 1 pairs P ↔ mP, P' ↔ mP' within one
+  cell); no horizontal mirror or half-turn — the y = 1/2 + n
+  centers are area-impossible (6/10 → 4/10 course) and the
+  y = 1 + n centers map a trapezoid to a slant-reversed copy that
+  is not a tile — the incongruent prototile classes (c = 3/10 ≠
+  (1 − m)/2 = 2/5 with slope m = 1/5) are the structural killer,
+  which is what keeps this out of pmm. Edge-to-edge (every edge
+  paired exactly twice, no T-junctions, W = 2/3/5); vertex stars
+  {78.6901° × 2, 101.3099° × 2} and {90° × 4}, all summing to
+  360°. 4 tess-tilings tests (standard trio + exact pm probe,
+  15 positive / 53 negative candidates mirroring m79_verify.py).
+  Census: 64 → 65 tilings, 76 → 77 memberships, Wallpaper tab
+  10 → 11, gap table 7 → 6 (pm drops out of
+  `WALLPAPER_GROUP_GAPS`; the shared gap note now names six
+  groups). 65 tilings, 505 tests at the commit.

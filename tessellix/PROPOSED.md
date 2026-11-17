@@ -979,15 +979,16 @@ confirm the diffraction claim during the spike before declaring.
 
 ---
 
-### 21. Wallpaper group completion — the 7 un-realized groups (M76 roadmap queue)
+### 21. Wallpaper group completion — the 6 un-realized groups (M76 roadmap queue)
 
-- **Motif:** M76 made the Wallpaper tab a group catalog: 10 of the 17
-  wallpaper groups have a registered realizer (p1 → stepped-hexominoes,
-  p2 → pentagon-3, pmm → kuniform-pmm, pgg → herringbone, p4 →
-  windmill, p4m → truncated-square, p4g → snub-square, p6 →
-  snub-trihexagonal, p6m → hexagon, cmm → elongated-triangular). A
+- **Motif:** M76 made the Wallpaper tab a group catalog: 11 of the 17
+  wallpaper groups have a registered realizer (pm → trapezoid-courses,
+  p1 → stepped-hexominoes, p2 → pentagon-3, pmm → kuniform-pmm, pgg →
+  herringbone, p4 → windmill, p4m → truncated-square, p4g →
+  snub-square, p6 → snub-trihexagonal, p6m → hexagon, cmm →
+  elongated-triangular). A
   shared gap note (`tess_core::browse::wallpaper_gap_note`) rendered
-  at the top of the tab in both UIs names the 7 absent groups. (The
+  at the top of the tab in both UIs names the 6 absent groups. (The
   17th group is pmg — the old `WallpaperGroup::Cmc` variant was a 3D
   space group misnamed as a 2D group; M76 renamed it `Pmg`.)
 - **Queue (difficulty per audit §4d):** pm, pg (easy); pmg, cm
@@ -1004,8 +1005,15 @@ confirm the diffraction claim during the spike before declaring.
     lattice measures **centered-rectangular** (declared on the
     primitive cell; centered cell 6×2 with center (−3,1) ∈ Λ) —
     not oblique as first believed.
-  - pm (rectangular): one mirror axis, one translation — e.g. a
-    2-tile cell with a single mirror line.
+  - pm ✅ **landed (M79)**: the catalog's first pm realizer —
+    trapezoid courses: two courses of trapezoids per 2×1 cell on the
+    rectangular lattice Λ = ⟨(2,0),(0,1)⟩ (det 2 = area), four tiles,
+    two incongruent trapezoid classes (areas 6/10 and 4/10, slant
+    slope ±1/5, intercept 3/10) each with its mirror in x = 1,
+    edge-to-edge. The mirror lines are exactly the vertical lines
+    x = k; the incongruent prototile classes (c = 3/10 ≠ (1 − m)/2
+    = 2/5 with slope m = 1/5) kill the half-turns and horizontal
+    mirrors that would make it pmm.
   - pg (rectangular): one glide-reflection, no mirrors.
   - cm (centered rectangular): the "c" lattice is exactly the case
     M76's `LatticeKind::CenteredRectangular` was built for; a 2-tile
@@ -1030,9 +1038,9 @@ confirm the diffraction claim during the spike before declaring.
   `registry_groups_are_complete_and_canonically_ordered` must be
   extended with the new tab sizes, and the shared gap note (both UIs)
   drops one group name per landing.
-- **Status:** p1 landed (M78); 7 remain — one group per milestone;
-  each landing flips one token in `wallpaper_gap_note` and the gap
-  note is re-verified in both UIs' tests.
+- **Status:** p1 landed (M78), pm landed (M79); 6 remain — one group
+  per milestone; each landing flips one token in `wallpaper_gap_note`
+  and the gap note is re-verified in both UIs' tests.
 
 ## Parked / rejected (with reasons)
 
