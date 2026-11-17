@@ -15,7 +15,7 @@ that still need a design-time check are marked **verify**. Nothing here
 is "would be nice" without at least a known construction path.
 
 Categories are the declared `TilingCategory` values (tess-core
-`category.rs`). Uniform (11) and Laves (8+1) are **closed** — everything
+`category.rs`). Uniform (11) and Laves (11: 8 primary + 3 self-dual secondaries) are **closed** — everything
 new lands in Wallpaper, Quasiperiodic, or Aperiodic (or, for the
 hyperbolic arc, a future category variant).
 
@@ -77,7 +77,7 @@ confirm the diffraction claim during the spike before declaring.
   the cell decomposition that is (split rectangles so every interior
   edge is shared), exactly like the pythagorean T-junction lesson.
 - **Why now:** cheapest possible new entries; good first issues for the
-  post-category-grouping workflow; fills the "Wallpaper (5)" section.
+  post-category-grouping workflow; fills the Wallpaper tab's group-realizer slots (see §21).
 - ✅ **M39 delivered (2026-11-12): basketweave** — `basketweave.rs`
   (feature `pavers`), 45°-rotated square lattice ⟨(2,2),(2,−2)⟩ with 4
   split dominoes per cell; long sides split into two unit edges so the

@@ -943,7 +943,7 @@ documentation pending).
   unit-structure test (exact side/angle/area/determinant identities),
   chirality-seed test, C2-rotation invariance test, and the
   brute-force culling cross-check.
-- **Status:** committed (M49). 39 tilings, 218 tests at the commit.
+- **Status:** committed (M49). 48 tilings, 297 tests at the commit.
 
 ### 16. Pentagon type 14 (Stein) ✅ (M50)
 
@@ -986,7 +986,7 @@ documentation pending).
   fingerprints), isohedral-class test (per-tile vertex counts and
   side multisets), C2-rotation invariance test, and the brute-force
   culling cross-check.
-- **Status:** committed (M50). 52 tilings, 332 tests at the commit.
+- **Status:** committed (M50). 51 tilings, 332 tests at the commit.
 
 ### 17. Pentagon type 15 (Mann/McLoud-Mann/Von Derau 2015) ✅ (M55)
 
@@ -1031,7 +1031,7 @@ documentation pending).
   containment; negative mirror probes) + window-census test
   (93/89/45 tiles at three fixed windows), plus the brute-force
   culling cross-check.
-- **Status:** committed (M55). 52 tilings, 333 tests at the commit.
+- **Status:** committed (M55). 54 tilings, 353 tests at the commit.
 
 ### 18. Pentagon type 9 (Rice 1977) ✅ (M59)
 
@@ -1192,7 +1192,7 @@ documentation pending).
   three fixed windows, cross-checked against an independent Python
   emulation of the lattice.rs culling), plus the brute-force
   culling cross-check.
-- **Status:** committed (M60). 56 tilings, 371 tests at the commit.
+- **Status:** committed (M60). 57 tilings, 371 tests at the commit.
 
 ### 21. Pentagon type 12 (Rice 1977) ✅ (M62)
 
@@ -1417,7 +1417,7 @@ documentation pending).
   window-census test (19/26/44/70 tiles at four fixed windows,
   cross-checked against the independent Python emulation of the
   culling).
-- **Status:** committed (M64). 59 tilings, 409 tests at the commit.
+- **Status:** committed (M64). 60 tilings, 409 tests at the commit.
 
 ### 24. Pentagon type 2 (Reinhardt family 2) ✅ (M65)
 
@@ -2585,7 +2585,7 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   exactly-once overlay over a ±5×±6 lattice window; surd
   identities to ≤2.2e-16); standard trio + unit structure +
   isohedral-class + C2 invariance tests, culling cross-check
-  (52 tilings, 332 tests).
+  (51 tilings, 332 tests).
 - 2026-11-13 — M54 Hankin polygons-in-contact sixfold khatam (3.6.3.6
   substrate), p6m ✅: the sixfold engine of the same strapwork generator
   (`pic_3_6_3_6.rs`, feature `hankin_ext`) — Hankin polygons-in-contact at
@@ -2773,7 +2773,7 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   dodecagon); honest negative re-confirmed: no local 30° center, so
   12-fold is Bragg/MLD. Python↔Rust rule-table diff ≤ 4e-15 through
   depth 4. 16 shield.rs tests + standard trio + proto census
-  (55 tilings, 373 tests).
+  (56 tilings, 373 tests).
 - 2026-11-15 — M60 Pentagon type 11 (Kershner 1968) ✅: Kershner's
   two-parameter family (2a + c = d = e, A = 90°, 2B + C = 360°,
   C + E = 180°) pinned to the reference construction's B = 156°
@@ -2803,7 +2803,7 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   half-turn equality, glide containment with inverses and lattice
   shifts, mirror-absence probes) + window-census tests (counts
   238/213/116 cross-checked against an independent Python emulation
-  of the culling), culling cross-check green (56 tilings, 371 tests).
+  of the culling), culling cross-check green (57 tilings, 371 tests).
 
 - 2026-11-15 — M62 Pentagon type 12 (Kershner 1968) ✅: Kershner's
   two-parameter family (2a = d = c + e, A = 90°, 2B + C = 360° ⇒
@@ -2878,7 +2878,7 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   scratch polygon, voiding those negatives). Refined census: 172
   full + 46 split edges (all d-midpoints exact tiling vertices),
   vertex figures {60°,120°,180°} 46× + {120°,120°,120°} 39×.
-  9 tess-tilings tests (59 tilings, 409 tests).
+  9 tess-tilings tests (60 tilings, 409 tests).
 
 - 2026-11-17 — M65 Pentagon type 2 (Reinhardt family 2, 1918) ✅: the
   c = e, d = b, B + D = 180° family pinned to the exact-Q(√3) member
