@@ -979,16 +979,16 @@ confirm the diffraction claim during the spike before declaring.
 
 ---
 
-### 21. Wallpaper group completion — the 6 un-realized groups (M76 roadmap queue)
+### 21. Wallpaper group completion — the 5 un-realized groups (M76 roadmap queue)
 
-- **Motif:** M76 made the Wallpaper tab a group catalog: 11 of the 17
-  wallpaper groups have a registered realizer (pm → trapezoid-courses,
-  p1 → stepped-hexominoes, p2 → pentagon-3, pmm → kuniform-pmm, pgg →
-  herringbone, p4 → windmill, p4m → truncated-square, p4g →
-  snub-square, p6 → snub-trihexagonal, p6m → hexagon, cmm →
-  elongated-triangular). A
+- **Motif:** M76 made the Wallpaper tab a group catalog: 12 of the 17
+  wallpaper groups have a registered realizer (pg → glide-hexagon-strips,
+  pm → trapezoid-courses, p1 → stepped-hexominoes, p2 → pentagon-3,
+  pmm → kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
+  truncated-square, p4g → snub-square, p6 → snub-trihexagonal,
+  p6m → hexagon, cmm → elongated-triangular). A
   shared gap note (`tess_core::browse::wallpaper_gap_note`) rendered
-  at the top of the tab in both UIs names the 6 absent groups. (The
+  at the top of the tab in both UIs names the 5 absent groups. (The
   17th group is pmg — the old `WallpaperGroup::Cmc` variant was a 3D
   space group misnamed as a 2D group; M76 renamed it `Pmg`.)
 - **Queue (difficulty per audit §4d):** pm, pg (easy); pmg, cm
@@ -1014,7 +1014,18 @@ confirm the diffraction claim during the spike before declaring.
     x = k; the incongruent prototile classes (c = 3/10 ≠ (1 − m)/2
     = 2/5 with slope m = 1/5) kill the half-turns and horizontal
     mirrors that would make it pmm.
-  - pg (rectangular): one glide-reflection, no mirrors.
+  - pg ✅ **landed (M80)**: the catalog's first pg realizer —
+    glide hexagon strips: two horizontal hexagon strips per 1×2 cell
+    on the rectangular lattice Λ = ⟨(1,0),(0,2)⟩ (det 2 = area),
+    four tiles (fat area 29/40, convex; waist area 11/40, 2 reflex
+    vertices; A ≅ T and B ≅ U chiral twins), strip 1 the glide
+    image of strip 0 under g(x,y) = (x+1/2, −y) with
+    g² = (1,0) ∈ Λ. The only non-translation symmetries are the
+    horizontal glides of the single family g·Λ (glide 1/2), on two
+    parallel orbits y ∈ 2ℤ and y = 1+2ℤ — no mirrors, no rotations,
+    no perpendicular glides (exact 16-coset probe); the strip-1
+    finger is forced to x = 1/5 by the glide, edge-to-edge, five
+    edge directions, no verticals.
   - cm (centered rectangular): the "c" lattice is exactly the case
     M76's `LatticeKind::CenteredRectangular` was built for; a 2-tile
     motif with one mirror through the lattice points on the centered
@@ -1038,9 +1049,10 @@ confirm the diffraction claim during the spike before declaring.
   `registry_groups_are_complete_and_canonically_ordered` must be
   extended with the new tab sizes, and the shared gap note (both UIs)
   drops one group name per landing.
-- **Status:** p1 landed (M78), pm landed (M79); 6 remain — one group
-  per milestone; each landing flips one token in `wallpaper_gap_note`
-  and the gap note is re-verified in both UIs' tests.
+- **Status:** p1 landed (M78), pm landed (M79), pg landed (M80);
+  5 remain — one group per milestone; each landing flips one token in
+  `wallpaper_gap_note` and the gap note is re-verified in both UIs'
+  tests.
 
 ## Parked / rejected (with reasons)
 

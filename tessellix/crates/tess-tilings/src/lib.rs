@@ -90,6 +90,8 @@ pub mod running_bond;
 pub mod stepped_hexominoes;
 #[cfg(feature = "pavers")]
 pub mod trapezoid_courses;
+#[cfg(feature = "pavers")]
+pub mod glide_hexagon_strips;
 #[cfg(feature = "pentagon2")]
 pub mod pentagon2;
 #[cfg(feature = "pentagon3")]
@@ -321,6 +323,7 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(running_bond::running_bond());
         r = r.register(stepped_hexominoes::stepped_hexominoes());
         r = r.register(trapezoid_courses::trapezoid_courses());
+        r = r.register(glide_hexagon_strips::glide_hexagon_strips());
     }
     r
 }
@@ -488,16 +491,16 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-        // Census of today's taxonomy (M79). 65 built-ins — 63 before
+        // Census of today's taxonomy (M80). 66 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
         //   TwoUniform 2, Laves 11 (8 primary incl. cairo-pentagonal +
-        //   3 regular secondaries), Wallpaper 11 (group representatives
+        //   3 regular secondaries), Wallpaper 12 (group representatives
         //   as secondaries — one card per represented group),
         //   PentagonTypes 12, Islamic 9, Arrangements 5,
         //   Quasiperiodic 8, Aperiodic 4, Nonperiodic 4.
-        // Membership census 77 = 65 primaries + 12 secondaries (3 Laves
+        // Membership census 78 = 66 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -507,15 +510,16 @@ mod tests {
         // the 10-tab scheme above -> M77 PentagonTypes 10 -> 11
         // (pentagon-8) -> M74 PentagonTypes 11 -> 12 (pentagon-6)
         // -> M78 Wallpaper 9 -> 10 (stepped-hexominoes, p1)
-        // -> M79 Wallpaper 10 -> 11 (trapezoid-courses, pm).
+        // -> M79 Wallpaper 10 -> 11 (trapezoid-courses, pm)
+        // -> M80 Wallpaper 11 -> 12 (glide-hexagon-strips, pg).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 2, 11, 11, 12, 9, 5, 8, 4, 4],
+            vec![11, 2, 11, 12, 12, 9, 5, 8, 4, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 65, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 77, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 66, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 78, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -536,7 +540,7 @@ mod tests {
                 .unwrap()
         });
         assert_eq!(groups.len(), wall.cards.len(), "every Wallpaper card carries a group");
-        assert_eq!(groups.len(), 11, "eleven represented wallpaper groups");
+        assert_eq!(groups.len(), 12, "twelve represented wallpaper groups");
         let expected: Vec<&WallpaperGroup> = WallpaperGroup::ALL
             .iter()
             .filter(|g| !tess_core::browse::WALLPAPER_GROUP_GAPS.contains(*g))
@@ -3328,6 +3332,7 @@ mod pavers_tests {
     use super::tests::{check_covers, check_det, check_rotated};
     use crate::basketweave;
     use crate::herringbone;
+    use crate::glide_hexagon_strips;
     use crate::running_bond;
     use crate::stepped_hexominoes;
     use crate::trapezoid_courses;
@@ -4007,6 +4012,36 @@ mod pavers_tests {
         );
     }
 
+    /// Glide-hexagon-strips (M80) standard trio.
+    #[test]
+    fn glide_hexagon_strips_covers_region() {
+        check_covers(
+            &glide_hexagon_strips::glide_hexagon_strips(),
+            "glide-hexagon-strips",
+            BBox::new(v2(-5.0, -3.0), v2(11.0, 7.0)),
+        );
+    }
+
+    #[test]
+    fn glide_hexagon_strips_rotated_scaled() {
+        check_rotated(
+            &glide_hexagon_strips::glide_hexagon_strips(),
+            "glide-hexagon-strips(rot30,scale0.7)",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn glide_hexagon_strips_deterministic() {
+        check_det(
+            &glide_hexagon_strips::glide_hexagon_strips(),
+            "glide-hexagon-strips",
+            BBox::new(v2(-4.0, -3.0), v2(10.0, 6.0)),
+        );
+    }
+
     /// Lattice membership for the trapezoid-courses table, in doubled
     /// (×10, integer) coordinates: Λ10 = ⟨(20,0),(0,10)⟩ =
     /// {(20i, 10j) : i, j ∈ ℤ}.
@@ -4196,6 +4231,202 @@ mod pavers_tests {
                 .sum::<i64>()
         };
         assert_ne!(area10(&TC_TILES[0]), area10(&TC_TILES[2]), "P and P' areas differ");
+    }
+
+    /// Lattice membership for the glide-hexagon-strips table, in ×20
+    /// (integer) coordinates: Λ20 = ⟨(20,0),(0,40)⟩ = {(20i, 40j) :
+    /// i, j ∈ ℤ}.
+    fn gh_in_lat(x: i64, y: i64) -> bool {
+        x.rem_euclid(20) == 0 && y.rem_euclid(40) == 0
+    }
+
+    /// The four cell tiles in ×20 coordinates, CCW, in cell order
+    /// [A, T, B, U]: A/T the fat hexagons (strips 0/1), B/U the waist
+    /// hexagons (strips 0/1).
+    const GH_TILES: [[(i64, i64); 6]; 4] = [
+        [(0, 0), (10, 0), (14, 8), (10, 20), (0, 20), (-5, 10)],
+        [(-10, 40), (-15, 30), (-10, 20), (0, 20), (4, 32), (0, 40)],
+        [(10, 0), (20, 0), (15, 10), (20, 20), (10, 20), (14, 8)],
+        [(0, 40), (4, 32), (0, 20), (10, 20), (5, 30), (10, 40)],
+    ];
+
+    /// Does M normalize Λ20? Every candidate here is in GL(2, ℤ)
+    /// (|det| = 1), so both basis images in Λ20 imply M(Λ20) = Λ20.
+    fn gh_normalizes(m: [i64; 4]) -> bool {
+        gh_in_lat(20 * m[0], 20 * m[2]) && gh_in_lat(40 * m[1], 40 * m[3])
+    }
+
+    /// The image of tile `t` under g = (M, v), as a sorted 6-point set.
+    fn gh_image(t: &[(i64, i64); 6], m: [i64; 4], v: [i64; 2]) -> [(i64, i64); 6] {
+        let mut out: Vec<(i64, i64)> = t
+            .iter()
+            .map(|&(x, y)| (m[0] * x + m[1] * y + v[0], m[2] * x + m[3] * y + v[1]))
+            .collect();
+        out.sort_unstable();
+        let mut arr: [(i64, i64); 6] = [(0, 0); 6];
+        for (i, p) in out.iter().enumerate() {
+            arr[i] = *p;
+        }
+        arr
+    }
+
+    /// The sorted 6-point set `t + (dx, dy)`.
+    fn gh_shifted(t: &[(i64, i64); 6], dx: i64, dy: i64) -> [(i64, i64); 6] {
+        let mut out: Vec<(i64, i64)> = t.iter().map(|&(x, y)| (x + dx, y + dy)).collect();
+        out.sort_unstable();
+        let mut arr: [(i64, i64); 6] = [(0, 0); 6];
+        for (i, p) in out.iter().enumerate() {
+            arr[i] = *p;
+        }
+        arr
+    }
+
+    fn gh_sorted(t: &[(i64, i64); 6]) -> [(i64, i64); 6] {
+        let mut out = *t;
+        out.sort_unstable();
+        out
+    }
+
+    /// Is the sorted set `a` a translate of the sorted set `u` by a
+    /// vector of Λ20? Tries every (a_i, u_j) anchor pair; a match on
+    /// the first pair fixes λ and the full-set check confirms it.
+    fn gh_translate_of(a: &[(i64, i64); 6], u: &[(i64, i64); 6]) -> bool {
+        (0..6)
+            .into_iter()
+            .flat_map(|i| (0..6).map(move |j| (a[i].0 - u[j].0, a[i].1 - u[j].1)))
+            .any(|(dx, dy)| {
+                gh_in_lat(dx, dy)
+                    && (0..6)
+                        .all(|k| (a[k].0, a[k].1) == (u[k].0 + dx, u[k].1 + dy))
+            })
+    }
+
+    /// Does g = (M, v) map every cell tile onto a cell tile plus a
+    /// lattice translate — the exact symmetry criterion for a 4-tile
+    /// cell (with M normalizing Λ20, the image of the full tiling is
+    /// then exactly the tiling)?
+    fn gh_maps_cells(m: [i64; 4], v: [i64; 2]) -> bool {
+        GH_TILES.iter().all(|t| {
+            let a = gh_image(t, m, v);
+            GH_TILES.iter().any(|u| gh_translate_of(&a, &gh_sorted(u)))
+        })
+    }
+
+    /// The exact pg criterion: g = (M, v) is a symmetry of the tiling
+    /// iff M normalizes Λ20 and it maps every cell tile onto a cell
+    /// tile plus a lattice translate.
+    fn gh_is_sym(m: [i64; 4], v: [i64; 2]) -> bool {
+        gh_normalizes(m) && gh_maps_cells(m, v)
+    }
+
+    /// Exact pg probe: the lattice translations and the single glide
+    /// family g·Λ are symmetries; every off-lattice translation coset,
+    /// every non-glide horizontal mirror/glide coset, all 16 vertical
+    /// mirror/glide cosets, all 16 half-turn cosets, and every
+    /// non-normalizing linear part (diagonal and anti-diagonal
+    /// mirrors/glides, 90°/270° rotations) are not — mirroring the
+    /// full Python battery (`m80_verify.py`: 74 positive candidates,
+    /// 62 exact-coset negatives, 6 non-normalizing parts).
+    #[test]
+    fn glide_hexagon_strips_wallpaper_group_is_pg() {
+        // Structural sanity: the glide (M_MIRY, (1/2, 0)) — ×20,
+        // (10, 0) — is a symmetry and swaps the strips: g(A) = T +
+        // (20,−40), g(T) = A + (0,−40), g(B) = U + (20,−40), g(U) =
+        // B + (0,−40), exact vertex-set equality. The strip-1 finger
+        // at (4,32)/20 = (1/5,8/5) is the glide image of the strip-0
+        // finger at (14,8)/20 = (7/10,2/5) — its x-position is forced
+        // by the glide.
+        assert_eq!(gh_image(&GH_TILES[0], M_MIRY, [10, 0]), gh_shifted(&GH_TILES[1], 20, -40));
+        assert_eq!(gh_image(&GH_TILES[1], M_MIRY, [10, 0]), gh_shifted(&GH_TILES[0], 0, -40));
+        assert_eq!(gh_image(&GH_TILES[2], M_MIRY, [10, 0]), gh_shifted(&GH_TILES[3], 20, -40));
+        assert_eq!(gh_image(&GH_TILES[3], M_MIRY, [10, 0]), gh_shifted(&GH_TILES[2], 0, -40));
+
+        // Positive: the 9 lattice translations (a window of Λ20).
+        for i in -1..=1 {
+            for j in -1..=1 {
+                assert!(
+                    gh_is_sym([1, 0, 0, 1], [20 * i, 40 * j]),
+                    "translation ({}i, {}j) must be a symmetry",
+                    i,
+                    j
+                );
+            }
+        }
+        // Positive: the 9 glide samples (M_MIRY, (10 + 20i, 40j)) —
+        // the family g·Λ (glide 1/2, axes y = integer).
+        for i in -1..=1 {
+            for j in -1..=1 {
+                assert!(
+                    gh_is_sym(M_MIRY, [10 + 20 * i, 40 * j]),
+                    "glide ((1/2 + {}i), {}j) must be a symmetry",
+                    i,
+                    j
+                );
+            }
+        }
+
+        // Complete coset enumeration: for each of I, M_MIRY, M_MIRX,
+        // M_ROT2, all 16 v-cosets mod Λ20 (x20 ∈ {0,5,10,15}, y20 ∈
+        // {0,10,20,30}). Exactly one coset of I (the identity) and
+        // exactly one of M_MIRY (the glide coset (10,0)) are
+        // positive; all 16 of M_MIRX and all 16 of M_ROT2 are
+        // negative — 64 checks, 2 pos / 62 neg.
+        for (mi, m) in [
+            [1, 0, 0, 1],
+            M_MIRY,
+            M_MIRX,
+            M_ROT2,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            for &x20 in &[0i64, 5, 10, 15] {
+                for &y20 in &[0i64, 10, 20, 30] {
+                    let expected = match mi {
+                        0 => x20 == 0 && y20 == 0,
+                        1 => x20 == 10 && y20 == 0,
+                        _ => false,
+                    };
+                    assert_eq!(
+                        gh_is_sym(m, [x20, y20]),
+                        expected,
+                        "coset ({x20},{y20}) of linear part {mi}"
+                    );
+                }
+            }
+        }
+
+        // Non-normalizing linear parts: R90, R270, diagonal and
+        // anti-diagonal mirror/glide linear parts send (20,0) to
+        // (0,±20) ∉ Λ20, so no such isometry acts at any center.
+        const M_ROT4_270: [i64; 4] = [0, 1, -1, 0];
+        for m in [M_ROT4, M_ROT4_270, M_DIAG, M_ANTI] {
+            assert!(!gh_normalizes(m), "part {m:?} must not normalize Λ20");
+            for v in [[0, 0], [20, 20], [20, 0], [0, 40], [10, 20]] {
+                assert!(!gh_is_sym(m, v), "{m:?} at {v:?}");
+            }
+        }
+
+        // Sanity: the ×20 cell tiles are CCW with doubled areas 580,
+        // 580, 220, 220 (areas 290, 290, 110, 110 = 29/40, 29/40,
+        // 11/40, 11/40 times 20²), summing to 800 = 20² · det Λ.
+        let gh_area2 = |t: &[(i64, i64); 6]| -> i64 {
+            (0..6)
+                .map(|i| t[i].0 * t[(i + 1) % 6].1 - t[(i + 1) % 6].0 * t[i].1)
+                .sum::<i64>()
+        };
+        assert_eq!(gh_area2(&GH_TILES[0]), 580, "A ×20 doubled area");
+        assert_eq!(gh_area2(&GH_TILES[1]), 580, "T ×20 doubled area");
+        assert_eq!(gh_area2(&GH_TILES[2]), 220, "B ×20 doubled area");
+        assert_eq!(gh_area2(&GH_TILES[3]), 220, "U ×20 doubled area");
+        assert_eq!(
+            gh_area2(&GH_TILES[0])
+                + gh_area2(&GH_TILES[1])
+                + gh_area2(&GH_TILES[2])
+                + gh_area2(&GH_TILES[3]),
+            1600,
+            "cell doubled areas sum to 2·20²·det"
+        );
     }
 }
 
@@ -4620,7 +4851,8 @@ mod kuniform_tests {
 mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
-        archimedean, basketweave, cairo, girih, girih_sc, girih_w85, hexagon, herringbone,
+        archimedean, basketweave, cairo, girih, girih_sc, girih_w85, glide_hexagon_strips,
+        hexagon, herringbone,
 khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, pentagon8, pentagon9, pentagon10, pentagon11, pentagon12,
         pentagon13,
         pentagon14, pentagon15,
@@ -4741,6 +4973,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
             ("running-bond", running_bond::running_bond()),
             ("stepped-hexominoes", stepped_hexominoes::stepped_hexominoes()),
             ("trapezoid-courses", trapezoid_courses::trapezoid_courses()),
+            ("glide-hexagon-strips", glide_hexagon_strips::glide_hexagon_strips()),
             ("pentagon-2", pentagon2::spec()),
             ("pentagon-3", pentagon3::spec()),
             ("pentagon-6", pentagon6::spec()),

@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (65 tilings)
+## Implemented (66 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -116,17 +116,17 @@ figures at the split midpoints, `2.4.4`).
 
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (2) ·
-**Laves (Catalan duals)** (11) · **Wallpaper** (11) · **Pentagon
+**Laves (Catalan duals)** (11) · **Wallpaper** (12) · **Pentagon
 Types** (12) · **Islamic** (9) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (4) · **Nonperiodic** (4) —
-77 memberships over the 65 implemented tilings; the 12 extra are
+78 memberships over the 66 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
-M74/M77/M78/M79 and is updated in M79.)
+M74/M77/M78/M79 and is re-synced in M80.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
   `square` and `hexagon` also appear under Laves (self-dual regular
-  patterns), and eleven tilings appear under the Wallpaper catalog.
+  patterns), and twelve tilings appear under the Wallpaper catalog.
   `browse_tabs` appends secondary categories to each card's tabs and
   sorts each tab by `section_key`, which now guards on the *tab's*
   category, not the card's (a Wallpaper tab is all-secondary).
@@ -134,12 +134,13 @@ M74/M77/M78/M79 and is updated in M79.)
   egui geometry test pins the new card budget (2-line card titles,
   no clipping at 1200×900, 640×800 and 2560×900).
 - **Wallpaper catalog.** The Wallpaper tab is a group catalog, not a
-  motif list: one card per realized wallpaper group — 11 of the 17:
-  p1 → stepped-hexominoes, p2 → pentagon-3, pm → trapezoid-courses,
+  motif list: one card per realized wallpaper group — 12 of the 17:
+  p1 → stepped-hexominoes, p2 → pentagon-3, pg → glide-hexagon-strips,
+  pm → trapezoid-courses,
   pmm → kuniform-pmm, pgg → herringbone, p4 → windmill,
   p4m → truncated-square, p4g → snub-square, p6 →
   snub-trihexagonal, p6m → hexagon, cmm →
-  elongated-triangular. The six un-realized groups — pg, cm,
+  elongated-triangular. The five un-realized groups — cm,
   pmg, p3, p3m1, p31m —
   are named in a shared gap note
   (`tess_core::browse::wallpaper_gap_note`) rendered at the top of
@@ -1852,6 +1853,98 @@ documentation pending).
   squared-edge multisets), rot60/rot120 lattice-kill.
 - **Status:** committed (M79). 65 tilings, 505 tests at the commit.
 
+### 30. Glide hexagon strips ✅ (M80)
+
+- **Motif:** two horizontal hexagon strips per 1×2 cell on the
+  rectangular lattice `Λ = ⟨(1,0), (0,2)⟩` (det 2): strip 0
+  (`y ∈ [0,1]`) is the row `A, B, A+(1,0), B+(1,0), …` and strip 1
+  (`y ∈ [1,2]`) is its glide image. The four cell tiles (CCW): `A`
+  = `(0,0),(1/2,0),(7/10,2/5),(1/2,1),(0,1),(−1/4,1/2)` (fat,
+  convex, area 29/40), `B` = `(1/2,0),(1,0),(3/4,1/2),(1,1),(1/2,1),
+  (7/10,2/5)` (waist, two reflex vertices, area 11/40),
+  `T = g(A) + (−1,2)` (fat, area 29/40) and `U = g(B) + (−1,2)`
+  (waist, area 11/40) for the glide `g(x,y) = (x + 1/2, −y)`,
+  `g² = (1,0) ∈ Λ`. `A ≅ T` and `B ≅ U` are chiral twins (related
+  by a reflection, not by any direct isometry); the fat and waist
+  classes are incongruent by area (29/40 vs 11/40) and reflex count
+  (0 vs 2) — though all four tiles share the identical squared-edge
+  multiset `{1/4, 1/4, 1/5, 2/5, 5/16, 5/16}`. The strip-1 finger is
+  forced to `x = 1/5` by the glide, `g(7/10,2/5) + (−1,2) =
+  (1/5,8/5)`; a hand-placed finger at `2/5` would break the glide
+  and drop the group to p1. The catalog's first **pg** realizer —
+  the twelfth represented card of the Wallpaper group catalog (5 of
+  the 17 groups still unrepresented).
+- **Group:** **pg** by structure plus exact probe: translations
+  plus ONE horizontal glide family (glide 1/2), no mirrors, no
+  rotations, no perpendicular glides. The glide `g` (axis `y = 0`)
+  maps the tile set onto itself (`g(A) = T+(1,−2)`, `g(B) =
+  U+(1,−2)`, `g(T) = A+(0,−2)`, `g(U) = B+(0,−2)`), and the
+  composites `g ∘ (a, 2b)` carry two parallel glide-line orbits,
+  `y ∈ 2ℤ` and `y = 1 + 2ℤ` (e.g. `Φ = T_{(−1,2)} ∘ g =
+  (x − 1/2, 2 − y) = g ∘ (−1,−2)` is the glide on `y = 1`,
+  `Φ² = (−1,0) ∈ Λ`) — one glide direction, two orbits. No
+  horizontal mirror or other glide: the vertex levels mod 1 carry
+  x-positions `0: (1/2)ℤ`, `1/2: ±1/4 + ℤ` (line-dependent),
+  `2/5: 7/10 + ℤ`, `3/5: 1/5 + ℤ`, and the only candidate surviving
+  the finger-tip case split is the half-glide `s ≡ 1/2, 2c ≡ 1`,
+  killed by the elbow `(−1/4, 1/2) ↦ (1/4, 1/2)`, which is not a
+  vertex. No vertical mirror: `x = c` must preserve the half-unit
+  edge pattern on `y ∈ ℤ` (forcing `2c ∈ (1/2)ℤ`) and map the
+  finger tip `(7/10, 2/5)` to a same-level vertex, forcing
+  `2c ≡ 7/5 (mod 1)`; `7/5 ∉ (1/2)ℤ`. No half-turns: centers with
+  `b ≡ 0` and `b ≡ 1/2 (mod 1)` both map the finger tip to level
+  `3/5`, which carries vertices only at `x ≡ 1/5 + ℤ`, forcing
+  `2a ≡ 9/10 (mod 1)` against the edge-pattern constraint
+  `2a ∈ (1/2)ℤ`; `9/10 ∉ (1/2)ℤ`. Diagonal mirrors/glides and
+  90°/270°/120°/240° rotations do not normalize `Λ` (and there are
+  no vertical edges for a 90° rotation to map). The exact probe
+  confirms the complete 16-coset enumeration: only the identity
+  translation coset and the single glide coset are positive — so
+  the translation subgroup is exactly `Λ` (`g² = (1,0)` is a
+  primitive translation, not a double one).
+- **Lattice & cell:** 4 tiles per **rectangular** (primitive) cell,
+  basis `(1,0)`, `(0,2)`, det 2 = 29/40 + 11/40 + 29/40 + 11/40 =
+  total tile area; measured kind Rectangular, matching the
+  declaration (legality test
+  `declared_symmetry_is_legal_and_matches_the_measured_lattice`).
+- **Edge structure:** **EDGE-TO-EDGE**: every edge paired exactly
+  twice, no T-junctions (exact segment census over the 396-tile
+  window: 352 interior edges, 868 vertices; clipped coverage
+  72 = 72). 24 tile-edges per cell in five directions (mod 180°),
+  no verticals: 8 horizontal of length 1/2 (on `y ∈ ℤ`); the
+  slope-`±2` family, 4 edges of length √5/5 (finger links) plus 8
+  of length √5/4 (chain edges); and the slope-`±3` family, 4 edges
+  of length √10/5 (notch sides).
+- **Vertex stars:** every one of the 265 interior vertex figures
+  sums to 360°: finger tips `(7/10,2/5)+Λ`, `(1/5,8/5)+Λ` →
+  `{225°, 135°}` (two tiles); notch elbows `(3/4,1/2)+Λ`,
+  `(1/4,3/2)+Λ` → `{233.1301°, 126.8699°}` = `{360° −
+  arccos(−3/5), arccos(−3/5)}` (two tiles); interface `(0,1)+Λ`,
+  `(1/2,1)+Λ` → `{116.5651°, 108.4349°, 71.5651°, 63.4349°}`
+  (= `{180° − arctan 2, 180° − arctan 3, arctan 3, arctan 2}`,
+  four tiles); baseline `(0,0)`, `(1/2,0)`, `(0,2)`, `(1/2,2) + Λ`
+  → `{116.5651° × 2, 63.4349° × 2}` (four tiles).
+- **Seeds:** `proto` = cell index (registry order `[A, T, B, U]`);
+  `seed` = shape class — 0 = the fat hexagons `A, T`, 1 = the waist
+  hexagons `B, U`.
+- **Verify:** standard trio (coverage, rotated-scaled,
+  deterministic) + the exact pg probe
+  (`glide_hexagon_strips_wallpaper_group_is_pg`, mirroring the full
+  Python battery `m80_verify.py`: positive = lattice translations
+  plus the glide family `g · (0,2)^k`; negative = the complete
+  16-coset enumeration for every candidate linear part — I,
+  M_MIRY, M_MIRX, M_ROT2 — plus the non-normalizing parts, each
+  sampled at multiple centers) + the brute-force culling
+  cross-check + the legality test + the Python transcript: CCW
+  polygons with areas 29/40, 11/40, 29/40, 11/40 summing to det 2,
+  the 396-tile window partition (352 interior edges paired twice,
+  868 vertices, no T-junctions, clipped coverage 72 = 72), the
+  265-vertex star census above, the congruence census (`A ≅ T`,
+  `B ≅ U` reflection-only; all other pairs incongruent), battery
+  74 positive (49 translations + 25 glides) / 62 exact-coset
+  negative + 6 non-normalizing parts.
+- **Status:** committed (M80). 66 tilings, 509 tests at the commit.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -2809,3 +2902,34 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   10 → 11, gap table 7 → 6 (pm drops out of
   `WALLPAPER_GROUP_GAPS`; the shared gap note now names six
   groups). 65 tilings, 505 tests at the commit.
+- 2026-11-17 — M80 Glide hexagon strips (pg) ✅: two horizontal
+  hexagon strips per 1×2 cell on the rectangular lattice
+  Λ = ⟨(1,0),(0,2)⟩ (det 2 = area) — four tiles, two shape classes
+  (fat, convex, area 29/40 and waist, 2 reflex vertices, area 11/40;
+  A ≅ T and B ≅ U chiral twins, all four sharing the squared-edge
+  multiset {1/4, 1/4, 1/5, 2/5, 5/16, 5/16}) — strip 1 the glide
+  image of strip 0 under g(x,y) = (x+1/2, −y), g² = (1,0) — the
+  catalog's first **pg** realizer (12 of the 17 groups now
+  represented). Group pg by exact probe: the only non-translation
+  symmetries are horizontal glides of one family (glide 1/2) on two
+  parallel orbits, y ∈ 2ℤ and y = 1+2ℤ (Φ = T_{(−1,2)}∘g = g∘(−1,−2)
+  is the y = 1 glide, Φ² = (−1,0)); no horizontal mirror or other
+  glide (the half-glide s ≡ 1/2, 2c ≡ 1 is the only survivor of the
+  finger-tip case split and is killed by the elbow (−1/4,1/2) ↦
+  (1/4,1/2) not being a vertex), no vertical mirrors (the
+  half-unit edge pattern on y ∈ ℤ forces 2c ∈ (1/2)ℤ while the
+  finger tip forces 2c ≡ 7/5 (mod 1)), no half-turns (both center
+  classes b ≡ 0 and b ≡ 1/2 (mod 1) force 2a ≡ 9/10 (mod 1) from
+  the finger tip landing on level 3/5, vertices only at x ≡ 1/5 + ℤ,
+  against 2a ∈ (1/2)ℤ), diagonal and 90°/270°/120°/240° parts
+  do not normalize Λ. Edge-to-edge (396-tile window census: 352
+  interior edges each paired twice, 868 vertices, no T-junctions,
+  clipped coverage 72 = 72); five edge directions mod 180° (0°,
+  arctan 2, arctan 3, 180°−arctan 2, 180°−arctan 3), no verticals;
+  265 interior vertex figures all sum to 360°. 4 tess-tilings tests
+  (standard trio + exact pg probe, mirroring m80_verify.py: 74
+  positive / 62 exact-coset negative + 6 non-normalizing parts).
+  Census: 65 → 66 tilings, 77 → 78 memberships, Wallpaper tab
+  11 → 12, gap table 6 → 5 (pg drops out of
+  `WALLPAPER_GROUP_GAPS`; the shared gap note now names five
+  groups). 66 tilings, 509 tests at the commit.
