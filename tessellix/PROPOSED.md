@@ -228,7 +228,7 @@ confirm the diffraction claim during the spike before declaring.
   | 3 | a=b, d=c+e, A=C=D=120° | p3 / p31m | 3 | iso | **no** |
   | 4 | b=c, d=e, B=D=90° | p4 / p4g | 4 | iso | yes |
   | 5 | a=b, d=e, A=60°, D=120° | p6 | 6 | iso | yes |
-  | 6 | a=d=e, b=c, B+D=180°, 2B=E | p2 | 4 | 2-iso | yes |
+  | 6 | a=d=e, b=c, A=2C, C+E=180° (repo letters; in the table's Wikipedia letters the same family reads B+D=180°, 2B=E — W-A=our-B, W-B=our-C, W-C=our-D, W-D=our-E, W-E=our-A, side letters aligned) | p2 (authored, M74) | 4 | 2-iso | yes |
   | 7 | b=c=d=e, B+2E=2C+D=360° | pgg (verified, M72) | 8 | 2-iso | yes |
   | 8 | b=c=d=e, 2B+C=D+2E=360° | pgg (verified, M77) | 8 | 2-iso | yes |
   | 9 | b=c=d=e, 2A+C=D+2E=360° | pgg (verified, M59) | 8 | 2-iso | yes |
@@ -283,10 +283,10 @@ confirm the diffraction claim during the spike before declaring.
   automorphism audit plus exact generator verification — half-turn
   c0 = (13, 4√3), perpendicular glides g1² = w2 and g2² = −w1, no
   mirrors). Remaining (M75+), in the arc's priority
-  order: 6 (7 now implemented in M72; 8 now implemented in M77; 1
-  and 5 covered by existing registry entries —
+  order: 1 and 5 covered by existing registry entries —
   prismatic-pentagonal / floret-pentagonal — coverage audit
-  documentation pending; 3, 8, 9, 10, 11, 12, 13, 14 and 15
+  documentation pending (type 6 now implemented in M74, 7 in
+  M72, 8 in M77; 2, 3, 9, 10, 11, 12, 13, 14 and 15
   implemented). Existing tilings
   likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
@@ -1122,3 +1122,11 @@ that already exists twice.
   Wallpaper tab is a 9-of-17 group catalog with a shared gap note,
   and the 17th group is pmg, not cmc (Cmc is a 3D space group; the
   misnamed enum variant was renamed Cmc → Pmg).
+- 2026-11-17 — M74: pentagon-census #5 — type-6 dossier row now
+  carries the repo-convention conditions (a=d=e, b=c, A=2C,
+  C+E=180°) with the Wikipedia-lettering note (W-A=our-B,
+  W-B=our-C, W-C=our-D, W-D=our-E, W-E=our-A, sides unchanged; the
+  article's B+D=180°, 2B=E is the same family in that convention),
+  group recorded as p2 (authored, M74); the remaining-arc line
+  drops type 6 (implemented) and now names 1 and 5 as the only
+  remaining coverage-audit items.

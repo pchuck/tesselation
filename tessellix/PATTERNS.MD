@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (62 tilings)
+## Implemented (63 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -88,6 +88,7 @@ figures at the split midpoints, `2.4.4`).
 | `pentagon-12` | Rice pentagon, type 12 (Rice 1977) | pgg | 2-isohedral (seeds 0/1: {0,3,4,7} / {1,2,5,6}, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile closed to exact Q(√3) surds at the shipped B = 150° member (A = 90°, B = 150°, C = 60°, D = E = 120°, a = 1, b = √3, c = 1, d = 2, e = 1 — the family conditions 2a = d = c + e, 2B + C = 360° hold to ~1e-12); non-edge-to-edge — every d-side splits at its exact midpoint into two unit halves, all other sides full-side matched (b↔b, c↔c, e↔e); vertex stars {90°,90°,180°}, {60°,120°,180°}, {120°,120°,120°}, {60°,150°,150°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M62) |
 | `pentagon-10` | James pentagon, type 10 (James 1975) | cmm | 3-isohedral (seeds 0/1/2: {0,2}, {1,3}, {4,5}), 6 tiles per centered-rectangular cell w1 = (3,3), w2 = (−2,5), det 21 = 6 × area (7/2) (M76 basis; the M63 cell basis (5,−2)/(8,1) spans the same lattice); exact at the shipped B = 90° member (A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2; family a = b = c + e, A = 90°, B + E = 180° with d² = c² + e²); non-edge-to-edge — both length-2 sides split at their exact midpoints into two unit halves (integer T-junctions), all other sides full-side matched (c↔c, d↔d, e↔e); vertex figures {90°,135°,135°} 71×, {90°,90°,180°} 50×, {90°,90°,90°,90°} 13× (134 interior vertices); group cmm by exact audit — mirrors x+y = 3k and x−y = 7k, half-turn at the origin, genuine glide g = T(5,−2)∘R2 with g² = (7,−7) (axis x+y = 3/2, no pure-reflection conjugate), R90 negative; centered rectangular lattice (index-2 sublattice Z(3,3)+Z(−7,7) with centre (−2,5) ∈ L∖L', no orthogonal Z-basis for L) — cmm, not pmm (M63) |
 | `pentagon-3` | Reinhardt pentagon, type 3 (family 3, 1918) | p2 | 1-isohedral (single orbit), 2 tiles per oblique cell, exact Q(√3) (pinned integral member (a,b,c,d,e) = (2,2,1,4,3): A = B = C = D = 120°, E = 60° — a = b, d = c + e, B + E = 180°; area 5√3); non-edge-to-edge — only the d = 4 sides split, at their exact midpoints between two length-2 (a/b) partner sides, all other sides full-side matched; vertex stars {60°,120°,180°} (A/E-type) and {120°,120°,120°} (B/C/D-type); chiral prototile, one chirality used — the classical three-tile type-3 pinwheel admits no periodic cell for this member (complete det-15 closure search + norm-form x²+3y²=120), so the shipped structure is the discovered minimal 2-tile p2 cell, four half-turn classes d/2 + Λ/2, no mirrors or glides (M64) |
+| `pentagon-6` | Kershner pentagon, type 6 (1968) | p2 | 2-isohedral (seeds 0/1, orbits {0,1}/{2,3}), 4 tiles per oblique cell w1 = (1, 2√3), w2 = (−3, √3) (det = 7√3 = 4 × area 7√3/4), exact Q(√3) at the unique 30°-grid-pinnable member (A = B = D = E = 120°, C = 60°, a = d = e = 1, b = c = 2; A = 2C, C + E = 180°); edge-to-edge — all 20 stored sides exactly once reverse-glued under an involution (4 in-unit pairs + 6 across ±w1, ±w2, ±(w1−w2); census a-a:1, a-d:2, b-b:1, b-c:2, c-c:1, d-e:2, e-e:1), 20 directed sides → 18 torus classes with one double-covered arc; vertex stars {60°,60°,120°,120°} 340 + {120°,120°,120°} 682 in the 787-tile window (1022 of 1286 interior vertices, all 360°); p2: half-turns one coset c0 + Λ/2 (c0 = (1/2, 0)), no mirrors — 22-ray search, 0 genuine, no candidate direction normalizes Λ; achiral prototile congruent to the floret-pentagonal tile (one pentagon, two tilings: p2 2-iso vs floret p6 1-iso) (M74) |
 | `pentagon-8` | Kershner pentagon, type 8 (1968) | pgg | 2-isohedral (seeds 0/1, orbits {0,3,4,7}/{1,2,5,6}, each orbit mixing both chiralities), 8 tiles per rectangular cell w1 = (36, 24√3), w2 = (−36, 18√3) (w1 ⊥ w2, det = 1512√3 = 8 × area 189√3), exact Q(√3) at the shipped B = C = 120° member (tan A = 3√3, cos D = 1/7, tan E = −√3/2, A = E − 60°, a = 6√7, b = c = d = e = 14; vertices on the Z[√3] grid); edge-to-edge — all 20 torus side pairs reverse-glued (a-a:4, b-c:4, b-d:4, c-c:2, d-e:4, e-e:2); vertex stars {A,A,C,D} ×30, {B,B,C} ×36, {D,E,E} ×25 (all sum 360°); two perpendicular glide families squaring to w1 and −w2, no mirrors (M77) |
 
 ### Aperiodic / nonperiodic
@@ -819,7 +820,7 @@ labels, which are out of chronological order.)
   counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
   306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
 - **Status:** implemented (M45).
-## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60, M62, M63, M64, M65, M72, M77 landed)
+## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60, M62, M63, M64, M65, M72, M74, M77 landed)
 
 The PROPOSED.md #5 arc (all 15 convex pentagonal tiling types). Type 13
 (Rice) lands first: its 8-tile primitive unit is small enough for a
@@ -875,14 +876,27 @@ tan E = −√3/2, A = E − 60°, a = 6√7, b = c = d = e = 14, tile area
 both chiralities), pgg (g1² = w1, g2² = −w2, half-turn centre
 c0 = (−1/2, 25√3/2)), edge-to-edge, vertex stars
 {A,A,C,D} (79.1°, 79.1°, 120°, 81.8°) ×30, {B,B,C} (3 × 120°) ×36,
-{D,E,E} (81.8°, 139.1°, 139.1°) ×25 — the arc's second Kershner.
+{D,E,E} (81.8°, 139.1°, 139.1°) ×25 — the arc's second Kershner;
+type 6 (Kershner 1968) twelfth: the a = d = e, b = c, A = 2C,
+C + E = 180° family's unique 30°-grid-pinnable member (A = B = D =
+E = 120°, C = 60°, a = d = e = 1, b = c = 2, area 7√3/4); 4-tile
+oblique cell w1 = (1, 2√3), w2 = (−3, √3) (det = 7√3 = 4 × area),
+2-isohedral (seeds 0/1, orbits {T0,T1}/{T2,T3}); p2 (half-turns
+one coset c0 + Λ/2, c0 = (1/2, 0); 22-ray mirror search 0 genuine,
+no edge direction normalizes Λ); edge-to-edge — the 20 sides
+reverse-glue pairwise (4 in-unit + 6 shifted pairs), 18 directed
+torus classes with one double-covered arc, vertex stars
+{60°,60°,120°,120°} + {120°,120°,120°}; the prototile is achiral
+and congruent to the floret-pentagonal tile — one pentagon, two
+tilings (p2 2-isohedral vs the floret's p6 1-isohedral).
 
-Type 7 is implemented (M72) — see §25, and type 8 (M77) — see §26;
+Type 7 is implemented (M72) — see §25, type 8 (M77) — see §26, and
+type 6 (M74) — see §27;
 the M58 bounded negative is superseded (grid-pinning artifact + two
 search-phase accounting bugs: the published instance is off-grid, so
 the grid search could never have found it). Remaining in the arc:
-type 6 (new tiling queued), with types 1 and 5 covered by existing
-registry entries (coverage audit documentation pending).
+types 1 and 5 covered by existing registry entries (coverage audit
+documentation pending).
 
 ### 15. Pentagon type 13 (Rice 1977) ✅ (M49)
 
@@ -1616,6 +1630,97 @@ registry entries (coverage audit documentation pending).
   (prototile chiral — forward cyclic match only — and the eight
   cells split four direct / four mirror).
 - **Status:** committed (M77). 62 tilings, 485 tests at the commit.
+
+### 27. Pentagon type 6 (Kershner 1968) ✅ (M74)
+
+- **Motif:** Kershner's type-6 convex pentagonal tiling — the family
+  `a = d = e`, `b = c`, `A = 2C`, `C + E = 180°` (in Wikipedia's
+  shifted lettering W-A = our B, W-B = our C, W-C = our D,
+  W-D = our E, W-E = our A, the same family reads
+  `a = b`, `c = d = e`, `2B = E`, `B + D = 180°`) — pinned to its
+  unique 30°-grid member (A, B, C, D, E) = (120°, 120°, 60°, 120°,
+  120°) with (a, b, c, d, e) = (1, 2, 2, 1, 1), tile area 7√3/4;
+  exact Q(√3) pin A = (0,0), B = (1,0), C = (2,√3), D = (0,√3),
+  E = (−1/2, √3/2). The prototile is achiral (its mirror is a 300°
+  rotation plus translation of the pin) and congruent to the
+  floret-pentagonal tile (pin = R30⁷·(√3·FLORET6) + (2,√3), unique
+  over the 12 rotations) — one pentagon, two tilings: this p2
+  2-isohedral one vs the floret's p6 1-isohedral.
+- **Group:** **p2** by structure plus exact audit: the half-turns
+  form one coset `c0 + Λ/2`, `c0 = (1/2, 0)` — the c0-symmetric
+  window is exact set-equal under the half-turn, all four coset
+  representatives are centres with every whole-lattice shift, and
+  the off-coset half-lattice points are not centres (their
+  half-turns square to a lattice translation). No mirror or glide:
+  a mirror axis must permute the edge-direction set {0°, 60°,
+  120°} mod 180° — the six candidates 0, 30, 60, 90, 120, 150° —
+  and none normalizes Λ (nor do R60, R90, R120 — no 3-, 4-, or
+  6-fold rotations). A complete 22-ray mirror enumeration found 0
+  genuine candidates; the normalizer condition is load-bearing —
+  a block-image check alone admits four spurious subset maps with
+  R(Λ) ⊊ Λ.
+- **Lattice & cell:** **4 tiles** per oblique cell,
+  `w1 = (1, 2√3)`, `w2 = (−3, √3)`,
+  `|det(w1, w2)| = 7√3 = 4 × tile area` (|w1|² = 13, |w2|² = 12,
+  w1·w2 = 3). Seeds `[0, 0, 1, 1]`: the two isohedral classes are
+  the orbits `{T0, T1}` / `{T2, T3}`; the half-turn about any
+  centre permutes the cells mod Λ by the closed permutation
+  0 ↔ 1, 2 ↔ 3. All cells are direct placements with vertex i =
+  the prototile's (A,B,C,D,E)[i] in every cell (the 60° corner at
+  index 2).
+- **Edge structure:** **EDGE-TO-EDGE** at the pentagon level.
+  Every one of the 20 stored sides has exactly one physical
+  reverse neighbour (cell j, side f, shift λ); the partner map is
+  an involution with λ′ = −λ, equal lengths, and shift ∈ {0, ±w1,
+  ±w2, ±(w1−w2)} — 4 in-unit pairs (8 sides at λ = 0) + 6 shifted
+  pairs; side-pair census a-a:1, a-d:2, b-b:1, b-c:2, c-c:1,
+  d-e:2, e-e:1 (10 undirected orbits). On the torus the 20
+  directed sides wrap to 18 directed side classes; one arc is
+  double-covered — (2,√3)→(0,√3) ≡ (3,0) — carrying lifts T0e2,
+  T3e1 in that direction and T1e2, T2e1 reversed (endpoint-
+  congruent, not translates of each other); the other 16 classes
+  have exactly one lift. 787-tile window (±20.25 × ±15√3): 3935
+  directed full edges all unique, 3424 interior directed edges
+  each paired with its reverse, 1286 vertices, 1022 interior, no
+  T-junctions. Torus Euler: 6 − 10 + 4 = 0.
+- **Vertex stars:** 1022 interior = 340 × {60°,60°,120°,120°} +
+  682 × {120°,120°,120°}, every star complete. Torus vertex
+  orbits: 6 (sizes 3, 3, 3, 3, 4, 4) — stars 2 ×
+  {60°,60°,120°,120°} + 4 × {120°,120°,120°}, all summing to 360°.
+- **Verify:** standard trio (coverage, rotated-scaled,
+  deterministic) + unit-structure test (4 cells: prototile corners
+  bit-exact Q(√3) surds, corner angles 120/120/60/120/120, side
+  multiset {1,1,1,2,2}, lattice (1, 2√3)/(−3, √3) with det =
+  4·area, |w1|² = 13, |w2|² = 12, w1·w2 = 3, seeds [0,0,1,1],
+  per-cell CCW + area) + window-census test (3268/864/112/20 tiles
+  at four fixed windows) + edge-to-edge gluing test (787 tiles:
+  3935 full directed edges all unique, 3424 interior directed
+  edges each paired with its reverse, 1286 vertices) +
+  vertex-figure census (1022 interior vertices: 340 ×
+  {60°,60°,120°,120°}, 682 × {120°,120°,120°}) + cell-gluing
+  census (per-side physical partner search — exactly one
+  (j, f, λ) with λ a lattice vector and endpoint agreement;
+  involution with λ′ = −λ; shifts in {0, ±w1, ±w2, ±(w1−w2)}; 8
+  in-unit sides; side-pair histogram; torus: 18 directed classes,
+  the double-covered arc (2,√3)→(0,√3) ≡ (3,0) with lifts
+  {(0,2),(3,1)} forward and {(1,2),(2,1)} reversed; 6 vertex
+  orbits (3,3,3,3,4,4), orbit stars) + p2-symmetry test (exact
+  half-turn about c0 = (1/2, 0) on the c0-symmetric window; all
+  four c0 + Λ/2 representatives are centres with whole-lattice
+  shifts; off-coset half-lattice points are not centres; the six
+  mirror-direction candidates and R60/R90/R120 all fail to
+  normalize Λ) + isohedral test (half-turns permute the cells
+  0 ↔ 1, 2 ↔ 3; the group they generate has exactly two orbits
+  {0,1}/{2,3} = the seed classes; both seeds appear in every
+  patch; every generated tile keeps the prototile side multiset)
+  + achiral test (mirror_y(T0) is set-equal to R300·T0 +
+  (−1/2, −√3/2), pointwise Rot60·MIR[i] + (−1/2, √3/2) =
+  PIN[i] with MIR in the mirror's own CCW order) + floret-kinship
+  test (pin = R30⁷·(√3·FLORET6) + (2,√3) pointwise, FLORET6 =
+  [f2,f3,f4,f0,f1]; unique (k, t) = (7, (2,√3)) over the 12
+  rotations — floret constants defined locally, no laves.rs
+  dependency).
+- **Status:** committed (M74). 63 tilings, 497 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -2483,3 +2588,30 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   windows. The exact-Q(√3) member of the oldest Kershner family
   lands the second Kershner after type 7. 11 tess-tilings tests
   (62 tilings, 485 tests).
+- 2026-11-17 — M74 Pentagon type 6 (Kershner 1968) ✅: the
+  a = d = e, b = c, A = 2C, C + E = 180° family pinned to its
+  unique 30°-grid member (A = B = D = E = 120°, C = 60°,
+  a = d = e = 1, b = c = 2, tile area 7√3/4; exact Q(√3) pin
+  (0,0), (1,0), (2,√3), (0,√3), (−1/2,√3/2)). **4-tile oblique
+  unit, 2-isohedral** (seeds [0,0,1,1]; full-group orbits
+  {T0,T1}/{T2,T3}; half-turns permute cells 0 ↔ 1, 2 ↔ 3).
+  Lattice w1 = (1, 2√3), w2 = (−3, √3), |det| = 7√3 = 4 × area
+  (|w1|² = 13, |w2|² = 12, w1·w2 = 3). Group **p2** by structure +
+  complete mirror search: half-turns one coset c0 + Λ/2 with
+  c0 = (1/2, 0); 22-ray enumeration 0 genuine, the six
+  edge-direction mirror candidates and R60/R90/R120 all fail to
+  normalize Λ (a block-image check alone admits four spurious
+  subset maps, so the normalizer condition is load-bearing).
+  **EDGE-TO-EDGE**: all 20 stored sides reverse-glued exactly once
+  (involution with λ′ = −λ; 4 in-unit pairs + 6 pairs across
+  ±w1, ±w2, ±(w1−w2)); side pairs a-a:1 a-d:2 b-b:1 b-c:2 c-c:1
+  d-e:2 e-e:1; 20 directed sides → 18 torus classes, one
+  double-covered arc (2,√3)→(0,√3) ≡ (3,0). 787-tile census:
+  3935 directed full edges all unique, 3424 interior directed
+  edges each paired, 1286 vertices, 1022 interior; vertex stars
+  1022 = 340 × {60°,60°,120°,120°} + 682 × {120°,120°,120°} (torus
+  6 orbits, sizes 3,3,3,3,4,4). Window census 3268/864/112/20 at
+  four fixed windows. Achiral prototile, congruent to the
+  floret-pentagonal tile — one pentagon, two tilings (p2 2-iso vs
+  the floret's p6 1-iso). 12 tess-tilings tests (63 tilings,
+  497 tests).
