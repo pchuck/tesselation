@@ -979,17 +979,17 @@ confirm the diffraction claim during the spike before declaring.
 
 ---
 
-### 21. Wallpaper group completion — the 4 un-realized groups (M76 roadmap queue)
+### 21. Wallpaper group completion — the 3 un-realized groups (M76 roadmap queue)
 
-- **Motif:** M76 made the Wallpaper tab a group catalog: 13 of the 17
+- **Motif:** M76 made the Wallpaper tab a group catalog: 14 of the 17
   wallpaper groups have a registered realizer (pg → glide-hexagon-strips,
-  pm → trapezoid-courses, pmg → shifted-trapezoid-courses,
+  pm → trapezoid-courses, cm → wavy-courses, pmg → shifted-trapezoid-courses,
   p1 → stepped-hexominoes, p2 → pentagon-3,
   pmm → kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
   truncated-square, p4g → snub-square, p6 → snub-trihexagonal,
   p6m → hexagon, cmm → elongated-triangular). A
   shared gap note (`tess_core::browse::wallpaper_gap_note`) rendered
-  at the top of the tab in both UIs names the 4 absent groups. (The
+  at the top of the tab in both UIs names the 3 absent groups. (The
   17th group is pmg — the old `WallpaperGroup::Cmc` variant was a 3D
   space group misnamed as a 2D group; M76 renamed it `Pmg`.)
 - **Queue (difficulty per audit §4d):** pm, pg (easy); pmg, cm
@@ -1027,10 +1027,23 @@ confirm the diffraction claim during the spike before declaring.
     no perpendicular glides (exact 16-coset probe); the strip-1
     finger is forced to x = 1/5 by the glide, edge-to-edge, five
     edge directions, no verticals.
-  - cm (centered rectangular): the "c" lattice is exactly the case
-    M76's `LatticeKind::CenteredRectangular` was built for; a 2-tile
-    motif with one mirror through the lattice points on the centered
-    cell.
+  - cm ✅ **landed (M82)**: the catalog's first cm realizer — wavy
+    courses: zigzag courses of height 4/3 (period-2 waves of slope
+    ±1/3, peaks 1/3 above the valleys; Z(t−1) + 1 = 4/3 − Z(t)
+    stacks the courses exactly), each column-course quadrilateral cut
+    by a diagonal seam alternating slope ±1 with column-course parity
+    — four triangles per primitive cell of
+    Λ = ⟨(1,1),(2,0)⟩ (det 2, the x+y-even lattice, also
+    square-metric — degenerate centered-rectangular realization), two
+    incongruent classes (areas 1/3 and 2/3). The brief's original
+    single-slope seam set had no mirror at all and was re-derived
+    before landing; the seam alternation is what makes the vertical
+    mirrors x = integer symmetries, with the glides (2j+1−x, y+1)
+    (glide (0,1), g² = (0,2) ∈ Λ) on the half-integer axes — and
+    since the centering (1,1) ∈ Λ, the mirror and glide
+    representatives live in ONE coset of Λ (exact 144-coset probe:
+    2 pos / 142 neg — no half-turns, no horizontal mirrors or
+    glides, no rot90/diagonal parts).
   - pmg ✅ **landed (M81)**: the catalog's first pmg realizer —
     shifted trapezoid courses: two courses of M79's trapezoid classes
     per 2×2 cell on the rectangular lattice Λ = ⟨(2,0),(0,2)⟩ (det 4 =
@@ -1061,10 +1074,16 @@ confirm the diffraction claim during the spike before declaring.
   extended with the new tab sizes, and the shared gap note (both UIs)
   drops one group name per landing.
 - **Status:** p1 landed (M78), pm landed (M79), pg landed (M80),
-  pmg landed (M81); 4 remain — one group per milestone; each landing
+  pmg landed (M81), cm landed (M82); 3 remain — p3, p3m1, p31m (the
+  hexagonal groups), one group per milestone; each landing
   flips one token in
   `wallpaper_gap_note` and the gap note is re-verified in both UIs'
-  tests.
+  tests. HX-STUDY handoffs for the remaining three are staged in
+  /tmp/opencode/hexgroups/ (hx_p3_cell.json — 3-tile cut-honeycomb
+  chiral cell, 1 congruence class; hx_p3m1_cell.json — 18-tile cell,
+  3 classes; hx_p31m_cell.json — 8-tile cell, 2 classes; each with
+  the complete exact Q(√3) battery and full D6 probe battery PASS),
+  feeding the port tasks M83 (p3), M84 (p3m1), M85 (p31m).
 
 ## Parked / rejected (with reasons)
 

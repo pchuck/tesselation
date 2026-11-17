@@ -94,6 +94,8 @@ pub mod trapezoid_courses;
 pub mod glide_hexagon_strips;
 #[cfg(feature = "pavers")]
 pub mod shifted_trapezoid_courses;
+#[cfg(feature = "pavers")]
+pub mod wavy_courses;
 #[cfg(feature = "pentagon2")]
 pub mod pentagon2;
 #[cfg(feature = "pentagon3")]
@@ -327,6 +329,7 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(trapezoid_courses::trapezoid_courses());
         r = r.register(glide_hexagon_strips::glide_hexagon_strips());
         r = r.register(shifted_trapezoid_courses::shifted_trapezoid_courses());
+        r = r.register(wavy_courses::wavy_courses());
     }
     r
 }
@@ -494,16 +497,16 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-        // Census of today's taxonomy (M81). 67 built-ins — 63 before
+        // Census of today's taxonomy (M82). 68 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
         //   TwoUniform 2, Laves 11 (8 primary incl. cairo-pentagonal +
-        //   3 regular secondaries), Wallpaper 13 (group representatives
+        //   3 regular secondaries), Wallpaper 14 (group representatives
         //   as secondaries — one card per represented group),
         //   PentagonTypes 12, Islamic 9, Arrangements 5,
         //   Quasiperiodic 8, Aperiodic 4, Nonperiodic 4.
-        // Membership census 79 = 67 primaries + 12 secondaries (3 Laves
+        // Membership census 80 = 68 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -514,15 +517,17 @@ mod tests {
         // (pentagon-8) -> M74 PentagonTypes 11 -> 12 (pentagon-6)
         // -> M78 Wallpaper 9 -> 10 (stepped-hexominoes, p1)
         // -> M79 Wallpaper 10 -> 11 (trapezoid-courses, pm)
-        // -> M80 Wallpaper 11 -> 12 (glide-hexagon-strips, pg).
+        // -> M80 Wallpaper 11 -> 12 (glide-hexagon-strips, pg)
+        // -> M81 Wallpaper 12 -> 13 (shifted-trapezoid-courses, pmg)
+        // -> M82 Wallpaper 13 -> 14 (wavy-courses, cm).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 2, 11, 13, 12, 9, 5, 8, 4, 4],
+            vec![11, 2, 11, 14, 12, 9, 5, 8, 4, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 67, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 79, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 68, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 80, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -543,7 +548,7 @@ mod tests {
                 .unwrap()
         });
         assert_eq!(groups.len(), wall.cards.len(), "every Wallpaper card carries a group");
-        assert_eq!(groups.len(), 13, "thirteen represented wallpaper groups");
+        assert_eq!(groups.len(), 14, "fourteen represented wallpaper groups");
         let expected: Vec<&WallpaperGroup> = WallpaperGroup::ALL
             .iter()
             .filter(|g| !tess_core::browse::WALLPAPER_GROUP_GAPS.contains(*g))
@@ -3340,6 +3345,7 @@ mod pavers_tests {
     use crate::shifted_trapezoid_courses;
     use crate::stepped_hexominoes;
     use crate::trapezoid_courses;
+    use crate::wavy_courses;
     use tess_core::geometry::{BBox, Vec2};
 
     /// Candidate matrices (row-major) used by the paver group probes.
@@ -4076,6 +4082,36 @@ mod pavers_tests {
         );
     }
 
+    /// Wavy-courses (M82) standard trio.
+    #[test]
+    fn wavy_courses_covers_region() {
+        check_covers(
+            &wavy_courses::wavy_courses(),
+            "wavy-courses",
+            BBox::new(v2(-5.0, -3.0), v2(11.0, 7.0)),
+        );
+    }
+
+    #[test]
+    fn wavy_courses_rotated_scaled() {
+        check_rotated(
+            &wavy_courses::wavy_courses(),
+            "wavy-courses(rot30,scale0.7)",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn wavy_courses_deterministic() {
+        check_det(
+            &wavy_courses::wavy_courses(),
+            "wavy-courses",
+            BBox::new(v2(-4.0, -3.0), v2(10.0, 6.0)),
+        );
+    }
+
     /// Lattice membership for the trapezoid-courses table, in doubled
     /// (×10, integer) coordinates: Λ10 = ⟨(20,0),(0,10)⟩ =
     /// {(20i, 10j) : i, j ∈ ℤ}.
@@ -4715,6 +4751,277 @@ mod pavers_tests {
         );
         assert_eq!(areas.iter().sum::<i64>(), 800, "cell doubled areas sum to 10²·det");
     }
+
+    /// Lattice membership for the wavy-courses table, in ×3 (integer)
+    /// coordinates: Λ3 = ⟨(3,3),(6,0)⟩ = {(x,y) : y ≡ 0 (mod 3), x−y ≡
+    /// 0 (mod 6)} — the x+y-even lattice of ℤ², det 18.
+    fn wc_in_lat(x: i64, y: i64) -> bool {
+        y.rem_euclid(3) == 0 && (x - y).rem_euclid(6) == 0
+    }
+
+    /// The four cell tiles in ×3 coordinates, CCW, in cell order
+    /// [T_low, T_high, T_low', T_high']: column 0 (even parity) and
+    /// column 1 (odd parity) of course 0.
+    const WC_TILES: [[(i64, i64); 3]; 4] = [
+        [(0, 0), (3, 1), (3, 3)],
+        [(0, 0), (3, 3), (0, 4)],
+        [(3, 1), (6, 0), (3, 3)],
+        [(3, 3), (6, 0), (6, 4)],
+    ];
+
+    /// Does M normalize Λ3? Every candidate here is in GL(2, ℤ)
+    /// (|det| = 1), so both basis images in Λ3 imply M(Λ3) = Λ3 (the
+    /// lattice is square-metric, so all eight D4 parts normalize it).
+    fn wc_normalizes(m: [i64; 4]) -> bool {
+        wc_in_lat(3 * m[0] + 3 * m[1], 3 * m[2] + 3 * m[3])
+            && wc_in_lat(6 * m[0], 6 * m[2])
+    }
+
+    /// The image of tile `t` under g = (M, v), as a sorted 3-point set.
+    fn wc_image(t: &[(i64, i64); 3], m: [i64; 4], v: [i64; 2]) -> [(i64, i64); 3] {
+        let mut out: Vec<(i64, i64)> = t
+            .iter()
+            .map(|&(x, y)| (m[0] * x + m[1] * y + v[0], m[2] * x + m[3] * y + v[1]))
+            .collect();
+        out.sort_unstable();
+        let mut arr: [(i64, i64); 3] = [(0, 0); 3];
+        for (i, p) in out.iter().enumerate() {
+            arr[i] = *p;
+        }
+        arr
+    }
+
+    fn wc_sorted(t: &[(i64, i64); 3]) -> [(i64, i64); 3] {
+        let mut out = *t;
+        out.sort_unstable();
+        out
+    }
+
+    /// The sorted 3-point set `t + (dx, dy)`.
+    fn wc_shifted(t: &[(i64, i64); 3], dx: i64, dy: i64) -> [(i64, i64); 3] {
+        let mut out: Vec<(i64, i64)> = t.iter().map(|&(x, y)| (x + dx, y + dy)).collect();
+        out.sort_unstable();
+        let mut arr: [(i64, i64); 3] = [(0, 0); 3];
+        for (i, p) in out.iter().enumerate() {
+            arr[i] = *p;
+        }
+        arr
+    }
+
+    /// Is the sorted set `a` a translate of the sorted set `u` by a
+    /// vector of Λ3? Tries every (a_i, u_j) anchor pair; a match on the
+    /// first pair fixes λ and the full-set check confirms it.
+    fn wc_translate_of(a: &[(i64, i64); 3], u: &[(i64, i64); 3]) -> bool {
+        (0..3)
+            .into_iter()
+            .flat_map(|i| (0..3).map(move |j| (a[i].0 - u[j].0, a[i].1 - u[j].1)))
+            .any(|(dx, dy)| {
+                wc_in_lat(dx, dy)
+                    && (0..3).all(|k| (a[k].0, a[k].1) == (u[k].0 + dx, u[k].1 + dy))
+            })
+    }
+
+    /// Does g = (M, v) map every cell tile onto a cell tile plus a
+    /// lattice translate — the exact symmetry criterion for a 4-tile
+    /// cell (with M normalizing Λ3, the image of the full tiling is
+    /// then exactly the tiling)?
+    fn wc_maps_cells(m: [i64; 4], v: [i64; 2]) -> bool {
+        WC_TILES.iter().all(|t| {
+            let a = wc_image(t, m, v);
+            WC_TILES.iter().any(|u| wc_translate_of(&a, &wc_sorted(u)))
+        })
+    }
+
+    /// The exact cm criterion: g = (M, v) is a symmetry of the tiling
+    /// iff M normalizes Λ3 and it maps every cell tile onto a cell
+    /// tile plus a lattice translate.
+    fn wc_is_sym(m: [i64; 4], v: [i64; 2]) -> bool {
+        wc_normalizes(m) && wc_maps_cells(m, v)
+    }
+
+    /// Exact cm probe: the lattice translations, the vertical mirror
+    /// lines x = k, and the glide family g_j·Λ (g_j(x,y) = (2j+1−x,
+    /// y+1), glide (0,1), half-integer axes) are symmetries; the
+    /// complete 144-coset enumeration (all eight D4 linear parts that
+    /// normalize the square-metric Λ3 × 18 cosets, x3 ∈ {0..5},
+    /// y3 ∈ {0..2}) shows no other isometry coset is positive —
+    /// exactly the identity coset and the mirror/glide coset (2 pos /
+    /// 142 neg; the glide representatives (6j+3,3) lie in the same
+    /// coset as the mirrors (6j,0) because (3,3) ∈ Λ3) — and every
+    /// named negative from the Python battery (`m82_verify.py`) is
+    /// killed.
+    #[test]
+    fn wavy_courses_wallpaper_group_is_cm() {
+        // Structural sanity: the mirror x = 0 (M_MIRX, v = (0,0))
+        // swaps the even-column tiles with the odd-column tiles of
+        // course 0 — T_low ↔ T_low' + (−2,0), T_high ↔ T_high' +
+        // (−2,0), and back (C1 stays C1, C2 stays C2 — no class
+        // mixing).
+        assert_eq!(wc_image(&WC_TILES[0], M_MIRX, [0, 0]), wc_shifted(&WC_TILES[2], -6, 0));
+        assert_eq!(wc_image(&WC_TILES[1], M_MIRX, [0, 0]), wc_shifted(&WC_TILES[3], -6, 0));
+        assert_eq!(wc_image(&WC_TILES[2], M_MIRX, [0, 0]), wc_shifted(&WC_TILES[0], -6, 0));
+        assert_eq!(wc_image(&WC_TILES[3], M_MIRX, [0, 0]), wc_shifted(&WC_TILES[1], -6, 0));
+        // The glide g_0(x,y) = (1−x, y+1) — ×3, (M_MIRX, (3,3)) — maps
+        // T_low → T_low' + (−1,1) and T_high → T_high' + (−1,1); its
+        // square is the lattice translation (0,2).
+        assert_eq!(wc_image(&WC_TILES[0], M_MIRX, [3, 3]), wc_shifted(&WC_TILES[2], -3, 3));
+        assert_eq!(wc_image(&WC_TILES[1], M_MIRX, [3, 3]), wc_shifted(&WC_TILES[3], -3, 3));
+        // The centering translation (1,1) — ×3, (3,3) — is a symmetry.
+        assert!(wc_is_sym([1, 0, 0, 1], [3, 3]), "centering (1,1) must be a symmetry");
+
+        // Positive: the 25 lattice translations (a window of Λ3).
+        for i in -2..=2 {
+            for j in -2..=2 {
+                assert!(
+                    wc_is_sym([1, 0, 0, 1], [3 * i + 6 * j, 3 * i]),
+                    "translation ({}i + {}j·(2,0)) must be a symmetry",
+                    i,
+                    j
+                );
+            }
+        }
+        // Positive: the vertical mirror lines x = k (k = −2..2), v =
+        // (6k, 0) in ×3, and their composites with lattice
+        // translations.
+        for c in -2i64..=2 {
+            assert!(
+                wc_is_sym(M_MIRX, [6 * c, 0]),
+                "mirror x = {c} must be a symmetry"
+            );
+        }
+        assert!(wc_is_sym(M_MIRX, [0, 6]), "mirror x=0 + (0,2): (0,2) in Λ");
+        assert!(wc_is_sym(M_MIRX, [6, -6]), "mirror x=1 + (0,−2)");
+        // Positive: the glide samples g_j (j = −1..1) — ×3, v =
+        // (6j+3, 3) — axes x = j + 1/2, glide (0,1).
+        for j in -1..=1 {
+            assert!(
+                wc_is_sym(M_MIRX, [6 * j + 3, 3]),
+                "glide axis x = {}+1/2 must be a symmetry",
+                j
+            );
+        }
+
+        // Complete coset enumeration: for each of the eight D4 linear
+        // parts that normalize Λ3 (a square-metric lattice), all 18
+        // v-cosets mod Λ3 (x3 ∈ 0..5, y3 ∈ 0..2). For a fixed part m
+        // that normalizes Λ3, the group elements with part m form
+        // either nothing or a single coset of Λ3, so one rep per coset
+        // is the complete census. Exactly one coset of I (the
+        // identity) and one of M_MIRX (the mirrors x = k together with
+        // the glides (6j+3,3) — (3,3) ∈ Λ3 puts them in ONE coset) are
+        // positive; all 18 cosets of the other six parts are negative
+        // — 144 checks, 2 pos / 142 neg (no p2/cmm/p4 upgrade).
+        const M_ROT4_270: [i64; 4] = [0, 1, -1, 0];
+        for (pi, m) in [
+            [1, 0, 0, 1],
+            M_MIRX,
+            M_MIRY,
+            M_ROT2,
+            M_ROT4,
+            M_ROT4_270,
+            M_DIAG,
+            M_ANTI,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            for x3 in 0..6 {
+                for y3 in 0..3 {
+                    let expected = match pi {
+                        0 => x3 == 0 && y3 == 0,
+                        1 => x3 == 0 && y3 == 0,
+                        _ => false,
+                    };
+                    assert_eq!(
+                        wc_is_sym(m, [x3, y3]),
+                        expected,
+                        "coset ({x3},{y3}) of linear part {pi}"
+                    );
+                }
+            }
+        }
+
+        // Named negatives (from the Python battery): off-lattice
+        // translations.
+        for v in [[3, 0], [0, 3], [3, 1], [0, 1]] {
+            assert!(!wc_is_sym([1, 0, 0, 1], v), "off-lattice translation {v:?}");
+        }
+        // Vertical mirror off the x = k family.
+        assert!(!wc_is_sym(M_MIRX, [3, 0]), "vertical mirror x = 1/2 must not be");
+        // Vertical glides with the wrong slide: the integer-axis
+        // glide (0,1) and the half-integer-axis glide (0,2) are NOT
+        // symmetries (the glide coset is the one containing (3,3)).
+        assert!(!wc_is_sym(M_MIRX, [0, 3]), "vertical glide (x = 0, slide (0,1))");
+        assert!(!wc_is_sym(M_MIRX, [3, 6]), "vertical glide (x = 1/2, slide (0,2))");
+        // Horizontal mirrors and the horizontal glide.
+        assert!(!wc_is_sym(M_MIRY, [0, 0]), "horizontal mirror y = 0 must not be");
+        assert!(!wc_is_sym(M_MIRY, [0, 3]), "horizontal mirror y = 1/2 must not be");
+        assert!(!wc_is_sym(M_MIRY, [3, 3]), "horizontal glide (axis y = 1/2) must not be");
+        // Half-turns about the thirds-grid centers the pattern could
+        // plausibly carry — v = 2·center in ×3.
+        for (cx, cy) in [
+            (0, 0),
+            (3, 3),
+            (0, 3),
+            (3, 1),
+            (3, 0),
+            (6, 0),
+            (3, 2),
+            (6, 4),
+            (0, 2),
+            (6, 3),
+            (9, 0),
+            (6, 6),
+        ] {
+            assert!(!wc_is_sym(M_ROT2, [2 * cx, 2 * cy]), "half-turn about ({cx},{cy})/3");
+        }
+        // Extra D4 parts: spot checks (all 18 cosets each already
+        // proven negative by the enumeration).
+        for m in [M_ROT4, M_ROT4_270, M_DIAG, M_ANTI] {
+            for v in [[0, 0], [3, 3], [6, 6], [3, 0], [0, 3]] {
+                assert!(!wc_is_sym(m, v), "extra D4 part {m:?} at {v:?}");
+            }
+        }
+
+        // Sanity: the ×3 cell tiles are CCW with doubled areas 6, 12,
+        // 6, 12 (areas 1/3, 2/3, 1/3, 2/3), summing to 36 = 9 · 2 ·
+        // det Λ, and the two congruence classes are incongruent (C1
+        // carries the 2/3 edge — squared 4 ×9 — where C2 carries the
+        // 4/3 edge — squared 16 ×9).
+        let wc_area2 = |t: &[(i64, i64); 3]| -> i64 {
+            (0..3)
+                .map(|i| t[i].0 * t[(i + 1) % 3].1 - t[(i + 1) % 3].0 * t[i].1)
+                .sum::<i64>()
+        };
+        let areas: Vec<i64> = WC_TILES.iter().map(wc_area2).collect();
+        assert_eq!(
+            areas,
+            vec![6, 12, 6, 12],
+            "cell doubled areas (T_low, T_high, T_low', T_high')"
+        );
+        assert_eq!(areas.iter().sum::<i64>(), 36, "cell doubled areas sum to 9·2·det");
+        let wc_sq_edges = |t: &[(i64, i64); 3]| -> Vec<i64> {
+            let mut e: Vec<i64> = (0..3)
+                .map(|i| {
+                    let dx = t[i].0 - t[(i + 1) % 3].0;
+                    let dy = t[i].1 - t[(i + 1) % 3].1;
+                    dx * dx + dy * dy
+                })
+                .collect();
+            e.sort_unstable();
+            e
+        };
+        assert_eq!(
+            wc_sq_edges(&WC_TILES[0]),
+            vec![4, 10, 18],
+            "C1 squared edges ×9 (2/3, sqrt(10)/3, sqrt(2))"
+        );
+        assert_eq!(
+            wc_sq_edges(&WC_TILES[1]),
+            vec![10, 16, 18],
+            "C2 squared edges ×9 (4/3 edge present)"
+        );
+    }
 }
 
 /// Tests for the 2-uniform (k-uniform) `LatticeTiling` tables.
@@ -5145,7 +5452,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
         pentagon14, pentagon15,
         pic_3_12_12,
         pic_3_6_3_6, pic_4_8_8, running_bond, shifted_trapezoid_courses, square,
-        stepped_hexominoes, triangle, trapezoid_courses, windmill,
+        stepped_hexominoes, triangle, trapezoid_courses, wavy_courses, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
     use tess_core::params::ParamSet;
@@ -5265,6 +5572,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
                 "shifted-trapezoid-courses",
                 shifted_trapezoid_courses::shifted_trapezoid_courses(),
             ),
+            ("wavy-courses", wavy_courses::wavy_courses()),
             ("pentagon-2", pentagon2::spec()),
             ("pentagon-3", pentagon3::spec()),
             ("pentagon-6", pentagon6::spec()),
