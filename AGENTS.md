@@ -16,3 +16,12 @@
 - **Never end a turn while a background job runs** — poll synchronously
   with bounded sleeps (origin: M64 att-3 session cut). Coordinators keep
   this rule in every worker brief.
+- **Vision policy (two-tier; supersedes the blanket no-model-vision ban,
+  2026-11-17):** model vision is allowed for reconnaissance — comparing
+  a render against a reference figure, catching gross structural errors
+  early, UI appearance judgment — but never as verification evidence:
+  every count, closure, pairing, or correctness claim in a REPORT or a
+  test must be programmatic (parsed SVG/path data, exact arithmetic,
+  census battery, mutation-checked headless test). When a visual look
+  motivated a change, the report must cite the programmatic check that
+  confirmed it. "Looks right" is not a deliverable.
