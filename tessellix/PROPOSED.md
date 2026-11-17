@@ -226,7 +226,7 @@ confirm the diffraction claim during the spike before declaring.
   | 4 | b=c, d=e, B=D=90° | p4 / p4g | 4 | iso | yes |
   | 5 | a=b, d=e, A=60°, D=120° | p6 | 6 | iso | yes |
   | 6 | a=d=e, b=c, B+D=180°, 2B=E | p2 | 4 | 2-iso | yes |
-  | 7 | b=c=d=e, B+2E=2C+D=360° | deferred (M58) | 8 | 2-iso | yes |
+  | 7 | b=c=d=e, B+2E=2C+D=360° | pgg (verified, M72) | 8 | 2-iso | yes |
   | 8 | b=c=d=e, 2B+C=D+2E=360° | pgg/p2 | 8 | 2-iso | yes |
   | 9 | b=c=d=e, 2A+C=D+2E=360° | pgg (verified, M59) | 8 | 2-iso | yes |
   | 10 | a=b=c+e, A=90°, B+E=180°, B+2C=360° | cmm (verified, M63) | 6 | 3-iso | **no** |
@@ -279,26 +279,36 @@ confirm the diffraction claim during the spike before declaring.
   0/1), group **pgg confirmed** (gauge-invariant quotient-table
   automorphism audit plus exact generator verification — half-turn
   c0 = (13, 4√3), perpendicular glides g1² = w2 and g2² = −w1, no
-  mirrors). Remaining (M72+), in the arc's priority
-  order: 5, then 1 (p2 topology zoo)
-  (7 deferred with evidence above; 3, 9, 10, 11, 12 and 15
-  implemented). Existing tilings likely cover 4
+  mirrors). Remaining (M75+), in the arc's priority
+  order: 6, then 8 (7 now implemented in M72; 1 and 5 covered by
+  existing registry entries — prismatic-pentagonal /
+  floret-pentagonal — coverage audit documentation pending;
+  3, 9, 10, 11, 12, 13, 14 and 15 implemented). Existing tilings
+  likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
   verify the assignments at design time; implement only uncovered
   types. One type per task, delegated; all `pentagon1..15` features
   pre-created (types 4/8 map to cairo/hirschhorn pending verification).
-  **Type 7 (M58): DEFERRED with evidence** — four sessions culminated in
-  an honest stop: the 15°/30°-grid pin clause is provably unsatisfiable
-  (0 of 25 grid points close; nearest miss exactly (1+√2−√6)/2 ≈ 0.0176),
-  the valid 22.5°-grid pin (A=67.5°, B=C=135°, D=90°, E=112.5°, a²=2+√2,
-  all conditions exact) admits **no 8-tile periodic cell** (exact
-  translational pairing failure + 22M-node bounded search, 0 solutions,
-  unbounded tree — a bounded negative, not an exhaustive proof); the
-  reference instance ≈(148°,133°) is off-grid and not surd-pin-able.
-  Evidence pack: task scratch REPORT.md (376 lines). Brief corrections
-  learned: A = C − B/2 (not B/2 + C); the "B < D" clause is not a
-  convexity condition. Future milestone: re-scope (reference-instance
-  combinatorics first, pose-model audit, or periodicity-proof framing).
+  **Type 7: DONE (M72)** — the M58 bounded negative is superseded:
+  it was an artifact of grid-restricted pinning (the family's
+  published members sit off the 15°/30° and 22.5° grids the bounded
+  search was pinned to, so the search could never have found the
+  instance) plus two search-phase accounting bugs (mirror-edge
+  direction, glued-corner jitter). The applet-grounded published
+  instance (Jaap Scherphuis Tiling Viewer, N5-07, E = 106°) closes
+  the family: b = c = d = e = 1/2, a ≈ 1.0357942, B = 148°,
+  C ≈ 132.8626° (the unique root in (120°, 180°) of
+  F(t) = sin(E−2t) − sin(t+E) − sin(E−t) − sin(E)), D ≈ 94.2747°,
+  A = C − B/2 ≈ 58.8626° (the M58 brief corrections stand: A = C −
+  B/2 confirmed; the "B < D" clause is not a convexity condition).
+  The construction is bit-exact against the applet cell (max |Δ| =
+  0.0 over 40 vertices + lattice), the tiling is edge-to-edge
+  (907-tile census 3770 full / 0 split), vertex stars 816 = 271 +
+  266 + 279, torus 20 edge orbits + 12 vertex orbits, group **pgg**
+  (g1² = w1, g2² = −w2, half-turns c0 = (1/4, 0) + Λ/2, 24 negative
+  probes), 8-tile 2-isohedral rectangular cell (four direct + four
+  mirror), 11 tess-tilings tests (62 tilings, 476 tests). See
+  PATTERNS.MD §25.
   **Type 11: DONE (M60)** — Kershner 1968 family 2a+c=d=e, A=90°,
   2B+C=360°, C+E=180° (⇒ C=360−2B, E=2B−180, D=270−B; convex
   90°<B<180°); pinned the reference construction's B=156° member at

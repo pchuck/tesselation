@@ -119,10 +119,10 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-61 built-in tilings, all discoverable in both UIs via the registry
+62 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
-**Wallpaper** (25), **Quasiperiodic** (8: Penrose family, Ammann–Beenker,
+**Wallpaper** (26), **Quasiperiodic** (8: Penrose family, Ammann–Beenker,
 Stampfli, shield, girih Darb-i Imam), **Aperiodic** (7: einstein family, limit-periodic
 rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
 UIs group their lists by it. Categories are declared on the tiling
@@ -173,6 +173,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `pentagon-12` | Pentagon type 12 (Kershner) | pentagonal (Kershner 1968): A = 90°, B = 150°, C = 60°, D = E = 120°, 2a = d = c + e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side is split at its exact midpoint into two unit halves), two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
 | `pentagon-2` | Pentagon type 2 (Reinhardt) | pentagonal (Reinhardt 1918 family 2): A = B = D = 90°, C = 120°, E = 150°, a = 1, b = d = 1 + √3/2, c = e = 1/2 (c = e, d = b, B + D = 180°), exact Q(√3); 1-isohedral, 4 tiles (two chiral pairs) per rectangular cell, edge-to-edge, two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
 | `pentagon-3` | Pentagon type 3 (Reinhardt) | pentagonal (Reinhardt 1918 family 3): A = B = C = D = 120°, E = 60°, a = b = 2, c = 1, d = 4, e = 3 (a = b, d = c + e), exact Q(√3); 1-isohedral, 2 tiles per oblique cell, non-edge-to-edge (every d-side is split at its exact midpoint between two length-2 sides); chiral prototile, one chirality used — the classical three-tile type-3 pinwheel admits no periodic cell for this member | p2 | oblique |
+| `pentagon-7` | Pentagon type 7 (Kershner) | pentagonal (Kershner 1968): b = c = d = e, B + 2E = 2C + D = 360° (published instance E = 106°: A ≈ 58.86°, B = 148°, C ≈ 132.86°, D ≈ 94.27°, a ≈ 1.0357942, b = c = d = e = 1/2, prototile computed at runtime); 2-isohedral, 8 tiles (four direct, four mirror) per rectangular cell, edge-to-edge, two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
 | `pentagon-13` | Pentagon type 13 (Rice) | pentagonal (Rice type 13, A = 120°): d = 2a = 2e, B = E = 90°; 2-isohedral chiral pair, 8 tiles per cell | p2 | rectangular |
 | `pentagon-14` | Pentagon type 14 (Stein) | pentagonal (Stein 1985, completely determined): 2a = 2c = d = e, b = βa, A = 90°; 3-isohedral, 6 tiles per oblique cell | p2 | oblique |
 | `pentagon-15` | Pentagon type 15 (Mann) | pentagonal (Mann / McLoud-Mann / Von Derau 2015): A = 150°, B = 60°, C = 135°, D = 105°, E = 90°, a = 2b, c² = 2+√3; 3-isohedral, 12 tiles per rectangular cell, two perpendicular glides | pgg | rectangular |
@@ -483,7 +484,7 @@ straight into `paint::PALETTE`).
 
 ## Tests
 
-`cargo test --workspace` (currently 456 tests, all green, zero
+`cargo test --workspace` (currently 476 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (61 tilings)
+## Implemented (62 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -764,7 +764,7 @@ labels, which are out of chronological order.)
   counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
   306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
 - **Status:** implemented (M45).
-## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60, M62, M63, M64, M65 landed)
+## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60, M62, M63, M64, M65, M72 landed)
 
 The PROPOSED.md #5 arc (all 15 convex pentagonal tiling types). Type 13
 (Rice) lands first: its 8-tile primitive unit is small enough for a
@@ -799,15 +799,25 @@ c = e = 1/2) — the arc's second pentagon-level edge-to-edge
 (after type 9) and its first two-chiral-pair unit: a 4-tile
 rectangular cell whose glides map each tile onto its mirror image,
 group pgg (colouring the two chiralities drops the group to p2),
-vertex figures {90°, 120°, 150°} and {90°, 90°, 90°, 90°}.
+vertex figures {90°, 120°, 150°} and {90°, 90°, 90°, 90°};
+type 7 (Kershner 1968) tenth: the arc's first non-surd edge-to-edge
+pgg — published E = 106° member (A ≈ 58.86°, B = 148°,
+C ≈ 132.86°, D ≈ 94.27°, a ≈ 1.0357942, b = c = d = e = 1/2),
+runtime-computed prototile (C = root in (120°,180°) of the applet's
+transcendental closure equation; not surd-pinnable); 8-tile rectangular
+cell, four direct + four mirror, 2-isohedral (seeds 0/1, orbits
+{0,3,4,7}/{1,2,5,6}), pgg (g1² = w1, g2² = −w2, half-turns c0 =
+(1/4,0) + Λ/2), edge-to-edge, vertex stars {106°,106°,148°},
+{94.27°,132.86°,132.86°}, {58.86°,58.86°,94.27°,148°} — closing the
+M58 deferral (grid-pinning artifact + two search-phase accounting
+bugs; see PROPOSED.md #5).
 
-Type 7 (Kershner 1968) remains **deferred (M58)** with a bounded
-negative: the 15°/30°-grid pin clause is provably unsatisfiable, the
-valid 22.5°-grid pin admits no 8-tile periodic cell (22M-node search,
-0 solutions), and the reference instance ≈(148°, 133°) is off-grid —
-a **future milestone** to revive via the M60-lesson pipeline (pin the
-reference instance with bounded floats; see PROPOSED.md #5). Remaining
-in the arc: types 5, 1.
+Type 7 is implemented (M72) — see §25; the M58 bounded negative is
+superseded (grid-pinning artifact + two search-phase accounting bugs:
+the published instance is off-grid, so the grid search could never
+have found it). Remaining in the arc: types 6 and 8 (new tilings
+queued), with types 1 and 5 covered by existing registry entries
+(coverage audit documentation pending).
 
 ### 15. Pentagon type 13 (Rice) ✅ (M49)
 
@@ -1398,6 +1408,82 @@ in the arc: types 5, 1.
   prototile side multiset {1/2, 1/2, 1, 1 + √3/2, 1 + √3/2} and
   seed 0).
 - **Status:** committed (M65). 61 tilings, 465 tests at the commit.
+
+### 25. Pentagon type 7 (Kershner 1968) ✅ (M72)
+
+- **Motif:** Kershner's type-7 convex pentagonal tiling — the
+  one-parameter family `b = c = d = e`, `B + 2E = 2C + D = 360°` —
+  pinned to the published E = 106° member (Jaap Scherphuis Tiling
+  Viewer, N5-07; the applet slider defaults to 110°): `A ≈ 58.86°`,
+  `B = 148°`, `C ≈ 132.86°`, `D ≈ 94.27°`, `a ≈ 1.0357942`,
+  `b = c = d = e = 1/2`.  The family's closure equation is
+  transcendental in E, so the instance is **not surd-pinnable**: the
+  prototile is computed at runtime, C as the unique root in
+  (120°, 180°) of `F(t) = sin(E−2t) − sin(t+E) − sin(E−t) − sin(E)`
+  (bisection to 1e-3, then ≤ 200 Newton steps), and `A = C − B/2`.
+  The cell is 2-isohedral: four direct + four mirror tiles.  This
+  closes the M58 deferral: the published instance is off the 15°/30°
+  (and 22.5°) grids the bounded search was pinned to, so the search
+  could never have found it.
+- **Group:** **pgg** (orbifold 2\*22) by structure plus exact audit:
+  two perpendicular glide families with axes along the lattice
+  directions, `g1² = w1`, `g2² = −w2` — each a true half-translation
+  glide (along-axis shift +|w1|/2 and −|w2|/2 respectively, verified
+  to 1e-6, so no power of either glide is a pure reflection);
+  `g2∘g1` is the half-turn about `c0 = (1/4, 0)`, and the half-turn
+  centres are exactly the four classes `c0 + Λ/2` (all 36 verified
+  with 9 lattice shifts each).  No mirrors (22 negative probes: the
+  two perpendicular-part-only candidates plus 20 whole-lattice
+  shifts) and no quarter-turns (2 probes) — 24 negative probes in
+  total.
+- **Lattice & cell:** **8 tiles** per rectangular cell.  The lattice
+  is computed from the construction, not hardcoded:
+  `w1 = cell2.p3 − cell0.p0 = (1.4422756957517922,
+  1.02096015812545)` (both cells direct) and
+  `w2 = −(cell5.p3 − cell3.p1) = (−1.3851382485043073,
+  1.9567376994827812)` (cells 3 and 5 are mirror-stored, so their
+  raw p3/p1 sit at stored indices 2 and 4).  Rectangular (w1 ⊥ w2)
+  with `|w1 × w2| = 4.236326192143856 = 8 × tile area` (tile area
+  0.529540774017982).  Seeds `[0, 1, 1, 0, 0, 1, 1, 0]`: the two
+  isohedral classes are the orbits `{0,3,4,7}` and `{1,2,5,6}` (each
+  mixing both chiralities).
+- **Edge structure:** **EDGE-TO-EDGE** at the pentagon level — the
+  arc's first non-surd edge-to-edge pgg.  Refined edge census over
+  the 907-tile block window: 3770 full edges, 0 split edges.  Torus
+  gluing census: the 40 cell edges form exactly 20 partner orbits
+  (no broken edges, glued pairs equal-length to 1e-9, partner shift
+  a lattice vector), with glued side pairs a-a:4, b-b:2, b-e:4,
+  c-d:4, c-e:4, d-d:2.  Vertex stars: 816 = 271 × {106°, 106°,
+  148°} + 266 × {94°, 133°, 133°} + 279 × {59°, 59°, 94°, 148°}
+  (figures rounded to the degree, every star complete); torus
+  vertex orbits: 12 (eight of size 3, four of size 4).
+- **Verify:** standard trio (coverage, rotated-scaled, deterministic)
+  + unit-structure test (8 congruent copies of the runtime prototile:
+  angles {58.86°, 148°, 132.86°, 94.27°, 106°} at 1e-9, sides
+  1/2 × 4 + a at 1e-12/1e-9, family identities B + 2E = 2C + D =
+  360°, 2A + B + D = 360°, A = C − B/2, closure F(C) = 0, seed
+  pattern, lattice identities w1 = cell2.p3 − cell0.p0 and
+  w2 = −(cell5.p3 − cell3.p1), rectangular, det = 8·area, stored
+  cells bit-exact against the raw construction) + window-census test
+  (398 / 369 / 193 / 1149 tiles at four fixed windows) +
+  refined-edge census (907 tiles: 3770 full, 0 split) +
+  vertex-figure census (816 interior vertices: 271 × {106°,
+  106°, 148°}, 266 × {94°, 133°, 133°}, 279 × {59°, 59°, 94°,
+  148°}) + cell-gluing census (20 edge orbits, side-pair histogram,
+  12 vertex orbits) + pgg-symmetry test (exact half-turn about
+  c0 = (1/4, 0) on the interior-AABB patch; g1, g1⁻¹, g2, g2⁻¹ and
+  lattice-shifted glide variants preserve the tiling; g1² = w1,
+  g2² = −w2, g2∘g1 = half-turn about c0; half-shifts +w1/2 and
+  −w2/2; all 36 half-turns across the four classes c0 + Λ/2; every
+  cell maps onto a tile under the three generators and 10 lattice
+  translations on the 1922-tile big patch; 24 negative probes) +
+  isohedral test (cell permutations ht = (0 4)(1 5)(2 6)(3 7),
+  g1 = (0 3)(1 2)(4 7)(5 6), g2 = (0 7)(1 6)(2 5)(3 4); exactly two
+  full-group orbits {0,3,4,7}/{1,2,5,6} = the seed classes; every
+  generated tile keeps the prototile side multiset {1/2, 1/2, 1/2, 1/2, a}) +
+  enantiomer-mix test (prototile chiral — forward cyclic match only —
+  and the eight cells split four direct / four mirror).
+- **Status:** committed (M72). 62 tilings, 476 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -2161,3 +2247,38 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   115/165/272/281/17 over five fixed windows, cross-checked against
   the independent Python culling emulation. 9 tess-tilings tests
   (61 tilings, 465 tests).
+
+- 2026-11-17 — M72 Pentagon type 7 (Kershner 1968) ✅: the
+  b = c = d = e, B + 2E = 2C + D = 360° family pinned to the
+  published E = 106° member (Jaap Scherphuis Tiling Viewer N5-07;
+  the applet slider defaults to 110°): A ≈ 58.86°, B = 148°,
+  C ≈ 132.86°, D ≈ 94.27°, a ≈ 1.0357942, b = c = d = e = 1/2,
+  tile area 0.529540774017982. The instance is not surd-pinnable
+  (transcendental closure in E), so the prototile is computed at
+  runtime: C the unique root in (120°, 180°) of
+  F(t) = sin(E−2t) − sin(t+E) − sin(E−t) − sin(E) (bisection to
+  1e-3, then ≤ 200 Newton steps), A = C − B/2. **8-tile rectangular
+  unit, four direct + four mirror, 2-isohedral** (seeds
+  [0,1,1,0,0,1,1,0]; full-group orbits {0,3,4,7}/{1,2,5,6}; cell
+  permutations ht = (0 4)(1 5)(2 6)(3 7), g1 = (0 3)(1 2)(4 7)(5
+  6), g2 = (0 7)(1 6)(2 5)(3 4)). Lattice computed from the
+  construction, not hardcoded: w1 = cell2.p3 − cell0.p0 =
+  (1.4422756957517922, 1.02096015812545), w2 = −(cell5.p3 −
+  cell3.p1) = (−1.3851382485043073, 1.9567376994827812);
+  rectangular, |det| = 4.236326192143856 = 8 × area (the raw
+  construction basis had negative det, so w2 ships negated). Group
+  **pgg** by exact audit: perpendicular glides g1² = w1, g2² = −w2
+  (half-shifts +|w1|/2 and −|w2|/2, so no power of a glide is a
+  reflection), g2∘g1 = half-turn about c0 = (1/4, 0); all four
+  c0 + Λ/2 half-turn classes verified at ×9 lattice shifts; 22
+  negative mirror probes + 2 quarter-turn probes. **EDGE-TO-EDGE**:
+  907-tile census 3770 full / 0 split edges; torus 20 edge orbits,
+  side pairs a-a:4 b-b:2 b-e:4 c-d:4 c-e:4 d-d:2, 12 vertex orbits
+  (eight 3s, four 4s). Vertex stars 816 = 271 × {106°,106°,148°} +
+  266 × {94°,133°,133°} + 279 × {59°,59°,94°,148°}. Window census
+  398/369/193/1149 at four fixed windows; 1922-tile big patch for
+  tile-image membership. Closes the M58 deferral (the M58 bounded
+  negative was a grid-pinning artifact plus two search-phase
+  accounting bugs — the published instance is off-grid, so the grid
+  search could never have found it). 11 tess-tilings tests (62
+  tilings, 476 tests).
