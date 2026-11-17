@@ -74,7 +74,16 @@ impl Tiling for PythagoreanTiling {
     }
 
     fn category(&self) -> TilingCategory {
-        TilingCategory::Wallpaper
+        TilingCategory::Arrangements
+    }
+
+    fn declared_symmetry(&self) -> Option<SymmetryMeta> {
+        // p4 for every ratio: the cell lattice (b, a), (−a, b) is square
+        // for all r, and the motif's 4-fold rotation survives for every r
+        // (mirrors only at r = 1, the p4m square-grid degenerate case).
+        // The lattice constant depends on r, so no basis is declared
+        // (`lattice_basis` stays `None`).
+        Some(SymmetryMeta::new(WallpaperGroup::P4, LatticeKind::Square))
     }
 
     fn params(&self) -> &'static [ParamSpec] {

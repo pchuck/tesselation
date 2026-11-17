@@ -66,7 +66,17 @@ impl Tiling for StarCrossTiling {
     }
 
     fn category(&self) -> TilingCategory {
-        TilingCategory::Wallpaper
+        TilingCategory::Islamic
+    }
+
+    fn declared_symmetry(&self) -> Option<SymmetryMeta> {
+        // The lattice is parameter-independent: the star radius scales the
+        // tiles, never the translations.
+        Some(SymmetryMeta::new(WallpaperGroup::P4m, LatticeKind::Square))
+    }
+
+    fn lattice_basis(&self) -> Option<[Vec2; 2]> {
+        Some([Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)])
     }
 
     fn params(&self) -> &'static [ParamSpec] {

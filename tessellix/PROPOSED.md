@@ -211,8 +211,11 @@ confirm the diffraction claim during the spike before declaring.
   repo already owns several members unknowingly; this arc makes the
   census explicit and complete, mirroring the Laves/Archimedean arcs.
 - **Current coverage (verify type assignments at design time):**
-  `cairo-pentagonal` / `cairo-collinear` = type 4 family; likely
-  type 1 (`prismatic-pentagonal`, cmm topology) and type 5
+  `cairo-pentagonal` = type 4 family (M76: `cairo-collinear` was the
+  same V3.3.4.3.4 pattern with a different pentagon and was merged
+  into it as a documented collinear-vertex variant — one card,
+  61 tilings); likely type 1 (`prismatic-pentagonal`, cmm topology)
+  and type 5
   (`floret-pentagonal`, p6 six-tile rosette); `hirschhorn` almost
   certainly type 8 (angle multiset {60,80,100,140,160} matches
   2B+C = D+2E = 360°, b=c=d=e).
@@ -948,6 +951,53 @@ confirm the diffraction claim during the spike before declaring.
 
 ---
 
+### 21. Wallpaper group completion — the 8 un-realized groups (M76 roadmap queue)
+
+- **Motif:** M76 made the Wallpaper tab a group catalog: 9 of the 17
+  wallpaper groups have a registered realizer (p2 → pentagon-3, pmm →
+  kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
+  truncated-square, p4g → snub-square, p6 → snub-trihexagonal,
+  p6m → hexagon, cmm → elongated-triangular). A shared gap note
+  (`tess_core::browse::wallpaper_gap_note`) rendered at the top of the
+  tab in both UIs names the 8 absent groups. (The 17th group is pmg —
+  the old `WallpaperGroup::Cmc` variant was a 3D space group misnamed
+  as a 2D group; M76 renamed it `Pmg`.)
+- **Queue (difficulty per audit §4d):** p1, pm, pg (easy); pmg, cm
+  (easy–medium); p3, p3m1 (medium); p31m (hard).
+  - p1 (oblique): the trivial group — a chiral 2-tile motif on an
+    oblique cell; the plumbing already exists (aperiodic P1
+    placeholders are dropped by `card_meta`, so a periodic p1 entry
+    is the first non-trivial P1 card).
+  - pm (rectangular): one mirror axis, one translation — e.g. a
+    2-tile cell with a single mirror line.
+  - pg (rectangular): one glide-reflection, no mirrors.
+  - cm (centered rectangular): the "c" lattice is exactly the case
+    M76's `LatticeKind::CenteredRectangular` was built for; a 2-tile
+    motif with one mirror through the lattice points on the centered
+    cell.
+  - pmg (rectangular): a mirror pair plus perpendicular glides — the
+    17th group.
+  - p3 (hexagonal): first 3-fold group — a chiral 3-tile motif on the
+    hexagonal lattice, no mirrors.
+  - p3m1 (hexagonal): 3-folds + mirrors through the vertices; the
+    natural next step after p3.
+  - p31m (hexagonal): 3-folds + mirrors through the edges;
+    distinguishable from p3m1 by where the mirrors fall.
+- **Construction:** per the adoption checklist — Python spike first
+  (exact geometry + group probe), then the standard battery + a
+  group-audit probe like the M40/M41 coset probes, then registry +
+  census + README/PATTERNS updates.
+- **Verify:** the M76 legality test
+  (`declared_symmetry_is_legal_and_matches_the_measured_lattice`)
+  already enforces (group, lattice kind) legality and
+  measured-lattice agreement for any new entry;
+  `registry_groups_are_complete_and_canonically_ordered` must be
+  extended with the new tab sizes, and the shared gap note (both UIs)
+  drops one group name per landing.
+- **Status:** queued (M76+); one group per milestone; each landing
+  flips one token in `wallpaper_gap_note` and the gap note is
+  re-verified in both UIs' tests.
+
 ## Parked / rejected (with reasons)
 
 - **Quaquaversal tiling** — 3-space tiling; no 2D analogue (removed
@@ -1035,3 +1085,12 @@ that already exists twice.
 - 2026-11-12 — created from PATTERNS.MD's proposed/research sections +
   a literature sweep (20 candidates: 4 P0 quick wins, 8 P1 sprints,
   8 P2 arcs; 8 parked/rejected with reasons).
+- 2026-11-17 — M76: (1) pentagon-census coverage line updated —
+  `cairo-collinear` merged into `cairo-pentagonal` (same V3.3.4.3.4
+  pattern, different pentagon; the card is now "Cairo Pentagonal
+  (V3.3.4.3.4)" with the collinear-vertex variant documented in its
+  description); (2) new roadmap queue §21: the 8 un-realized
+  wallpaper groups (p1, pm, pg, cm, pmg, p3, p3m1, p31m) — the M76
+  Wallpaper tab is a 9-of-17 group catalog with a shared gap note,
+  and the 17th group is pmg, not cmc (Cmc is a 3D space group; the
+  misnamed enum variant was renamed Cmc → Pmg).

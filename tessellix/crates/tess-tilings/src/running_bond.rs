@@ -6,17 +6,20 @@
 //! The running-bond paver bond: rows of 2:1 dominoes (stretcher
 //! bricks) with each row offset by half a brick relative to its
 //! neighbours — the plain sibling of the paver trio. In the
-//! canonical frame the tiling is periodic on the rectangular lattice
-//! `⟨ (2,0), (0,2) ⟩` (area 4); one unit cell holds exactly two
-//! horizontal dominoes,
+//! canonical frame the tiling is periodic on the centered rectangular
+//! lattice `⟨ (2,0), (1,1) ⟩` (area 2); one unit cell holds exactly
+//! one horizontal domino,
 //!
 //! * `H (0,0)`: `[0,2] × [0,1]` (row `y ∈ [0,1]`, even-x dominoes),
-//! * `H (1,1)`: `[1,3] × [1,2]` (row `y ∈ [1,2]`, odd-x dominoes),
 //!
-//! area `2·2 = 4 = |det|`, so the lattice translates tile the plane
-//! with no gaps and no overlaps. Even rows (`y ∈ [2l, 2l+1]` with
-//! `l` even) carry even-x dominoes; odd rows carry odd-x dominoes —
-//! the half-brick offset.
+//! area `2 = |det|`, so the lattice translates tile the plane with no
+//! gaps and no overlaps. Even rows (`y ∈ [2l, 2l+1]` with `l` even)
+//! carry even-x dominoes; odd rows carry odd-x dominoes — the half-brick
+//! offset. (The index-2 coarser lattice `2ℤ²` with two dominoes per cell
+//! also tiles the plane, but the true translation lattice of the
+//! wallpaper group is the finer centered rectangle: `(1,1)` is itself a
+//! symmetry translation, mapping each domino onto its half-offset
+//! neighbour.)
 //!
 //! # Non-edge-to-edge note
 //!
@@ -87,32 +90,27 @@ fn h_domino(x: f64, y: f64) -> Polygon {
 }
 
 /// Running bond paver pattern — stretcher rows offset by half a brick
-/// (cmm on the rectangular lattice ⟨(2,0),(0,2)⟩).
+/// (cmm on the centered rectangular lattice ⟨(2,0),(1,1)⟩).
 pub fn running_bond() -> LatticeTiling {
-    // One row + its half-offset successor: the even-x domino of row 0
-    // and the odd-x domino of row 1; the lattice translates complete
-    // the bond.
-    let cells = vec![
-        Cell {
-            poly: h_domino(0.0, 0.0),
-            seed: 0,
-        },
-        Cell {
-            poly: h_domino(1.0, 1.0),
-            seed: 0,
-        },
-    ];
+    // One domino; the centered-rectangular lattice ⟨(2,0),(1,1)⟩
+    // translates it into the full bond (the (1,1) step carries each
+    // domino to its half-offset successor row).
+    let cells = vec![Cell {
+        poly: h_domino(0.0, 0.0),
+        seed: 0,
+    }];
 
     LatticeTiling {
         id: "running-bond",
         name: "Running bond (2:1 dominoes)",
-        description: "Running-bond paver pattern: stretcher rows of 2:1 dominoes, each row offset by half a brick. Rectangular lattice <(2,0),(0,2)>, 2 split dominoes per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group cmm: mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions.",
-        lattice: [Vec2::new(2.0, 0.0), Vec2::new(0.0, 2.0)],
+        description: "Running-bond paver pattern: stretcher rows of 2:1 dominoes, each row offset by half a brick. Centered rectangular lattice <(2,0),(1,1)>, one split domino per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group cmm: mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions.",
+        lattice: [Vec2::new(2.0, 0.0), Vec2::new(1.0, 1.0)],
         cells,
         offset: Vec2::ZERO,
         group: WallpaperGroup::Cmm,
-        lattice_kind: LatticeKind::Rectangular,
-        category: TilingCategory::Wallpaper,
+        lattice_kind: LatticeKind::CenteredRectangular,
+        category: TilingCategory::Arrangements,
+        secondary: &[],
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

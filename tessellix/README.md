@@ -47,25 +47,30 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--strapwork DEG` | off | overlay the Hankin PIC strapwork walls at contact angle DEG (measured from each tile edge) on any tiling — layer mode of the polygons-in-contact engine (`tess-core::strapwork`) |
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
-**Browse mode** — the tab bar lists the six display categories with card
-counts (`Uniform (11)   Laves (9)   Wallpaper (25)   ...`); below it a
-responsive card grid shows the active tab's tilings as blocks with a
-half-block raster thumbnail, the tiling name, a `group · lattice` line
-(wallpaper tilings), a short description fragment, and `params: n` when
-the tiling has adjustable parameters. In the Wallpaper tab the cards are
-grouped under crystal-system section headers (Oblique, Rectangular,
-Centered, Square, Hexagonal), ordered by lattice kind then wallpaper
-group; all other tabs appear in registry order. Keys: `Tab`/`Shift-Tab`
-or `1`–`6` switch tabs (per-tab cursor and scroll position are
-remembered), `↑↓←→` or `hjkl` move the cursor (wraps), `PgUp`/`PgDn` or
-the mouse wheel scroll the grid, `Enter`/`Space` open the selected
-tiling in Render mode, `/` starts a search, `q` quits.
+**Browse mode** — the tab bar lists the ten display categories with card
+counts (`Uniform (11)   Two-Uniform (2)   Laves (11)   Wallpaper (9)   Pentagon
+Types (10)   Islamic (9)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (4)
+Nonperiodic (4)`); below it a responsive card grid shows the active tab's
+tilings as blocks with a half-block raster thumbnail, the tiling name (up to
+two lines), a `group · lattice` line (wallpaper tilings), a short description
+fragment, and `params: n` when the tiling has adjustable parameters. A
+tiling can belong to more than one tab: its primary category (its family)
+plus declared secondaries — the Wallpaper tab is one card per wallpaper
+group (the group catalog) built purely from secondaries, so it opens with an
+explicit note listing the eight groups that have no registered realizer.
+In the Wallpaper tab the cards are grouped under crystal-system section
+headers (Oblique, Rectangular, Centered, Square, Hexagonal), ordered by
+lattice kind then wallpaper group; all other tabs appear in registry order.
+Keys: `Tab`/`Shift-Tab` or `1`–`9`/`0` switch tabs (per-tab cursor and
+scroll position are remembered), `↑↓←→` or `hjkl` move the cursor (wraps),
+`PgUp`/`PgDn` or the mouse wheel scroll the grid, `Enter`/`Space` open the
+selected tiling in Render mode, `/` starts a search, `q` quits.
 
 **Search** — `/` opens a prompt in the status bar; the query filters
 cards by name, id, and description (case-insensitive) across all tabs.
 The tab bar shows per-tab match counts and the active tab jumps to the
 first tab with a match. `Enter` opens the highlighted match, `Esc`
-cancels, `Tab`/`1`–`6` still switch tabs, `Backspace` deletes.
+cancels, `Tab`/`1`–`9`/`0` still switch tabs, `Backspace` deletes.
 
 **Render mode** — the selected tiling fills the whole terminal (one
 character cell = one pixel, no chrome but the status bar):
@@ -89,19 +94,22 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 `tess-core::browse` model — no side panel in either mode:
 
 - **Browse mode** — the whole window is the card grid. A tab band
-  (the six category tabs with card counts + a search field, one
+  (the ten category tabs with card counts + a search field, one
   wrapping row) sits over a responsive card grid: the column count is
-  computed from the window width (target card ~240 px, clamped
-  1–4 columns) and the cards stretch to fill. Cards show crystal-
-  system section headers (Wallpaper tab), a lazily generated preview
-  (rasterized at default parameters by the shared `tess-core::raster`,
-  same palette/proto-fallback semantics as the TUI thumbnails, cached
-  per (id, params, size), generated for visible cards only), the bold
-  name, the `group · lattice` line, and a truncated description.
-  Search filters name/id/description case-insensitively; the tab row
-  shows per-tab match counts and the active tab jumps to the first
-  tab with a match. Clicking a card opens Render mode; per-tab
-  selection is remembered.
+  computed from the window width (target card ~240 px, fully dynamic
+  — no upper bound) and the cards stretch to fill. The Wallpaper tab
+  (one card per wallpaper group — the group catalog) opens with an
+  explicit note listing the eight groups that have no registered
+  realizer. Cards show crystal-system section headers (Wallpaper
+  tab), a lazily generated preview (rasterized at default parameters
+  by the shared `tess-core::raster`, same palette/proto-fallback
+  semantics as the TUI thumbnails, cached per (id, params, size),
+  generated for visible cards only), the bold name (up to two lines,
+  broken at a word boundary), the `group · lattice` line, and a
+  truncated description. Search filters name/id/description
+  case-insensitively; the tab row shows per-tab match counts and the
+  active tab jumps to the first tab with a match. Clicking a card
+  opens Render mode; per-tab selection is remembered.
 - **Render mode** — the whole window is the canvas (drag to pan,
   scroll to zoom anchored at the cursor). A top strip offers `← back`,
   `◀`/`▶` prev/next (walking the current tab's order, wrapping), a
@@ -119,15 +127,21 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-62 built-in tilings, all discoverable in both UIs via the registry
-(`tess-tui -- list`). Every tiling declares one of six canonical
-display categories — **Uniform** (11), **Laves / Catalan duals** (9),
-**Wallpaper** (26), **Quasiperiodic** (8: Penrose family, Ammann–Beenker,
-Stampfli, shield, girih Darb-i Imam), **Aperiodic** (4: einstein family,
-pinwheel), and **Nonperiodic** (4: limit-periodic rep-tiles, Hirschhorn) — and both
-UIs group their lists by it. Categories are declared on the tiling
-(never derived from its symmetry), so the grouping is honest about
-what the mathematics distinguishes; see `tess-core/src/category.rs`.
+61 built-in tilings (73 tab memberships), all discoverable in both UIs
+via the registry (`tess-tui -- list`). Every tiling declares a primary
+display category — its family — plus optional secondary tabs (e.g. the
+self-dual regular tilings also appear in Laves, and nine periodic
+tilings anchor the per-group Wallpaper catalog). The ten tabs:
+**Uniform** (11), **Two-Uniform** (2), **Laves / Catalan duals** (11,
+8 primary + 3 self-dual secondaries), **Wallpaper** (9: one card per
+wallpaper group, 8 of the 17 groups still unrepresented),
+**Pentagon Types** (10), **Islamic** (9), **Arrangements** (5),
+**Quasiperiodic** (8: Penrose family, Ammann–Beenker, Stampfli, shield,
+girih Darb-i Imam), **Aperiodic** (4: einstein family, pinwheel), and
+**Nonperiodic** (4: limit-periodic rep-tiles, Hirschhorn). Categories
+are declared on the tiling (never derived from its symmetry), so the
+grouping is honest about what the mathematics distinguishes; see
+`tess-core/src/category.rs`.
 
 | id | name | type | wallpaper group | lattice |
 |---|---|---|---|---|
@@ -137,38 +151,37 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `truncated-square` | Truncated square (4.8.8) | Archimedean | p4m | square |
 | `trihexagonal` | Trihexagonal (3.6.3.6) | Archimedean | p6m | hexagonal |
 | `snub-trihexagonal` | Snub trihexagonal (3.3.3.3.6) | Archimedean, chiral | p6 | hexagonal |
-| `elongated-triangular` | Elongated triangular (3.3.3.4.4) | Archimedean | cmm | rectangular |
+| `elongated-triangular` | Elongated triangular (3.3.3.4.4) | Archimedean | cmm | centered |
 | `rhombitrihexagonal` | Rhombitrihexagonal (3.4.6.4) | Archimedean | p6m | hexagonal |
 | `truncated-trihexagonal` | Truncated trihexagonal (4.6.12) | Archimedean | p6m | hexagonal |
 | `truncated-hexagonal` | Truncated hexagonal (3.12.12) | Archimedean | p6m | hexagonal |
 | `snub-square` | Snub square (3.3.4.3.4) | Archimedean | p4g | square |
 | `star-cross` | Star and cross ({8/3}) | Islamic star-and-cross family (one-parameter) | p4m | square |
 | `hexagram` | Hexagram and hexagon ({6/2}) | hexagram star-and-hexagon family (one-parameter) | p6m | hexagonal |
-| `cairo-pentagonal` | Cairo pentagonal (3.3.3 / 4.4.4.4) | pentagonal (Catalan dual of the snub square) | p4g | square |
-| `cairo-collinear` | Cairo collinear (3.3.3 / 4.4.4.4) | pentagonal, integer-coordinate collinear form | p4g | square |
+| `cairo-pentagonal` | Cairo Pentagonal (V3.3.4.3.4) | pentagonal (Catalan dual of the snub square); includes the integer-coordinate collinear variant (angles 143.13°/108.43°/108.43°/90°/90°, edges 4×√10+4, square 72-area cell) | p4g | square |
 | `tetrakis-square` | Tetrakis square (V4.8.8) | Laves (Catalan dual of the truncated square) | p4m | square |
 | `rhombille` | Rhombille (V3.6.3.6) | Laves (Catalan dual of the trihexagonal); 3-colored cube illusion | p6m | hexagonal |
 | `triakis-triangular` | Triakis triangular (V3.12.12) | Laves (Catalan dual of the truncated hexagonal) | p6m | hexagonal |
 | `deltoidal-trihexagonal` | Deltoidal trihexagonal (V3.4.6.4) | Laves (Catalan dual of the rhombitrihexagonal) | p6m | hexagonal |
 | `kisrhombille` | Kisrhombille (V4.6.12) | Laves (Catalan dual of the truncated trihexagonal) | p6m | hexagonal |
-| `prismatic-pentagonal` | Prismatic pentagonal (V3.3.3.4.4) | Laves (Catalan dual of the elongated triangular) | cmm | rectangular |
+| `prismatic-pentagonal` | Prismatic pentagonal (V3.3.3.4.4) | Laves (Catalan dual of the elongated triangular) | cmm | centered |
 | `floret-pentagonal` | Floret pentagonal (V3.3.3.3.6) | Laves (Catalan dual of the snub trihexagonal), chiral | p6 | hexagonal |
-| `girih-shesh-band` | Girih shesh-band (6.6.6) | periodic girih strapwork band | p2 | oblique |
-| `girih-star-cross` | Girih star-and-cross (periodic, 10-fold) | measured classical strapwork panel: 10-pointed stars, bobbins, chord straps; 545-tile cell data table | pmm | oblique |
+| `girih-shesh-band` | Girih shesh-band (6.6.6) | periodic girih strapwork band | p2 | centered |
+| `girih-star-cross` | Girih star-and-cross (periodic, 10-fold) | measured classical strapwork panel: 10-pointed stars, bobbins, chord straps; 545-tile cell data table | cmm | centered |
 | `girih-w85` | Girih 12-pointed star interlace (W85) | Wichmann panel data18/W85 (Alhambra, Mexuar patio): exact Q(√3) strap grid L = 283.92, strap 9; 42 tiles per hexagonal cell; drawn interlace chiral | p6 | hexagonal |
 | `pic-4-8-8` | Hankin PIC fourfold khatam | Hankin polygons-in-contact strapwork on the 4.8.8 substrate (contact angle δ = 45°): midpoint-chord walls — {8/2} octagram in each octagon — partitioning the plane into octagon + small square + 4 house pentagons + 8 star tips per cell, exact Q(√2) | p4m | square |
 | `pic-3-6-3-6` | Hankin PIC sixfold khatam | Hankin polygons-in-contact strapwork on the trihexagonal (3.6.3.6) substrate (contact angle δ = 60°): midpoint-chord walls — {6/2} hexagram in each hexagon, midsegments in each triangle — partitioning the plane into 4 hexagram-core hexagons + 6 hexagram tips + 2 midsegment triangles per cell (a half-scale 3.6.3.6), exact Q(√3) | p6m | hexagonal |
 | `pic-3-12-12` | Hankin PIC twelvefold khatam | Hankin polygons-in-contact strapwork on the truncated-hexagonal (3.12.12) substrate (contact angle δ = 60° — the only angle closing both the dodecagon and the triangle): midpoint-chord walls — {12/4} twelvefold rosette in each dodecagon, midsegments in each triangle — partitioning the plane into rosette-core dodecagon + 6 vertex pentagons + 12 band quads + 2 medial triangles + 12 inner quads + 12 star notches per cell, exact Q(√3) | p6m | hexagonal |
 | `khatam-girih` | Khatam girih decomposition (8-point) | classical kissing {8/3} star-and-cross cut into 8 rhombi + square + 4 pentagons per cell (exact Q(√2) kitab) | p4m | square |
 | `basketweave` | Basketweave (2:1 dominoes) | paver bond: 2×2 blocks of two parallel 2:1 dominoes, checkerboard orientation; long sides split into unit edges | p4g | square |
-| `herringbone` | Herringbone (2:1 dominoes) | paver bond: chiral L-pairs of 2:1 dominoes, single-direction; long sides split into unit edges | pgg | oblique |
-| `running-bond` | Running bond (2:1 dominoes) | paver bond: stretcher rows of 2:1 dominoes, each row offset by half a brick; long sides split into unit edges | cmm | rectangular |
+| `herringbone` | Herringbone (2:1 dominoes) | paver bond: chiral L-pairs of 2:1 dominoes, single-direction; long sides split into unit edges | pgg | rectangular |
+| `running-bond` | Running bond (2:1 dominoes) | paver bond: stretcher rows of 2:1 dominoes, each row offset by half a brick; long sides split into unit edges | cmm | centered |
 | `pythagorean` | Pythagorean (two squares) | periodic two-square family (one-parameter ratio); square on the hypotenuse per cell | p4 | square |
 | `windmill` | Periodic pinwheel arrangement (p4) | Conway's periodic "spin" of the pinwheel motif: 1–2–√5 triangles around squares; homochiral, non-edge-to-edge | p4 | square |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | 2-uniform k-uniform: hexagonal tiling with one of every three hexagons dissected into six-triangle fans (Wikipedia `2-uniform n10`) | p6m | hexagonal |
 | `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | 2-uniform k-uniform: hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (Wikipedia `2-uniform n11`) | pmm | rectangular |
 | `pentagon-9` | Pentagon type 9 (Rice) | pentagonal (Rice 1977): A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; 2-isohedral, 8 tiles per rectangular cell, two perpendicular glide families squaring to the primitive translations | pgg | rectangular |
-| `pentagon-10` | Pentagon type 10 (James) | pentagonal (James 1975): A = 90°, B + E = 180°, a = b = c + e, d² = c² + e² (reference instance B = 90°, c = 1: A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2); 3-isohedral, 6 tiles per cell, non-edge-to-edge (each length-2 side split at its exact midpoint), mirrors y = x and y = −x, half-turn at the origin, genuine glide (axis x + y = 3/2), centered rectangular lattice | cmm | oblique |
+| `pentagon-10` | Pentagon type 10 (James) | pentagonal (James 1975): A = 90°, B + E = 180°, a = b = c + e, d² = c² + e² (reference instance B = 90°, c = 1: A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2); 3-isohedral, 6 tiles per cell, non-edge-to-edge (each length-2 side split at its exact midpoint), mirrors y = x and y = −x, half-turn at the origin, genuine glide (axis x + y = 3/2), centered rectangular lattice | cmm | centered |
 | `pentagon-11` | Pentagon type 11 (Rice) | pentagonal (Rice 1977): A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, 2a + c = d = e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side carries one c-side and two a-sides), two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
 | `pentagon-12` | Pentagon type 12 (Rice) | pentagonal (Rice 1977): A = 90°, B = 150°, C = 60°, D = E = 120°, 2a = d = c + e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side is split at its exact midpoint into two unit halves), two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
 | `pentagon-2` | Pentagon type 2 (Reinhardt) | pentagonal (Reinhardt 1918 family 2): A = B = D = 90°, C = 120°, E = 150°, a = 1, b = d = 1 + √3/2, c = e = 1/2 (c = e, d = b, B + D = 180°), exact Q(√3); 1-isohedral, 4 tiles (two chiral pairs) per rectangular cell, edge-to-edge, two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
@@ -196,8 +209,8 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 
 Every periodic tiling reports its wallpaper group, lattice kind, and (for
 periodic ones) its lattice basis as analytic symmetry metadata. The
-framework models all 17 wallpaper groups and the four lattice kinds
-(oblique, rectangular, square, hexagonal).
+framework models all 17 wallpaper groups and the five lattice kinds
+(oblique, rectangular, centered rectangular, square, hexagonal).
 
 Each periodic tiling accepts the same two parameters, discovered by the
 UIs: **scale** (0.1–50, step 0.05) and **rotation** (0–360°, step 5°).
@@ -467,11 +480,16 @@ category and its cards), `browse_tabs` (one tab per display category in
 then wallpaper group, the other tabs in registry order), and
 `section_key` (a card's crystal-system section header, used by both
 UIs' card grids for the oblique/rectangular/centered/square/hexagonal
-grouping). The model knows nothing about tiling ids or rendering — the
-TUI and the egui GUI render these tabs and cards; card previews
-rasterize through the shared `tess-core::raster` (the TUI to character
-cells over its 256-cube palette, the GUI to texture pixels mapped
-straight into `paint::PALETTE`).
+grouping). A tiling's **primary** category is its family; it may also
+declare `secondary_categories`, so a card can appear in more than one
+tab — the Wallpaper tab is one card per wallpaper group (the group
+catalog) built purely from secondaries, with the remaining unrepresented
+groups surfaced by `wallpaper_gap_note` rather than placeholder cards.
+The model knows nothing about tiling ids or rendering — the TUI and the
+egui GUI render these tabs and cards; card previews rasterize through
+the shared `tess-core::raster` (the TUI to character cells over its
+256-cube palette, the GUI to texture pixels mapped straight into
+`paint::PALETTE`).
 
 ### Rendering
 
@@ -484,7 +502,7 @@ straight into `paint::PALETTE`).
 
 ## Tests
 
-`cargo test --workspace` (currently 476 tests, all green, zero
+`cargo test --workspace` (currently 474 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
@@ -516,11 +534,10 @@ warnings):
   table validation, deterministic patch stability across views),
   Hirschhorn
   patch invariants (Euler χ = 1, exact C6 symmetry,
-  edge ownership ≤ 2, 20° frame quantization), a full edge/vertex census
-  of the embedded girih patch, and the Cairo collinear integer
-  properties. For the periodic tables, a brute-force test re-emits every
-  tile over a fixed index window and requires the exact same tile set as
-  the generator's range-based culling.
+  edge ownership ≤ 2, 20° frame quantization), and a full edge/vertex
+  census of the embedded girih patch. For the periodic tables, a
+  brute-force test re-emits every tile over a fixed index window and
+  requires the exact same tile set as the generator's range-based culling.
 
 The periodic tilings' geometry was additionally verified analytically
 before implementation: for each, the cell area exactly equals

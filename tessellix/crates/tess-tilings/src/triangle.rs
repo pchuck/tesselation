@@ -36,6 +36,7 @@ pub fn spec() -> LatticeTiling {
         group: WallpaperGroup::P6m,
         lattice_kind: LatticeKind::Hexagonal,
         category: TilingCategory::Uniform,
+        secondary: &[TilingCategory::Laves],
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

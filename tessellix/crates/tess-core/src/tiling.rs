@@ -65,6 +65,30 @@ pub trait Tiling {
     /// lists. Declared per tiling — never derived from geometry or
     /// symmetry — so the taxonomy stays honest (see [`TilingCategory`]).
     fn category(&self) -> TilingCategory;
+    /// Additional display categories this tiling also belongs to
+    /// (multi-tab membership). Defaults to `&[]` — most tilings belong to
+    /// exactly one tab. Used, for example, by the three regular tilings
+    /// (which are their own Catalan duals, so they also appear under
+    /// Laves), and by the wallpaper-group representatives (which also
+    /// appear in the Wallpaper group catalog tab).
+    fn secondary_categories(&self) -> &'static [TilingCategory] {
+        &[]
+    }
+    /// The wallpaper group and lattice kind this tiling declares, or
+    /// `None` for tilings that are not wallpaper tilings (aperiodic,
+    /// quasiperiodic) or whose lattice kind varies with parameters.
+    /// Defaults to `None`; the standard periodic generators override this
+    /// so symmetry metadata can be queried without running `generate`.
+    fn declared_symmetry(&self) -> Option<SymmetryMeta> {
+        None
+    }
+    /// The declared lattice basis (cell space) for tilings with a fixed,
+    /// parameter-independent lattice. `None` when the tiling has no fixed
+    /// lattice or its lattice depends on parameters (e.g. Pythagorean).
+    /// Defaults to `None`.
+    fn lattice_basis(&self) -> Option<[Vec2; 2]> {
+        None
+    }
     /// Parameter declarations, discovered by UIs.
     fn params(&self) -> &'static [ParamSpec];
     /// Color mode the UI should start with for this tiling.

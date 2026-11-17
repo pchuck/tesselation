@@ -72,7 +72,17 @@ impl Tiling for HexagramTiling {
     }
 
     fn category(&self) -> TilingCategory {
-        TilingCategory::Wallpaper
+        TilingCategory::Islamic
+    }
+
+    fn declared_symmetry(&self) -> Option<SymmetryMeta> {
+        // The lattice is parameter-independent: the star radius scales the
+        // tiles, never the translations.
+        Some(SymmetryMeta::new(WallpaperGroup::P6m, LatticeKind::Hexagonal))
+    }
+
+    fn lattice_basis(&self) -> Option<[Vec2; 2]> {
+        Some([Vec2::new(1.0, 0.0), Vec2::new(0.5, 0.5 * SQRT_3)])
     }
 
     fn params(&self) -> &'static [ParamSpec] {

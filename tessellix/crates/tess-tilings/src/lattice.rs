@@ -86,6 +86,11 @@ pub struct LatticeTiling {
     /// Canonical display category (declared by each table — see
     /// [`TilingCategory`]).
     pub category: TilingCategory,
+    /// Additional display categories (multi-tab membership, M76).
+    /// `&[]` for most tilings; e.g. the three regular tilings also
+    /// appear under Laves, and the wallpaper-group representatives
+    /// also appear under the Wallpaper catalog tab.
+    pub secondary: &'static [TilingCategory],
     pub seed_pattern: SeedPattern,
     pub params: &'static [ParamSpec],
     /// Builds the linear map from cell space to world space from params.
@@ -109,6 +114,18 @@ impl Tiling for LatticeTiling {
 
     fn category(&self) -> TilingCategory {
         self.category
+    }
+
+    fn secondary_categories(&self) -> &'static [TilingCategory] {
+        self.secondary
+    }
+
+    fn declared_symmetry(&self) -> Option<SymmetryMeta> {
+        Some(SymmetryMeta::new(self.group, self.lattice_kind))
+    }
+
+    fn lattice_basis(&self) -> Option<[Vec2; 2]> {
+        Some(self.lattice)
     }
 
     fn params(&self) -> &'static [ParamSpec] {

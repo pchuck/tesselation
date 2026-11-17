@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (62 tilings)
+## Implemented (61 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -34,15 +34,14 @@ Status markers:
 The uniform family is **closed**: all 11 exist, so no further
 Archimedean work is possible (or needed).
 
-### Laves / Catalan duals — complete: 8 of 8 (+ 1 variant)
+### Laves / Catalan duals — complete: 8 of 8
 
 The whole Catalan family now mirrors the closed Archimedean set:
 every dual is the face-centroid dual of an exact primal table.
 
 | id | face config | group | primal | notes |
 |---|---|---|---|---|
-| `cairo-pentagonal` | V3.3.4.3.4 | p4g | snub-square | tangential pentagons; minimum-perimeter pentagonal tiling |
-| `cairo-collinear` | V3.3.4.3.4 | p4g | — (flattened double-hex construction) | integer-coordinate variant; edges 4 and √10 |
+| `cairo-pentagonal` | Cairo Pentagonal (V3.3.4.3.4) | p4g | snub-square | tangential pentagons; minimum-perimeter pentagonal tiling; the collinear-vertex variant (143.13/108.43/108.43/90/90°, edges 4×√10 + 4, integral vertices, square 72-area cell) is documented in the card description (M76) |
 | `tetrakis-square` | V4.8.8 | p4m | truncated-square | right isosceles triangles, 45°×8 at octagon centers; 4 proper pattern colors |
 | `rhombille` | V3.6.3.6 | p6m | trihexagonal | 60°/120° rhombi, 3 per cell; pattern 3-colors by orientation (cube illusion) |
 | `triakis-triangular` | V3.12.12 | p6m | truncated-hexagonal | 120°-apex isosceles triangles; triangular lattice of dodecagon centers, each cell split three ways |
@@ -57,8 +56,8 @@ every dual is the face-centroid dual of an exact primal table.
 |---|---|---|---|
 | `star-cross` | {8/3} star and cross | p4m | one-parameter star radius: gapped → kissing (khatam) |
 | `hexagram` | hexagram and hexagon ({6/2}) | p6m | one-parameter star tip radius: gapped → kissing hexagram-and-hexagon tiling; stars on the hexagonal lattice, interstice split into two hexagons at the kissing radius |
-| `girih-shesh-band` | girih strapwork band | p2 | single shesh-band hexagon, oblique lattice |
-| `girih-star-cross` | 10-pointed girih star-and-cross strapwork (periodic) | pmm | measured classical panel; 545-tile cell data table on the (77,45)/(0,90) oblique lattice (M35) |
+| `girih-shesh-band` | girih strapwork band | p2 | single shesh-band hexagon, centered rectangular lattice (M76: kind corrected from oblique) |
+| `girih-star-cross` | 10-pointed girih star-and-cross strapwork (periodic) | cmm | measured classical panel; 545-tile cell data table on the (77,45)/(0,90) centered-rectangular basis (M35; M76: group pmm → cmm, lattice kind → centered rectangular) |
 | `girih-w85` | 12-pointed girih star interlace | p6 | Wichmann data18/W85 (Alhambra Mexuar): exact Q(√3) strap-line grid (L = 283.92, strap 9, all vertices (p+q√3)/50), 42 tiles per hexagonal cell; motif is *632 but the drawn over/under interlace is chiral → p6 (M52) |
 | `pic-4-8-8` | Hankin PIC fourfold khatam (median) | p4m | polygons-in-contact strapwork on the 4.8.8 substrate at δ = 45°: rays run edge-midpoint to edge-midpoint ({8/2} two-square octagram per octagon, midpoint chords per square), face-to-face partition into octagon + small square + 4 house pentagons + 8 star tips, 14 faces per A·Z² cell (A = 1+√2), exact Q(√2) with all vertices (p+q√2)/4; un-interlaced, mirrors and glide probe verified (M53) |
 | `pic-3-6-3-6` | Hankin PIC sixfold khatam | p6m | polygons-in-contact strapwork on the trihexagonal 3.6.3.6 substrate at δ = 60°: rays run edge-midpoint to edge-midpoint ({6/2} hexagram per hexagon, midsegments per triangle), face-to-face partition — the wall network *is* a half-scale 3.6.3.6 — into 4 hexagram-core hexagons + 6 hexagram tips + 2 midsegment triangles, 12 faces per ⟨(2,0),(1,√3)⟩ cell, Σ = 2√3 = |det| exact over Q(√3) with all vertices on the (p+q√3)/4 grid; un-interlaced, rot60/rot120/rot180 + five mirrors probe verified (M54) |
@@ -77,8 +76,8 @@ figures at the split midpoints, `2.4.4`).
 | id | motif | group | notes |
 |---|---|---|---|
 | `basketweave` | 2:1 dominoes in 2×2 alternating blocks | p4g | 45°-rotated square lattice ⟨(2,2),(2,−2)⟩, 4 split dominoes per cell; 4-folds at the even-even points, mirrors at the odd axes only (offset from the 4-fold centers — p4g, not p4m), six glide families; exact coset group probe (M39) |
-| `herringbone` | 2:1 dominoes in chiral L-pairs | pgg | oblique lattice ⟨(1,3),(2,2)⟩, 2 split dominoes per cell; single-direction (chiral): 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal + anti-diagonal axes), no mirrors; exact coset group probe (M40) |
-| `running-bond` | 2:1 dominoes in stretcher rows, half-brick offset | cmm | rectangular lattice ⟨(2,0),(0,2)⟩, 2 split dominoes per cell; mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions; exact coset group probe (M41) |
+| `herringbone` | 2:1 dominoes in chiral L-pairs | pgg | rectangular lattice ⟨(2,2),(1,−1)⟩ (M76), 2 split dominoes per cell; single-direction (chiral): 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal + anti-diagonal axes), no mirrors; exact coset group probe (M40) |
+| `running-bond` | 2:1 dominoes in stretcher rows, half-brick offset | cmm | centered rectangular lattice ⟨(2,0),(1,1)⟩ (M76; the measured lattice is the √2-degenerate square lattice — the legality test's documented exception), 1 split domino per cell; mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions; exact coset group probe (M41) |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | p6m | hexagonal tiling with one of every three hexagons (index-3 sublattice m ≡ n mod 3 of the honeycomb centers) dissected into six-triangle fans; Wikipedia `2-uniform n10`, t = 2, e = 3 |
 | `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | pmm | hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (rectangular lattice, hexagons share full horizontal edges); Wikipedia `2-uniform n11`, t = 2, e = 3 |
 | `pentagon-13` | Rice pentagon, type 13 (1977, A = 120°) | p2 | 2-isohedral chiral pair (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3); long side split into two collinear a-edges (M49) |
@@ -87,7 +86,7 @@ figures at the split midpoints, `2.4.4`).
 | `pentagon-9` | Rice pentagon, type 9 (Rice 1977) | pgg | 2-isohedral (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3) (A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; vertices on the (Z+Z√3)/7 grid); edge-to-edge, vertex stars {A,A,C}, {D,E,E}, {B,B,C,D}; two perpendicular glide families squaring to the primitive translations, no mirrors (M59) |
 | `pentagon-11` | Rice pentagon, type 11 (Rice 1977) | pgg | 2-isohedral (seeds 0/1, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile with bounded-precision floats (A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, a = r = 0.0946641…, b = s = 1.0568030…, c = 1, d = e = 1 + 2r — the family conditions 2a + c = d = e, 2B + C = 360°, C + E = 180° hold to ~1e-12); non-edge-to-edge — every d-side carries one c-side and two a-sides; vertex stars {C,B,B}, {A,A,180°}, {D,D,E}, {C,E,180°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M60) |
 | `pentagon-12` | Rice pentagon, type 12 (Rice 1977) | pgg | 2-isohedral (seeds 0/1: {0,3,4,7} / {1,2,5,6}, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile closed to exact Q(√3) surds at the shipped B = 150° member (A = 90°, B = 150°, C = 60°, D = E = 120°, a = 1, b = √3, c = 1, d = 2, e = 1 — the family conditions 2a = d = c + e, 2B + C = 360° hold to ~1e-12); non-edge-to-edge — every d-side splits at its exact midpoint into two unit halves, all other sides full-side matched (b↔b, c↔c, e↔e); vertex stars {90°,90°,180°}, {60°,120°,180°}, {120°,120°,120°}, {60°,150°,150°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M62) |
-| `pentagon-10` | James pentagon, type 10 (James 1975) | cmm | 3-isohedral (seeds 0/1/2: {0,2}, {1,3}, {4,5}), 6 tiles per oblique cell w1 = (5,−2), w2 = (8,1), det 21 = 6 × area (7/2); exact at the shipped B = 90° member (A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2; family a = b = c + e, A = 90°, B + E = 180° with d² = c² + e²); non-edge-to-edge — both length-2 sides split at their exact midpoints into two unit halves (integer T-junctions), all other sides full-side matched (c↔c, d↔d, e↔e); vertex figures {90°,135°,135°} 71×, {90°,90°,180°} 50×, {90°,90°,90°,90°} 13× (134 interior vertices); group cmm by exact audit — mirrors x+y = 3k and x−y = 7k, half-turn at the origin, genuine glide g = T(5,−2)∘R2 with g² = (7,−7) (axis x+y = 3/2, no pure-reflection conjugate), R90 negative; centered rectangular lattice (index-2 sublattice Z(3,3)+Z(−7,7) with centre (−2,5) ∈ L∖L', no orthogonal Z-basis for L) — cmm, not pmm (M63) |
+| `pentagon-10` | James pentagon, type 10 (James 1975) | cmm | 3-isohedral (seeds 0/1/2: {0,2}, {1,3}, {4,5}), 6 tiles per centered-rectangular cell w1 = (3,3), w2 = (−2,5), det 21 = 6 × area (7/2) (M76 basis; the M63 cell basis (5,−2)/(8,1) spans the same lattice); exact at the shipped B = 90° member (A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2; family a = b = c + e, A = 90°, B + E = 180° with d² = c² + e²); non-edge-to-edge — both length-2 sides split at their exact midpoints into two unit halves (integer T-junctions), all other sides full-side matched (c↔c, d↔d, e↔e); vertex figures {90°,135°,135°} 71×, {90°,90°,180°} 50×, {90°,90°,90°,90°} 13× (134 interior vertices); group cmm by exact audit — mirrors x+y = 3k and x−y = 7k, half-turn at the origin, genuine glide g = T(5,−2)∘R2 with g² = (7,−7) (axis x+y = 3/2, no pure-reflection conjugate), R90 negative; centered rectangular lattice (index-2 sublattice Z(3,3)+Z(−7,7) with centre (−2,5) ∈ L∖L', no orthogonal Z-basis for L) — cmm, not pmm (M63) |
 | `pentagon-3` | Reinhardt pentagon, type 3 (family 3, 1918) | p2 | 1-isohedral (single orbit), 2 tiles per oblique cell, exact Q(√3) (pinned integral member (a,b,c,d,e) = (2,2,1,4,3): A = B = C = D = 120°, E = 60° — a = b, d = c + e, B + E = 180°; area 5√3); non-edge-to-edge — only the d = 4 sides split, at their exact midpoints between two length-2 (a/b) partner sides, all other sides full-side matched; vertex stars {60°,120°,180°} (A/E-type) and {120°,120°,120°} (B/C/D-type); chiral prototile, one chirality used — the classical three-tile type-3 pinwheel admits no periodic cell for this member (complete det-15 closure search + norm-form x²+3y²=120), so the shipped structure is the discovered minimal 2-tile p2 cell, four half-turn classes d/2 + Λ/2, no mirrors or glides (M64) |
 
 ### Aperiodic / nonperiodic
@@ -110,6 +109,61 @@ figures at the split midpoints, `2.4.4`).
 | `spectre` | Spectre (chiral einstein Tile(1,1)) | single equal-edge prototile, aperiodic *without* reflections; 9-label D12 substitution (spectre.js-identical), exact Q(√3) surd geometry; edge-to-edge |
 | `hirschhorn` | Hirschhorn–Hunt pentagon (140°/60°/160°/80°/100°) | not locally forced; C6-symmetric constrained-growth realization |
 | `girih-quasiperiodic` | girih star-and-cross {10/3} (quasiperiodic) | quasiperiodic; Darb-i Imam 3-prototile substitution (Lu & Steinhardt 2007, IF = 2φ³); exact 10-fold seed rosette, edge-to-edge at every generation |
+
+## Gallery taxonomy (M76)
+
+M76 restructured the browse gallery into ten tabs
+(`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (2) ·
+**Laves (Catalan duals)** (11) · **Wallpaper** (9) · **Pentagon
+Types** (10) · **Islamic** (9) · **Arrangements** (5) ·
+**Quasiperiodic** (8) · **Aperiodic** (4) · **Nonperiodic** (4) —
+73 memberships over the 61 implemented tilings; the 12 extra are
+secondary memberships.
+
+- **Multi-tab membership.** `Tiling::secondary_categories()` (default
+  `&[]`) lets a tiling appear in additional tabs: `triangle`,
+  `square` and `hexagon` also appear under Laves (self-dual regular
+  patterns), and nine tilings appear under the Wallpaper catalog.
+  `browse_tabs` appends secondary categories to each card's tabs and
+  sorts each tab by `section_key`, which now guards on the *tab's*
+  category, not the card's (a Wallpaper tab is all-secondary).
+  Both UIs (ratatui + egui) pin the ten-tab layout, and the headless
+  egui geometry test pins the new card budget (2-line card titles,
+  no clipping at 1200×900, 640×800 and 2560×900).
+- **Wallpaper catalog.** The Wallpaper tab is a group catalog, not a
+  motif list: one card per realized wallpaper group — 9 of the 17:
+  p2 → pentagon-3, pmm → kuniform-pmm, pgg → herringbone, p4 →
+  windmill, p4m → truncated-square, p4g → snub-square, p6 →
+  snub-trihexagonal, p6m → hexagon, cmm → elongated-triangular. The
+  eight un-realized groups — p1, pm, pg, cm, pmg, p3, p3m1, p31m —
+  are named in a shared gap note
+  (`tess_core::browse::wallpaper_gap_note`) rendered at the top of
+  the tab in both UIs; no placeholder cards. (Historic bug fixed in
+  M76: the 17th group is **pmg**, not cmc — Cmc is a 3D space group;
+  the misnamed `WallpaperGroup::Cmc` variant is now `Pmg`.)
+- **LatticeKind::CenteredRectangular.** A fifth lattice kind. The
+  legality test
+  (`declared_symmetry_is_legal_and_matches_the_measured_lattice`)
+  pins each declared (group, lattice kind) against the 17-group
+  table and re-measures the lattice from the declared basis vectors
+  alone (hexagonal probe → orthogonal unimodular pair →
+  centered-rectangular probe; tol 1e-6), never calling `generate()`.
+  Re-declarations: pentagon-10 → centered, basis (3,3)/(−2,5);
+  running-bond → centered, basis (2,0)/(1,1) 1-domino cell — the
+  only declared-c-rect whose measured lattice is a √2-degenerate
+  square lattice, the test's documented exception (point group 2mm,
+  no 4-fold); girih-shesh-band → centered (p2); girih-star-cross →
+  centered with group corrected pmm → cmm (the (77,45)/(0,90) basis
+  is a primitive cell of the centered rectangular lattice);
+  elongated-triangular and prismatic-pentagonal → centered;
+  herringbone → rectangular, basis normalized to (2,2)/(1,−1).
+- **Cairo merge.** `cairo-collinear` was the same Laves pattern
+  (V3.3.4.3.4, dual of snub-square) as `cairo-pentagonal` with a
+  different pentagon shape, so it was dropped as a separate card;
+  `cairo-pentagonal` is now named "Cairo Pentagonal (V3.3.4.3.4)"
+  and its description documents the collinear-vertex variant
+  (143.13/108.43/108.43/90/90°, edges 4×√10 + 4, integral vertices,
+  square 72-area cell). 62 → 61 tilings.
 
 ## Arc: "complete the classics" — ✅ complete (M19–M29)
 
@@ -2300,3 +2354,27 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   reflected copies; the two girih star-cross cards now self-identify in
   title (periodic vs quasiperiodic). No registry or geometry changes:
   Aperiodic 7→4, Nonperiodic 1→4, 62 tilings, no new tests.
+- 2026-11-17 — M76 gallery taxonomy redesign ✅: (1) new
+  `LatticeKind::CenteredRectangular` (fifth lattice kind) + legality
+  test pinning declared (group, lattice kind) against the 17-group
+  table with basis-vector-only lattice measurement (hexagonal →
+  orthogonal → centered-rectangular probes, tol 1e-6); re-declares
+  pentagon-10 (3,3)/(−2,5), running-bond (2,0)/(1,1) + 1-domino cell
+  (√2-degenerate-square exception), girih-shesh-band (p2, centered),
+  girih-star-cross (pmm → cmm, centered, (77,45)/(0,90) basis kept —
+  a primitive cell of the centered lattice), elongated-triangular,
+  prismatic-pentagonal → centered, herringbone basis normalized to
+  (2,2)/(1,−1); (2) `Tiling::secondary_categories()` multi-tab
+  membership — triangle/square/hexagon also under Laves, nine tilings
+  under the new Wallpaper group-catalog tab (9 of 17 groups; shared
+  gap note names the 8 absent: p1, pm, pg, cm, pmg, p3, p3m1, p31m);
+  the 17th group is pmg, not cmc (Cmc is a 3D space group — the
+  misnamed enum variant renamed Cmc → Pmg); (3) `cairo-collinear`
+  merged into `cairo-pentagonal` ("Cairo Pentagonal (V3.3.4.3.4)" +
+  collinear-variant sentence) — 62 → 61 tilings; (4) browse gallery
+  restructured to ten tabs (Uniform 11, Two-Uniform 2, Laves 11,
+  Wallpaper 9, Pentagon Types 10, Islamic 9, Arrangements 5,
+  Quasiperiodic 8, Aperiodic 4, Nonperiodic 4; 73 memberships),
+  pinned in both UIs with word-boundary 2-line card titles, number
+  keys 1–9/0, `section_key(tab_category, card)`, and the headless
+  no-clipping geometry test at three window sizes (mutation-checked).

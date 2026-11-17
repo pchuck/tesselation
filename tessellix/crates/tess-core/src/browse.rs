@@ -84,13 +84,15 @@ impl Tab {
 
 /// The display order of lattice kinds (crystal systems), used as the
 /// primary sort key within the Wallpaper tab: oblique, rectangular,
-/// square, hexagonal; non-lattice entries (if any) sort last.
+/// centered rectangular, square, hexagonal; non-lattice entries (if any)
+/// sort last.
 pub fn lattice_rank(l: LatticeKind) -> u8 {
     match l {
         LatticeKind::Oblique => 0,
         LatticeKind::Rectangular => 1,
-        LatticeKind::Square => 2,
-        LatticeKind::Hexagonal => 3,
+        LatticeKind::CenteredRectangular => 2,
+        LatticeKind::Square => 3,
+        LatticeKind::Hexagonal => 4,
         LatticeKind::None => 9,
     }
 }
@@ -105,25 +107,32 @@ pub fn group_rank(g: Option<WallpaperGroup>) -> u8 {
     }
 }
 
-/// The crystal-system section key for a card: the header text a card
-/// grid should draw above the first card of each section. Only Wallpaper
-/// cards have non-empty sections; centered-rectangular groups (Cm, Cmm,
-/// Cmc) form their own "centered" section, distinct from primitive
-/// rectangular. Non-wallpaper cards and lattice-less Wallpaper cards
-/// return `""` (no header).
-pub fn section_key(card: &CardMeta) -> &'static str {
-    if card.category != TilingCategory::Wallpaper {
+/// The crystal-system section key for a card displayed in the tab
+/// `tab_category`: the header text a card grid should draw above the
+/// first card of each section. Only the Wallpaper tab has sections —
+/// the group catalog is sorted by crystal system, and the key is the
+/// card's declared lattice kind ("oblique", "rectangular", "centered",
+/// "square", "hexagonal"); the tab context is required because the
+/// Wallpaper tab's cards are secondary members whose primary category
+/// is their own family (M76). A centered-rectangular card can only
+/// carry a C-group (Cm or Cmm), which is cross-checked with a
+/// debug_assert. Cards in every other tab, and lattice-less Wallpaper
+/// cards, return `""` (no header).
+pub fn section_key(tab_category: TilingCategory, card: &CardMeta) -> &'static str {
+    if tab_category != TilingCategory::Wallpaper {
         return "";
     }
     match card.lattice {
         Some(LatticeKind::Oblique) => "oblique",
-        Some(LatticeKind::Rectangular) => {
-            match card.group {
-                Some(WallpaperGroup::Cm | WallpaperGroup::Cmm | WallpaperGroup::Cmc) => {
-                    "centered"
-                }
-                _ => "rectangular",
-            }
+        Some(LatticeKind::Rectangular) => "rectangular",
+        Some(LatticeKind::CenteredRectangular) => {
+            debug_assert!(
+                matches!(card.group, Some(WallpaperGroup::Cm | WallpaperGroup::Cmm)),
+                "centered-rectangular card {} declares non-C-group {:?}",
+                card.id,
+                card.group
+            );
+            "centered"
         }
         Some(LatticeKind::Square) => "square",
         Some(LatticeKind::Hexagonal) => "hexagonal",
@@ -131,36 +140,79 @@ pub fn section_key(card: &CardMeta) -> &'static str {
     }
 }
 
+/// The wallpaper groups with no registered realizer (M76). The Wallpaper
+/// tab renders one card per group it does have; both UIs show the groups
+/// in this table as an explicit gap note in that tab. As roadmap tilings
+/// land, groups are removed from this table.
+pub const WALLPAPER_GROUP_GAPS: [WallpaperGroup; 8] = [
+    WallpaperGroup::P1,
+    WallpaperGroup::Pm,
+    WallpaperGroup::Pg,
+    WallpaperGroup::Cm,
+    WallpaperGroup::Pmg,
+    WallpaperGroup::P3,
+    WallpaperGroup::P3m1,
+    WallpaperGroup::P31m,
+];
+
+/// The explicit gap note the Wallpaper tab renders above its cards:
+/// the groups in [`WALLPAPER_GROUP_GAPS`] have no registered realizer
+/// yet (roadmap queue), so the tab's one-card-per-group catalog is not
+/// complete. Both UIs derive this text from the gap table.
+pub fn wallpaper_gap_note() -> String {
+    let names: Vec<String> = WALLPAPER_GROUP_GAPS.iter().map(ToString::to_string).collect();
+    format!("no realizer registered for: {} (roadmap queue)", names.join(" · "))
+}
+
 /// Capture a tiling's declared metadata as card data. Symmetry facts are
 /// read from a bounded probe generation (see the module docs).
+///
+/// The group/lattice fields are set for the periodic categories (every
+/// category whose cards are wallpaper tilings); they are `None` for the
+/// nonperiodic world (quasiperiodic / aperiodic / nonperiodic), whose
+/// generators report `P1` / `None` as a "not a wallpaper tiling"
+/// placeholder, not as a claim of p1 symmetry.
 pub fn card_meta(t: &dyn Tiling) -> CardMeta {
     let params = ParamSet::default_for(t.params());
     let region = BBox::new(PROBE_REGION.0, PROBE_REGION.1);
     let result = t.generate(&params, &Query { region });
-    let wallpaper = matches!(
+    let periodic = matches!(
         t.category(),
-        TilingCategory::Uniform | TilingCategory::Laves | TilingCategory::Wallpaper
+        TilingCategory::Uniform
+            | TilingCategory::TwoUniform
+            | TilingCategory::Laves
+            | TilingCategory::Wallpaper
+            | TilingCategory::PentagonTypes
+            | TilingCategory::Islamic
+            | TilingCategory::Arrangements
     );
     CardMeta {
         id: t.id(),
         name: t.name(),
         description: t.description(),
         category: t.category(),
-        group: wallpaper.then_some(result.symmetry.group),
-        lattice: wallpaper.then_some(result.symmetry.lattice),
+        group: periodic.then_some(result.symmetry.group),
+        lattice: periodic.then_some(result.symmetry.lattice),
         notes: result.symmetry.notes,
         params: t.params().len(),
     }
 }
 
 /// Build the browser: one [`Tab`] per category in canonical
-/// [`TilingCategory::ALL`] order (all six tabs, including any that are
+/// [`TilingCategory::ALL`] order (all tabs, including any that are
 /// empty — a stable tab bar).
 ///
-/// Ordering: the Wallpaper tab is sorted by (lattice rank, group rank),
-/// i.e. crystal system first (oblique, rectangular, square, hexagonal)
-/// and wallpaper group within a crystal system; ties keep registry
-/// order (the sort is stable). Every other tab keeps registry order.
+/// Membership: a tiling appears in its primary tab and in every tab
+/// from its [`Tiling::secondary_categories`] (multi-tab membership).
+/// Secondary cards are appended after the primaries, in registry
+/// order, so a card's primary slot is stable across tab changes.
+///
+/// Ordering: the Wallpaper tab (the one-card-per-group catalog) is
+/// sorted by (lattice rank, group rank), i.e. crystal system first
+/// (oblique, rectangular, centered rectangular, square, hexagonal) and
+/// wallpaper group within a crystal system; ties keep registry order
+/// (the sort is stable). Every other tab keeps primary-then-secondary
+/// registry order.
 pub fn browse_tabs(registry: &Registry) -> Vec<Tab> {
     let mut tabs = Vec::with_capacity(TilingCategory::ALL.len());
     for cat in TilingCategory::ALL {
@@ -169,6 +221,11 @@ pub fn browse_tabs(registry: &Registry) -> Vec<Tab> {
             .filter(|t| t.category() == cat)
             .map(card_meta)
             .collect();
+        for t in registry.iter().filter(|t| {
+            t.category() != cat && t.secondary_categories().contains(&cat)
+        }) {
+            cards.push(card_meta(t));
+        }
         if cat == TilingCategory::Wallpaper {
             cards.sort_by_key(|c| {
                 (
@@ -193,6 +250,7 @@ mod tests {
     struct Fixed {
         id: &'static str,
         cat: TilingCategory,
+        secondary: &'static [TilingCategory],
         group: WallpaperGroup,
         lattice: LatticeKind,
         params: usize,
@@ -210,6 +268,9 @@ mod tests {
         }
         fn category(&self) -> TilingCategory {
             self.cat
+        }
+        fn secondary_categories(&self) -> &'static [TilingCategory] {
+            self.secondary
         }
         fn params(&self) -> &'static [ParamSpec] {
             match self.params {
@@ -236,6 +297,7 @@ mod tests {
         r = r.register(Fixed {
             id: "hex-a",
             cat: TilingCategory::Wallpaper,
+            secondary: &[],
             group: WallpaperGroup::P6m,
             lattice: LatticeKind::Hexagonal,
             params: 0,
@@ -243,6 +305,7 @@ mod tests {
         r = r.register(Fixed {
             id: "obl-a",
             cat: TilingCategory::Wallpaper,
+            secondary: &[],
             group: WallpaperGroup::P1,
             lattice: LatticeKind::Oblique,
             params: 0,
@@ -250,6 +313,7 @@ mod tests {
         r = r.register(Fixed {
             id: "sq-b",
             cat: TilingCategory::Wallpaper,
+            secondary: &[],
             group: WallpaperGroup::P2,
             lattice: LatticeKind::Square,
             params: 0,
@@ -257,6 +321,7 @@ mod tests {
         r = r.register(Fixed {
             id: "sq-a",
             cat: TilingCategory::Wallpaper,
+            secondary: &[],
             group: WallpaperGroup::P1,
             lattice: LatticeKind::Square,
             params: 0,
@@ -264,13 +329,15 @@ mod tests {
         r = r.register(Fixed {
             id: "ctr-a",
             cat: TilingCategory::Wallpaper,
+            secondary: &[],
             group: WallpaperGroup::Cmm,
-            lattice: LatticeKind::Rectangular,
+            lattice: LatticeKind::CenteredRectangular,
             params: 0,
         });
         r = r.register(Fixed {
             id: "primsq-a",
             cat: TilingCategory::Wallpaper,
+            secondary: &[],
             group: WallpaperGroup::Pmm,
             lattice: LatticeKind::Rectangular,
             params: 0,
@@ -278,6 +345,7 @@ mod tests {
         r = r.register(Fixed {
             id: "u1",
             cat: TilingCategory::Uniform,
+            secondary: &[],
             group: WallpaperGroup::P4m,
             lattice: LatticeKind::Square,
             params: 0,
@@ -285,30 +353,57 @@ mod tests {
         r = r.register(Fixed {
             id: "a1",
             cat: TilingCategory::Aperiodic,
+            secondary: &[],
             group: WallpaperGroup::P1,
             lattice: LatticeKind::None,
+            params: 0,
+        });
+        // Laves-primary with a Wallpaper secondary membership (the
+        // multi-tab member); registered last so it ties hex-a in the
+        // stable Wallpaper sort.
+        r = r.register(Fixed {
+            id: "l1",
+            cat: TilingCategory::Laves,
+            secondary: &[TilingCategory::Wallpaper],
+            group: WallpaperGroup::P6m,
+            lattice: LatticeKind::Hexagonal,
             params: 0,
         });
         r
     }
 
     #[test]
-    fn tabs_cover_every_tiling_exactly_once() {
+    fn tabs_cover_every_tiling_through_membership() {
         let r = reg();
         let tabs = browse_tabs(&r);
         assert_eq!(tabs.len(), TilingCategory::ALL.len());
         for (i, c) in TilingCategory::ALL.iter().enumerate() {
             assert_eq!(tabs[i].category, *c);
         }
+        // Membership semantics: one card per primary category, plus one
+        // card per declared secondary (l1's Wallpaper membership).
         let total: usize = tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, r.len());
+        assert_eq!(total, r.len() + 1, "one secondary membership");
         let mut ids: Vec<&str> = tabs
             .iter()
             .flat_map(|t| t.cards.iter().map(|c| c.id))
             .collect();
+        let distinct = ids.len();
         ids.sort_unstable();
         ids.dedup();
-        assert_eq!(ids.len(), r.len(), "no card dropped or duplicated");
+        assert_eq!(ids.len(), r.len(), "no tiling dropped");
+        assert_eq!(distinct, r.len() + 1, "l1 appears in exactly two tabs");
+        for t in r.iter() {
+            let primary = tabs
+                .iter()
+                .find(|tab| tab.category == t.category())
+                .unwrap();
+            assert!(primary.card_index_of(t.id()).is_some(), "primary tab missing {}", t.id());
+            for sec in t.secondary_categories() {
+                let tab = tabs.iter().find(|tab| tab.category == *sec).unwrap();
+                assert!(tab.card_index_of(t.id()).is_some(), "secondary tab {} missing {}", sec, t.id());
+            }
+        }
     }
 
     #[test]
@@ -320,12 +415,13 @@ mod tests {
             .find(|t| t.category == TilingCategory::Wallpaper)
             .unwrap();
         let ids: Vec<&str> = wall.cards.iter().map(|c| c.id).collect();
-        // oblique, then rectangular (Pmm before Cmm), then square (P1
-        // before P2), then hexagonal: registry order is broken exactly
-        // as the (lattice rank, group rank) keys demand.
+        // oblique, then rectangular, then centered rectangular, then
+        // square (P1 before P2), then hexagonal (the P6m tie between
+        // hex-a and l1 keeps registry order): broken exactly as the
+        // (lattice rank, group rank) keys demand.
         assert_eq!(
             ids,
-            vec!["obl-a", "primsq-a", "ctr-a", "sq-a", "sq-b", "hex-a"]
+            vec!["obl-a", "primsq-a", "ctr-a", "sq-a", "sq-b", "hex-a", "l1"]
         );
     }
 
@@ -338,12 +434,20 @@ mod tests {
             .find(|t| t.category == TilingCategory::Uniform)
             .unwrap();
         assert_eq!(uni.cards.iter().map(|c| c.id).collect::<Vec<_>>(), vec!["u1"]);
-        // Empty categories still appear (stable tab bar).
+        // The Laves primary card (l1) is here in registry order; its
+        // Wallpaper secondary is sorted in the Wallpaper tab.
         let lav = tabs
             .iter()
             .find(|t| t.category == TilingCategory::Laves)
             .unwrap();
-        assert!(lav.cards.is_empty());
+        assert_eq!(lav.cards.iter().map(|c| c.id).collect::<Vec<_>>(), vec!["l1"]);
+        // Categories with no members at all still appear (stable tab
+        // bar).
+        let qp = tabs
+            .iter()
+            .find(|t| t.category == TilingCategory::Quasiperiodic)
+            .unwrap();
+        assert!(qp.cards.is_empty());
     }
 
     #[test]
@@ -371,7 +475,7 @@ mod tests {
         let key = |id: &str| {
             wall.iter()
                 .find(|c| c.id == id)
-                .map(|c| section_key(c))
+                .map(|c| section_key(TilingCategory::Wallpaper, c))
                 .unwrap()
         };
         assert_eq!(key("obl-a"), "oblique");
@@ -379,19 +483,19 @@ mod tests {
         assert_eq!(key("ctr-a"), "centered");
         assert_eq!(key("sq-a"), "square");
         assert_eq!(key("hex-a"), "hexagonal");
-        // Non-wallpaper cards have no section.
+        // Cards in other tabs have no section, whatever their lattice.
         let uni = &tabs
             .iter()
             .find(|t| t.category == TilingCategory::Uniform)
             .unwrap()
             .cards[0];
-        assert_eq!(section_key(uni), "");
+        assert_eq!(section_key(TilingCategory::Uniform, uni), "");
         let a1 = &tabs
             .iter()
             .find(|t| t.category == TilingCategory::Aperiodic)
             .unwrap()
             .cards[0];
-        assert_eq!(section_key(a1), "");
+        assert_eq!(section_key(TilingCategory::Aperiodic, a1), "");
     }
 
     #[test]
@@ -407,7 +511,7 @@ mod tests {
             .cards;
         let mut seen: Vec<&'static str> = Vec::new();
         for c in wall {
-            let k = section_key(c);
+            let k = section_key(TilingCategory::Wallpaper, c);
             if !k.is_empty() && !seen.contains(&k) {
                 seen.push(k);
             }
@@ -435,5 +539,26 @@ mod tests {
             .cards[0];
         assert_eq!(u1.group, Some(WallpaperGroup::P4m));
         assert_eq!(u1.lattice, Some(LatticeKind::Square));
+    }
+
+    #[test]
+    fn wallpaper_group_gaps_are_exactly_the_unrepresented_groups() {
+        // The gap table plus the groups represented by the real registry
+        // must partition the 17 groups; the 9 represented groups are
+        // pinned by the tess-tilings census test, which cross-checks the
+        // table against the actual declarations. Here: the table is
+        // well-formed on its own.
+        assert_eq!(WALLPAPER_GROUP_GAPS.len(), 8);
+        let mut gaps = WALLPAPER_GROUP_GAPS.to_vec();
+        gaps.sort_unstable_by_key(|g| group_rank(Some(*g)));
+        let n = gaps.len();
+        gaps.dedup();
+        assert_eq!(gaps.len(), n, "gap table has no duplicates");
+        for g in WALLPAPER_GROUP_GAPS {
+            assert!(
+                WallpaperGroup::ALL.contains(&g),
+                "gap table lists non-wallpaper group {g}"
+            );
+        }
     }
 }

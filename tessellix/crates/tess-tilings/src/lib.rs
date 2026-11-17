@@ -223,7 +223,6 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "cairo")]
     {
         r = r.register(cairo::cairo_pentagonal());
-        r = r.register(cairo::cairo_collinear());
     }
     #[cfg(feature = "chair")]
     {
@@ -307,6 +306,7 @@ pub fn registry() -> tess_core::Registry {
 mod tests {
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
     use tess_core::tiling::{Query, Tiling};
 
     /// Deterministic xorshift64 rng, shared by the test modules in this
@@ -423,79 +423,291 @@ mod tests {
     /// The GUI fills each tile with ear-clipped triangles; verify the
     /// triangulation of every generated tile is valid: n−2 triangles and
     /// area conserved to high precision (a sign of no overfill/gaps).
-    /// The declared-category grouping both UIs render: categories in
-    /// canonical [`TilingCategory::ALL`] order, registration order
-    /// preserved within each category, and no tiling dropped or
-    /// duplicated. The per-category census pins today's taxonomy —
-    /// extend it when adding a tiling (and the README's count).
+    /// The declared-category grouping both UIs render, via the shared
+    /// [`tess_core::browse_tabs`] model: one tab per category in
+    /// canonical [`TilingCategory::ALL`] order, each tiling in its
+    /// primary tab plus every tab from its
+    /// [`Tiling::secondary_categories`]. The per-tab census pins today's
+    /// taxonomy — extend it when adding a tiling (and the README's
+    /// count).
     #[test]
     fn registry_groups_are_complete_and_canonically_ordered() {
         let r = super::registry();
-        let grouped = r.grouped();
+        let tabs = tess_core::browse_tabs(&r);
 
-        let pos = |c: &tess_core::TilingCategory| {
-            tess_core::TilingCategory::ALL
+        // Exactly one tab per category, in canonical ALL order.
+        assert_eq!(tabs.len(), tess_core::TilingCategory::ALL.len());
+        for (tab, c) in tabs.iter().zip(tess_core::TilingCategory::ALL.iter()) {
+            assert_eq!(tab.category, *c, "tabs follow TilingCategory::ALL order");
+        }
+
+        // Completeness: every tiling in its primary tab, every declared
+        // secondary present, nothing else.
+        let memberships: usize = tabs.iter().map(|t| t.cards.len()).sum();
+        for t in r.iter() {
+            let primary = tabs.iter().find(|tab| tab.category == t.category()).unwrap();
+            assert!(
+                primary.card_index_of(t.id()).is_some(),
+                "primary tab missing {}",
+                t.id()
+            );
+            for sec in t.secondary_categories() {
+                let tab = tabs.iter().find(|tab| tab.category == *sec).unwrap();
+                assert!(
+                    tab.card_index_of(t.id()).is_some(),
+                    "secondary tab {} missing {}",
+                    sec,
+                    t.id()
+                );
+            }
+        }
+        let expected_memberships: usize =
+            r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
+        assert_eq!(memberships, expected_memberships, "membership census");
+
+        // Census of today's taxonomy (M76). 61 built-ins — 62 before the
+        // cairo-collinear merge into cairo-pentagonal (M76) — across the
+        // 10 tabs, in TilingCategory::ALL order:
+        //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
+        //   TwoUniform 2, Laves 11 (8 primary incl. cairo-pentagonal +
+        //   3 regular secondaries), Wallpaper 9 (group representatives
+        //   as secondaries — one card per represented group),
+        //   PentagonTypes 10, Islamic 9, Arrangements 5,
+        //   Quasiperiodic 8, Aperiodic 4, Nonperiodic 4.
+        // Membership census 73 = 61 primaries + 12 secondaries (3 Laves
+        // + 9 Wallpaper).
+        // History: M50 16 Wallpaper under default features -> M55 17
+        // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
+        // -> M62 22 (pentagon-12) -> M63 23 (pentagon-10) -> M64 24
+        // (pentagon-3) -> M65 25 (pentagon-2) -> M72 26 (pentagon-7)
+        // -> M76: the old single Wallpaper bucket (26) is replaced by
+        // the 10-tab scheme above.
+        let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
+        assert_eq!(
+            sizes,
+            vec![11, 2, 11, 9, 10, 9, 5, 8, 4, 4],
+            "per-tab census (update when adding tilings)"
+        );
+        assert_eq!(r.len(), 61, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 73, "membership census (update when adding tilings)");
+
+        // The Wallpaper tab is the group catalog: exactly one card per
+        // represented group, and the represented groups are precisely
+        // the 17 groups minus the gap table.
+        let wall = &tabs
+            .iter()
+            .find(|t| t.category == tess_core::TilingCategory::Wallpaper)
+            .unwrap();
+        let mut groups: Vec<&WallpaperGroup> = wall
+            .cards
+            .iter()
+            .filter_map(|c| c.group.as_ref())
+            .collect();
+        groups.sort_unstable_by_key(|g| {
+            WallpaperGroup::ALL
                 .iter()
-                .position(|a| a == c)
-                .expect("declared categories are ALL variants")
-        };
-        for w in grouped.windows(2) {
-            assert!(pos(&w[0].0) < pos(&w[1].0), "categories out of canonical order");
+                .position(|a| *a == **g)
+                .unwrap()
+        });
+        assert_eq!(groups.len(), wall.cards.len(), "every Wallpaper card carries a group");
+        assert_eq!(groups.len(), 9, "nine represented wallpaper groups");
+        let expected: Vec<&WallpaperGroup> = WallpaperGroup::ALL
+            .iter()
+            .filter(|g| !tess_core::browse::WALLPAPER_GROUP_GAPS.contains(*g))
+            .collect();
+        assert_eq!(groups, expected, "represented groups = 17 - gaps");
+    }
+
+    /// Part A legality test (M76). Two independent claims per tiling:
+    ///
+    /// 1. *Group legality*: the declared (group, lattice kind) pair is a
+    ///    row of the crystallographic table (owner doc §4,
+    ///    `docs/2D_Tilings_Reference.md`): p1/p2 admit any lattice;
+    ///    pm/pg/pmm/pmg/pgg are primitive-rectangular only; cm/cmm are
+    ///    centered-rectangular only; p4/p4m/p4g are square only;
+    ///    p3/p3m1/p31m/p6/p6m are hexagonal only.
+    /// 2. *Basis measurement*: when a fixed lattice basis is declared
+    ///    (`Tiling::lattice_basis`), the lattice it spans must actually
+    ///    be of the declared kind. Measured from the basis vectors
+    ///    alone — no `generate()` call — via [`measured_kind`]. The
+    ///    measurement reports the lattice's MAXIMAL metric type, so one
+    ///    degenerate realization is admitted: a rectangular or
+    ///    centered-rectangular lattice whose vectors happen to form a
+    ///    square metric lattice (equal-length orthogonal vectors) is
+    ///    measured as Square even though the pattern's point group has
+    ///    no 4-fold — a square-metric translation lattice under a
+    ///    ≤2-fold group is a valid rectangular/c-rectangular Bravais
+    ///    realization (running-bond: L = {x+y even}, constant √2).
+    ///    Cross-combos in the other direction are NOT admitted: a
+    ///    declared Square must measure Square, a declared Oblique must
+    ///    measure Oblique.
+    #[test]
+    fn declared_symmetry_is_legal_and_matches_the_measured_lattice() {
+        /// The lattice kinds a wallpaper group may sit on (the 17-group
+        /// legality table; see the test docs).
+        fn legal_kinds(g: WallpaperGroup) -> &'static [LatticeKind] {
+            match g {
+                WallpaperGroup::P1 | WallpaperGroup::P2 => &[
+                    LatticeKind::Oblique,
+                    LatticeKind::Rectangular,
+                    LatticeKind::CenteredRectangular,
+                    LatticeKind::Square,
+                    LatticeKind::Hexagonal,
+                ],
+                WallpaperGroup::Pm
+                | WallpaperGroup::Pg
+                | WallpaperGroup::Pmm
+                | WallpaperGroup::Pmg
+                | WallpaperGroup::Pgg => &[LatticeKind::Rectangular],
+                WallpaperGroup::Cm | WallpaperGroup::Cmm => &[LatticeKind::CenteredRectangular],
+                WallpaperGroup::P4 | WallpaperGroup::P4m | WallpaperGroup::P4g => {
+                    &[LatticeKind::Square]
+                }
+                WallpaperGroup::P3
+                | WallpaperGroup::P3m1
+                | WallpaperGroup::P31m
+                | WallpaperGroup::P6
+                | WallpaperGroup::P6m => &[LatticeKind::Hexagonal],
+            }
         }
 
-        // Completeness: exactly a partition of the registry.
-        let total: usize = grouped.iter().map(|(_, ts)| ts.len()).sum();
-        assert_eq!(total, r.len(), "grouping must not drop tilings");
-        let mut ids: Vec<&str> =
-            grouped.iter().flat_map(|(_, ts)| ts.iter().map(|t| t.id())).collect();
-        ids.sort_unstable();
-        let mut expect: Vec<&str> = r.iter().map(|t| t.id()).collect();
-        expect.sort_unstable();
-        assert_eq!(ids, expect, "grouping must not duplicate tilings");
+        /// Measure the lattice type of L = Z a + Z b from the basis
+        /// vectors alone. Priority: hexagonal (an equal-length 60/120°
+        /// basis exists), then orthogonal basis (square when the pair is
+        /// equal-length, rectangular otherwise), then centered
+        /// rectangular (an orthogonal pair spanning an index-2
+        /// sublattice whose cell center is a lattice point), else
+        /// oblique. Every stage is an exact invariant of the lattice, so
+        /// the search bounds only affect finding the certificate, never
+        /// the answer.
+        fn measured_kind(a: Vec2, b: Vec2) -> LatticeKind {
+            let det = a.cross(b);
+            let tol = 1e-6 * a.dot(a).max(b.dot(b)).max(1.0);
+            let span = |m: i32, n: i32, p: i32, q: i32| -> (Vec2, Vec2) {
+                (a * m as f64 + b * n as f64, a * p as f64 + b * q as f64)
+            };
+            let is_basis = |d: f64| (d - det).abs() <= tol || (d + det).abs() <= tol;
 
-        // Registration order preserved within each category.
-        for (c, ts) in &grouped {
-            let registry_order: Vec<&str> =
-                r.iter().filter(|t| t.category() == *c).map(|t| t.id()).collect();
-            let got: Vec<&str> = ts.iter().map(|t| t.id()).collect();
-            assert_eq!(got, registry_order, "{}: within-category order", c);
+            // Stage 1: hexagonal — a 60/120° equal-length basis of L.
+            for m in -2..=2 {
+                for n in -2..=2 {
+                    if m == 0 && n == 0 {
+                        continue;
+                    }
+                    for p in -2..=2 {
+                        for q in -2..=2 {
+                            if p == 0 && q == 0 {
+                                continue;
+                            }
+                            let (u, v) = span(m, n, p, q);
+                            if !is_basis(u.cross(v)) {
+                                continue;
+                            }
+                            let (u2, v2) = (u.dot(u), v.dot(v));
+                            if (u2 - v2).abs() > tol {
+                                continue;
+                            }
+                            // 2 u·v = ±|u|²  <=>  60° or 120°.
+                            if (2.0 * u.dot(v) - u2).abs() <= tol
+                                || (2.0 * u.dot(v) + u2).abs() <= tol
+                            {
+                                return LatticeKind::Hexagonal;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Stage 2: an orthogonal basis of L — square when the pair is
+            // equal-length, rectangular otherwise. (A centered lattice
+            // never has an orthogonal basis, so this stage cannot
+            // misclassify one.)
+            for m in -3..=3 {
+                for n in -3..=3 {
+                    if m == 0 && n == 0 {
+                        continue;
+                    }
+                    for p in -3..=3 {
+                        for q in -3..=3 {
+                            if p == 0 && q == 0 {
+                                continue;
+                            }
+                            let (u, v) = span(m, n, p, q);
+                            if !is_basis(u.cross(v)) || u.dot(v).abs() > tol {
+                                continue;
+                            }
+                            return if (u.dot(u) - v.dot(v)).abs() <= tol {
+                                LatticeKind::Square
+                            } else {
+                                LatticeKind::Rectangular
+                            };
+                        }
+                    }
+                }
+            }
+
+            // Stage 3: centered rectangular — an orthogonal pair (u, v)
+            // spanning an index-2 sublattice with the cell center
+            // (u+v)/2 back in L (even coefficient sums). A primitive
+            // rectangular or oblique lattice has no such pair.
+            for m in -3..=3 {
+                for n in -3..=3 {
+                    if m == 0 && n == 0 {
+                        continue;
+                    }
+                    for p in -3..=3 {
+                        for q in -3..=3 {
+                            if p == 0 && q == 0 {
+                                continue;
+                            }
+                            if (m + p) % 2 != 0 || (n + q) % 2 != 0 {
+                                continue;
+                            }
+                            let (u, v) = span(m, n, p, q);
+                            if (u.cross(v) - 2.0 * det).abs() > tol
+                                && (u.cross(v) + 2.0 * det).abs() > tol
+                            {
+                                continue;
+                            }
+                            if u.dot(v).abs() > tol {
+                                continue;
+                            }
+                            return LatticeKind::CenteredRectangular;
+                        }
+                    }
+                }
+            }
+
+            LatticeKind::Oblique
         }
 
-        // Census of today's taxonomy. The test runs under both the
-        // default features and `--features pentagon14`, so the Wallpaper
-        // count must track whichever pentagon census the registry holds.
-        // Coordinator note (M50 integration): main carries girih-w85 and
-        // pic-4-8-8 beyond the fork point, so the fixed convention wins —
-        // 16 under every build that keeps default features.
-        // M55: pentagon-15 added to defaults -> 17 under every build
-        // that keeps default features.
-        // M59: pentagon-9 added to defaults -> 20 under every build that
-        // keeps default features.
-        // M60: pentagon-11 added to defaults -> 21 under every build that
-        // keeps default features.
-        // M62: pentagon-12 added to defaults -> 22 under every build that
-        // keeps default features.
-// M63: pentagon-10 added to defaults -> 23 under every build that
-        // keeps default features.
-        // M64: pentagon-3 added to defaults -> 24 under every build that
-        // keeps default features.
-        // M65: pentagon-2 added to defaults -> 25 under every build that
-        // keeps default features.
-        // M72: pentagon-7 added to defaults -> 26 under every build that
-        // keeps default features.
-        let counts: std::collections::BTreeMap<&str, usize> =
-            grouped.iter().map(|(c, ts)| (c.label(), ts.len())).collect();
-        let expect_counts: std::collections::BTreeMap<&str, usize> = [
-            ("Uniform", 11),
-            ("Laves (Catalan duals)", 9),
-            ("Wallpaper", 26),
-            ("Quasiperiodic", 8),
-            ("Aperiodic", 4),
-            ("Nonperiodic", 4),
-        ]
-        .into_iter()
-        .collect();
-        assert_eq!(counts, expect_counts, "category census (update when adding tilings)");
+        for t in super::registry().iter() {
+            let Some(meta) = t.declared_symmetry() else {
+                continue; // aperiodic / quasiperiodic / parameterized
+            };
+            assert!(
+                legal_kinds(meta.group).contains(&meta.lattice),
+                "{}: {} does not permit lattice kind {}",
+                t.id(),
+                meta.group,
+                meta.lattice
+            );
+            if let Some([a, b]) = t.lattice_basis() {
+                let measured = measured_kind(a, b);
+                assert!(
+                    measured == meta.lattice
+                        || (measured == LatticeKind::Square
+                            && matches!(
+                                meta.lattice,
+                                LatticeKind::Rectangular | LatticeKind::CenteredRectangular
+                            )),
+                    "{}: declared {} but the declared basis measures as {}",
+                    t.id(),
+                    meta.lattice,
+                    measured
+                );
+            }
+        }
     }
 
     #[test]
@@ -2006,7 +2218,6 @@ mod cairo_tests {
     use super::tests::{check_covers, check_det, check_rotated};
     use crate::cairo;
     use tess_core::geometry::{BBox, Vec2};
-    use tess_core::tiling::Tiling;
 
     fn v2(x: f64, y: f64) -> Vec2 {
         Vec2::new(x, y)
@@ -2041,139 +2252,6 @@ mod cairo_tests {
         );
     }
 
-    #[test]
-    fn cairo_collinear_covers_region() {
-        check_covers(
-            &cairo::cairo_collinear(),
-            "cairo-collinear",
-            BBox::new(v2(-16.0, -12.0), v2(16.0, 12.0)),
-        );
-    }
-
-    #[test]
-    fn cairo_collinear_rotated_scaled() {
-        check_rotated(
-            &cairo::cairo_collinear(),
-            "cairo-collinear(rot30,scale0.7)",
-            BBox::new(v2(-12.0, -12.0), v2(12.0, 12.0)),
-            0.7,
-            30.0,
-        );
-    }
-
-    #[test]
-    fn cairo_collinear_deterministic() {
-        check_det(
-            &cairo::cairo_collinear(),
-            "cairo-collinear",
-            BBox::new(v2(-12.0, -10.0), v2(12.0, 10.0)),
-        );
-    }
-
-    /// Defining properties of the collinear form: every vertex is integral,
-    /// every edge has length 4 or √10, interior vertex figures are exactly
-    /// the two types (degree 3 and degree 4), and the collinearity property
-    /// — every interior edge fragment's supporting line carries a
-    /// non-adjacent fragment.
-    #[test]
-    fn cairo_collinear_integer_properties() {
-        use std::collections::{BTreeSet, HashMap};
-        fn gcd(mut a: i64, mut b: i64) -> i64 {
-            while b != 0 {
-                let t = a % b;
-                a = b;
-                b = t;
-            }
-            a
-        }
-        type LineKey = (i64, i64, i64);
-        type Frag = ((i64, i64), (i64, i64));
-        let t = cairo::cairo_collinear();
-        let p = tess_core::params::ParamSet::default_for(t.params());
-        let region = BBox::new(v2(-40.0, -40.0), v2(40.0, 40.0));
-        let r = t.generate(&p, &tess_core::tiling::Query { region });
-        assert!(r.message.is_none(), "{:?}", r.message);
-        assert!(!r.tiles.is_empty());
-        assert_eq!(
-            r.tiles
-                .iter()
-                .map(|t| t.proto)
-                .collect::<BTreeSet<_>>()
-                .len(),
-            4,
-            "expect exactly 4 proto classes"
-        );
-
-        let sq10 = 10f64.sqrt();
-        let mut edge_set: BTreeSet<Frag> = BTreeSet::new();
-        for tile in &r.tiles {
-            assert_eq!(tile.poly.pts.len(), 5);
-            for v in &tile.poly.pts {
-                assert!(
-                    (v.x - v.x.round()).abs() < 1e-9 && (v.y - v.y.round()).abs() < 1e-9,
-                    "non-integral vertex {v:?}"
-                );
-            }
-            for i in 0..5 {
-                let a = tile.poly.pts[i];
-                let b = tile.poly.pts[(i + 1) % 5];
-                let len = (b - a).length();
-                assert!(
-                    (len - 4.0).abs() < 1e-9 || (len - sq10).abs() < 1e-9,
-                    "edge length {len} not 4 or sqrt(10)"
-                );
-                let ka = (a.x.round() as i64, a.y.round() as i64);
-                let kb = (b.x.round() as i64, b.y.round() as i64);
-                let (lo, hi) = if ka <= kb { (ka, kb) } else { (kb, ka) };
-                edge_set.insert((lo, hi));
-            }
-        }
-
-        // Supporting-line key: reduced integral direction + offset.
-        let line_key = |lo: (i64, i64), hi: (i64, i64)| -> LineKey {
-            let (mut dx, mut dy) = (hi.0 - lo.0, hi.1 - lo.1);
-            let g = gcd(dx.abs(), dy.abs());
-            dx /= g;
-            dy /= g;
-            if dx < 0 || (dx == 0 && dy < 0) {
-                dx = -dx;
-                dy = -dy;
-            }
-            (dx, dy, dy * lo.0 - dx * lo.1)
-        };
-
-        let mut lines: HashMap<LineKey, Vec<Frag>> = HashMap::new();
-        let mut deg: HashMap<(i64, i64), u32> = HashMap::new();
-        for &(lo, hi) in &edge_set {
-            *deg.entry(lo).or_insert(0) += 1;
-            *deg.entry(hi).or_insert(0) += 1;
-            lines.entry(line_key(lo, hi)).or_default().push((lo, hi));
-        }
-
-        // Interior vertices show only the two vertex-figure degrees.
-        for (&(vx, vy), &d) in &deg {
-            if vx.abs() <= 20 && vy.abs() <= 20 {
-                assert!(d == 3 || d == 4, "vertex ({vx},{vy}) has degree {d}");
-            }
-        }
-
-        // Collinearity: every interior fragment's supporting line carries a
-        // non-adjacent fragment.
-        for &(lo, hi) in &edge_set {
-            if lo.0.abs() > 20 || lo.1.abs() > 20 || hi.0.abs() > 20 || hi.1.abs() > 20 {
-                continue;
-            }
-            let mates = lines
-                .get(&line_key(lo, hi))
-                .expect("fragment's own line missing");
-            assert!(
-                mates
-                    .iter()
-                    .any(|&(x, y)| x != lo && x != hi && y != lo && y != hi),
-                "fragment ({lo:?}->{hi:?}) has no non-adjacent line mate"
-            );
-        }
-    }
 }
 
 #[cfg(test)]
@@ -4250,7 +4328,6 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon7, pentagon9, penta
             ("3.12.12", archimedean::truncated_hexagonal()),
             ("3.3.4.3.4", archimedean::snub_square()),
             ("cairo", cairo::cairo_pentagonal()),
-            ("cairo-collinear", cairo::cairo_collinear()),
             ("girih", girih::girih_shesh_band()),
             ("girih-sc", girih_sc::girih_star_cross()),
             ("girih-w85", girih_w85::girih_w85()),
@@ -4529,7 +4606,7 @@ mod pentagon13_tests {
         assert_eq!(t.id, "pentagon-13");
         assert_eq!(t.group, WallpaperGroup::P2);
         assert_eq!(t.lattice_kind, LatticeKind::Rectangular);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the L0 cell (seed 0)");
     }
 }
@@ -4766,7 +4843,7 @@ mod girih_w85_tests {
         assert_eq!(t.id, "girih-w85");
         assert_eq!(t.group, WallpaperGroup::P6);
         assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::Islamic);
     }
 }
 
@@ -5054,7 +5131,7 @@ mod pic_4_8_8_tests {
         assert_eq!(t.id, "pic-4-8-8");
         assert_eq!(t.group, WallpaperGroup::P4m);
         assert_eq!(t.lattice_kind, LatticeKind::Square);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::Islamic);
     }
 }
 
@@ -5118,7 +5195,7 @@ mod pentagon14_tests {
         assert_eq!(t.id, "pentagon-14");
         assert_eq!(t.group, WallpaperGroup::P2);
         assert_eq!(t.lattice_kind, LatticeKind::Oblique);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the D0 cell (seed 0)");
         assert_eq!(t.cells.len(), 6, "the primitive unit holds six tiles");
         assert_eq!(
@@ -5629,7 +5706,7 @@ mod pic_3_6_3_6_tests {
         assert_eq!(t.id, "pic-3-6-3-6");
         assert_eq!(t.group, WallpaperGroup::P6m);
         assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::Islamic);
     }
 }
 #[cfg(all(test, feature = "hankin_ext"))]
@@ -6084,7 +6161,7 @@ mod pic_3_12_12_tests {
         assert_eq!(t.id, "pic-3-12-12");
         assert_eq!(t.group, WallpaperGroup::P6m);
         assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::Islamic);
     }
 }
 
@@ -6613,7 +6690,7 @@ mod pentagon15_tests {
         let t = spec();
         assert_eq!(t.group, WallpaperGroup::Pgg);
         assert_eq!(t.lattice_kind, LatticeKind::Rectangular);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the T1 cell (seed 0)");
         let p = ParamSet::default_for(t.params());
         for (region, want) in [
@@ -7157,7 +7234,7 @@ mod pentagon9_tests {
         let t = spec();
         assert_eq!(t.group, WallpaperGroup::Pgg);
         assert_eq!(t.lattice_kind, LatticeKind::Rectangular);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the T1 cell (seed 0)");
         let p = ParamSet::default_for(t.params());
         for (region, want) in [
@@ -7471,7 +7548,7 @@ mod pentagon11_tests {
         let t = spec();
         assert_eq!(t.group, WallpaperGroup::Pgg);
         assert_eq!(t.lattice_kind, LatticeKind::Rectangular);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the cell-0 tile (seed 0)");
         let p = ParamSet::default_for(t.params());
         for (region, want) in [
@@ -8143,7 +8220,7 @@ mod pentagon12_tests {
         let t = spec();
         assert_eq!(t.group, WallpaperGroup::Pgg);
         assert_eq!(t.lattice_kind, LatticeKind::Rectangular);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the cell-0 tile (seed 0)");
         let p = ParamSet::default_for(t.params());
         for (region, want) in [
@@ -8731,20 +8808,29 @@ mod pentagon10_tests {
 
     /// Unit structure of the primitive cell: 6 tiles (the prototile at its
     /// four rotations about the origin plus the two mirrored cells at the
-    /// shifted anchors (1, 2) and (−1, −2)) on the lattice w1 = (5, −2),
-    /// w2 = (8, 1) with det = 21 = 6 × tile area (7/2).  The shipped
-    /// B = 90-degree member is exact: a = b = 2, c = e = 1, d = √2
-    /// (d² = c² + e²); every cell is CCW, no two cells coincide, and the
-    /// seeds follow the three isohedral orbits.
+    /// shifted anchors (1, 2) and (−1, −2)) on the centered basis
+    /// w1 = (3, 3), w2 = (−2, 5) with det = 21 = 6 × tile area (7/2).
+    /// The index-2 sublattice Z(3,3) + Z(−7,7) is the primitive rectangle
+    /// (sides 3√2 × 7√2) and its centre w2 = (−2, 5) lies in the lattice
+    /// — the centered-rectangular structure that separates cmm from pmm.
+    /// The shipped B = 90-degree member is exact: a = b = 2, c = e = 1,
+    /// d = √2 (d² = c² + e²); every cell is CCW, no two cells coincide,
+    /// and the seeds follow the three isohedral orbits.
     #[test]
     fn pentagon_10_unit_structure_is_exact() {
         let t = spec();
         assert_eq!(t.id, "pentagon-10");
         assert_eq!(t.cells.len(), 6, "the primitive unit holds six tiles");
-        assert_eq!(t.lattice[0], Vec2::new(5.0, -2.0));
-        assert_eq!(t.lattice[1], Vec2::new(8.0, 1.0));
+        assert_eq!(t.lattice[0], Vec2::new(3.0, 3.0));
+        assert_eq!(t.lattice[1], Vec2::new(-2.0, 5.0));
         let (w1, w2) = (t.lattice[0], t.lattice[1]);
-        assert!((w1.dot(w2) - 38.0).abs() < 1e-12, "the basis is oblique (w1·w2 = 38)");
+        // The declared centered basis is oblique (w1·w2 = 9); the
+        // primitive rectangle Z(3,3) + Z(−7,7) = Z w1 + Z(−w1 + 2w2) is
+        // orthogonal: (3,3)·(−7,7) = 0.
+        assert!((w1.dot(w2) - 9.0).abs() < 1e-12, "centered basis w1·w2 = 9, got {}", w1.dot(w2));
+        let w2p = -w1 + w2 * 2.0;
+        assert_eq!(w2p, Vec2::new(-7.0, 7.0), "−w1 + 2w2 = (−7, 7)");
+        assert!(w1.dot(w2p).abs() < 1e-12, "the primitive rectangle is orthogonal");
         let det = w1.cross(w2);
         assert!(det > 0.0, "the lattice basis must be positively oriented");
         let a0 = t.cells[0].poly.area();
@@ -8834,8 +8920,8 @@ mod pentagon10_tests {
     fn pentagon_10_window_census() {
         let t = spec();
         assert_eq!(t.group, WallpaperGroup::Cmm);
-        assert_eq!(t.lattice_kind, LatticeKind::Oblique);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.lattice_kind, LatticeKind::CenteredRectangular);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the cell-0 tile (seed 0)");
         let p = ParamSet::default_for(t.params());
         for (region, want) in [
@@ -9059,14 +9145,15 @@ mod pentagon10_tests {
     /// The wallpaper group is cmm: the half-turn about the origin and the
     /// two mirrors in y = x and y = −x preserve the tiling exactly
     /// (interior-AABB set equality on the (−10, −10)–(10, 10) patch, 104
-    /// tiles), and the genuine glide g = (R2, w1) with axis x + y = 3/2
-    /// preserves it, and so does its inverse and the lattice-shifted
-    /// variants.  g² = (I + M)·w1 = (7, −7) = 3w1 − w2 is a lattice
-    /// translation, and the axis sits at perpendicular offset (3/4, 3/4)
-    /// from the origin, so no conjugate of g is a pure reflection: the
-    /// perpendicular-part candidate (R2, (3/2, 3/2)), a reflection in the
-    /// glide axis itself, maps the prototile onto an unplaced region (the
-    /// R2 mirror lines are at x + y = 3k, while the glide axes fill
+    /// tiles), and the genuine glide g = (R2, u), u = (5, −2) = w1 − w2
+    /// in the centered basis, with axis x + y = 3/2 preserves it, and so
+    /// does its inverse and the lattice-shifted variants.  g² =
+    /// (I + M)·u = (7, −7) = w1 − 2w2 is a lattice translation, and the
+    /// axis sits at perpendicular offset (3/4, 3/4) from the origin, so
+    /// no conjugate of g is a pure reflection: the perpendicular-part
+    /// candidate (R2, (3/2, 3/2)), a reflection in the glide axis
+    /// itself, maps the prototile onto an unplaced region (the R2 mirror
+    /// lines are at x + y = 3k, while the glide axes fill
     /// x + y = 3k/2).  R90 is not a symmetry: R90(M90@(1,2)) is the
     /// unplaced D180@(−2,1) region while R90(D0@(0,0)) is placed.
     #[test]
@@ -9084,18 +9171,22 @@ mod pentagon10_tests {
         check_iso(&t, &p, MI, Vec2::ZERO, ra, true, "half-turn −I");
         check_iso(&t, &p, R1, Vec2::ZERO, ra, true, "mirror R1 (y = x)");
         check_iso(&t, &p, R2, Vec2::ZERO, ra, true, "mirror R2 (y = −x)");
-        // The genuine glide g = (R2, w1): g² = (I + M)·w1 = (7, −7) =
-        // 3w1 − w2 is a lattice translation, and the perpendicular glide
-        // part is (3/2, 3/2) — the axis x + y = 3/2 at foot (3/4, 3/4).
-        let gs = v2((R2.0 + 1.0) * w1.x + R2.1 * w1.y, R2.2 * w1.x + (R2.3 + 1.0) * w1.y);
-        assert!((gs - (w1 * 3.0 - w2)).length() < 1e-9, "g² must equal 3w1 − w2, got {gs:?}");
+        // The genuine glide g = (R2, u), u = (5, −2) = w1 − w2: g² =
+        // (I + M)·u = (7, −7) = w1 − 2w2 is a lattice translation, and
+        // the perpendicular glide part is (3/2, 3/2) = w1/2 — the axis
+        // x + y = 3/2 at foot (3/4, 3/4).
+        let u = w1 - w2;
+        assert_eq!(u, v2(5.0, -2.0), "u = (5, −2) in the centered basis");
+        let gs = v2((R2.0 + 1.0) * u.x + R2.1 * u.y, R2.2 * u.x + (R2.3 + 1.0) * u.y);
+        assert!((gs - (w1 - w2 * 2.0)).length() < 1e-9, "g² must equal w1 − 2w2, got {gs:?}");
+        assert!((gs - v2(7.0, -7.0)).length() < 1e-9, "g² = (7, −7)");
         let t_perp = v2(1.5, 1.5);
-        assert!((t_perp - (w1 - v2(3.5, -3.5))).length() < 1e-9, "perpendicular glide part");
+        assert!((t_perp - w1 * 0.5).length() < 1e-9, "perpendicular glide part");
         // The glide preserves the tiling (the image window is shifted, so
         // check containment of the images among the tiles generated there)
-        // — and so does the inverse.
-        check_iso(&t, &p, R2, w1, ra, false, "glide g (axis x + y = 3/2)");
-        check_iso(&t, &p, R2, -w1, ra, false, "glide g⁻¹");
+        // — and so does the inverse, g⁻¹ = (R2, −R2·u) = (R2, w2).
+        check_iso(&t, &p, R2, u, ra, false, "glide g (axis x + y = 3/2)");
+        check_iso(&t, &p, R2, w2, ra, false, "glide g⁻¹");
         // Big patch for tile-image membership.
         let big = BBox::new(v2(-8.0, -8.0), v2(14.0, 12.0));
         let big_tiles = t.generate(&p, &Query { region: big });
@@ -9104,15 +9195,15 @@ mod pentagon10_tests {
             big_tiles.tiles.iter().map(|tile| vkey(&tile.poly.pts)).collect();
         let prot = t.cells[0].poly.pts.clone();
         // Every lattice-shifted variant of the glide maps the prototile
-        // onto a tile (the glide class is the whole coset w1 + L = L, since
-        // w1 ∈ L) — as do the pure mirrors (R2, 0) and (R1, 0) and the
-        // mirror-line translations (R2, (6, 6)) [x + y = 6] and
+        // onto a tile (the R2 coset is the whole set {(R2, v) : v ∈ L},
+        // since R2 ∈ O(L)) — as do the pure mirrors (R2, 0) and (R1, 0)
+        // and the mirror-line translations (R2, (6, 6)) [x + y = 6] and
         // (R1, (7, −7)) [x − y = 7].
         for (i, j) in [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0)] {
             let sh = w1 * i + w2 * j;
-            let img: Vec<Vec2> = prot.iter().map(|q| apply_iso(R2, w1 + sh, *q)).collect();
+            let img: Vec<Vec2> = prot.iter().map(|q| apply_iso(R2, u + sh, *q)).collect();
             assert!(set.contains(&vkey(&img)), "(g + {i}·w1 + {j}·w2) must map cell0 onto a tile");
-            let img: Vec<Vec2> = prot.iter().map(|q| apply_iso(R2, -w1 + sh, *q)).collect();
+            let img: Vec<Vec2> = prot.iter().map(|q| apply_iso(R2, w2 + sh, *q)).collect();
             assert!(
                 set.contains(&vkey(&img)),
                 "(g⁻¹ + {i}·w1 + {j}·w2) must map cell0 onto a tile"
@@ -9492,7 +9583,7 @@ mod pentagon3_tests {
         let t = spec();
         assert_eq!(t.group, WallpaperGroup::P2);
         assert_eq!(t.lattice_kind, LatticeKind::Oblique);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the cell-0 tile (seed 0)");
         let p = ParamSet::default_for(t.params());
         for (region, want) in [
@@ -10106,7 +10197,7 @@ mod pentagon2_tests {
         let t = spec();
         assert_eq!(t.group, WallpaperGroup::Pgg);
         assert_eq!(t.lattice_kind, LatticeKind::Rectangular);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the cell-0 tile (seed 0)");
         let p = ParamSet::default_for(t.params());
         for (region, want) in [
@@ -10847,7 +10938,7 @@ mod pentagon7_tests {
         let t = spec();
         assert_eq!(t.group, WallpaperGroup::Pgg);
         assert_eq!(t.lattice_kind, LatticeKind::Rectangular);
-        assert_eq!(t.category, TilingCategory::Wallpaper);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the cell-0 tile (seed 0)");
         let p = ParamSet::default_for(t.params());
         for (region, want) in [

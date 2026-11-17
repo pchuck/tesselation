@@ -6,9 +6,9 @@
 //!
 //! The herringbone paver bond: `L`-pairs of one horizontal and one
 //! vertical 2:1 domino, `H(a,b) + V(a+2,b)`, laid down at every point
-//! of the oblique lattice `L = ⟨ (1,3), (2,2) ⟩` (area 4) — one 2-brick
-//! cell, `H (0,0)` and `V (2,0)`, area `2·2 = 4 = |det|`, so the
-//! lattice translates tile the plane with no gaps and no overlaps.
+//! of the rectangular lattice `L = ⟨ (2,2), (1,−1) ⟩` (area 4) — one
+//! 2-brick cell, `H (0,0)` and `V (2,0)`, area `2·2 = 4 = |det|`, so
+//! the lattice translates tile the plane with no gaps and no overlaps.
 //! All L-pairs run in the same diagonal direction (this is one of the
 //! two enantiomorphs of the herringbone; the pattern is chiral).
 //!
@@ -92,8 +92,8 @@ fn v_domino(x: f64, y: f64) -> Polygon {
     ])
 }
 
-/// Herringbone paver bond — L-pairs of 2:1 dominoes on the oblique
-/// lattice ⟨(1,3),(2,2)⟩ (pgg; chiral, single-direction).
+/// Herringbone paver bond — L-pairs of 2:1 dominoes on the rectangular
+/// lattice ⟨(2,2),(1,−1)⟩ (pgg; chiral, single-direction).
 pub fn herringbone() -> LatticeTiling {
     // One L-pair: a horizontal domino + the vertical one completing
     // the herringbone elbow; the lattice translates complete the
@@ -112,13 +112,14 @@ pub fn herringbone() -> LatticeTiling {
     LatticeTiling {
         id: "herringbone",
         name: "Herringbone (2:1 dominoes)",
-        description: "Herringbone paver bond: chiral single-direction L-pairs of 2:1 dominoes on the oblique lattice <(1,3),(2,2)>, 2 split dominoes per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group pgg: 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal and anti-diagonal axes), no mirrors.",
-        lattice: [Vec2::new(1.0, 3.0), Vec2::new(2.0, 2.0)],
+        description: "Herringbone paver bond: chiral single-direction L-pairs of 2:1 dominoes on the rectangular lattice <(2,2),(1,−1)>, 2 split dominoes per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group pgg: 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal and anti-diagonal axes), no mirrors.",
+        lattice: [Vec2::new(2.0, 2.0), Vec2::new(1.0, -1.0)],
         cells,
         offset: Vec2::ZERO,
         group: WallpaperGroup::Pgg,
-        lattice_kind: LatticeKind::Oblique,
-        category: TilingCategory::Wallpaper,
+        lattice_kind: LatticeKind::Rectangular,
+        category: TilingCategory::Arrangements,
+        secondary: &[TilingCategory::Wallpaper],
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

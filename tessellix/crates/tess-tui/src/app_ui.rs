@@ -4,7 +4,9 @@
 //! * **Browse** — a category tab bar over a responsive card grid.
 //!   Wallpaper cards are grouped into crystal-system sections (oblique,
 //!   rectangular, centered, square, hexagonal) with a bold header row
-//!   above each section; the grid scrolls by rows.
+//!   above each section; the Wallpaper tab also opens with a gap note
+//!   for the groups with no registered realizer; the grid scrolls by
+//!   rows.
 //! * **Render** — the selected tiling full-screen (one cell = one
 //!   pixel, as before) with a status bar; `←`/`→` walk prev/next tiling
 //!   in the current tab's order (the browse cursor follows, so `Esc`
@@ -47,11 +49,11 @@ use tess_core::params::ParamSet;
 use crate::raster;
 use crate::thumb;
 
-/// Target card size: ~26–30 columns × 10–12 rows; the grid fits as many
-/// full-size cards as the viewport allows (≥ 1 column, ≥ 1 row) and
-/// stretches them to fill.
+/// Target card size: ~26–30 columns × 12–14 rows (a two-line title
+/// needs one extra row); the grid fits as many full-size cards as the
+/// viewport allows (≥ 1 column, ≥ 1 row) and stretches them to fill.
 const TARGET_CARD_W: u16 = 28;
-const TARGET_CARD_H: u16 = 12;
+const TARGET_CARD_H: u16 = 14;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum Mode {
@@ -61,10 +63,11 @@ enum Mode {
 }
 
 /// One row of the card grid plan: either a crystal-system section
-/// header or one row of cards (indices into the tab's card list).
+/// header (or the Wallpaper tab's gap note) or one row of cards
+/// (indices into the tab's card list).
 #[derive(Debug)]
 enum GridRow {
-    Header(&'static str),
+    Header(String),
     Cards(Vec<usize>),
 }
 
@@ -75,10 +78,10 @@ struct Tui {
     /// Render (the selected tiling's own category).
     tab_idx: usize,
     /// Per-tab card cursor, indexed by [`TilingCategory::ALL`] position.
-    cursors: [usize; 6],
+    cursors: [usize; 10],
     /// Per-tab grid scroll: index of the topmost grid row, same
     /// indexing. Clamped against the rendered plan on every draw.
-    scroll: [usize; 6],
+    scroll: [usize; 10],
     mode: Mode,
     search: String,
     /// Params overlay open in Render mode.
@@ -114,8 +117,8 @@ impl Tui {
             app: App::new(registry, 8.0),
             tabs,
             tab_idx: 0,
-            cursors: [0; 6],
-            scroll: [0; 6],
+            cursors: [0; 10],
+            scroll: [0; 10],
             mode: Mode::Browse,
             search: String::new(),
             params_open: false,
@@ -303,7 +306,8 @@ impl Tui {
                 KeyCode::Tab => self.switch_tab(1),
                 KeyCode::BackTab => self.switch_tab(-1),
                 // Digits are reserved for tab jumps in search too.
-                KeyCode::Char(c @ '1'..='6') => self.switch_tab_to((c as usize) - ('1' as usize)),
+                KeyCode::Char(c @ '1'..='9') => self.switch_tab_to((c as usize) - ('1' as usize)),
+                KeyCode::Char('0') => self.switch_tab_to(9),
                 KeyCode::Char(c) if c.is_ascii_graphic() || c == ' ' => {
                     self.search.push(c);
                     self.apply_search_jump();
@@ -320,7 +324,8 @@ impl Tui {
                 }
                 KeyCode::Tab => self.switch_tab(1),
                 KeyCode::BackTab => self.switch_tab(-1),
-                KeyCode::Char(c @ '1'..='6') => self.switch_tab_to((c as usize) - ('1' as usize)),
+                KeyCode::Char(c @ '1'..='9') => self.switch_tab_to((c as usize) - ('1' as usize)),
+                KeyCode::Char('0') => self.switch_tab_to(9),
                 KeyCode::Up | KeyCode::Char('k') => self.move_cursor(-(self.grid_cols as i32)),
                 KeyCode::Down | KeyCode::Char('j') => self.move_cursor(self.grid_cols as i32),
                 KeyCode::Left | KeyCode::Char('h') => self.move_cursor(-1),
@@ -455,6 +460,38 @@ fn truncate(s: &str, max_chars: usize) -> String {
     t
 }
 
+/// Split a card title into at most two lines of at most `per_line`
+/// characters each: the whole name when it fits one line, otherwise
+/// the name broken at the last word boundary inside the first budget
+/// (a bare character cut only when no boundary is reachable), so
+/// line two never starts mid-word. Each line keeps the
+/// label-level truncation as a backstop, so a name longer than
+/// 2 × `per_line` still fits its card.
+fn title_lines(name: &str, per_line: usize) -> Vec<String> {
+    if per_line == 0 {
+        return Vec::new();
+    }
+    if name.chars().count() <= per_line {
+        return vec![name.to_string()];
+    }
+    let chars: Vec<char> = name.chars().collect();
+    // Prefer the last space in the first budget, but not so early
+    // that line 1 degenerates into a stub.
+    let min_split = (per_line * 2) / 3;
+    let split = (min_split..per_line).rev().find(|&i| chars[i] == ' ');
+    let (first, rest): (String, String) = match split {
+        Some(i) => (
+            chars[..i].iter().collect(),
+            chars[i + 1..].iter().collect(),
+        ),
+        None => (
+            chars[..per_line].iter().collect(),
+            chars[per_line..].iter().collect(),
+        ),
+    };
+    vec![first, truncate(&rest, per_line)]
+}
+
 /// Card grid geometry for a viewport: as many target-size cards as fit
 /// (≥ 1 column, ≥ 1 row), stretched to fill.
 fn grid_cols_rows(area: Rect) -> (u16, u16, u16, u16) {
@@ -467,18 +504,25 @@ fn grid_cols_rows(area: Rect) -> (u16, u16, u16, u16) {
 
 /// Plan the grid rows for the visible card indices of a tab: runs of
 /// equal section key, each preceded by a header row when the key is
-/// non-empty, split into rows of `cols` cards.
+/// non-empty, split into rows of `cols` cards. The Wallpaper tab
+/// opens with the explicit gap note for the groups with no registered
+/// realizer.
 fn plan_grid_rows(tab: &Tab, visible: &[usize], cols: u16) -> Vec<GridRow> {
     let mut rows = Vec::new();
+    if tab.category == TilingCategory::Wallpaper && !visible.is_empty() {
+        rows.push(GridRow::Header(browse::wallpaper_gap_note()));
+    }
     let mut i = 0;
     while i < visible.len() {
-        let key = browse::section_key(&tab.cards[visible[i]]);
+        let key = browse::section_key(tab.category, &tab.cards[visible[i]]);
         let mut j = i;
-        while j < visible.len() && browse::section_key(&tab.cards[visible[j]]) == key {
+        while j < visible.len()
+            && browse::section_key(tab.category, &tab.cards[visible[j]]) == key
+        {
             j += 1;
         }
         if !key.is_empty() {
-            rows.push(GridRow::Header(key));
+            rows.push(GridRow::Header(key.to_string()));
         }
         for chunk in visible[i..j].chunks(cols as usize) {
             rows.push(GridRow::Cards(chunk.to_vec()));
@@ -720,20 +764,33 @@ fn render_card(
     } else {
         Style::default().fg(Color::DarkGray)
     };
+    let iw = rect.width.saturating_sub(2) as usize;
+    // The title: up to two lines (a long name wraps at the inner
+    // width). The first line is the block title on the top border
+    // (centered, as before); a wrapped second line is painted as the
+    // first inner row, so the content starts under it.
+    let tlines = title_lines(name, iw);
+    let title_extra = tlines.len().saturating_sub(1);
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(border_style)
-        .title(truncate(name, (rect.width as usize).saturating_sub(2)));
+        .title(tlines[0].as_str());
     frame.render_widget(block, rect);
+    if title_extra > 0 {
+        frame.render_widget(
+            Paragraph::new(truncate(&tlines[1], iw)).alignment(Alignment::Center),
+            Rect::new(rect.x + 1, rect.y + 1, iw as u16, 1),
+        );
+    }
 
-    let iw = rect.width.saturating_sub(2) as usize;
     let ih = rect.height.saturating_sub(2) as usize;
     if iw == 0 || ih == 0 {
         return;
     }
     let has_params = nparams > 0;
     let attr_rows = 2 + usize::from(has_params);
-    let thumb_rows = (ih - attr_rows).max(1);
+    let content = ih.saturating_sub(title_extra);
+    let thumb_rows = content.saturating_sub(attr_rows).max(1);
 
     // Thumbnail: the tiling at its default params, in its default
     // preview color mode (proto fallback for `Single`). Cached per
@@ -764,7 +821,7 @@ fn render_card(
             let (top, bot) = thumb.rows[r][x];
             let cell = &mut buf[Position {
                 x: rect.x + 1 + x as u16,
-                y: rect.y + 1 + r as u16,
+                y: rect.y + 1 + title_extra as u16 + r as u16,
             }];
             cell.set_char('▀');
             cell.set_style(Style::default().fg(map(top)).bg(map(bot)));
@@ -775,7 +832,7 @@ fn render_card(
     // description fragment (or the symmetry notes when the
     // description is empty); "params: n" only for parameterized
     // tilings.
-    let y0 = rect.y + 1 + thumb_rows as u16;
+    let y0 = rect.y + 1 + title_extra as u16 + thumb_rows as u16;
     if y0 + attr_rows as u16 <= rect.y + rect.height {
         let line1 = format!("{} · {}", group_s, lattice_s);
         let frag: String = desc.chars().take(40).collect();
@@ -806,12 +863,12 @@ fn render_card(
 fn render_status_browse(frame: &mut Frame, tui: &mut Tui, rect: Rect) {
     let status = match tui.mode {
         Mode::Search => format!(
-            " search> {} │ {} match(es) · enter open · esc cancel · tab/1-6 switch",
+            " search> {} │ {} match(es) · enter open · esc cancel · tab/1-9/0 switch",
             truncate(&tui.search, 24),
             tui.match_counts().iter().sum::<usize>()
         ),
         _ => format!(
-            " {} (tab {}/6) │ arrows/hjkl move · enter open · tab/1-6 tabs · pgup/pgdn/wheel scroll · / search · q quit",
+            " {} (tab {}/10) │ arrows/hjkl move · enter open · tab/1-9/0 tabs · pgup/pgdn/wheel scroll · / search · q quit",
             tui.active_tab().category.label(),
             tui.tab_idx + 1
         ),
@@ -983,19 +1040,26 @@ mod tests {
     #[test]
     fn registry_tabs_classify_every_tiling_once() {
         let tui = Tui::new();
+        assert_eq!(tui.tabs.len(), 10, "one tab per TilingCategory::ALL entry");
+        // Multi-tab membership (M76): a tiling appears in its primary
+        // tab plus every secondary tab, so the tab sizes sum to the
+        // 73 memberships of the 61 registered tilings, not to 61.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 62, "the registry has 62 tilings");
+        assert_eq!(total, 73, "61 tilings carry 73 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 9, 26, 8, 4, 4]);
+        assert_eq!(counts, vec![11, 2, 11, 9, 10, 9, 5, 8, 4, 4]);
     }
 
     #[test]
     fn wallpaper_tab_sorted_by_crystal_system_then_group() {
         let tui = Tui::new();
-        let wall = &tui.tabs[2];
+        let wall = &tui.tabs[3];
         assert_eq!(wall.category, TilingCategory::Wallpaper);
-        let keys: Vec<&'static str> =
-            wall.cards.iter().map(|c| browse::section_key(c)).collect();
+        let keys: Vec<&'static str> = wall
+            .cards
+            .iter()
+            .map(|c| browse::section_key(TilingCategory::Wallpaper, c))
+            .collect();
         // Lattice rank is non-decreasing along the tab (crystal-system
         // grouping).
         let ranks: Vec<u8> = wall
@@ -1027,16 +1091,20 @@ mod tests {
     // ---- tab bar ----------------------------------------------------
 
     #[test]
-    fn tab_bar_shows_all_six_categories_with_counts() {
-        let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
+    fn tab_bar_shows_all_ten_categories_with_counts() {
+        let mut term = Terminal::new(TestBackend::new(200, 30)).unwrap();
         let mut tui = Tui::new();
         term.draw(|f| render(f, &mut tui)).unwrap();
         let text = buffer_text(&term);
         let row0 = text.lines().next().unwrap();
         for (label, n) in [
             ("Uniform", 11),
-            ("Laves (Catalan duals)", 9),
-            ("Wallpaper", 26),
+            ("Two-Uniform", 2),
+            ("Laves (Catalan duals)", 11),
+            ("Wallpaper", 9),
+            ("Pentagon Types", 10),
+            ("Islamic", 9),
+            ("Arrangements", 5),
             ("Quasiperiodic", 8),
             ("Aperiodic", 4),
             ("Nonperiodic", 4),
@@ -1054,13 +1122,18 @@ mod tests {
     fn grid_paints_wallpaper_cards_and_sections() {
         let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
         let mut tui = Tui::new();
-        key(&mut tui, KeyCode::Char('3')); // Wallpaper tab
+        key(&mut tui, KeyCode::Char('4')); // Wallpaper tab
         term.draw(|f| render(f, &mut tui)).unwrap();
         let mut text = buffer_text(&term);
         // First card name painted.
         assert!(
-            text.contains(tui.tabs[2].cards[0].name),
+            text.contains(tui.tabs[3].cards[0].name),
             "first wallpaper card name missing"
+        );
+        // The gap note opens the tab (groups with no realizer).
+        assert!(
+            text.contains("no realizer registered for"),
+            "wallpaper gap note missing: {text}"
         );
         assert!(
             count_symbol(&term, "▀") > 100,
@@ -1093,22 +1166,24 @@ mod tests {
         term.draw(|f| render(f, &mut tui)).unwrap();
         key(&mut tui, KeyCode::Right); // Uniform cursor → 1
         assert_eq!(tui.cursors[0], 1);
-        key(&mut tui, KeyCode::Tab); // → Laves
+        key(&mut tui, KeyCode::Tab); // → Two-Uniform
         assert_eq!(tui.tab_idx, 1);
         key(&mut tui, KeyCode::Right);
         assert_eq!(tui.cursors[1], 1);
         key(&mut tui, KeyCode::BackTab); // → Uniform again
         assert_eq!(tui.tab_idx, 0);
         assert_eq!(tui.cursors[0], 1, "Uniform cursor remembered");
-        assert_eq!(tui.cursors[1], 1, "Laves cursor remembered");
+        assert_eq!(tui.cursors[1], 1, "Two-Uniform cursor remembered");
         // Number keys jump.
         key(&mut tui, KeyCode::Char('6'));
         assert_eq!(tui.tab_idx, 5);
+        key(&mut tui, KeyCode::Char('0'));
+        assert_eq!(tui.tab_idx, 9);
         // Wrap both ways.
         key(&mut tui, KeyCode::Tab);
         assert_eq!(tui.tab_idx, 0);
         key(&mut tui, KeyCode::BackTab);
-        assert_eq!(tui.tab_idx, 5);
+        assert_eq!(tui.tab_idx, 9);
     }
 
     #[test]
@@ -1129,13 +1204,14 @@ mod tests {
         assert!(tui.scroll[0] > 0, "grid should auto-scroll to the cursor");
         let last_name = tui.tabs[0].cards[n - 1].name;
         let text = buffer_text(&term);
-        // Card titles are truncated to the card's inner width (33-2 at
-        // this terminal size); compare against the same truncation.
-        let expect = truncate(last_name, 31);
-        assert!(
-            text.contains(&expect),
-            "cursor card should be visible after auto-scroll"
-        );
+        // Card titles are two-line: compare against the same split the
+        // renderer uses (line 1, and line 2 when the name wraps).
+        for line in title_lines(last_name, 31) {
+            assert!(
+                text.contains(&line),
+                "cursor card title line {line:?} should be visible after auto-scroll"
+            );
+        }
         // Wrapping within the tab: last → 0 → last.
         key(&mut tui, KeyCode::Right);
         assert_eq!(tui.cursors[0], 0, "cursor wraps within the tab");
@@ -1150,9 +1226,9 @@ mod tests {
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
         let mut tui = Tui::new();
         term.draw(|f| render(f, &mut tui)).unwrap();
-        key(&mut tui, KeyCode::Char('3')); // Wallpaper
+        key(&mut tui, KeyCode::Char('4')); // Wallpaper
         key(&mut tui, KeyCode::Right); // cursor → card 1
-        let (tab, card) = (2usize, 1usize);
+        let (tab, card) = (3usize, 1usize);
         let id = tui.tabs[tab].cards[card].id;
         let name = tui.tabs[tab].cards[card].name;
         key(&mut tui, KeyCode::Enter);
@@ -1200,9 +1276,12 @@ mod tests {
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
         let mut tui = Tui::new();
         term.draw(|f| render(f, &mut tui)).unwrap();
-        key(&mut tui, KeyCode::Char('3'));
+        key(&mut tui, KeyCode::Char('5')); // Pentagon Types
+        // The walk follows the SELECTED tiling's own category tab; the
+        // Pentagon Types tab is primary membership, so walking stays in
+        // it (the Wallpaper tab is all secondary membership).
         let (i0, i1, n1, last_id, last_idx) = {
-            let tab = &tui.tabs[2];
+            let tab = &tui.tabs[4];
             (
                 tab.cards[0].id,
                 tab.cards[1].id,
@@ -1215,7 +1294,7 @@ mod tests {
         assert_eq!(tui.app.selected_id(), i0);
         key(&mut tui, KeyCode::Right);
         assert_eq!(tui.app.selected_id(), i1);
-        assert_eq!(tui.cursors[2], 1, "browse cursor follows the walk");
+        assert_eq!(tui.cursors[4], 1, "browse cursor follows the walk");
         term.draw(|f| render(f, &mut tui)).unwrap();
         let text = buffer_text(&term);
         assert!(text.contains(n1), "status bar should show the next tiling");
@@ -1223,7 +1302,7 @@ mod tests {
         key(&mut tui, KeyCode::Left);
         key(&mut tui, KeyCode::Left);
         assert_eq!(tui.app.selected_id(), last_id);
-        assert_eq!(tui.cursors[2], last_idx);
+        assert_eq!(tui.cursors[4], last_idx);
     }
 
     #[test]
@@ -1262,7 +1341,7 @@ mod tests {
         let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
         let mut tui = Tui::new();
         term.draw(|f| render(f, &mut tui)).unwrap();
-        key(&mut tui, KeyCode::Char('3')); // start in Wallpaper
+        key(&mut tui, KeyCode::Char('4')); // start in Wallpaper
         key(&mut tui, KeyCode::Char('/'));
         for c in "penrose".chars() {
             key(&mut tui, KeyCode::Char(c));
@@ -1321,7 +1400,7 @@ mod tests {
 
     #[test]
     fn search_tab_bar_shows_match_counts() {
-        let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
+        let mut term = Terminal::new(TestBackend::new(200, 30)).unwrap();
         let mut tui = Tui::new();
         term.draw(|f| render(f, &mut tui)).unwrap();
         key(&mut tui, KeyCode::Char('/'));
@@ -1348,13 +1427,13 @@ mod tests {
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
         let mut tui = Tui::new();
         term.draw(|f| render(f, &mut tui)).unwrap();
-        key(&mut tui, KeyCode::Char('3'));
-        let ci = tui.tabs[2]
+        key(&mut tui, KeyCode::Char('4'));
+        let ci = tui.tabs[3]
             .cards
             .iter()
             .position(|c| c.params > 0)
             .expect("the Wallpaper tab has parameterized tilings");
-        tui.cursors[2] = ci;
+        tui.cursors[3] = ci;
         key(&mut tui, KeyCode::Enter);
         let specs = tui.app.tiling().params();
         assert!(!specs.is_empty());
@@ -1474,7 +1553,7 @@ mod tests {
     fn debug_dump_screen() {
         let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
         let mut tui = Tui::new();
-        key(&mut tui, KeyCode::Char('3'));
+        key(&mut tui, KeyCode::Char('4'));
         term.draw(|f| render(f, &mut tui)).unwrap();
         println!("\n=== browse (wallpaper) ===\n{}", buffer_text(&term));
         key(&mut tui, KeyCode::Enter);

@@ -24,6 +24,7 @@ pub fn spec() -> LatticeTiling {
         group: WallpaperGroup::P4m,
         lattice_kind: LatticeKind::Square,
         category: TilingCategory::Uniform,
+        secondary: &[TilingCategory::Laves],
         seed_pattern: SeedPattern::Checker,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

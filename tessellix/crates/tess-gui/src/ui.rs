@@ -2,10 +2,11 @@
 //! the TUI (UI-3; the owner prefers the TUI layout):
 //!
 //! * **Browse** — the whole window is the card grid: a tab band (the
-//!   six category tabs + a search field, one wrapping row) over
+//!   ten category tabs + a search field, one wrapping row) over
 //!   crystal-system section headers and cards with lazily generated
-//!   previews (shared `tess_core::raster`). Clicking a card opens
-//!   Render mode.
+//!   previews (shared `tess_core::raster`). The Wallpaper tab opens
+//!   with a gap note for the groups with no registered realizer.
+//!   Clicking a card opens Render mode.
 //! * **Render** — the whole window is the canvas (drag-pan,
 //!   wheel-zoom) with a top strip (`← back`, `◀`/`▶` prev/next in the
 //!   tab order, a params toggle, reset) and a collapsible bottom panel
@@ -41,31 +42,39 @@ const GRID_SPX: f32 = 10.0;
 /// `truncate()` (ellipsis at the card's width), which kicks in
 /// first.
 const DESC_CHARS: usize = 40;
+/// Character budget per card-title line: a name longer than this
+/// wraps to the card's second title line (still ellipsized at the
+/// card's width by the label's own `truncate()`).
+const NAME_CHARS_PER_LINE: usize = 24;
 /// Card inner margin (inset on all four sides), in pixels. The card's
 /// content child is bounded by [`card_inner_w`] × [`CARD_INNER_H`],
 /// inset by this margin from the card's allocated rect — which IS the
 /// grid cell, exactly the column width, so the grid fills the window
 /// width without overflowing.
 const CARD_INNER_MARGIN: f32 = 5.0;
-/// Vertical spacing between card rows (image → name → description →
-/// symmetry line), in pixels.
+/// Vertical spacing between card rows (image → name line 1 → name
+/// line 2 → description → symmetry line), in pixels.
 const CARD_ROW_SPX: f32 = 3.0;
-/// Fixed heights of the card's three single-line text rows, in
-/// pixels: name (16 px strong), description (13 px), symmetry line
-/// (12 px). Each is the galley row height of egui's default
-/// proportional font at that size, plus headroom, so the text
-/// content always fits the fixed card height ([`CARD_INNER_H`])
-/// (pinned by a unit test against the real galley row heights).
+/// Fixed heights of the card's text rows, in pixels: name (two lines,
+/// 16 px strong each), description (13 px), symmetry line (12 px).
+/// Each is the galley row height of egui's default proportional font
+/// at that size, plus headroom, so the text content always fits the
+/// fixed card height ([`CARD_INNER_H`]) (pinned by a unit test
+/// against the real galley row heights).
 const CARD_NAME_LINE_H: f32 = 18.5;
 const CARD_DESC_LINE_H: f32 = 15.0;
 const CARD_SYM_LINE_H: f32 = 14.0;
-/// Fixed inner content height of a card: image + the three text
-/// rows + the row spacings between them. Every card is at least
-/// this tall, so all card boxes are the same size and the grid is
-/// orthogonal — every card in every row aligns (pinned by a unit
-/// test).
+/// Fixed inner content height of a card: image + the two-line title +
+/// description + symmetry line + the row spacings between them.
+/// Every card is at least this tall, so all card boxes are the same
+/// size and the grid is orthogonal — every card in every row aligns
+/// (pinned by a unit test).
 const CARD_INNER_H: f32 =
-    CARD_IMG_H as f32 + CARD_NAME_LINE_H + CARD_DESC_LINE_H + CARD_SYM_LINE_H + 3.0 * CARD_ROW_SPX;
+    CARD_IMG_H as f32
+        + 2.0 * CARD_NAME_LINE_H
+        + CARD_DESC_LINE_H
+        + CARD_SYM_LINE_H
+        + 4.0 * CARD_ROW_SPX;
 /// Total card height — the inner content plus the two vertical margins.
 /// `draw_card` allocates exactly `col_w` × [`CARD_TOTAL_H`] per cell, so
 /// every card is identical and the grid's cell sizes never depend on
@@ -128,7 +137,7 @@ pub struct GuiApp {
     last_highlighted: (usize, String),
     /// Lazily built card preview textures, keyed by (id, params-string,
     /// size). Textures are generated in the draw pass for visible cards
-    /// only — generating all 59 up front would stall the first frame.
+    /// only — generating all 61 up front would stall the first frame.
     card_textures: HashMap<String, egui::TextureHandle>,
     /// The browser's search text (name/id/description, all tabs).
     /// Kept in GuiApp rather than `app.search` because the TUI and the
@@ -252,14 +261,20 @@ struct CardSection<'a> {
 /// [`tess_core::section_key`], in first-appearance order. On the
 /// Wallpaper tab this yields the crystal-system sections
 /// (oblique/rectangular/centered/square/hexagonal, in that order);
-/// every other tab is a single headerless run.
-fn sectionize<'a>(cards: &'a [tess_core::CardMeta]) -> Vec<CardSection<'a>> {
+/// every other tab is a single headerless run. `tab_category` is the
+/// tab the cards are displayed in — the section key is a property of
+/// the (tab, card) pair, since the Wallpaper tab's cards are
+/// secondary members whose primary category is their own family.
+fn sectionize<'a>(
+    tab_category: tess_core::TilingCategory,
+    cards: &'a [tess_core::CardMeta],
+) -> Vec<CardSection<'a>> {
     let mut out: Vec<CardSection<'a>> = Vec::new();
     let mut i = 0;
     while i < cards.len() {
-        let key = tess_core::section_key(&cards[i]);
+        let key = tess_core::section_key(tab_category, &cards[i]);
         let mut j = i + 1;
-        while j < cards.len() && tess_core::section_key(&cards[j]) == key {
+        while j < cards.len() && tess_core::section_key(tab_category, &cards[j]) == key {
             j += 1;
         }
         out.push(CardSection { header: key, cards: &cards[i..j] });
@@ -367,6 +382,37 @@ fn truncate_text(s: &str, max: usize) -> String {
     let mut out: String = chars[..max - 1].iter().collect();
     out.push('…');
     out
+}
+
+/// The card title in exactly two lines of at most
+/// `NAME_CHARS_PER_LINE` characters each: the whole name on line 1
+/// (line 2 empty) when it fits the budget, otherwise the name broken
+/// at the last word boundary inside the first budget (a bare
+/// character cut only when no boundary is reachable), so line two
+/// never starts mid-word (a name longer than the 2-line budget
+/// truncates on its second line). Both lines keep label-level
+/// ellipsis truncation as a backstop at the card's width, and both
+/// rows are always reserved so every card keeps the same height.
+fn title_lines(name: &str, per_line: usize) -> [String; 2] {
+    if name.chars().count() <= per_line {
+        return [name.to_string(), String::new()];
+    }
+    let chars: Vec<char> = name.chars().collect();
+    // Prefer the last space in the first budget, but not so early
+    // that line 1 degenerates into a stub.
+    let min_split = (per_line * 2) / 3;
+    let split = (min_split..per_line).rev().find(|&i| chars[i] == ' ');
+    let (first, rest): (String, String) = match split {
+        Some(i) => (
+            chars[..i].iter().collect(),
+            chars[i + 1..].iter().collect(),
+        ),
+        None => (
+            chars[..per_line].iter().collect(),
+            chars[per_line..].iter().collect(),
+        ),
+    };
+    [first, truncate_text(&rest, per_line * 2)]
 }
 
 impl GuiApp {
@@ -694,6 +740,20 @@ impl GuiApp {
             });
             return;
         }
+        // The Wallpaper tab (one card per group) opens with the
+        // explicit gap note for the groups with no registered
+        // realizer — the catalog is not complete.
+        if tab.category == tess_core::TilingCategory::Wallpaper {
+            ui.add(
+                egui::Label::new(egui::RichText::new(
+                    tess_core::wallpaper_gap_note(),
+                )
+                .small()
+                .weak())
+                .wrap_mode(egui::TextWrapMode::Wrap),
+            );
+            ui.add_space(2.0);
+        }
         // Responsive columns over the full window width ([`
         // columns_for_width`], fully dynamic — at least one, no
         // upper bound); the column width is the available width
@@ -703,6 +763,10 @@ impl GuiApp {
         let cols = columns_for_width(avail, CARD_TARGET_W);
         let col_w = card_col_w(avail, cols, GRID_SPX);
         self.card_grid_col_w = col_w;
+        // Copy the category out of the tab before the grid closure:
+        // the closure takes `&mut self`, so no borrow of `self.tabs`
+        // (or of `tab`) may survive into it.
+        let tab_category = tab.category;
         // Scroll the selection into view only when (tab, selection)
         // actually changed since the last frame — the TUI's
         // last_highlighted guard; without it, manual scrolling would
@@ -714,7 +778,7 @@ impl GuiApp {
             // `section_key`; the snapshot is a local, so the closure
             // holds no borrows of `self` besides the `&mut` it needs
             // for the texture cache and click handling.
-            for section in sectionize(&cards) {
+            for section in sectionize(tab_category, &cards) {
                 if !section.header.is_empty() {
                     ui.end_row();
                     ui.add(egui::Label::new(egui::RichText::new(
@@ -741,7 +805,7 @@ impl GuiApp {
     }
 
     /// One card: preview texture (generated lazily, visible cards
-    /// only), the name, a truncated description, and a small
+    /// only), the two-line name, a truncated description, and a small
     /// "group · lattice" symmetry line — all STACKED vertically.
     ///
     /// The body is built with explicit geometry, no inherited layout:
@@ -828,8 +892,19 @@ impl GuiApp {
             }
         }
         content.add_space(CARD_ROW_SPX);
+        // The card title: up to two lines of the name, each ellipsized
+        // at the inner width. Both rows are always reserved (an empty
+        // second line still takes its height, same pattern as the
+        // empty-description case), so every card keeps the uniform
+        // card size.
+        let tlines = title_lines(card.name, NAME_CHARS_PER_LINE);
         content.add(
-            egui::Label::new(egui::RichText::new(card.name.to_string()).strong().size(16.0))
+            egui::Label::new(egui::RichText::new(tlines[0].clone()).strong().size(16.0))
+                .truncate(),
+        );
+        content.add_space(CARD_ROW_SPX);
+        content.add(
+            egui::Label::new(egui::RichText::new(tlines[1].clone()).strong().size(16.0))
                 .truncate(),
         );
         content.add_space(CARD_ROW_SPX);
@@ -1445,7 +1520,7 @@ mod tests {
         let cards = vec![
             card_fix("o1", wp, Some(p1), Some(tess_core::LatticeKind::Oblique)),
             card_fix("r1", wp, Some(p1), Some(tess_core::LatticeKind::Rectangular)),
-            card_fix("c1", wp, Some(cmm), Some(tess_core::LatticeKind::Rectangular)),
+            card_fix("c1", wp, Some(cmm), Some(tess_core::LatticeKind::CenteredRectangular)),
             card_fix("r2", wp, Some(p1), Some(tess_core::LatticeKind::Rectangular)),
             card_fix("s1", wp, Some(p1), Some(tess_core::LatticeKind::Square)),
             card_fix("h1", wp, Some(p1), Some(tess_core::LatticeKind::Hexagonal)),
@@ -1456,7 +1531,7 @@ mod tests {
                 None,
             ),
         ];
-        let sections = super::sectionize(&cards);
+        let sections = super::sectionize(wp, &cards);
         let headers: Vec<&str> = sections.iter().map(|s| s.header).collect();
         assert_eq!(
             headers,
@@ -1482,14 +1557,14 @@ mod tests {
             .find(|t| t.category == tess_core::TilingCategory::Wallpaper)
             .expect("wallpaper tab");
         assert!(!wp.cards.is_empty(), "wallpaper tab must not be empty");
-        let sections = super::sectionize(&wp.cards);
+        let sections = super::sectionize(tess_core::TilingCategory::Wallpaper, &wp.cards);
         let mut covered = 0usize;
         for s in &sections {
             assert!(!s.cards.is_empty());
             if !s.header.is_empty() {
                 assert_eq!(
                     s.header,
-                    tess_core::section_key(&s.cards[0]),
+                    tess_core::section_key(tess_core::TilingCategory::Wallpaper, &s.cards[0]),
                     "header must come from the section's first card"
                 );
             }
@@ -1497,15 +1572,15 @@ mod tests {
         }
         assert_eq!(covered, wp.cards.len());
         // Crystal-system order: no section may re-appear before a later
-        // crystal system (oblique before rectangular before square
-        // before hexagonal).
+        // crystal system (oblique before rectangular before centered
+        // before square before hexagonal).
         let rank = |h: &str| match h {
             "" => 9,
             "oblique" => 0,
             "rectangular" => 1,
-            "centered" => 1,
-            "square" => 2,
-            "hexagonal" => 3,
+            "centered" => 2,
+            "square" => 3,
+            "hexagonal" => 4,
             _ => panic!("unexpected header {h:?}"),
         };
         let mut max_rank = 0u8;
@@ -1684,21 +1759,21 @@ mod tests {
     }
 
     /// The fixed card height is factored purely from constants:
-    /// image, three text rows, and the three row spacings, with the
-    /// line heights ordered name ≥ description ≥ symmetry. The
-    /// pinned literal catches a card-height constant edited without
-    /// re-deriving the sum.
+    /// image, the two-line title, description, symmetry line, and the
+    /// four row spacings, with the line heights ordered name ≥
+    /// description ≥ symmetry. The pinned literal catches a
+    /// card-height constant edited without re-deriving the sum.
     #[test]
     fn card_inner_h_is_factored_from_constants() {
         assert_eq!(
             super::CARD_INNER_H,
             super::CARD_IMG_H as f32
-                + super::CARD_NAME_LINE_H
+                + 2.0 * super::CARD_NAME_LINE_H
                 + super::CARD_DESC_LINE_H
                 + super::CARD_SYM_LINE_H
-                + 3.0 * super::CARD_ROW_SPX
+                + 4.0 * super::CARD_ROW_SPX
         );
-        assert_eq!(super::CARD_INNER_H, 146.5);
+        assert_eq!(super::CARD_INNER_H, 168.0);
         assert!(
             super::CARD_INNER_H > super::CARD_IMG_H as f32,
             "text rows must add height below the image"
@@ -1875,6 +1950,18 @@ mod tests {
                         g.right() <= cr.right() + 1.0,
                         "{tag}: text galley {g:?} sticks out right of card {cr:?}"
                     );
+                    // No-clipping at the two-line-title budget: every
+                    // card's text must fit the fixed CARD_INNER_H (the
+                    // 2-line name grew the budget; a stale constant
+                    // would clip the symmetry line below the card).
+                    assert!(
+                        g.bottom() <= cr.bottom() + 1.0,
+                        "{tag}: text galley {g:?} is clipped below card {cr:?} (CARD_INNER_H budget too small)"
+                    );
+                    assert!(
+                        g.top() >= cr.top() - 1.0,
+                        "{tag}: text galley {g:?} is clipped above card {cr:?}"
+                    );
                 }
                 let left_rows: Vec<egui::Rect> = galleys
                     .iter()
@@ -1902,8 +1989,8 @@ mod tests {
             }
             assert!(
                 cards_stacked >= 1,
-                "{tag}: no card stacks the 3-line name/description/symmetry \
-                 stack at its inner-left margin ({} cards, {} galleys painted)",
+                "{tag}: no card stacks the name/description/symmetry lines\
+                 at its inner-left margin ({} cards, {} galleys painted)",
                 card_rects.len(),
                 galleys.len()
             );

@@ -8,8 +8,8 @@
 //! article): all edges unit-length, interior angles 2 × [72°, 144°, 144°].
 //!
 //! The tile is centrally symmetric (180° about its centroid maps v0↔v3,
-//! v1↔v4, v2↔v5), so it tiles by pure translation on the oblique lattice
-//! `span{t1, t4}` where
+//! v1↔v4, v2↔v5), so it tiles by pure translation on the centered
+//! rectangular lattice `span{t1, t4}` where
 //! `t1 = (−(cos36°+cos72°), −(sin36°+sin72°))` and
 //! `t4 = (1−cos72°, −sin72°)`.
 //! `det(t1, t4) = area(tile)` exactly, giving one tile per cell.
@@ -38,7 +38,7 @@ const S72: f64 = 0.9510565162951535; // sin 72° = √(10+2√5)/4
 
 /// Girih shesh-band (elongated hexagon) lattice tiling, wallpaper group p2.
 ///
-/// Single-tile oblique lattice tiling. The shesh-band hexagon (all edges
+/// Single-tile centered-rectangular lattice tiling. The shesh-band hexagon (all edges
 /// unit-length, angles 2×[72°,144°,144°]) tiles by translation on
 /// `span{t1, t4}` with `det(t1,t4) = tile area ≈ 2.1266` (exact in radicals).
 /// One tile per cell. Vertex figure 6.6.6 at every interior vertex
@@ -60,7 +60,7 @@ pub fn girih_shesh_band() -> LatticeTiling {
     LatticeTiling {
         id: "girih-shesh-band",
         name: "Girih Shesh-Band (6.6.6)",
-        description: "Periodic girih tiling by the shesh-band (elongated hexagon) tile — the six-sided girih prototile (2×[72°,144°,144°], unit edges). Single-tile oblique lattice (p2); vertex figure 6.6.6. The periodic band-only limit of girih strapwork: parallel straight straps, no stars.",
+        description: "Periodic girih tiling by the shesh-band (elongated hexagon) tile — the six-sided girih prototile (2×[72°,144°,144°], unit edges). Single-tile centered rectangular lattice (p2); vertex figure 6.6.6. The periodic band-only limit of girih strapwork: parallel straight straps, no stars.",
         lattice: [
             Vec2::new(-(C36 + C72), -(S36 + S72)), // t1
             Vec2::new(1.0 - C72, -S72),            // t4
@@ -70,8 +70,9 @@ pub fn girih_shesh_band() -> LatticeTiling {
         ],
         offset: Vec2::ZERO,
         group: WallpaperGroup::P2,
-        lattice_kind: LatticeKind::Oblique,
-        category: TilingCategory::Wallpaper,
+        lattice_kind: LatticeKind::CenteredRectangular,
+        category: TilingCategory::Islamic,
+        secondary: &[],
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

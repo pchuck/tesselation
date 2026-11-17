@@ -14,22 +14,43 @@ use std::fmt;
 
 /// Canonical display categories, ordered from most-ordered to least:
 /// the periodic world by decreasing transitivity (vertex-transitive
-/// uniform, face-transitive Laves, other wallpaper), then the
-/// non-repeating world by decreasing order (quasiperiodic — pure-point
-/// diffraction; aperiodic — rules force non-repetition; nonperiodic —
-/// one non-repeating realization of a tile that also admits periodic
-/// tilings).
+/// uniform, two-uniform, face-transitive Laves, the one-card-per-group
+/// wallpaper catalog, family tabs for pentagon / Islamic / arrangement
+/// tiles), then the non-repeating world by decreasing order
+/// (quasiperiodic — pure-point diffraction; aperiodic — rules force
+/// non-repetition; nonperiodic — one non-repeating realization of a
+/// tile that also admits periodic tilings).
+///
+/// M76: a tiling's *primary* category is its family; it may also
+/// belong to extra tabs (e.g. the Wallpaper group catalog) through
+/// [`crate::tiling::Tiling::secondary_categories`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum TilingCategory {
     /// Vertex-transitive tilings by regular polygons: the 11 uniform
     /// (Archimedean) tilings — a closed set.
     Uniform,
+    /// Two-uniform tilings: two vertex orbits (k-uniform, k = 2).
+    TwoUniform,
     /// Face-transitive Catalan duals of the uniform tilings — a closed
-    /// set of 8 plus documented variants.
+    /// set of 8 plus documented variants. The three regular tilings
+    /// (triangle, square, hexagon) are self-dual and join here as
+    /// secondary members (see
+    /// [`crate::tiling::Tiling::secondary_categories`]).
     Laves,
-    /// All other periodic (wallpaper) tilings: decorative families,
-    /// star-and-cross, girih bands, parameterized periodic families.
+    /// The wallpaper-group catalog: one representative card per
+    /// wallpaper group of the 17 (members join here as secondaries;
+    /// groups with no registered realizer are noted as gaps).
     Wallpaper,
+    /// The ten known families of convex pentagonal tilings (Kershner,
+    /// James, Reynolds, Casey, Liben–Larson, ...), each with its own
+    /// angle/side conditions.
+    PentagonTypes,
+    /// Girih, star-and-cross and related Islamic geometric patterns.
+    Islamic,
+    /// Paver / brick-laying arrangements (basketweave, herringbone,
+    /// running bond, windmill, pythagorean) — decorative periodic
+    /// layouts without regular polygons.
+    Arrangements,
     /// Quasiperiodic substitution tilings (pure-point diffraction /
     /// cut-and-project structure): the Penrose family, Ammann–Beenker,
     /// the girih Darb-i Imam substitution.
@@ -45,10 +66,14 @@ pub enum TilingCategory {
 
 impl TilingCategory {
     /// Canonical display order (most-ordered → least-ordered).
-    pub const ALL: [TilingCategory; 6] = [
+    pub const ALL: [TilingCategory; 10] = [
         TilingCategory::Uniform,
+        TilingCategory::TwoUniform,
         TilingCategory::Laves,
         TilingCategory::Wallpaper,
+        TilingCategory::PentagonTypes,
+        TilingCategory::Islamic,
+        TilingCategory::Arrangements,
         TilingCategory::Quasiperiodic,
         TilingCategory::Aperiodic,
         TilingCategory::Nonperiodic,
@@ -59,8 +84,12 @@ impl TilingCategory {
     pub fn label(self) -> &'static str {
         match self {
             TilingCategory::Uniform => "Uniform",
+            TilingCategory::TwoUniform => "Two-Uniform",
             TilingCategory::Laves => "Laves (Catalan duals)",
             TilingCategory::Wallpaper => "Wallpaper",
+            TilingCategory::PentagonTypes => "Pentagon Types",
+            TilingCategory::Islamic => "Islamic",
+            TilingCategory::Arrangements => "Arrangements",
             TilingCategory::Quasiperiodic => "Quasiperiodic",
             TilingCategory::Aperiodic => "Aperiodic",
             TilingCategory::Nonperiodic => "Nonperiodic",
@@ -80,7 +109,7 @@ mod tests {
 
     #[test]
     fn all_is_complete_with_distinct_labels() {
-        assert_eq!(TilingCategory::ALL.len(), 6);
+        assert_eq!(TilingCategory::ALL.len(), 10);
         let mut labels: Vec<&'static str> =
             TilingCategory::ALL.iter().map(|c| c.label()).collect();
         labels.sort_unstable();

@@ -49,9 +49,11 @@
 //! (90°, 90°, 90°, 90°); every star sums to 360°.
 //!
 //! Primitive cell: **6 tiles** on the lattice `w1 = (5, −2)`,
-//! `w2 = (8, 1)` with `|det(w1, w2)| = 21 = 6 × 7/2`.  Registered as
-//! `Oblique` (the basis is not orthogonal); the centered-rectangular
-//! structure lives in the index-2 mirror sublattice above.
+//! `w2 = (8, 1)` with `|det(w1, w2)| = 21 = 6 × 7/2` (equivalently the
+//! centered basis `w1 = (3, 3)`, `w2 = (−2, 5)` — the primitive
+//! rectangle's sides plus its center — used in the declaration).
+//! Registered as `Cmm` / `CenteredRectangular`: the lattice is
+//! centered rectangular, which is what separates cmm from pmm.
 
 use tess_core::geometry::{Polygon, Vec2};
 use tess_core::symmetry::{LatticeKind, WallpaperGroup};
@@ -139,16 +141,17 @@ pub fn spec() -> LatticeTiling {
     LatticeTiling {
         id: "pentagon-10",
         name: "Pentagon type 10 (James)",
-        description: "Pentagonal tiling of type 10 (James, 1975): A = B = E = 90°, C = D = 135°, sides a = b = 2, c = e = 1, d = √2 (a = b = c + e, d² = c² + e²); isosceles B = 90° instance, non-edge-to-edge (each length-2 side is split at its midpoint between two unit sides), 3-isohedral (seeds 0/1/2), 6 tiles per cell, wallpaper group cmm (mirrors y = x and y = −x, half-turn at the origin, genuine glide g = T(5,−2)∘R2 with axis x + y = 3/2; centered rectangular lattice Z(5,−2)+Z(8,1)).",
+        description: "Pentagonal tiling of type 10 (James, 1975): A = B = E = 90°, C = D = 135°, sides a = b = 2, c = e = 1, d = √2 (a = b = c + e, d² = c² + e²); isosceles B = 90° instance, non-edge-to-edge (each length-2 side is split at its midpoint between two unit sides), 3-isohedral (seeds 0/1/2), 6 tiles per cell, wallpaper group cmm (mirrors y = x and y = −x, half-turn at the origin, genuine glide g = T(5,−2)∘R2 with axis x + y = 3/2; centered rectangular lattice Z(3,3)+Z(−2,5)).",
         lattice: [
-            Vec2::new(5.0, -2.0),
-            Vec2::new(8.0, 1.0),
+            Vec2::new(3.0, 3.0),
+            Vec2::new(-2.0, 5.0),
         ],
         cells,
         offset: Vec2::ZERO,
         group: WallpaperGroup::Cmm,
-        lattice_kind: LatticeKind::Oblique,
-        category: TilingCategory::Wallpaper,
+        lattice_kind: LatticeKind::CenteredRectangular,
+        category: TilingCategory::PentagonTypes,
+        secondary: &[],
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

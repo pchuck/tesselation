@@ -7,7 +7,7 @@ use std::fmt;
 pub enum WallpaperGroup {
     P1, P2,
     Pm, Pg, Cm, Pmm,
-    Pgg, Cmm, Cmc,
+    Pgg, Cmm, Pmg,
     P4, P4m, P4g,
     P3, P3m1, P31m,
     P6, P6m,
@@ -17,7 +17,7 @@ impl WallpaperGroup {
     pub const ALL: [WallpaperGroup; 17] = [
         WallpaperGroup::P1, WallpaperGroup::P2,
         WallpaperGroup::Pm, WallpaperGroup::Pg, WallpaperGroup::Cm, WallpaperGroup::Pmm,
-        WallpaperGroup::Pgg, WallpaperGroup::Cmm, WallpaperGroup::Cmc,
+        WallpaperGroup::Pgg, WallpaperGroup::Cmm, WallpaperGroup::Pmg,
         WallpaperGroup::P4, WallpaperGroup::P4m, WallpaperGroup::P4g,
         WallpaperGroup::P3, WallpaperGroup::P3m1, WallpaperGroup::P31m,
         WallpaperGroup::P6, WallpaperGroup::P6m,
@@ -35,7 +35,7 @@ impl fmt::Display for WallpaperGroup {
             WallpaperGroup::Pmm => "pmm",
             WallpaperGroup::Pgg => "pgg",
             WallpaperGroup::Cmm => "cmm",
-            WallpaperGroup::Cmc => "cmc",
+            WallpaperGroup::Pmg => "pmg",
             WallpaperGroup::P4 => "p4",
             WallpaperGroup::P4m => "p4m",
             WallpaperGroup::P4g => "p4g",
@@ -54,6 +54,10 @@ impl fmt::Display for WallpaperGroup {
 pub enum LatticeKind {
     Oblique,
     Rectangular,
+    /// Centered rectangular lattice (crystallographically `cmm`-family
+    /// groups): a rectangular lattice with an extra point at the cell
+    /// center.
+    CenteredRectangular,
     Square,
     Hexagonal,
     /// Not a lattice tiling (e.g. aperiodic tilings).
@@ -65,6 +69,7 @@ impl fmt::Display for LatticeKind {
         let s = match self {
             LatticeKind::Oblique => "oblique",
             LatticeKind::Rectangular => "rectangular",
+            LatticeKind::CenteredRectangular => "centered",
             LatticeKind::Square => "square",
             LatticeKind::Hexagonal => "hexagonal",
             LatticeKind::None => "none",
