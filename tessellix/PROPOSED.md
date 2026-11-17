@@ -979,23 +979,31 @@ confirm the diffraction claim during the spike before declaring.
 
 ---
 
-### 21. Wallpaper group completion — the 8 un-realized groups (M76 roadmap queue)
+### 21. Wallpaper group completion — the 7 un-realized groups (M76 roadmap queue)
 
-- **Motif:** M76 made the Wallpaper tab a group catalog: 9 of the 17
-  wallpaper groups have a registered realizer (p2 → pentagon-3, pmm →
-  kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
-  truncated-square, p4g → snub-square, p6 → snub-trihexagonal,
-  p6m → hexagon, cmm → elongated-triangular). A shared gap note
-  (`tess_core::browse::wallpaper_gap_note`) rendered at the top of the
-  tab in both UIs names the 8 absent groups. (The 17th group is pmg —
-  the old `WallpaperGroup::Cmc` variant was a 3D space group misnamed
-  as a 2D group; M76 renamed it `Pmg`.)
-- **Queue (difficulty per audit §4d):** p1, pm, pg (easy); pmg, cm
+- **Motif:** M76 made the Wallpaper tab a group catalog: 10 of the 17
+  wallpaper groups have a registered realizer (p1 → stepped-hexominoes,
+  p2 → pentagon-3, pmm → kuniform-pmm, pgg → herringbone, p4 →
+  windmill, p4m → truncated-square, p4g → snub-square, p6 →
+  snub-trihexagonal, p6m → hexagon, cmm → elongated-triangular). A
+  shared gap note (`tess_core::browse::wallpaper_gap_note`) rendered
+  at the top of the tab in both UIs names the 7 absent groups. (The
+  17th group is pmg — the old `WallpaperGroup::Cmc` variant was a 3D
+  space group misnamed as a 2D group; M76 renamed it `Pmg`.)
+- **Queue (difficulty per audit §4d):** pm, pg (easy); pmg, cm
   (easy–medium); p3, p3m1 (medium); p31m (hard).
-  - p1 (oblique): the trivial group — a chiral 2-tile motif on an
-    oblique cell; the plumbing already exists (aperiodic P1
-    placeholders are dropped by `card_meta`, so a periodic p1 entry
-    is the first non-trivial P1 card).
+  - p1 ✅ **landed (M78)**: the catalog's first p1 realizer — the
+    asymmetric 2-step staircase hexomino (unit squares (0,0),(0,1),
+    (1,1),(1,2),(2,1),(2,2)) on its own translation lattice
+    Λ = ⟨(3,1),(0,2)⟩ (det 6 = area, 1 tile per cell, 1-isohedral,
+    edge-to-edge with 180° collinear corners). The queue item
+    proposed an oblique chiral motif, but the exhaustive search
+    (det-3/6/9/12/18 triominoes + det-5 pentominoes: 0 p1; the
+    brief's det-3 L-triomino candidate is flawed at the partition
+    level) found the minimal single-orbit p1 at area 6, and its
+    lattice measures **centered-rectangular** (declared on the
+    primitive cell; centered cell 6×2 with center (−3,1) ∈ Λ) —
+    not oblique as first believed.
   - pm (rectangular): one mirror axis, one translation — e.g. a
     2-tile cell with a single mirror line.
   - pg (rectangular): one glide-reflection, no mirrors.
@@ -1022,9 +1030,9 @@ confirm the diffraction claim during the spike before declaring.
   `registry_groups_are_complete_and_canonically_ordered` must be
   extended with the new tab sizes, and the shared gap note (both UIs)
   drops one group name per landing.
-- **Status:** queued (M76+); one group per milestone; each landing
-  flips one token in `wallpaper_gap_note` and the gap note is
-  re-verified in both UIs' tests.
+- **Status:** p1 landed (M78); 7 remain — one group per milestone;
+  each landing flips one token in `wallpaper_gap_note` and the gap
+  note is re-verified in both UIs' tests.
 
 ## Parked / rejected (with reasons)
 

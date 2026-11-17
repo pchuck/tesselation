@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (2)   Laves (11)   Wallpaper (9)   Pentagon
+counts (`Uniform (11)   Two-Uniform (2)   Laves (11)   Wallpaper (10)   Pentagon
 Types (12)   Islamic (9)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (4)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -57,7 +57,7 @@ fragment, and `params: n` when the tiling has adjustable parameters. A
 tiling can belong to more than one tab: its primary category (its family)
 plus declared secondaries — the Wallpaper tab is one card per wallpaper
 group (the group catalog) built purely from secondaries, so it opens with an
-explicit note listing the eight groups that have no registered realizer.
+explicit note listing the seven groups that have no registered realizer.
 In the Wallpaper tab the cards are grouped under crystal-system section
 headers (Oblique, Rectangular, Centered, Square, Hexagonal), ordered by
 lattice kind then wallpaper group; all other tabs appear in registry order.
@@ -99,7 +99,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
   computed from the window width (target card ~240 px, fully dynamic
   — no upper bound) and the cards stretch to fill. The Wallpaper tab
   (one card per wallpaper group — the group catalog) opens with an
-  explicit note listing the eight groups that have no registered
+  explicit note listing the seven groups that have no registered
   realizer. Cards show crystal-system section headers (Wallpaper
   tab), a lazily generated preview (rasterized at default parameters
   by the shared `tess-core::raster`, same palette/proto-fallback
@@ -127,14 +127,14 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-63 built-in tilings (75 tab memberships), all discoverable in both UIs
+64 built-in tilings (76 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
-self-dual regular tilings also appear in Laves, and nine periodic
+self-dual regular tilings also appear in Laves, and ten periodic
 tilings anchor the per-group Wallpaper catalog). The ten tabs:
 **Uniform** (11), **Two-Uniform** (2), **Laves / Catalan duals** (11,
-8 primary + 3 self-dual secondaries), **Wallpaper** (9: one card per
-wallpaper group, 8 of the 17 groups still unrepresented),
+8 primary + 3 self-dual secondaries), **Wallpaper** (10: one card per
+wallpaper group, 7 of the 17 groups still unrepresented),
 **Pentagon Types** (12), **Islamic** (9), **Arrangements** (5),
 **Quasiperiodic** (8: Penrose family, Ammann–Beenker, Stampfli, shield,
 girih Darb-i Imam), **Aperiodic** (4: einstein family, pinwheel), and
@@ -176,6 +176,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `basketweave` | Basketweave (2:1 dominoes) | paver bond: 2×2 blocks of two parallel 2:1 dominoes, checkerboard orientation; long sides split into unit edges | p4g | square |
 | `herringbone` | Herringbone (2:1 dominoes) | paver bond: chiral L-pairs of 2:1 dominoes, single-direction; long sides split into unit edges | pgg | rectangular |
 | `running-bond` | Running bond (2:1 dominoes) | paver bond: stretcher rows of 2:1 dominoes, each row offset by half a brick; long sides split into unit edges | cmm | centered |
+| `stepped-hexominoes` | Stepped hexominoes | paver tiling: asymmetric 2-step staircase hexomino, one tile per cell on the centered rectangular lattice ⟨(3,1),(0,2)⟩ (primitive cell; centered cell 6×2 with center (−3,1) in the lattice), edge-to-edge with 180° at the four collinear corners; the catalog's first p1 realizer — the centered-rectangular normalizer {I, R180, Mx, My} is broken by the asymmetric staircase | p1 | centered |
 | `pythagorean` | Pythagorean (two squares) | periodic two-square family (one-parameter ratio); square on the hypotenuse per cell | p4 | square |
 | `windmill` | Periodic pinwheel arrangement (p4) | Conway's periodic "spin" of the pinwheel motif: 1–2–√5 triangles around squares; homochiral, non-edge-to-edge | p4 | square |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | 2-uniform k-uniform: hexagonal tiling with one of every three hexagons dissected into six-triangle fans (Wikipedia `2-uniform n10`) | p6m | hexagonal |
@@ -504,7 +505,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 497 tests, all green, zero
+`cargo test --workspace` (currently 501 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

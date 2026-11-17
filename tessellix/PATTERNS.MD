@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (63 tilings)
+## Implemented (64 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -116,16 +116,17 @@ figures at the split midpoints, `2.4.4`).
 
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (2) ·
-**Laves (Catalan duals)** (11) · **Wallpaper** (9) · **Pentagon
-Types** (10) · **Islamic** (9) · **Arrangements** (5) ·
+**Laves (Catalan duals)** (11) · **Wallpaper** (10) · **Pentagon
+Types** (12) · **Islamic** (9) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (4) · **Nonperiodic** (4) —
-73 memberships over the 61 implemented tilings; the 12 extra are
-secondary memberships.
+76 memberships over the 64 implemented tilings; the 12 extra are
+secondary memberships. (Counts at this commit; the block pre-dated
+M74/M77/M78 and is updated in M78.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
   `square` and `hexagon` also appear under Laves (self-dual regular
-  patterns), and nine tilings appear under the Wallpaper catalog.
+  patterns), and ten tilings appear under the Wallpaper catalog.
   `browse_tabs` appends secondary categories to each card's tabs and
   sorts each tab by `section_key`, which now guards on the *tab's*
   category, not the card's (a Wallpaper tab is all-secondary).
@@ -133,11 +134,12 @@ secondary memberships.
   egui geometry test pins the new card budget (2-line card titles,
   no clipping at 1200×900, 640×800 and 2560×900).
 - **Wallpaper catalog.** The Wallpaper tab is a group catalog, not a
-  motif list: one card per realized wallpaper group — 9 of the 17:
-  p2 → pentagon-3, pmm → kuniform-pmm, pgg → herringbone, p4 →
-  windmill, p4m → truncated-square, p4g → snub-square, p6 →
-  snub-trihexagonal, p6m → hexagon, cmm → elongated-triangular. The
-  eight un-realized groups — p1, pm, pg, cm, pmg, p3, p3m1, p31m —
+  motif list: one card per realized wallpaper group — 10 of the 17:
+  p1 → stepped-hexominoes, p2 → pentagon-3, pmm → kuniform-pmm,
+  pgg → herringbone, p4 → windmill, p4m → truncated-square,
+  p4g → snub-square, p6 → snub-trihexagonal, p6m → hexagon, cmm →
+  elongated-triangular. The seven un-realized groups — pm, pg, cm,
+  pmg, p3, p3m1, p31m —
   are named in a shared gap note
   (`tess_core::browse::wallpaper_gap_note`) rendered at the top of
   the tab in both UIs; no placeholder cards. (Historic bug fixed in
@@ -1722,6 +1724,73 @@ documentation pending).
   dependency).
 - **Status:** committed (M74). 63 tilings, 497 tests at the commit.
 
+### 28. Stepped hexominoes ✅ (M78)
+
+- **Motif:** the asymmetric 2-step staircase hexomino — unit squares
+  (0,0), (0,1), (1,1), (1,2), (2,1), (2,2) (width 3, height 3,
+  area 6) — one of the 12 free hexominoes, with a trivial
+  automorphism group (no non-identity rotation or mirror of the
+  plane maps it to a translate of itself). The catalog's first
+  **p1** realizer — the tenth and, for now, last-represented card
+  of the Wallpaper group catalog is p1's (7 of the 17 groups still
+  unrepresented).
+- **Group:** **p1** by structure plus exact probe: the normalizer of
+  Λ in the plane's isometry group is the centered-rectangular Klein
+  four-group {I, R180, Mx, My}, and the asymmetric staircase breaks
+  all three non-identity members — R180, a horizontal mirror, and a
+  vertical mirror each map the hexomino onto a different shape
+  (exact vertex-set comparison) — while the remaining D4 candidates
+  (R90, R270, Md, Ma) do not normalize Λ in the first place. An
+  independent 12-tile patch carries no non-identity symmetry, and
+  all seven coset candidates normalize to False.
+- **Lattice & cell:** 1 tile per **centered-rectangular** cell,
+  declared on the *primitive* basis `w1 = (3,1)`, `w2 = (0,2)`
+  (det 6 = area) — the same convention as girih-star-cross, which
+  keeps a primitive cell of its centered lattice. The centered cell
+  is `⟨(0,2), (−6,0)⟩`: a 6×2 rectangle (area 12 = 2·det) whose
+  center (−3,1) = −w1 + w2 is a lattice point. Structural note:
+  every tile spans exactly the columns {3k, 3k+1, 3k+2}, so the
+  columns x ≡ 2 (mod 3) are *complete* vertical tile-boundary lines
+  — the tiling decomposes into width-3 vertical bands. Harmless to
+  the group: (3,0) ∉ Λ, so no two bands are congruent by a tiling
+  symmetry. (The early "oblique" guess for this lattice was wrong:
+  the Rust `measured_kind` stage-3 probe — |u×v| = 2|det|, u ⊥ v,
+  (u+v)/2 ∈ L — finds the centered witness (0,2)/(−6,0), and the
+  legality test pins the declaration to it.)
+- **Edge structure:** **EDGE-TO-EDGE** at the unit-edge level under
+  the collinear-vertex convention: the 12-vertex polygon carries the
+  four interior corners (2,1), (3,2), (2,3), (0,1) as 180°
+  (collinear) points, so every boundary edge is a unit edge; every
+  interior unit edge is shared by exactly two tiles (exact
+  T-junction test over windows W = 4/12/20).
+- **Vertex stars:** W = 12 window (529 vertices): (90°,270°) × 184,
+  (180°,180°) × 172, (360°) × 92, (90°,90°,90°,90°) × 81 — every
+  figure sums to 360°. The (360°) class is the single lattice point
+  strictly inside each tile — (2,2) + λ, the interior point of the
+  2×2 block the hexomino contains — a degenerate single-sector
+  figure.
+- **Verify:** standard trio (coverage, rotated-scaled,
+  deterministic) + the exact p1 probe
+  (`stepped_hexominoes_wallpaper_group_is_p1`: the 7-candidate
+  split — R90/R270/Md/Ma fail the Λ-normalizer, R180/Mx/My fail
+  the exact vertex-set shape test — (I, v) is a symmetry for every
+  v in a wide Λ window, no non-identity M is a symmetry for any v,
+  positive sanity at (3,1)/(0,2), negative sanity at (0,1) and
+  (3,0) with (3,0) ∉ Λ) + the brute-force culling cross-check +
+  the legality test (measured_kind stage 3 returns
+  CenteredRectangular, matching the declaration) + the Python
+  transcript (`m78_final_check.py`): Bravais centered-rectangular
+  (witness ((6,0), (0,−2), center (3,−1))); coverage 0-bad at
+  W = 4/8/16; the 6 cell translates pairwise incongruent mod Λ;
+  e2e True at W = 4/12/20; the full D4 probe — normalizer
+  {I, R180, Mx, My}, every coset candidate False, 0 positive
+  non-identity symmetries; the independent B = 12 patch symmetry
+  test (empty); the vertex-figure census above; the complete-
+  boundary-column scan (all x = 3k+2 in [−12,12)); the polygon
+  (shoelace 2·area = 12, CCW; interior angles 90°×6 + 180°×4 +
+  270°×2, sum 1800 = 180°·(12−2)).
+- **Status:** committed (M78). 64 tilings, 501 tests at the commit.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -2615,3 +2684,45 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   floret-pentagonal tile — one pentagon, two tilings (p2 2-iso vs
   the floret's p6 1-iso). 12 tess-tilings tests (63 tilings,
   497 tests).
+- 2026-11-17 — M78 Stepped hexominoes (p1) ✅: the asymmetric
+  2-step staircase hexomino (unit squares (0,0),(0,1),(1,1),(1,2),
+  (2,1),(2,2)) tiled by its own translation lattice Λ = ⟨(3,1),
+  (0,2)⟩ — det 6 = area, 1 tile per cell, 1-isohedral,
+  edge-to-edge under the collinear-vertex convention (180° at the
+  four interior corners) — the catalog's first **p1** realizer
+  (10 of the 17 groups now represented). Bravais kind
+  **centered-rectangular**, declared on the *primitive* cell (same
+  convention as girih-star-cross): the centered cell
+  ⟨(0,2),(−6,0)⟩ is a 6×2 rectangle (area 12 = 2·det) whose center
+  (−3,1) = −w1 + w2 is a lattice point. The early "oblique" guess
+  was wrong — `measured_kind`'s stage-3 probe (|u×v| = 2|det|,
+  u ⊥ v, (u+v)/2 ∈ L) returns CenteredRectangular and the legality
+  test pins the declaration; the Python `bravais_kind` used during
+  search had the centered test inverted (it asked for |u×v| =
+  |det|/2 instead of 2|det| — impossible for u, v ∈ L) and so
+  mislabeled the winners as oblique. Group **p1** by exact probe:
+  the normalizer of Λ is {I, R180, Mx, My} and the asymmetric
+  staircase shape-breaks all three non-identity members (R180/Mx/My
+  map the hexomino onto a different shape — exact vertex-set
+  test), R90/R270/Md/Ma do not normalize Λ, all seven coset
+  candidates False, and an independent 12-tile patch carries no
+  non-identity symmetry. Structural note: the columns x ≡ 2 (mod 3)
+  are complete vertical tile-boundary lines (the tiling decomposes
+  into width-3 bands) — (3,0) ∉ Λ, so no two bands are congruent
+  and p1 is unaffected. The brief's det-3 L-triomino candidate is
+  flawed at the partition level: the three candidate anchor values
+  k, k−1, k+2 ≡ k, k−1, k−1 (mod 3) hit only two residue classes —
+  k=1 cells double-covered, k=2 cells uncovered (verified:
+  coverage census {0: 192, 1: 192, 2: 192} over [−12,12)²); the
+  complete det-3/6/9/12/18 triomino sweeps (det-3: 4 lattices × 5
+  orientations, none e2e-p1 — the only e2e det-3 triomino tiling is
+  straight-I on (3,0),(0,1), which is p2mm) and the det-5
+  pentomino sweep (0 p1) leave this area-6 staircase as the minimal
+  single-orbit p1 — found in the full area 4–8 hexomino search
+  (72 p1 winners = 2 essentially distinct tilings × 4 normalizer
+  variants; the shipped one is winner 2, its T-B sibling sits on
+  (1,3),(0,6)). 4 tess-tilings tests (standard trio + exact p1
+  probe). Also fixed the stale Gallery-taxonomy block, which
+  pre-dated M74/M77/M78 (9 Wallpaper / 10 Pentagon Types / 73
+  memberships / 61 tilings) — updated to the at-commit census
+  (10 / 12 / 76 / 64). 64 tilings, 501 tests at the commit.

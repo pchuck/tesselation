@@ -86,6 +86,8 @@ pub mod basketweave;
 pub mod herringbone;
 #[cfg(feature = "pavers")]
 pub mod running_bond;
+#[cfg(feature = "pavers")]
+pub mod stepped_hexominoes;
 #[cfg(feature = "pentagon2")]
 pub mod pentagon2;
 #[cfg(feature = "pentagon3")]
@@ -315,6 +317,7 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(basketweave::basketweave());
         r = r.register(herringbone::herringbone());
         r = r.register(running_bond::running_bond());
+        r = r.register(stepped_hexominoes::stepped_hexominoes());
     }
     r
 }
@@ -482,16 +485,16 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-        // Census of today's taxonomy (M76). 63 built-ins — 64 before the
-        // cairo-collinear merge into cairo-pentagonal (M76) — across the
-        // 10 tabs, in TilingCategory::ALL order:
+        // Census of today's taxonomy (M78). 64 built-ins — 63 before
+        // the cairo-collinear merge into cairo-pentagonal (M76) —
+        // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
         //   TwoUniform 2, Laves 11 (8 primary incl. cairo-pentagonal +
-        //   3 regular secondaries), Wallpaper 9 (group representatives
+        //   3 regular secondaries), Wallpaper 10 (group representatives
         //   as secondaries — one card per represented group),
         //   PentagonTypes 12, Islamic 9, Arrangements 5,
         //   Quasiperiodic 8, Aperiodic 4, Nonperiodic 4.
-        // Membership census 75 = 63 primaries + 12 secondaries (3 Laves
+        // Membership census 76 = 64 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -499,15 +502,16 @@ mod tests {
         // (pentagon-3) -> M65 25 (pentagon-2) -> M72 26 (pentagon-7)
         // -> M76: the old single Wallpaper bucket (26) is replaced by
         // the 10-tab scheme above -> M77 PentagonTypes 10 -> 11
-        // (pentagon-8) -> M74 PentagonTypes 11 -> 12 (pentagon-6).
+        // (pentagon-8) -> M74 PentagonTypes 11 -> 12 (pentagon-6)
+        // -> M78 Wallpaper 9 -> 10 (stepped-hexominoes, p1).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 2, 11, 9, 12, 9, 5, 8, 4, 4],
+            vec![11, 2, 11, 10, 12, 9, 5, 8, 4, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 63, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 75, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 64, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 76, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -528,7 +532,7 @@ mod tests {
                 .unwrap()
         });
         assert_eq!(groups.len(), wall.cards.len(), "every Wallpaper card carries a group");
-        assert_eq!(groups.len(), 9, "nine represented wallpaper groups");
+        assert_eq!(groups.len(), 10, "ten represented wallpaper groups");
         let expected: Vec<&WallpaperGroup> = WallpaperGroup::ALL
             .iter()
             .filter(|g| !tess_core::browse::WALLPAPER_GROUP_GAPS.contains(*g))
@@ -3321,6 +3325,7 @@ mod pavers_tests {
     use crate::basketweave;
     use crate::herringbone;
     use crate::running_bond;
+    use crate::stepped_hexominoes;
     use tess_core::geometry::{BBox, Vec2};
 
     /// Candidate matrices (row-major) used by the paver group probes.
@@ -3825,6 +3830,147 @@ mod pavers_tests {
             );
         }
     }
+
+    #[test]
+    fn stepped_hexominoes_covers_region() {
+        check_covers(
+            &stepped_hexominoes::stepped_hexominoes(),
+            "stepped-hexominoes",
+            BBox::new(v2(-4.0, -4.0), v2(12.0, 10.0)),
+        );
+    }
+
+    #[test]
+    fn stepped_hexominoes_rotated_scaled() {
+        check_rotated(
+            &stepped_hexominoes::stepped_hexominoes(),
+            "stepped-hexominoes(rot30,scale0.7)",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn stepped_hexominoes_deterministic() {
+        check_det(
+            &stepped_hexominoes::stepped_hexominoes(),
+            "stepped-hexominoes",
+            BBox::new(v2(-3.0, -3.0), v2(9.0, 5.0)),
+        );
+    }
+
+    /// Lattice membership for the stepped-hexominoes table:
+    /// Λ = ⟨(3,1),(0,2)⟩ = {(3i, i + 2j) : i, j ∈ ℤ}.
+    fn sh_in_lat(x: i64, y: i64) -> bool {
+        x.rem_euclid(3) == 0 && (y - x / 3).rem_euclid(2) == 0
+    }
+
+    /// The prototile's 12 vertex set (the CCW corners of the emitted
+    /// polygon, four of them 180° collinear — the shape test runs on
+    /// the unit-edge data).
+    const SH_VERTS: [(i64, i64); 12] = [
+        (0, 0), (1, 0), (1, 1), (2, 1), (3, 1), (3, 2),
+        (3, 3), (2, 3), (1, 3), (1, 2), (0, 2), (0, 1),
+    ];
+
+    /// Does M normalize Λ? Every candidate here is in GL(2, ℤ)
+    /// (|det| = 1), so both basis images in Λ imply M(Λ) = Λ.
+    fn sh_normalizes(m: [i64; 4]) -> bool {
+        sh_in_lat(3 * m[0] + m[1], 3 * m[2] + m[3]) && sh_in_lat(2 * m[1], 2 * m[3])
+    }
+
+    /// M(S) = S + t for a unique t (the prototile is a bounded
+    /// polygon, hence has no nontrivial self-translation)? Returns t,
+    /// found by aligning the lexicographic-min vertices and verified
+    /// by sorted set comparison.
+    fn sh_shape(m: [i64; 4]) -> Option<(i64, i64)> {
+        let mut mv: Vec<(i64, i64)> = SH_VERTS
+            .iter()
+            .map(|&(x, y)| (m[0] * x + m[1] * y, m[2] * x + m[3] * y))
+            .collect();
+        let min = |v: &[(i64, i64)]| *v.iter().min().unwrap();
+        let t = (min(&mv).0 - min(&SH_VERTS).0, min(&mv).1 - min(&SH_VERTS).1);
+        let mut moved: Vec<(i64, i64)> = SH_VERTS
+            .iter()
+            .map(|&(x, y)| (x + t.0, y + t.1))
+            .collect();
+        mv.sort_unstable();
+        moved.sort_unstable();
+        (mv == moved).then_some(t)
+    }
+
+    /// The exact p1 criterion: g = (M, v) is a symmetry of the tiling
+    /// iff M normalizes Λ, M(S) = S + t for some t ∈ Λ, and v ∈ Λ
+    /// (one orbit per cell, so the shape match is translation-exact:
+    /// the image of the origin tile must land on a lattice tile).
+    fn sh_is_sym(m: [i64; 4], v: [i64; 2]) -> bool {
+        sh_normalizes(m)
+            && sh_shape(m).is_some_and(|t| sh_in_lat(t.0, t.1))
+            && sh_in_lat(v[0], v[1])
+    }
+
+    #[test]
+    fn stepped_hexominoes_wallpaper_group_is_p1() {
+        const M_ROT4_270: [i64; 4] = [0, 1, -1, 0]; // R270
+        // The seven non-identity D4 candidates, as
+        // (M, normalizes Λ, M(S) = S + t). R90/R270/Md/Ma fail the
+        // normalizer; R180/Mx/My normalize but break the asymmetric
+        // staircase shape.
+        let table: [([i64; 4], bool, bool); 7] = [
+            (M_ROT4, false, false),     // R90
+            (M_ROT2, true, false),      // R180
+            (M_ROT4_270, false, false), // R270
+            (M_MIRX, true, false),      // mirrors of x = c
+            (M_MIRY, true, false),      // mirrors of y = c
+            (M_DIAG, false, false),     // mirrors/glides of y = x + c
+            (M_ANTI, false, false),     // mirrors/glides of y = −x + c
+        ];
+        for (m, norm, shape) in table {
+            assert_eq!(sh_normalizes(m), norm, "normalizer of {m:?}");
+            assert_eq!(sh_shape(m).is_some(), shape, "shape of {m:?}");
+        }
+
+        // Every isometry of the tiling is a lattice translation:
+        // (I, v) is a symmetry for every v in a wide Λ window, and no
+        // non-identity M is a symmetry for any v.
+        let window: Vec<[i64; 2]> = (
+            -2i64..=2
+        )
+            .flat_map(|i| {
+                (-3i64..=3).map(move |j| {
+                    [
+                        3 * i,
+                        i + 2 * j,
+                    ]
+                })
+            })
+            .collect();
+        for v in &window {
+            assert!(
+                sh_is_sym([1, 0, 0, 1], *v),
+                "translation {v:?} must be a symmetry"
+            );
+        }
+        for (m, _, _) in table {
+            for v in &window {
+                assert!(
+                    !sh_is_sym(m, *v),
+                    "({m:?}, {v:?}) must NOT be a symmetry"
+                );
+            }
+        }
+
+        // Positive sanity at the two basis vectors, negative sanity
+        // just off the lattice — including (3,0), which is absent from
+        // Λ, so the width-3 vertical bands are not congruent by a
+        // tiling symmetry.
+        assert!(sh_is_sym([1, 0, 0, 1], [3, 1]));
+        assert!(sh_is_sym([1, 0, 0, 1], [0, 2]));
+        assert!(!sh_is_sym([1, 0, 0, 1], [0, 1]));
+        assert!(!sh_is_sym([1, 0, 0, 1], [3, 0]));
+        assert!(!sh_in_lat(3, 0));
+    }
 }
 
 /// Tests for the 2-uniform (k-uniform) `LatticeTiling` tables.
@@ -4253,7 +4399,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
         pentagon13,
         pentagon14, pentagon15,
         pic_3_12_12,
-        pic_3_6_3_6, pic_4_8_8, running_bond, square, triangle, windmill,
+        pic_3_6_3_6, pic_4_8_8, running_bond, square, stepped_hexominoes, triangle, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
     use tess_core::params::ParamSet;
@@ -4366,6 +4512,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
             ("basketweave", basketweave::basketweave()),
             ("herringbone", herringbone::herringbone()),
             ("running-bond", running_bond::running_bond()),
+            ("stepped-hexominoes", stepped_hexominoes::stepped_hexominoes()),
             ("pentagon-2", pentagon2::spec()),
             ("pentagon-3", pentagon3::spec()),
             ("pentagon-6", pentagon6::spec()),

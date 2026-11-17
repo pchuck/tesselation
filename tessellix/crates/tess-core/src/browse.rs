@@ -114,10 +114,15 @@ pub fn group_rank(g: Option<WallpaperGroup>) -> u8 {
 /// card's declared lattice kind ("oblique", "rectangular", "centered",
 /// "square", "hexagonal"); the tab context is required because the
 /// Wallpaper tab's cards are secondary members whose primary category
-/// is their own family (M76). A centered-rectangular card can only
-/// carry a C-group (Cm or Cmm), which is cross-checked with a
-/// debug_assert. Cards in every other tab, and lattice-less Wallpaper
-/// cards, return `""` (no header).
+/// is their own family (M76). A centered-rectangular lattice is
+/// normalized by its full 2mm point group, so a card on it can carry
+/// any group whose point symmetries fit in 2mm — everything except pg
+/// (whose half-period glides force a primitive rectangular cell) and
+/// the square/hexagonal groups (whose rotations force square/hexagonal
+/// cells); this is cross-checked with a debug_assert (M78: the first
+/// C-lattice card, stepped-hexominoes (p1), exposed the over-strict
+/// M76 check that allowed only Cm/Cmm). Cards in every other tab, and
+/// lattice-less Wallpaper cards, return `""` (no header).
 pub fn section_key(tab_category: TilingCategory, card: &CardMeta) -> &'static str {
     if tab_category != TilingCategory::Wallpaper {
         return "";
@@ -127,8 +132,20 @@ pub fn section_key(tab_category: TilingCategory, card: &CardMeta) -> &'static st
         Some(LatticeKind::Rectangular) => "rectangular",
         Some(LatticeKind::CenteredRectangular) => {
             debug_assert!(
-                matches!(card.group, Some(WallpaperGroup::Cm | WallpaperGroup::Cmm)),
-                "centered-rectangular card {} declares non-C-group {:?}",
+                matches!(
+                    card.group,
+                    Some(
+                        WallpaperGroup::P1
+                        | WallpaperGroup::P2
+                        | WallpaperGroup::Pm
+                        | WallpaperGroup::Pmm
+                        | WallpaperGroup::Cm
+                        | WallpaperGroup::Pgg
+                        | WallpaperGroup::Cmm
+                        | WallpaperGroup::Pmg
+                    )
+                ),
+                "centered-rectangular card {} declares group {:?}, which a C lattice cannot support",
                 card.id,
                 card.group
             );
@@ -144,8 +161,7 @@ pub fn section_key(tab_category: TilingCategory, card: &CardMeta) -> &'static st
 /// tab renders one card per group it does have; both UIs show the groups
 /// in this table as an explicit gap note in that tab. As roadmap tilings
 /// land, groups are removed from this table.
-pub const WALLPAPER_GROUP_GAPS: [WallpaperGroup; 8] = [
-    WallpaperGroup::P1,
+pub const WALLPAPER_GROUP_GAPS: [WallpaperGroup; 7] = [
     WallpaperGroup::Pm,
     WallpaperGroup::Pg,
     WallpaperGroup::Cm,
@@ -544,11 +560,11 @@ mod tests {
     #[test]
     fn wallpaper_group_gaps_are_exactly_the_unrepresented_groups() {
         // The gap table plus the groups represented by the real registry
-        // must partition the 17 groups; the 9 represented groups are
+        // must partition the 17 groups; the 10 represented groups are
         // pinned by the tess-tilings census test, which cross-checks the
         // table against the actual declarations. Here: the table is
         // well-formed on its own.
-        assert_eq!(WALLPAPER_GROUP_GAPS.len(), 8);
+        assert_eq!(WALLPAPER_GROUP_GAPS.len(), 7);
         let mut gaps = WALLPAPER_GROUP_GAPS.to_vec();
         gaps.sort_unstable_by_key(|g| group_rank(Some(*g)));
         let n = gaps.len();
