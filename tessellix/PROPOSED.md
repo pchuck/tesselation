@@ -230,7 +230,7 @@ confirm the diffraction claim during the spike before declaring.
   | 5 | a=b, d=e, A=60°, D=120° | p6 | 6 | iso | yes |
   | 6 | a=d=e, b=c, B+D=180°, 2B=E | p2 | 4 | 2-iso | yes |
   | 7 | b=c=d=e, B+2E=2C+D=360° | pgg (verified, M72) | 8 | 2-iso | yes |
-  | 8 | b=c=d=e, 2B+C=D+2E=360° | pgg/p2 | 8 | 2-iso | yes |
+  | 8 | b=c=d=e, 2B+C=D+2E=360° | pgg (verified, M77) | 8 | 2-iso | yes |
   | 9 | b=c=d=e, 2A+C=D+2E=360° | pgg (verified, M59) | 8 | 2-iso | yes |
   | 10 | a=b=c+e, A=90°, B+E=180°, B+2C=360° | cmm (verified, M63) | 6 | 3-iso | **no** |
   | 11 | 2a+c=d=e, A=90°, 2B+C=360°, C+E=180° | pgg (verified, M60) | 8 | 2-iso | no |
@@ -283,10 +283,11 @@ confirm the diffraction claim during the spike before declaring.
   automorphism audit plus exact generator verification — half-turn
   c0 = (13, 4√3), perpendicular glides g1² = w2 and g2² = −w1, no
   mirrors). Remaining (M75+), in the arc's priority
-  order: 6, then 8 (7 now implemented in M72; 1 and 5 covered by
-  existing registry entries — prismatic-pentagonal /
-  floret-pentagonal — coverage audit documentation pending;
-  3, 9, 10, 11, 12, 13, 14 and 15 implemented). Existing tilings
+  order: 6 (7 now implemented in M72; 8 now implemented in M77; 1
+  and 5 covered by existing registry entries —
+  prismatic-pentagonal / floret-pentagonal — coverage audit
+  documentation pending; 3, 8, 9, 10, 11, 12, 13, 14 and 15
+  implemented). Existing tilings
   likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
   verify the assignments at design time; implement only uncovered
@@ -312,6 +313,33 @@ confirm the diffraction claim during the spike before declaring.
   probes), 8-tile 2-isohedral rectangular cell (four direct + four
   mirror), 11 tess-tilings tests (62 tilings, 476 tests). See
   PATTERNS.MD §25.
+  **Type 8: DONE (M77)** — Kershner 1968 family b = c = d = e,
+  2B + C = D + 2E = 360°, pinned to the exact Q(√3) member
+  B = C = 120°: tan A = 3√3 (A ≈ 79.11°), cos D = 1/7
+  (D ≈ 81.79°), tan E = −√3/2 (E ≈ 139.11°), A = E − 60°,
+  a = 6√7, b = c = d = e = 14, tile area 189√3; all cell
+  vertices on the Z[√3] grid (shipped table = verified M73
+  integer cell at scale 42 divided by 3). 8-tile rectangular
+  unit, four direct + four mirror (T2, T3, T5, T8), 2-isohedral
+  (seeds [0,1,1,0,0,1,1,0], orbits {0,3,4,7}/{1,2,5,6}, each
+  orbit mixing both chiralities); w1 = (36, 24√3),
+  w2 = (−36, 18√3), w1 ⊥ w2, det = 1512√3 = 8·area. Group
+  **pgg** by exact audit: perpendicular glides g1² = w1,
+  g2² = −w2 (axis shifts +|w1|/2 and −|w2|/2 exactly,
+  perpendicular parts (−4, 2√3) and (39, 26√3) nonzero — no
+  power of a glide is a reflection); g1 maps T1 exactly onto
+  T5, g2 maps T1 exactly onto T8; half-turn centre
+  c0 = (−1/2, 25√3/2) (lattice coords (7/24, 11/36)); 22
+  negative mirror probes + 2 quarter-turn probes.
+  **EDGE-TO-EDGE**: 79-tile census 395 full / 0 split edges,
+  290 interior directed edges each paired with its reverse,
+  148 vertices, no T-junctions; torus 20 edge orbits, side
+  pairs a-a:4 b-c:4 b-d:4 c-c:2 d-e:4 e-e:2 (all
+  reverse-glued), 12 vertex orbits (eight 3s, four 4s). Vertex
+  stars 91 = 30 × {A,A,C,D} + 36 × {B,B,C} + 25 × {D,E,E},
+  every star 360°. Window census 79/42/20/5 at four fixed
+  windows. 11 tess-tilings tests (62 tilings, 485 tests). See
+  PATTERNS.MD §26.
   **Type 11: DONE (M60)** — Rice 1977 family 2a+c=d=e, A=90°,
   2B+C=360°, C+E=180° (⇒ C=360−2B, E=2B−180, D=270−B; convex
   90°<B<180°); pinned the reference construction's B=156° member at

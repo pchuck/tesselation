@@ -137,7 +137,7 @@ pub struct GuiApp {
     last_highlighted: (usize, String),
     /// Lazily built card preview textures, keyed by (id, params-string,
     /// size). Textures are generated in the draw pass for visible cards
-    /// only — generating all 61 up front would stall the first frame.
+    /// only — generating all 62 up front would stall the first frame.
     card_textures: HashMap<String, egui::TextureHandle>,
     /// The browser's search text (name/id/description, all tabs).
     /// Kept in GuiApp rather than `app.search` because the TUI and the
