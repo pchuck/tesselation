@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (60 tilings)
+## Implemented (61 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -764,7 +764,7 @@ labels, which are out of chronological order.)
   counts (24,36,120)/(96,1116,1608)/(2328,14148,22104)/(30624,203004,
   306696)), Perron eigenvalue λ² = 7+4√3; standard trio.
 - **Status:** implemented (M45).
-## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60, M62, M63, M64 landed)
+## Follow-up: convex pentagon census — 🚧 in progress (M49+; M49, M50, M55, M59, M60, M62, M63, M64, M65 landed)
 
 The PROPOSED.md #5 arc (all 15 convex pentagonal tiling types). Type 13
 (Rice) lands first: its 8-tile primitive unit is small enough for a
@@ -791,7 +791,15 @@ centered lattice L' = Z(3,3)+Z(−7,7) (centre (−2,5) ∈ L∖L') ruling
 out pmm; type 3 (Reinhardt family 3) eighth: the pinned integral
 member (2, 2, 1, 4, 3) — the arc's first 2-tile unit and its first
 chiral one-orbit p2, after a complete search proved the classical
-three-tile 120° pinwheel admits no periodic cell for this member.
+three-tile 120° pinwheel admits no periodic cell for this member;
+type 2 (Reinhardt family 2) ninth: the c = e, d = b, B + D = 180°
+edge-to-edge variation, pinned to the exact-Q(√3) member a = 1
+(A = B = D = 90°, C = 120°, E = 150°, b = d = 1 + √3/2,
+c = e = 1/2) — the arc's second pentagon-level edge-to-edge
+(after type 9) and its first two-chiral-pair unit: a 4-tile
+rectangular cell whose glides map each tile onto its mirror image,
+group pgg (colouring the two chiralities drops the group to p2),
+vertex figures {90°, 120°, 150°} and {90°, 90°, 90°, 90°}.
 
 Type 7 (Kershner 1968) remains **deferred (M58)** with a bounded
 negative: the 15°/30°-grid pin clause is provably unsatisfiable, the
@@ -799,7 +807,7 @@ valid 22.5°-grid pin admits no 8-tile periodic cell (22M-node search,
 0 solutions), and the reference instance ≈(148°, 133°) is off-grid —
 a **future milestone** to revive via the M60-lesson pipeline (pin the
 reference instance with bounded floats; see PROPOSED.md #5). Remaining
-in the arc: types 2, 5, 1.
+in the arc: types 5, 1.
 
 ### 15. Pentagon type 13 (Rice) ✅ (M49)
 
@@ -1316,6 +1324,80 @@ in the arc: types 2, 5, 1.
   cross-checked against the independent Python emulation of the
   culling).
 - **Status:** committed (M64). 59 tilings, 409 tests at the commit.
+
+### 24. Pentagon type 2 (Reinhardt family 2) ✅ (M65)
+
+- **Motif:** Reinhardt's type-2 convex pentagonal tiling — the
+  one-parameter family `c = e`, `d = b`, `B + D = 180°` — pinned to
+  the exact-Q(√3) member `a = 1`: `A = B = D = 90°`, `C = 120°`,
+  `E = 150°`, `b = d = 1 + √3/2`, `c = e = 1/2` (tile area
+  `1 + √3/2`, every vertex in Q(√3)).  This is the family's
+  **edge-to-edge** variation (the Wikipedia type-2 section's other
+  isohedral pgg form is T-split).  The prototile is **chiral** —
+  its (side, angle) cycle ((1+√3/2, 90°), (1/2, 120°),
+  (1+√3/2, 90°), (1/2, 150°), (1, 90°)) is inequivalent to every
+  cyclic rotation of its reversal — yet the tiling uses **both**
+  chiralities: the primitive cell holds two chiral pairs (two
+  direct + two mirror tiles).
+- **Group:** **pgg** (orbifold 2\*22) by structure plus exact audit
+  of the quotient table: two perpendicular glide families with axes
+  along the lattice directions, `g1² = w1` and `g2² = −w2` — each a
+  true half-translation glide (the along-axis shift is exactly
+  half a primitive translation — the test verifies `2·t1·u1/|w1|
+  = +1` and `2·t2·u2/|w2| = −1`, i.e. shifts of +|w1|/2 and −|w2|/2
+  — so no power of either
+  glide is a pure reflection) — composing to the half-turn about
+  `c0 = (1 + √3/2, 0)`, the prototile's B vertex, **not** a lattice
+  point.  The half-turn centres are exactly the four classes
+  `c0 + Λ/2`.  No mirrors (22 negative candidates: the two
+  perpendicular-part-only mirror classes plus every whole-lattice
+  shift of them, i ∈ −2..2).  Colouring the two chiralities (direct
+  vs mirror) turns each glide into a pure reflection of its colour
+  class and drops the group to **p2** — the classical reference's
+  note.
+- **Lattice & cell:** **4 tiles** per rectangular cell, two chiral
+  pairs.  `w1 = (1/2, 1 + √3/2)`, `w2 = (−2 − √3, 1)`, with
+  `w1 ⊥ w2`, `|w1|² = 2 + √3`, `|w2|² = 8 + 4√3`,
+  `det = 4 + 2√3 = 4 × tile area`.  The four cells: the prototile
+  at (0, 0) (rotation 0°), its half-turn image at (2 + √3, 0)
+  (rotation 180°), and the two mirror tiles at
+  (1 + √3/2, 1/2) (rotation 150°) and ((3 + √3)/2, (1 + √3)/2)
+  (rotation 330°).
+- **Edge structure:** **EDGE-TO-EDGE** at the pentagon level — the
+  arc's second (after type 9): every side is matched by exactly one
+  full side of one neighbour, no T-junctions (refined edge census
+  over the 276-tile block window: 1182 full edges, 0 split edges,
+  minimum midpoint boundary margin 0.00144, an exact count robust
+  against the ~1e-15 float noise of the runtime-computed prototile).
+  The two vertex figures are {90°, 120°, 150°} (237) and
+  {90°, 90°, 90°, 90°} (118) — 355 interior vertices over the
+  281-tile block, every star complete (star-to-boundary margin
+  0.067; the edge-through-ray pass contributes no rays because no
+  edge passes through a vertex).
+- **Verify:** standard trio (coverage, rotated-scaled,
+  deterministic) + unit-structure test (4 congruent copies of the
+  runtime prototile: angles {90°, 90°, 120°, 90°, 150°} at 1e-9,
+  sides 1 + √3/2, 1/2, 1 + √3/2, 1/2, 1 at 1e-12, closure
+  E = (0, 1), family identities c = e, d = b, B + D = 180°, seeds
+  [0, 0, 0, 0], lattice literals, det = 4·area = 4 + 2√3,
+  |w1|² = 2 + √3, |w2|² = 8 + 4√3, w1 ⊥ w2, both chiralities
+  present) + window-census test (115 / 165 / 272 / 281 / 17 tiles
+  at five fixed windows, cross-checked against the independent
+  Python emulation of the culling) + refined-edge census (276-tile
+  window: 1182 full + 0 split edges) + vertex-figure census (355
+  interior vertices: {90°, 120°, 150°} 237×, {90°, 90°, 90°, 90°}
+  118×) + pgg-symmetry test (exact half-turn about c0 on the
+  interior-AABB patch; g1, g1⁻¹, g2, g2⁻¹ and four lattice-shifted
+  glide variants map the prototile onto tiles; all four c0 + Λ/2
+  half-turn classes with 9 lattice shifts; 10 lattice translations;
+  generator identities g1² = w1, g2² = −w2, g2∘g1 = half-turn about
+  c0; 22 negative mirror probes) + isohedral test (half-turn + the
+  two glide classes permute the cell table as a single orbit
+  r = (0 1)(2 3), g1 = (0 2)(1 3), g2 = (0 3)(1 2), the glides
+  identifying the chiralities; every generated tile keeps the
+  prototile side multiset {1/2, 1/2, 1, 1 + √3/2, 1 + √3/2} and
+  seed 0).
+- **Status:** committed (M65). 61 tilings, 465 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -2052,3 +2134,30 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   full + 46 split edges (all d-midpoints exact tiling vertices),
   vertex figures {60°,120°,180°} 46× + {120°,120°,120°} 39×.
   9 tess-tilings tests (59 tilings, 409 tests).
+
+- 2026-11-17 — M65 Pentagon type 2 (Reinhardt family 2, 1918) ✅: the
+  c = e, d = b, B + D = 180° family pinned to the exact-Q(√3) member
+  a = 1 (A = B = D = 90°, C = 120°, E = 150°, b = d = 1 + √3/2,
+  c = e = 1/2; area 1 + √3/2, all vertices in Q(√3)) — the arc's
+  edge-to-edge variation and its second pentagon-level edge-to-edge
+  (after type 9). **4-tile rectangular unit = two chiral pairs**
+  (the prototile is chiral; the tiling uses both chiralities — the
+  arc's first two-chiral-pair unit); 1-isohedral (seeds 0,0,0,0; the
+  two glide classes identify the chiralities: single orbit
+  r = (0 1)(2 3), g1 = (0 2)(1 3), g2 = (0 3)(1 2)). Rectangular
+  lattice w1 = (1/2, 1+√3/2) ⊥ w2 = (−2−√3, 1), |w1|² = 2+√3,
+  |w2|² = 8+4√3, det = 4 + 2√3 = 4·area. Group **pgg** by exact
+  quotient-table audit: perpendicular glides g1² = w1, g2² = −w2
+  (along-axis half-period shifts +1/2·w1 and −1/2·w2, so no power
+  is a pure reflection), g2∘g1 = half-turn about c0 = (1+√3/2, 0)
+  — the prototile's B vertex, not a lattice point; all four
+  c0 + Λ/2 half-turn classes realised (×9 lattice shifts); no
+  mirrors (22 negative probes). Colouring the two chiralities drops
+  the group to **p2** (the classical reference's note).
+  EDGE-TO-EDGE: refined census over the 276-tile window: 1182 full
+  edges, 0 splits (min midpoint boundary margin 0.00144). Vertex
+  figures {90°,120°,150°} 237× + {90°,90°,90°,90°} 118× (355
+  interior vertices, star-to-boundary margin 0.067). Window census
+  115/165/272/281/17 over five fixed windows, cross-checked against
+  the independent Python culling emulation. 9 tess-tilings tests
+  (61 tilings, 465 tests).

@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the six display categories with card
-counts (`Uniform (11)   Laves (9)   Wallpaper (24)   ...`); below it a
+counts (`Uniform (11)   Laves (9)   Wallpaper (25)   ...`); below it a
 responsive card grid shows the active tab's tilings as blocks with a
 half-block raster thumbnail, the tiling name, a `group · lattice` line
 (wallpaper tilings), a short description fragment, and `params: n` when
@@ -119,10 +119,10 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-60 built-in tilings, all discoverable in both UIs via the registry
+61 built-in tilings, all discoverable in both UIs via the registry
 (`tess-tui -- list`). Every tiling declares one of six canonical
 display categories — **Uniform** (11), **Laves / Catalan duals** (9),
-**Wallpaper** (24), **Quasiperiodic** (8: Penrose family, Ammann–Beenker,
+**Wallpaper** (25), **Quasiperiodic** (8: Penrose family, Ammann–Beenker,
 Stampfli, shield, girih Darb-i Imam), **Aperiodic** (7: einstein family, limit-periodic
 rep-tiles, pinwheel), and **Nonperiodic** (1: Hirschhorn) — and both
 UIs group their lists by it. Categories are declared on the tiling
@@ -171,6 +171,7 @@ what the mathematics distinguishes; see `tess-core/src/category.rs`.
 | `pentagon-10` | Pentagon type 10 (Kershner) | pentagonal (Kershner 1968): A = 90°, B + E = 180°, a = b = c + e, d² = c² + e² (reference instance B = 90°, c = 1: A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2); 3-isohedral, 6 tiles per cell, non-edge-to-edge (each length-2 side split at its exact midpoint), mirrors y = x and y = −x, half-turn at the origin, genuine glide (axis x + y = 3/2), centered rectangular lattice | cmm | oblique |
 | `pentagon-11` | Pentagon type 11 (Kershner) | pentagonal (Kershner 1968): A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, 2a + c = d = e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side carries one c-side and two a-sides), two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
 | `pentagon-12` | Pentagon type 12 (Kershner) | pentagonal (Kershner 1968): A = 90°, B = 150°, C = 60°, D = E = 120°, 2a = d = c + e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side is split at its exact midpoint into two unit halves), two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
+| `pentagon-2` | Pentagon type 2 (Reinhardt) | pentagonal (Reinhardt 1918 family 2): A = B = D = 90°, C = 120°, E = 150°, a = 1, b = d = 1 + √3/2, c = e = 1/2 (c = e, d = b, B + D = 180°), exact Q(√3); 1-isohedral, 4 tiles (two chiral pairs) per rectangular cell, edge-to-edge, two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
 | `pentagon-3` | Pentagon type 3 (Reinhardt) | pentagonal (Reinhardt 1918 family 3): A = B = C = D = 120°, E = 60°, a = b = 2, c = 1, d = 4, e = 3 (a = b, d = c + e), exact Q(√3); 1-isohedral, 2 tiles per oblique cell, non-edge-to-edge (every d-side is split at its exact midpoint between two length-2 sides); chiral prototile, one chirality used — the classical three-tile type-3 pinwheel admits no periodic cell for this member | p2 | oblique |
 | `pentagon-13` | Pentagon type 13 (Rice) | pentagonal (Rice type 13, A = 120°): d = 2a = 2e, B = E = 90°; 2-isohedral chiral pair, 8 tiles per cell | p2 | rectangular |
 | `pentagon-14` | Pentagon type 14 (Stein) | pentagonal (Stein 1985, completely determined): 2a = 2c = d = e, b = βa, A = 90°; 3-isohedral, 6 tiles per oblique cell | p2 | oblique |

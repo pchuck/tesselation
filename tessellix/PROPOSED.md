@@ -279,8 +279,8 @@ confirm the diffraction claim during the spike before declaring.
   0/1), group **pgg confirmed** (gauge-invariant quotient-table
   automorphism audit plus exact generator verification — half-turn
   c0 = (13, 4√3), perpendicular glides g1² = w2 and g2² = −w1, no
-  mirrors). Remaining (M65+), in the arc's priority
-  order: 2, 5, then 1 (p2 topology zoo)
+  mirrors). Remaining (M72+), in the arc's priority
+  order: 5, then 1 (p2 topology zoo)
   (7 deferred with evidence above; 3, 9, 10, 11, 12 and 15
   implemented). Existing tilings likely cover 4
   (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
@@ -403,6 +403,33 @@ confirm the diffraction claim during the spike before declaring.
    det 42) has centre (−2,5) ∈ L\L' → cmm, not pmm;
    registered as Oblique since w1·w2 = 38 ≠ 0. 9 tess-tilings
    tests (59 tilings, 409 tests). PATTERNS.MD §22.
+   **Type 2: DONE (M65)** — Reinhardt 1918 family 2 (c = e,
+   d = b, B + D = 180°) — the arc's **edge-to-edge** variation —
+   pinned to the exact-Q(√3) member a = 1: A = B = D = 90°,
+   C = 120°, E = 150°, b = d = 1 + √3/2, c = e = 1/2 (area
+   1 + √3/2, every vertex in Q(√3)). 4-tile rectangular
+   primitive unit = **two chiral pairs** (the cell holds two
+   direct + two mirror tiles); 1-isohedral (a single orbit: the
+   two glide classes identify the chiralities, so all tiles
+   carry seed 0). Lattice w1 = (1/2, 1 + √3/2) ⊥
+   w2 = (−2 − √3, 1), det = 4 + 2√3 = 4 × area. Group **pgg**
+   by exact audit of the quotient table: two perpendicular
+   glide families with axes along the lattice directions,
+   g1² = w1 and g2² = −w2 (each a true half-translation glide —
+   no power is a pure reflection), composing to the half-turn
+   about c0 = (1 + √3/2, 0) (the prototile's B vertex — NOT a
+   lattice point); the four half-turn classes c0 + Λ/2 are
+   realised; no mirrors (22 negative candidates). The prototile
+   is chiral yet the tiling uses **both** chiralities —
+   colouring the two chiralities turns the glides into pure
+   reflections of each colour class and drops the group to
+   **p2** (the article's note). EDGE-TO-EDGE at the pentagon
+   level — the arc's second (after type 9): a refined edge
+   census over 276 tiles finds 1182 full edges and zero
+   splits. Vertex figures {90°,120°,150°} 237× +
+   {90°,90°,90°,90°} 118× (355 interior vertices over the
+   281-tile block window). 9 tess-tilings tests (61 tilings,
+   465 tests). PATTERNS.MD §24.
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 
