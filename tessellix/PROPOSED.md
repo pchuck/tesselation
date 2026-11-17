@@ -309,7 +309,7 @@ confirm the diffraction claim during the spike before declaring.
   probes), 8-tile 2-isohedral rectangular cell (four direct + four
   mirror), 11 tess-tilings tests (62 tilings, 476 tests). See
   PATTERNS.MD §25.
-  **Type 11: DONE (M60)** — Kershner 1968 family 2a+c=d=e, A=90°,
+  **Type 11: DONE (M60)** — Rice 1977 family 2a+c=d=e, A=90°,
   2B+C=360°, C+E=180° (⇒ C=360−2B, E=2B−180, D=270−B; convex
   90°<B<180°); pinned the reference construction's B=156° member at
   c=1 (A=90°, B=156°, C=48°, D=114°, E=132°, a=r=0.0946641…,
@@ -321,7 +321,7 @@ confirm the diffraction claim during the spike before declaring.
   anchor-pair symmetry audit on the exact model (perpendicular glides
   g1²=w1, g2²=−w2, half-turns at c0=(−0.3716…, 0.7601…), no mirrors);
   PATTERNS.MD §19.
-  **Type 12: DONE (M62)** — Kershner 1968 family 2a = d = c + e,
+  **Type 12: DONE (M62)** — Rice 1977 family 2a = d = c + e,
   A = 90°, 2B + C = 360° (⇒ C = 360 − 2B, D = 270 − B,
   E = 2B − 180; convex 90° < B < 180°, b the second free
   parameter); pinned to the B = 150° member at c = 1 — a surd
@@ -386,7 +386,7 @@ confirm the diffraction claim during the spike before declaring.
   partner sides; vertex figures {60°,120°,180°} and {120°,120°,120°}),
   1-isohedral, four half-turn classes d/2 + Λ/2, chiral prototile used
   in one chirality (no mirrors/glides).  PATTERNS.MD §23.
-   **Type 10: DONE (M63)** — Kershner 1968 family a = b = c + e,
+   **Type 10: DONE (M63)** — James 1975 family a = b = c + e,
    A = 90°, B + E = 180° (⇒ C = 180 − B/2, D = 90 + B/2,
    E = 180 − B; convex 90° < B < 180°, e/c the second free
    parameter) pinned to the B = 90° member at c = 1: A = B = E =

@@ -285,7 +285,7 @@ impl Tiling for AmmannBeenkerTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Aperiodic square-rhombus tiling by substitution; local 8-fold symmetry."
+        "Quasiperiodic square-rhombus tiling by substitution; local 8-fold symmetry."
     }
 
     fn category(&self) -> TilingCategory {

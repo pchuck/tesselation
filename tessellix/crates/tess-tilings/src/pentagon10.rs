@@ -1,8 +1,9 @@
-//! Pentagon type 10 (Richard Kershner, 1968) tiling — 3-isohedral,
+//! Pentagon type 10 (James, 1975) tiling — 3-isohedral,
 //! non-edge-to-edge at the pentagon level, wallpaper group cmm.
 //!
-//! Type 10 is one of the five types Kershner announced in 1968 (types
-//! 10–14).  It is the two-parameter family with conditions `a = b = c + e`,
+//! Type 10 is the first pentagon type found after Kershner's three
+//! (1968); it was discovered by James in 1975.  It is the two-parameter
+//! family with conditions `a = b = c + e`,
 //! `A = 90°`, `B + E = 180°` (so `E = 180° − B`, `C = 180° − B/2`,
 //! `D = 90° + B/2`, convex for `90° < B < 180°`, with the side ratio
 //! `e/c` the second free parameter; side a runs E→A).  The instance
@@ -126,7 +127,7 @@ fn cell_polygons() -> [Vec<Vec2>; 6] {
     })
 }
 
-/// Pentagon type 10 (Kershner 1968): 3-isohedral, 6 tiles per cell,
+/// Pentagon type 10 (James 1975): 3-isohedral, 6 tiles per cell,
 /// wallpaper group cmm, non-edge-to-edge (each length-2 side is split
 /// at its midpoint between two unit sides).
 pub fn spec() -> LatticeTiling {
@@ -137,8 +138,8 @@ pub fn spec() -> LatticeTiling {
         .collect();
     LatticeTiling {
         id: "pentagon-10",
-        name: "Pentagon type 10 (Kershner)",
-        description: "Pentagonal tiling of type 10 (Richard Kershner, 1968): A = B = E = 90°, C = D = 135°, sides a = b = 2, c = e = 1, d = √2 (a = b = c + e, d² = c² + e²); isosceles B = 90° instance, non-edge-to-edge (each length-2 side is split at its midpoint between two unit sides), 3-isohedral (seeds 0/1/2), 6 tiles per cell, wallpaper group cmm (mirrors y = x and y = −x, half-turn at the origin, genuine glide g = T(5,−2)∘R2 with axis x + y = 3/2; centered rectangular lattice Z(5,−2)+Z(8,1)).",
+        name: "Pentagon type 10 (James)",
+        description: "Pentagonal tiling of type 10 (James, 1975): A = B = E = 90°, C = D = 135°, sides a = b = 2, c = e = 1, d = √2 (a = b = c + e, d² = c² + e²); isosceles B = 90° instance, non-edge-to-edge (each length-2 side is split at its midpoint between two unit sides), 3-isohedral (seeds 0/1/2), 6 tiles per cell, wallpaper group cmm (mirrors y = x and y = −x, half-turn at the origin, genuine glide g = T(5,−2)∘R2 with axis x + y = 3/2; centered rectangular lattice Z(5,−2)+Z(8,1)).",
         lattice: [
             Vec2::new(5.0, -2.0),
             Vec2::new(8.0, 1.0),

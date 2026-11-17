@@ -249,7 +249,7 @@ impl Tiling for PenrosePentagonTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Aperiodic tiling by five pentagons with a φ-substitution; local 5-fold symmetry."
+        "Quasiperiodic tiling by five pentagons with a φ-substitution; local 5-fold symmetry."
     }
 
     fn category(&self) -> TilingCategory {

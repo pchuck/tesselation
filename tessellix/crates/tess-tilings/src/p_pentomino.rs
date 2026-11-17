@@ -263,7 +263,7 @@ impl Tiling for PentPentominoTiling {
     }
 
     fn category(&self) -> TilingCategory {
-        TilingCategory::Aperiodic
+        TilingCategory::Nonperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

@@ -249,7 +249,7 @@ impl Tiling for PenroseTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Aperiodic rhomb tiling by substitution; local 5-fold symmetry."
+        "Quasiperiodic rhomb tiling by substitution; local 5-fold symmetry."
     }
 
     fn category(&self) -> TilingCategory {

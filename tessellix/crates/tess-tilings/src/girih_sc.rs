@@ -7341,7 +7341,7 @@ pub fn girih_star_cross() -> LatticeTiling {
     ];
     LatticeTiling {
         id: "girih-star-cross",
-        name: "Girih Star-and-Cross, 10-fold (pmm)",
+        name: "Girih Star-and-Cross (periodic, 10-fold, pmm)",
         description: "Classical 10-pointed girih star-and-cross strapwork on an oblique lattice: stars joined by chord straps with bobbin motifs between them (pmm). The cell reproduces a measured reference panel: 99 white ground faces and 446 strap-corridor pieces.",
         lattice: [Vec2::new(77.0, 45.0), Vec2::new(0.0, 90.0)],
         cells,

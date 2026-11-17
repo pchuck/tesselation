@@ -312,7 +312,7 @@ impl Tiling for TurtleTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Aperiodic homochiral tiling by turtle + hat prototiles (4+√15 ratio); nine-label substitution; exact hex-lattice geometry."
+        "Aperiodic homochiral tiling by the chiral hats-in-turtles substitution (turtle + hat, 4+√15 ratio; all tiles unreflected — the plain turtle tiling mixes reflected copies); nine-label substitution; exact hex-lattice geometry."
     }
 
     fn category(&self) -> TilingCategory {

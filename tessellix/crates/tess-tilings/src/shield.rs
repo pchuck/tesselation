@@ -353,7 +353,7 @@ impl Tiling for ShieldTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Aperiodic shield-hexagon + square + triangle substitution tiling; dodecagonal (12-fold) quasiperiodic, inflation √(2+√3)."
+        "Quasiperiodic shield-hexagon + square + triangle substitution tiling; dodecagonal (12-fold), inflation √(2+√3)."
     }
 
     fn category(&self) -> TilingCategory {

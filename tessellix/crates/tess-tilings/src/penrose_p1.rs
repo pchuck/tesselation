@@ -568,7 +568,7 @@ impl Tiling for PenroseP1Tiling {
     }
 
     fn description(&self) -> &'static str {
-        "Aperiodic P1 tiling by pentagon, 10-point star, boat and diamond tiles; \
+        "Quasiperiodic P1 tiling by pentagon, 10-point star, boat and diamond tiles; \
          exact φ²-deflation of a single pentagon seed (gasket patch)."
     }
 

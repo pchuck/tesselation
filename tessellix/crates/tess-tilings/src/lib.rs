@@ -490,8 +490,8 @@ mod tests {
             ("Laves (Catalan duals)", 9),
             ("Wallpaper", 26),
             ("Quasiperiodic", 8),
-            ("Aperiodic", 7),
-            ("Nonperiodic", 1),
+            ("Aperiodic", 4),
+            ("Nonperiodic", 4),
         ]
         .into_iter()
         .collect();

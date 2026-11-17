@@ -1,4 +1,4 @@
-//! Pentagon type 13 (Rice) tiling — canonical A = C = D = 120° instance.
+//! Pentagon type 13 (Rice, 1977) tiling — canonical A = C = D = 120° instance.
 //!
 //! Rice's type-13 pentagon satisfies `d = 2a = 2e`, `B = E = 90°` and
 //! `2A + D = 360°` (which forces `C = A`); with b = 1 and A = 120° all
@@ -70,7 +70,7 @@ pub(crate) fn tile_area() -> f64 {
     9.0 * (14.0 + 3.0 * s3()) / 338.0
 }
 
-/// Pentagon type 13 (Rice), canonical A = 120° instance: 2-isohedral,
+/// Pentagon type 13 (Rice 1977), canonical A = 120° instance: 2-isohedral,
 /// 8 tiles per primitive cell, wallpaper group p2.
 pub fn spec() -> LatticeTiling {
     let s3 = s3();
@@ -149,8 +149,8 @@ pub fn spec() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "pentagon-13",
-        name: "Pentagon type 13 (Rice)",
-        description: "Pentagonal tiling of type 13 (Rice), canonical A = 120°: d = 2a = 2e, B = E = 90°, 2A + D = 360°; 2-isohedral chiral pair (seeds 0/1), 8 tiles per cell, long side split into two collinear a-edges.",
+        name: "Pentagon type 13 (Rice, 1977)",
+        description: "Pentagonal tiling of type 13 (Rice, 1977), canonical A = 120°: d = 2a = 2e, B = E = 90°, 2A + D = 360°; 2-isohedral chiral pair (seeds 0/1), 8 tiles per cell, long side split into two collinear a-edges.",
         lattice: [Vec2::new(3.0 * s, 3.0 * s), Vec2::new(s, -s)],
         cells: vec![
             Cell { poly: l0, seed: 0 },

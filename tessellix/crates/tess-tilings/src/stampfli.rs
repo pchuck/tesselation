@@ -496,7 +496,7 @@ impl Tiling for StampfliTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Aperiodic square-triangle-rhombus tiling by substitution; local 12-fold symmetry, inflation 2+sqrt(3)."
+        "Quasiperiodic square-triangle-rhombus tiling by substitution; local 12-fold symmetry, inflation 2+sqrt(3)."
     }
 
     fn category(&self) -> TilingCategory {

@@ -302,7 +302,7 @@ impl Tiling for PenroseP2Tiling {
     }
 
     fn description(&self) -> &'static str {
-        "Aperiodic kite-dart tiling by half-tile substitution; local 5-fold symmetry."
+        "Quasiperiodic kite-dart tiling by half-tile substitution; local 5-fold symmetry."
     }
 
     fn category(&self) -> TilingCategory {
