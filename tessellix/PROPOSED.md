@@ -979,17 +979,17 @@ confirm the diffraction claim during the spike before declaring.
 
 ---
 
-### 21. Wallpaper group completion — the 3 un-realized groups (M76 roadmap queue)
+### 21. Wallpaper group completion — the 2 un-realized groups (M76 roadmap queue)
 
-- **Motif:** M76 made the Wallpaper tab a group catalog: 14 of the 17
+- **Motif:** M76 made the Wallpaper tab a group catalog: 15 of the 17
   wallpaper groups have a registered realizer (pg → glide-hexagon-strips,
   pm → trapezoid-courses, cm → wavy-courses, pmg → shifted-trapezoid-courses,
   p1 → stepped-hexominoes, p2 → pentagon-3,
-  pmm → kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
+  p3 → chiral-cut-honeycomb, pmm → kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
   truncated-square, p4g → snub-square, p6 → snub-trihexagonal,
   p6m → hexagon, cmm → elongated-triangular). A
   shared gap note (`tess_core::browse::wallpaper_gap_note`) rendered
-  at the top of the tab in both UIs names the 3 absent groups. (The
+  at the top of the tab in both UIs names the 2 absent groups. (The
   17th group is pmg — the old `WallpaperGroup::Cmc` variant was a 3D
   space group misnamed as a 2D group; M76 renamed it `Pmg`.)
 - **Queue (difficulty per audit §4d):** pm, pg (easy); pmg, cm
@@ -1056,8 +1056,24 @@ confirm the diffraction claim during the spike before declaring.
     the mirrors); the horizontal mirrors are dead (F(P) = R0+(−1,0) is
     half a period off Λ) — what makes it pmg and not pmm (exact
     128-coset probe: exactly 4 of the 16 cosets positive).
-  - p3 (hexagonal): first 3-fold group — a chiral 3-tile motif on the
-    hexagonal lattice, no mirrors.
+  - p3 ✅ **landed (M83)**: the catalog's first p3 realizer —
+    chiral-cut honeycomb: a chiral 3-armed Y carved into a side-2
+    regular hexagon from the alternating vertices V0, V2, V4 (each
+    arm V_i → W_i stops at W_i = mid(V_i, O) + delta, delta =
+    (−1/8, −1/10) rotated 120° with each arm; the inner seams
+    W_i → O close the Y) — 3 congruent hexagonal tiles per
+    hexagonal primitive cell Λ = ⟨(2√3,0),(√3,3)⟩ (det 6√3 = 3 ×
+    area 2√3), one chiral congruence class (tile1 = R120(tile0),
+    tile2 = R240(tile0) exactly, no translate). Group p3 by exact
+    ×320-integer probe: the only positive cosets of the 11 D6
+    linear parts are the zero coset for R120 and R240 (candidate
+    census 27/18/18/27/18 and 30 × 6), rot60/180/300 and all six
+    reflection families negative, 25/25 lattice translations, 0/6
+    off-lattice, rot120 centres in exactly three orbits
+    c(i,j) = (√3·i, i+2j). Construction transcribed from the
+    HX-STUDY handoff `hx_p3_cell.json` staged below, via the
+    scratch emitter (no hand-typed coords) — the handoff's
+    complete exact Q(√3) battery reproduced with zero deltas.
   - p3m1 (hexagonal): 3-folds + mirrors through the vertices; the
     natural next step after p3.
   - p31m (hexagonal): 3-folds + mirrors through the edges;
@@ -1074,16 +1090,15 @@ confirm the diffraction claim during the spike before declaring.
   extended with the new tab sizes, and the shared gap note (both UIs)
   drops one group name per landing.
 - **Status:** p1 landed (M78), pm landed (M79), pg landed (M80),
-  pmg landed (M81), cm landed (M82); 3 remain — p3, p3m1, p31m (the
-  hexagonal groups), one group per milestone; each landing
-  flips one token in
+  pmg landed (M81), cm landed (M82), p3 landed (M83); 2 remain —
+  p3m1, p31m (the hexagonal groups), one group per milestone; each
+  landing flips one token in
   `wallpaper_gap_note` and the gap note is re-verified in both UIs'
-  tests. HX-STUDY handoffs for the remaining three are staged in
-  /tmp/opencode/hexgroups/ (hx_p3_cell.json — 3-tile cut-honeycomb
-  chiral cell, 1 congruence class; hx_p3m1_cell.json — 18-tile cell,
+  tests. HX-STUDY handoffs for the remaining two are staged in
+  /tmp/opencode/hexgroups/ (hx_p3m1_cell.json — 18-tile cell,
   3 classes; hx_p31m_cell.json — 8-tile cell, 2 classes; each with
   the complete exact Q(√3) battery and full D6 probe battery PASS),
-  feeding the port tasks M83 (p3), M84 (p3m1), M85 (p31m).
+  feeding the port tasks M84 (p3m1), M85 (p31m).
 
 ## Parked / rejected (with reasons)
 

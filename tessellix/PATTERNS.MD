@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (68 tilings)
+## Implemented (69 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -116,17 +116,17 @@ figures at the split midpoints, `2.4.4`).
 
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (2) ·
-**Laves (Catalan duals)** (11) · **Wallpaper** (14) · **Pentagon
+**Laves (Catalan duals)** (11) · **Wallpaper** (15) · **Pentagon
 Types** (12) · **Islamic** (9) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (4) · **Nonperiodic** (4) —
-80 memberships over the 68 implemented tilings; the 12 extra are
+81 memberships over the 69 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
-M74/M77/M78/M79, was re-synced in M81, and again in M82.)
+M74/M77/M78/M79, was re-synced in M81, and again in M83.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
   `square` and `hexagon` also appear under Laves (self-dual regular
-  patterns), and fourteen tilings appear under the Wallpaper catalog.
+  patterns), and fifteen tilings appear under the Wallpaper catalog.
   `browse_tabs` appends secondary categories to each card's tabs and
   sorts each tab by `section_key`, which now guards on the *tab's*
   category, not the card's (a Wallpaper tab is all-secondary).
@@ -134,15 +134,16 @@ M74/M77/M78/M79, was re-synced in M81, and again in M82.)
   egui geometry test pins the new card budget (2-line card titles,
   no clipping at 1200×900, 640×800 and 2560×900).
 - **Wallpaper catalog.** The Wallpaper tab is a group catalog, not a
-  motif list: one card per realized wallpaper group — 14 of the 17:
-  p1 → stepped-hexominoes, p2 → pentagon-3, pg → glide-hexagon-strips,
+  motif list: one card per realized wallpaper group — 15 of the 17:
+  p1 → stepped-hexominoes, p2 → pentagon-3, p3 → chiral-cut-honeycomb,
+  pg → glide-hexagon-strips,
   pm → trapezoid-courses, cm → wavy-courses,
   pmg → shifted-trapezoid-courses,
   pmm → kuniform-pmm, pgg → herringbone, p4 → windmill,
   p4m → truncated-square, p4g → snub-square, p6 →
   snub-trihexagonal, p6m → hexagon, cmm →
-  elongated-triangular. The three un-realized groups —
-  p3, p3m1, p31m —
+  elongated-triangular. The two un-realized groups —
+  p3m1, p31m —
   are named in a shared gap note
   (`tess_core::browse::wallpaper_gap_note`) rendered at the top of
   the tab in both UIs; no placeholder cards. (Historic bug fixed in
@@ -2144,6 +2145,73 @@ documentation pending).
   census above.
 - **Status:** committed (M82). 68 tilings, 517 tests at the commit.
 
+### 33. Chiral-cut honeycomb ✅ (M83)
+
+- **Motif:** a chiral 3-armed Y carved into a side-2 regular
+  hexagon, centred at O, from the alternating vertices V0, V2,
+  V4: each arm V_i → W_i runs from the vertex toward the centre
+  but stops at W_i, where W_i = mid(V_i, O) + delta with
+  delta = (−1/8, −1/10) ROTATED by 120° with each arm — and the
+  three inner seams W_i → O close the Y. The Y cuts the hexagon
+  into 3 congruent hexagonal tiles [O, W0, V0, V1, V2, W2],
+  [O, W2, V2, V3, V4, W4], [O, W4, V4, V5, V0, W0]: ONE chiral
+  congruence class, with tile1 = R120(tile0) and tile2 =
+  R240(tile0) EXACTLY (no translate). The delta is what breaks
+  the honeycomb's 6-fold and mirror symmetries down to exactly
+  p3 (the delta-0 limit is the plain 3-sector fan, p6m). Family:
+  the HX-STUDY chiral honeycomb series (the `hx_p3_cell.json`
+  handoff, PROPOSED §21). The catalog's first **p3** realizer —
+  the fifteenth represented card of the Wallpaper group catalog
+  (2 of the 17 groups still unrepresented).
+- **Group:** **p3** by structure plus exact probe: 120°/240°
+  rotations and translations ONLY — no mirrors, no glides, no
+  60°/180°. The ×320 exact-integer probe (all 11 D6 linear parts
+  as integer 2L matrices, applied to the 100 raw cell-vertex
+  candidates per part, deduped by the coupled-floor `reduce320`)
+  is positive in exactly two cosets of the translation group —
+  the zero coset, for R120 and R240 — and negative for
+  rot60/rot180/rot300 and all six reflection families (tested
+  counts 18/27/18/27/18 and 30 × 6); 25/25 lattice translations
+  positive, 0/6 named off-lattice negatives. The rot120 centres
+  form exactly three orbits `c(i,j) = (√3·i, i+2j)`,
+  representatives (0,0), (√3,1), (2√3,2), each with
+  `c − R120·c ∈ Λ`.
+- **Lattice & cell:** 3 tiles per **hexagonal** primitive cell,
+  basis `a1 = (2√3,0)`, `a2 = (√3,3)` (|a1| = |a2| = 2√3, 60°),
+  det `6√3` = 3 × tile area `2√3`.
+- **Edge structure:** **EDGE-TO-EDGE**: 450 interior edge pairs
+  in the standard window, 0 unpaired, 0 bad; clipped coverage
+  4096 = 4096, 0 overlaps, 0 gaps. Squared-edge multiset per
+  tile (×320², lex-sorted): (94784,−12800) × 2 (inner seams
+  W_iO, 1481/1600 − √3/8), (115264,12800) × 2 (arm seams
+  W_iV_i, 1801/1600 + √3/8), (409600,0) × 2 (hexagon sides, 4).
+- **Vertex stars:** 170 vertex figures, all summing to 360°
+  (0 bad): 60 × `{120° × 3}` (the 25 hexagon centres O + 35 odd
+  corners V1, V3, V5), 35 × 6-angle even-corner stars
+  `{≈58.8079° × 3, ≈61.1921° × 3}` (V0, V2, V4 — six tiles
+  meet at each, the Y arms of the three adjacent hexagons
+  subdividing the plain 120° angles), and 75 × 2-angle bends
+  `{≈177.1677°, ≈182.8323°}` at the arm-tip points W_i (the Y
+  arms kink by ≈2.83° where the outer seam V_i → W_i meets the
+  inner seam W_i → O).
+- **Seeds:** `proto` = cell index `[tile0, tile1, tile2]`;
+  `seed` = 0 (one chiral congruence class, `seeds [0,0,0]`).
+- **Verify:** standard trio (coverage, rotated-scaled,
+  deterministic) + the exact p3 probe
+  (`chiral_cut_honeycomb_wallpaper_group_is_p3`, mirroring the
+  full Python battery `m83_verify.py`: the 11-part candidate
+  census with tested counts 27/18/18/27/18 and 30 × 6, R120/R240
+  positive in the zero coset only, 25/25 lattice translations,
+  0/6 off-lattice negatives, the three centre orbits with
+  `c − R120·c ∈ Λ`, the structural R120/R240 tile cycling, and
+  the cell arithmetic) + the brute-force culling cross-check +
+  the legality test + the Python transcript: 3 convex CCW
+  hexagonal cell tiles with doubled areas (0,409600) (×320²,
+  i.e. area 2√3 each) summing to (0,1228800) = 2·det·320², the
+  squared-edge multiset above, the 450/0/0 edge-to-edge
+  partition, and the 170-vertex star census above.
+- **Status:** committed (M83). 69 tilings, 521 tests at the commit.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -3201,3 +3269,35 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   13 → 14, gap table 4 → 3 (cm drops out of
   `WALLPAPER_GROUP_GAPS`; the shared gap note now names three
   groups). 68 tilings, 517 tests at the commit.
+- 2026-11-18 — M83 Chiral-cut honeycomb (p3) ✅: a chiral 3-armed Y
+  carved into a side-2 regular hexagon from the alternating
+  vertices V0, V2, V4 — each arm V_i → W_i stops at
+  W_i = mid(V_i, O) + delta (delta = (−1/8, −1/10), rotated 120°
+  with each arm) and the inner seams W_i → O close the Y — 3
+  congruent hexagonal tiles per hexagonal primitive cell
+  Λ = ⟨(2√3,0),(√3,3)⟩ (det 6√3 = 3 × area 2√3), one chiral
+  congruence class (tile1 = R120(tile0), tile2 = R240(tile0)
+  exactly), construction transcribed from the HX-STUDY handoff
+  `hx_p3_cell.json` (PROPOSED §21) via the scratch emitter (no
+  hand-typed coords). The catalog's first **p3** realizer (15 of
+  the 17 groups now represented). Group p3 by exact ×320-integer
+  probe: the only positive cosets of the 11 D6 linear parts are
+  the zero coset for R120 and R240 (candidate census 27/18/18/
+  27/18 and 30 × 6), rot60/180/300 and all six reflection
+  families negative, 25/25 lattice translations + 0/6
+  off-lattice, and the rot120 centres form exactly three orbits
+  c(i,j) = (√3·i, i+2j) (reps (0,0), (√3,1), (2√3,2);
+  c − R120·c ∈ Λ). Edge-to-edge (450 interior edge pairs, 0
+  unpaired, 0 T-junctions; clipped coverage 4096 = 4096, 0
+  overlaps, 0 gaps). Vertex stars: 170 figures (25 hexagon
+  centres + 35 odd corners {120° × 3} × 60, even corners
+  {≈58.8079° × 3, ≈61.1921° × 3} × 35, arm tips {≈177.1677°,
+  ≈182.8323°} × 75), all summing to 360°. 4 tess-tilings tests
+  (standard trio + exact p3 probe mirroring m83_verify.py: the
+  11-part candidate census, R120/R240 positive in the zero coset
+  only, 25/25 translations, 0/6 off-lattice, the three centre
+  orbits, the structural R120/R240 tile cycling, and the cell
+  arithmetic). Census: 68 → 69 tilings, 80 → 81 memberships,
+  Wallpaper tab 14 → 15, gap table 3 → 2 (p3 drops out of
+  `WALLPAPER_GROUP_GAPS`; the shared gap note now names two
+  groups). 69 tilings, 521 tests at the commit.

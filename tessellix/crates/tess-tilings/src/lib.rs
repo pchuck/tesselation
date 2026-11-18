@@ -96,6 +96,8 @@ pub mod glide_hexagon_strips;
 pub mod shifted_trapezoid_courses;
 #[cfg(feature = "pavers")]
 pub mod wavy_courses;
+#[cfg(feature = "pavers")]
+pub mod chiral_cut_honeycomb;
 #[cfg(feature = "pentagon2")]
 pub mod pentagon2;
 #[cfg(feature = "pentagon3")]
@@ -330,6 +332,7 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(glide_hexagon_strips::glide_hexagon_strips());
         r = r.register(shifted_trapezoid_courses::shifted_trapezoid_courses());
         r = r.register(wavy_courses::wavy_courses());
+        r = r.register(chiral_cut_honeycomb::chiral_cut_honeycomb());
     }
     r
 }
@@ -497,16 +500,16 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-        // Census of today's taxonomy (M82). 68 built-ins — 63 before
+        // Census of today's taxonomy (M83). 69 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
         //   TwoUniform 2, Laves 11 (8 primary incl. cairo-pentagonal +
-        //   3 regular secondaries), Wallpaper 14 (group representatives
+        //   3 regular secondaries), Wallpaper 15 (group representatives
         //   as secondaries — one card per represented group),
         //   PentagonTypes 12, Islamic 9, Arrangements 5,
         //   Quasiperiodic 8, Aperiodic 4, Nonperiodic 4.
-        // Membership census 80 = 68 primaries + 12 secondaries (3 Laves
+        // Membership census 81 = 69 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -519,15 +522,16 @@ mod tests {
         // -> M79 Wallpaper 10 -> 11 (trapezoid-courses, pm)
         // -> M80 Wallpaper 11 -> 12 (glide-hexagon-strips, pg)
         // -> M81 Wallpaper 12 -> 13 (shifted-trapezoid-courses, pmg)
-        // -> M82 Wallpaper 13 -> 14 (wavy-courses, cm).
+        // -> M82 Wallpaper 13 -> 14 (wavy-courses, cm)
+        // -> M83 Wallpaper 14 -> 15 (chiral-cut-honeycomb, p3).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 2, 11, 14, 12, 9, 5, 8, 4, 4],
+            vec![11, 2, 11, 15, 12, 9, 5, 8, 4, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 68, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 80, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 69, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 81, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -548,7 +552,7 @@ mod tests {
                 .unwrap()
         });
         assert_eq!(groups.len(), wall.cards.len(), "every Wallpaper card carries a group");
-        assert_eq!(groups.len(), 14, "fourteen represented wallpaper groups");
+        assert_eq!(groups.len(), 15, "fifteen represented wallpaper groups");
         let expected: Vec<&WallpaperGroup> = WallpaperGroup::ALL
             .iter()
             .filter(|g| !tess_core::browse::WALLPAPER_GROUP_GAPS.contains(*g))
@@ -3346,6 +3350,7 @@ mod pavers_tests {
     use crate::stepped_hexominoes;
     use crate::trapezoid_courses;
     use crate::wavy_courses;
+    use crate::chiral_cut_honeycomb;
     use tess_core::geometry::{BBox, Vec2};
 
     /// Candidate matrices (row-major) used by the paver group probes.
@@ -4108,6 +4113,36 @@ mod pavers_tests {
         check_det(
             &wavy_courses::wavy_courses(),
             "wavy-courses",
+            BBox::new(v2(-4.0, -3.0), v2(10.0, 6.0)),
+        );
+    }
+
+    /// Chiral-cut-honeycomb (M83) standard trio.
+    #[test]
+    fn chiral_cut_honeycomb_covers_region() {
+        check_covers(
+            &chiral_cut_honeycomb::chiral_cut_honeycomb(),
+            "chiral-cut-honeycomb",
+            BBox::new(v2(-5.0, -3.0), v2(11.0, 7.0)),
+        );
+    }
+
+    #[test]
+    fn chiral_cut_honeycomb_rotated_scaled() {
+        check_rotated(
+            &chiral_cut_honeycomb::chiral_cut_honeycomb(),
+            "chiral-cut-honeycomb(rot30,scale0.7)",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn chiral_cut_honeycomb_deterministic() {
+        check_det(
+            &chiral_cut_honeycomb::chiral_cut_honeycomb(),
+            "chiral-cut-honeycomb",
             BBox::new(v2(-4.0, -3.0), v2(10.0, 6.0)),
         );
     }
@@ -5022,6 +5057,423 @@ mod pavers_tests {
             "C2 squared edges ×9 (4/3 edge present)"
         );
     }
+
+    // ============ chiral-cut-honeycomb (M83, p3) ============
+
+    /// The ten distinct cell vertices, ×320, in first-encounter
+    /// tile order (O, W0, V0, V1, V2, W2, V3, V4, W4, V5): the
+    /// p3 probe candidate set.
+    const P3_VERTS: [[i64; 4]; 10] = [
+        [0, 0, 0, 0],
+        [-40, 128, 160, 0],
+        [0, 320, 320, 0],
+        [0, 640, 0, 0],
+        [0, 320, -320, 0],
+        [20, 176, -144, -20],
+        [0, -320, -320, 0],
+        [0, -640, 0, 0],
+        [20, -304, -16, 20],
+        [0, -320, 320, 0],
+    ];
+
+    /// The three cell tiles, ×320, CCW, 6 vertices each: tile k =
+    /// [O, W_{2k}, V_{2k}, V_{2k+1}, V_{2k+2}, W_{2k+4}]. R120 about
+    /// O cycles tile0 -> tile1 -> tile2 exactly (no translate).
+    const P3_TILES: [[[i64; 4]; 6]; 3] = [
+        [
+            [0, 0, 0, 0],
+            [-40, 128, 160, 0],
+            [0, 320, 320, 0],
+            [0, 640, 0, 0],
+            [0, 320, -320, 0],
+            [20, 176, -144, -20],
+        ],
+        [
+            [0, 0, 0, 0],
+            [20, 176, -144, -20],
+            [0, 320, -320, 0],
+            [0, -320, -320, 0],
+            [0, -640, 0, 0],
+            [20, -304, -16, 20],
+        ],
+        [
+            [0, 0, 0, 0],
+            [20, -304, -16, 20],
+            [0, -640, 0, 0],
+            [0, -320, 320, 0],
+            [0, 320, 320, 0],
+            [-40, 128, 160, 0],
+        ],
+    ];
+
+    /// Off-lattice translations that are NOT symmetries (×320):
+    /// (√3,0) [the vertex coset], a2/2, (1,0), (3,0), (1/2,0),
+    /// (√3, 1+√3) [off-lattice in both slots].
+    const P3_TRANSLATION_NEGS: [[i64; 4]; 6] = [
+        [0, 0, 320, 0],
+        [0, 480, 160, 0],
+        [320, 0, 0, 0],
+        [960, 0, 0, 0],
+        [160, 0, 0, 0],
+        [0, 320, 320, 320],
+    ];
+
+    /// The 11 D6 linear parts (non-identity), exact ×320, as the
+    /// INTEGER matrix 2L (row-major 4×4) in (A,B,C,D) coords: applying
+    /// the map to a ×320 point p is (2L·p)/2, exact division on the
+    /// vertex set. Re-derived from exact cos/sin values and cross-
+    /// checked against the hx_engine D6 definitions in m83_verify.py.
+    const P3_LIDENT: [[i64; 4]; 4] = [
+        [2, 0, 0, 0],
+        [0, 2, 0, 0],
+        [0, 0, 2, 0],
+        [0, 0, 0, 2],
+    ];
+    const P3_LROT60: [[i64; 4]; 4] = [
+        [1, 0, 0, -3],
+        [0, 1, 3, 0],
+        [0, -1, 1, 0],
+        [1, 0, 0, 1],
+    ];
+    const P3_LROT120: [[i64; 4]; 4] = [
+        [-1, 0, 0, -3],
+        [0, -1, 3, 0],
+        [0, -1, -1, 0],
+        [1, 0, 0, -1],
+    ];
+    const P3_LROT180: [[i64; 4]; 4] = [
+        [-2, 0, 0, 0],
+        [0, -2, 0, 0],
+        [0, 0, -2, 0],
+        [0, 0, 0, -2],
+    ];
+    const P3_LROT240: [[i64; 4]; 4] = [
+        [-1, 0, 0, 3],
+        [0, -1, -3, 0],
+        [0, 1, -1, 0],
+        [-1, 0, 0, -1],
+    ];
+    const P3_LROT300: [[i64; 4]; 4] = [
+        [1, 0, 0, 3],
+        [0, 1, -3, 0],
+        [0, 1, 1, 0],
+        [-1, 0, 0, 1],
+    ];
+    const P3_LREFL0: [[i64; 4]; 4] = [
+        [2, 0, 0, 0],
+        [0, -2, 0, 0],
+        [0, 0, 2, 0],
+        [0, 0, 0, -2],
+    ];
+    const P3_LREFL30: [[i64; 4]; 4] = [
+        [1, 0, 0, 3],
+        [0, -1, 3, 0],
+        [0, 1, 1, 0],
+        [1, 0, 0, -1],
+    ];
+    const P3_LREFL60: [[i64; 4]; 4] = [
+        [-1, 0, 0, 3],
+        [0, 1, 3, 0],
+        [0, 1, -1, 0],
+        [1, 0, 0, 1],
+    ];
+    const P3_LREFL90: [[i64; 4]; 4] = [
+        [-2, 0, 0, 0],
+        [0, 2, 0, 0],
+        [0, 0, -2, 0],
+        [0, 0, 0, 2],
+    ];
+    const P3_LREFL120: [[i64; 4]; 4] = [
+        [-1, 0, 0, -3],
+        [0, 1, -3, 0],
+        [0, -1, -1, 0],
+        [-1, 0, 0, 1],
+    ];
+    const P3_LREFL150: [[i64; 4]; 4] = [
+        [1, 0, 0, -3],
+        [0, -1, -3, 0],
+        [0, -1, 1, 0],
+        [-1, 0, 0, -1],
+    ];
+
+    /// Lattice membership in ×320 integer coordinates:
+    /// Λ320 = ⟨(0,0,640,0), (0,960,320,0)⟩, i.e. A = D = 0,
+    /// B ≡ 0 (mod 960), C − B/3 ≡ 0 (mod 640).
+    fn p3_in_lat(v: [i64; 4]) -> bool {
+        v[0] == 0
+            && v[3] == 0
+            && v[1].rem_euclid(960) == 0
+            && (v[2] - v[1] / 3).rem_euclid(640) == 0
+    }
+
+    /// Coupled-floor coset reduction for points with A = D = 0:
+    /// i-coord = (3C−B)/1920, j-coord = B/960, canonical iff both lie
+    /// in [0,1)². The two floors are COUPLED (the i-floor depends on
+    /// B): decoupled floors misplace representatives.
+    fn p3_reduce320(v: [i64; 4]) -> [i64; 4] {
+        let (a, b, c, d) = (v[0], v[1], v[2], v[3]);
+        let fj = b.div_euclid(960);
+        let bm = b - 960 * fj;
+        let fi = (3 * c - b).div_euclid(1920);
+        let cm = c - 320 * fj - 640 * fi;
+        [a, bm, cm, d]
+    }
+
+    /// Apply g = (L, v) to a ×320 point: L is given as the integer
+    /// matrix 2L (basis images have denominator ≤ 2, so the division
+    /// is exact on the vertex set).
+    fn p3_apply(l2: &[[i64; 4]; 4], v: [i64; 4], p: [i64; 4]) -> [i64; 4] {
+        let mut out = [0i64; 4];
+        for i in 0..4 {
+            let s = (0..4).map(|j| l2[i][j] * p[j]).sum::<i64>();
+            assert!(s % 2 == 0, "2L·p must be even, got {s}");
+            out[i] = s / 2 + v[i];
+        }
+        out
+    }
+
+    /// Does g = (L, v) map every cell tile onto a cell tile plus a
+    /// lattice translate — the exact symmetry criterion for the
+    /// 3-tile cell?
+    fn p3_maps_cells(l2: &[[i64; 4]; 4], v: [i64; 4]) -> bool {
+        for t in P3_TILES {
+            let mut gt: Vec<[i64; 4]> = t.iter().map(|p| p3_apply(l2, v, *p)).collect();
+            gt.sort_unstable();
+            let mut ok = false;
+            for u in P3_TILES {
+                let mut us = u.to_vec();
+                us.sort_unstable();
+                'anchors: for i in 0..6 {
+                    for j in 0..6 {
+                        let lam = [
+                            gt[i][0] - us[j][0],
+                            gt[i][1] - us[j][1],
+                            gt[i][2] - us[j][2],
+                            gt[i][3] - us[j][3],
+                        ];
+                        if !p3_in_lat(lam) {
+                            continue;
+                        }
+                        let mut all = true;
+                        for k in 0..6 {
+                            if gt[k][0] != us[k][0] + lam[0]
+                                || gt[k][1] != us[k][1] + lam[1]
+                                || gt[k][2] != us[k][2] + lam[2]
+                                || gt[k][3] != us[k][3] + lam[3]
+                            {
+                                all = false;
+                                break;
+                            }
+                        }
+                        if all {
+                            ok = true;
+                            break 'anchors;
+                        }
+                    }
+                }
+                if ok {
+                    break;
+                }
+            }
+            if !ok {
+                return false;
+            }
+        }
+        true
+    }
+
+    /// Does the linear part normalize the lattice? (Both basis images
+    /// in Λ; finite index with |det| = 1 then gives equality.)
+    fn p3_normalizes(l2: &[[i64; 4]; 4]) -> bool {
+        p3_in_lat(p3_apply(l2, [0; 4], [0, 0, 640, 0]))
+            && p3_in_lat(p3_apply(l2, [0; 4], [0, 960, 320, 0]))
+    }
+
+    /// The exact p3 criterion: g = (L, v) is a symmetry of the tiling
+    /// iff L normalizes Λ320 and it maps every cell tile onto a cell
+    /// tile plus a lattice translate.
+    fn p3_is_sym(l2: &[[i64; 4]; 4], v: [i64; 4]) -> bool {
+        p3_normalizes(l2) && p3_maps_cells(l2, v)
+    }
+
+    /// Exact p3 probe (×320 integer scheme, mirroring `m83_verify.py`):
+    /// positives are exactly the translations (25/25 in a ±2 window)
+    /// and the zero coset of rot120 and of rot240 — everything else is
+    /// negative across the full candidate census (the HX-STUDY battery
+    /// numbers: 18/27/18/27/18 tested cosets for the five rotations,
+    /// 30 for each of the six reflections), six off-lattice
+    /// translations are killed, and the three rot120 centre orbits
+    /// (hex centre, even corner, odd corner — p3's "333" fingerprint,
+    /// all genuinely 3-fold) reduce from the closed form
+    /// c(i,j) = (I − R120)⁻¹(i·a1 + j·a2) = (√3·i, i + 2j),
+    /// ×320: (0, 320(i+2j), 320i, 0).
+    #[test]
+    fn chiral_cut_honeycomb_wallpaper_group_is_p3() {
+        // Structural sanity: R120 cycles the cell tiles exactly about
+        // O (no translate) and R240 = R120².
+        let im = |l2: &[[i64; 4]; 4], t: &[[i64; 4]; 6]| -> Vec<[i64; 4]> {
+            let mut v: Vec<[i64; 4]> = t.iter().map(|p| p3_apply(l2, [0; 4], *p)).collect();
+            v.sort_unstable();
+            v
+        };
+        let sorted = |t: &[[i64; 4]; 6]| -> Vec<[i64; 4]> {
+            let mut v = t.to_vec();
+            v.sort_unstable();
+            v
+        };
+        assert_eq!(
+            im(&P3_LROT120, &P3_TILES[0]),
+            sorted(&P3_TILES[1]),
+            "R120(tile0) == tile1 exactly"
+        );
+        assert_eq!(
+            im(&P3_LROT240, &P3_TILES[0]),
+            sorted(&P3_TILES[2]),
+            "R240(tile0) == tile2 exactly"
+        );
+        assert_eq!(im(&P3_LIDENT, &P3_TILES[0]), sorted(&P3_TILES[0]));
+
+        // Positive: the 25 lattice translations of the ±2 window.
+        for i in -2i64..=2 {
+            for j in -2i64..=2 {
+                assert!(
+                    p3_is_sym(&P3_LIDENT, [0, 960 * j, 640 * i + 320 * j, 0]),
+                    "lattice translation ({i},{j}) must be a symmetry"
+                );
+            }
+        }
+        // Negative: the six off-lattice translations.
+        for v in P3_TRANSLATION_NEGS {
+            assert!(
+                !p3_is_sym(&P3_LIDENT, v),
+                "off-lattice {v:?} must not be a symmetry"
+            );
+        }
+
+        // Full candidate census for the 11 non-identity D6 parts:
+        // candidates = {q − L·p : p, q in the 10-vertex set}, reduced
+        // to one canonical rep per coset. Only the zero coset of
+        // rot120 and of rot240 is positive; the other nine parts are
+        // entirely negative (no 60°/180°/300° rotations, no mirror in
+        // any of the six families, no glides — p3, not p6 or any
+        // pmm-family upgrade).
+        const PARTS: [(&str, &[[i64; 4]; 4], usize, bool); 11] = [
+            ("rot60", &P3_LROT60, 18, false),
+            ("rot120", &P3_LROT120, 27, true),
+            ("rot180", &P3_LROT180, 18, false),
+            ("rot240", &P3_LROT240, 27, true),
+            ("rot300", &P3_LROT300, 18, false),
+            ("refl0", &P3_LREFL0, 30, false),
+            ("refl30", &P3_LREFL30, 30, false),
+            ("refl60", &P3_LREFL60, 30, false),
+            ("refl90", &P3_LREFL90, 30, false),
+            ("refl120", &P3_LREFL120, 30, false),
+            ("refl150", &P3_LREFL150, 30, false),
+        ];
+        for (name, l2, tested, has_pos) in PARTS {
+            assert!(p3_normalizes(l2), "{name}: linear part must normalize the lattice");
+            let mut cands: Vec<[i64; 4]> = Vec::new();
+            for p in P3_VERTS {
+                let mp = p3_apply(l2, [0; 4], p);
+                for q in P3_VERTS {
+                    let v = p3_reduce320([
+                        q[0] - mp[0],
+                        q[1] - mp[1],
+                        q[2] - mp[2],
+                        q[3] - mp[3],
+                    ]);
+                    if !cands.contains(&v) {
+                        cands.push(v);
+                    }
+                }
+            }
+            assert_eq!(cands.len(), tested, "{name}: tested coset count");
+            let mut pos = 0;
+            for v in &cands {
+                let sym = p3_is_sym(l2, *v);
+                if sym {
+                    pos += 1;
+                }
+                assert_eq!(
+                    sym,
+                    has_pos && *v == [0, 0, 0, 0],
+                    "{name}: candidate {v:?}"
+                );
+            }
+            assert_eq!(pos, usize::from(has_pos), "{name}: positive cosets");
+        }
+
+        // The three rot120 centre orbits mod the lattice: hex centre,
+        // even corner, odd corner — all three genuinely 3-fold.
+        let mut orb: Vec<[i64; 4]> = Vec::new();
+        for i in -3i64..=3 {
+            for j in -3i64..=3 {
+                let v = p3_reduce320([0, 320 * (i + 2 * j), 320 * i, 0]);
+                if !orb.contains(&v) {
+                    orb.push(v);
+                }
+            }
+        }
+        orb.sort_unstable();
+        let want_orb: [[i64; 4]; 3] = [[0, 0, 0, 0], [0, 320, 320, 0], [0, 640, 640, 0]];
+        assert_eq!(orb, want_orb.to_vec(), "rot120 centre orbits mod lattice");
+        // Each orbit rep c satisfies c − R120·c ∈ Λ (R120 about c is
+        // a symmetry).
+        for c in want_orb {
+            let d = p3_apply(&P3_LROT120, [0; 4], c);
+            assert!(
+                p3_in_lat([c[0] - d[0], c[1] - d[1], c[2] - d[2], c[3] - d[3]]),
+                "orbit rep {c:?}: c − R120·c in Λ"
+            );
+        }
+
+        // Cell arithmetic ×320²: doubled area per tile (0, 409600) =
+        // 4√3·320², sum (0, 1228800) = 2·det·320², and the
+        // squared-edge multiset 2×(409600,0), 2×(94784,−12800),
+        // 2×(115264,12800) identical across the three tiles (one
+        // congruence class).
+        let mut areas: Vec<(i64, i64)> = Vec::new();
+        let mut edges: Vec<Vec<(i64, i64)>> = Vec::new();
+        for t in P3_TILES {
+            let mut area = (0i64, 0i64);
+            let mut es: Vec<(i64, i64)> = Vec::new();
+            for i in 0..6 {
+                let (u, w) = (t[i], t[(i + 1) % 6]);
+                area.0 += u[0] * w[1] + 3 * u[2] * w[3] - w[0] * u[1] - 3 * w[2] * u[3];
+                area.1 += u[0] * w[3] + u[2] * w[1] - w[0] * u[3] - w[2] * u[1];
+                let (da, db, dc, dd) = (w[0] - u[0], w[1] - u[1], w[2] - u[2], w[3] - u[3]);
+                es.push((
+                    da * da + db * db + 3 * dc * dc + 3 * dd * dd,
+                    2 * da * dc + 2 * db * dd,
+                ));
+            }
+            es.sort_unstable();
+            edges.push(es.clone());
+            areas.push(area);
+        }
+        assert_eq!(areas, vec![(0, 409600); 3], "doubled tile areas ×320²");
+        assert_eq!(
+            areas[0].0 + areas[1].0 + areas[2].0,
+            0,
+            "real part of doubled cell area"
+        );
+        assert_eq!(
+            areas[0].1 + areas[1].1 + areas[2].1,
+            1_228_800,
+            "sum = 2·det·320²"
+        );
+        let want_edges: Vec<(i64, i64)> = vec![
+            (94784, -12800),
+            (94784, -12800),
+            (115264, 12800),
+            (115264, 12800),
+            (409600, 0),
+            (409600, 0),
+        ];
+        for e in &edges {
+            assert_eq!(*e, want_edges, "squared-edge multiset per tile");
+        }
+    }
 }
 
 /// Tests for the 2-uniform (k-uniform) `LatticeTiling` tables.
@@ -5445,8 +5897,8 @@ mod kuniform_tests {
 mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
-        archimedean, basketweave, cairo, girih, girih_sc, girih_w85, glide_hexagon_strips,
-        hexagon, herringbone,
+        archimedean, basketweave, cairo, chiral_cut_honeycomb, girih, girih_sc, girih_w85,
+        glide_hexagon_strips, hexagon, herringbone,
 khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, pentagon8, pentagon9, pentagon10, pentagon11, pentagon12,
         pentagon13,
         pentagon14, pentagon15,
@@ -5573,6 +6025,10 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
                 shifted_trapezoid_courses::shifted_trapezoid_courses(),
             ),
             ("wavy-courses", wavy_courses::wavy_courses()),
+            (
+                "chiral-cut-honeycomb",
+                chiral_cut_honeycomb::chiral_cut_honeycomb(),
+            ),
             ("pentagon-2", pentagon2::spec()),
             ("pentagon-3", pentagon3::spec()),
             ("pentagon-6", pentagon6::spec()),
