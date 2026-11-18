@@ -1,10 +1,20 @@
 ## Delegation rules
 - Prefer `fast-worker` for discrete small tasks with clear tests or well-defined output
-- **Max 2 `fast-worker` tasks in flight at a time** (owner directive 2026-11-12); queue additional fast-worker briefs until a slot frees
-- Prefer 'worker' for most development iterations. Can launch 2 in parallel.
+- Prefer `worker` for most development iterations.
 - If a worker fails twice, summarize the failure and call `strong-worker`.
 - If `strong-worker` doesn't resolve it after a few tries, call `frontier` with the failing output and what was tried.
 - Use 'frontier' for the most challenging tasks, or when other workers aren't converging on a solution.
+- **Parallel residency allowed; dispatch one job at a time (owner directive
+  2026-11-18; supersedes the 2026-11-12 "max 2 `fast-worker` in flight" cap
+  and the "launch 2 workers in parallel" rule).** Agents of every tier
+  (`worker`, `strong-worker`, `fast-worker`, `frontier`) may run in
+  parallel, but the coordinator dispatches new jobs ONE AT A TIME: launch
+  a single job, confirm it is established and the box is healthy, then
+  decide on the next dispatch. Never batch multiple launches. Context:
+  this box's 15.5 GiB GPU twice OOM-killed a strong-worker session while
+  another session was generating (2026-11-17/18); heavy derivations are
+  the marginal resident — when one is in flight, observe between
+  dispatches and prefer queueing over adding a second generating session.
 - Briefs must be self-contained: goal, files, constraints, how to verify.
 
 ## Harness discipline
