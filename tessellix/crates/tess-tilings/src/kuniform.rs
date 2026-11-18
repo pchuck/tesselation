@@ -1,11 +1,11 @@
 //! 2-uniform (k-uniform) tilings, expressed as [`LatticeTiling`] data
 //! tables.
 //!
-//! Both entries are from the closed list of 20 two-vertex-orbit tilings
+//! Five entries are from the closed list of 20 two-vertex-orbit tilings
 //! by regular polygons (Krotenheerdt; see the Wikipedia "k-uniform
-//! tilings" article — `2-uniform n10` and `2-uniform n11` respectively).
-//! The list's entries have no individual proper names, so these are
-//! named by their vertex configurations, following that convention:
+//! tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`, `n8`). The
+//! list's entries have no individual proper names, so these are named by
+//! their vertex configurations, following that convention:
 //!
 //! * `kuniform-p6m` — vertex figures 3⁶ ; 3².6², group p6m, t = 2,
 //!   e = 3. The "1/3-dissected" honeycomb: the regular hexagonal tiling
@@ -15,6 +15,15 @@
 //!   t = 2, e = 3. Flat-top unit hexagons in rectangular rows,
 //!   adjacent hexagons sharing full horizontal edges, and every
 //!   inter-hexagon rhombus split into two unit triangles.
+//! * `kuniform-n18` — vertex figures 3⁶ ; 3².4.3.4, group p6m,
+//!   t = 3, e = 3. Squares and two triangle orbits; the 3⁶ vertices are
+//!   the lattice origin.
+//! * `kuniform-n9` — vertex figures 3.4.6.4 ; 3².4.3.4, group p6m,
+//!   t = 4, e = 4. Hexagons ringed by squares with triangle fills; the
+//!   origin is a hexagon center.
+//! * `kuniform-n8` — vertex figures 3.4.6.4 ; 3³.4², group p6m,
+//!   t = 4, e = 4. The second p6m 3.4.6.4 form: hexagons ringed by
+//!   squares with triangle fills; the origin is a hexagon center.
 //!
 //! All coordinates lie in Z + (√3/2)·Q, stored through [`H`].
 
@@ -171,6 +180,514 @@ pub fn kuniform_pmm() -> LatticeTiling {
         lattice_kind: LatticeKind::Rectangular,
         category: TilingCategory::TwoUniform,
         secondary: &[TilingCategory::Wallpaper],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3⁶; 3².4.3.4), wallpaper group p6m.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n18` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons): t = 3 tile
+/// orbits (two triangle orbits + the squares), e = 3 edge orbits. H =
+/// √3/2.
+///
+/// The translation lattice is a 60° hexagonal basis with |b1| = |b2| =
+/// 1+√3: b1 = (0, 1+√3), b2 = ((3+√3)/2, (1+√3)/2); |det| = 3+2√3. The
+/// origin is a 3⁶ vertex (six triangles around a point) — a genuine
+/// 6-fold center of the tiling: the Python group determination verified
+/// R60..R300 about the origin plus all six mirrors through it, so the
+/// declared group is p6m.
+///
+/// The cell holds 11 tiles: 3 squares (seed 0, the largest class) and 8
+/// equilateral triangles — 6 from the first triangle orbit (seed 1) and 2
+/// from the second (seed 2). Area 3·1 + 8·(√3/4) = 3+2√3 = |det|.
+pub fn kuniform_n18() -> LatticeTiling {
+    // squares (seed 0, largest class — no hexagon)
+    let mut cells: Vec<Cell> = vec![Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(5.0/2.0 + H, 5.0/2.0 + 5.0 * H),
+            Vec2::new(2.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + 2.0 * H, 2.0 + 4.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 2.0 + 5.0 * H),
+        ]),
+        seed: 0,
+    }];
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(5.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 2.0 + 3.0 * H),
+            Vec2::new(2.0 + 2.0 * H, 2.0 + 4.0 * H),
+        ]),
+        seed: 0,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(5.0/2.0 + 2.0 * H, 2.0 + 5.0 * H),
+            Vec2::new(7.0/2.0 + 2.0 * H, 2.0 + 5.0 * H),
+            Vec2::new(7.0/2.0 + 2.0 * H, 3.0 + 5.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 3.0 + 5.0 * H),
+        ]),
+        seed: 0,
+    });
+
+    // first triangle orbit (seed 1)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(7.0/2.0 + 2.0 * H, 3.0 + 5.0 * H),
+            Vec2::new(3.0 + 2.0 * H, 3.0 + 6.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 3.0 + 5.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + 2.0 * H, 2.0 + 4.0 * H),
+            Vec2::new(3.0 + 2.0 * H, 2.0 + 4.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 2.0 + 5.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0 + 2.0 * H, 2.0 + 4.0 * H),
+            Vec2::new(7.0/2.0 + 2.0 * H, 2.0 + 5.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 2.0 + 5.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(5.0/2.0 + 2.0 * H, 2.0 + 3.0 * H),
+            Vec2::new(3.0 + 2.0 * H, 2.0 + 4.0 * H),
+            Vec2::new(2.0 + 2.0 * H, 2.0 + 4.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+            Vec2::new(5.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+            Vec2::new(2.0 + H, 3.0/2.0 + 4.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+            Vec2::new(2.0 + H, 3.0/2.0 + 2.0 * H),
+            Vec2::new(5.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    // second triangle orbit (seed 2)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(5.0/2.0 + H, 5.0/2.0 + 5.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 2.0 + 5.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 3.0 + 5.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + 2.0 * H, 2.0 + 4.0 * H),
+        ]),
+        seed: 2,
+    });
+    LatticeTiling {
+        id: "kuniform-n18",
+        name: "2-uniform (3⁶; 3².4.3.4)",
+        description: "2-uniform tiling (3⁶; 3².4.3.4) — squares and two triangle orbits around 3⁶ vertices (p6m).",
+        lattice: [Vec2::new(0.0, 1.0 + S3), Vec2::new((3.0 + S3) / 2.0, (1.0 + S3) / 2.0)],
+        cells,
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::P6m,
+        lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3.4.6.4; 3².4.3.4), wallpaper group p6m.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n9` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons): t = 4 tile
+/// orbits (hexagon + squares + two triangle orbits), e = 4 edge orbits.
+/// H = √3/2.
+///
+/// The translation lattice is a 60° hexagonal basis with |b1| = |b2| =
+/// 2+√3: b1 = (−(2+√3), 0), b2 = (1+√3/2, −(3/2+√3)); |det| = 6+7√3/2
+/// (left-handed basis, handled by the generator). The origin is the center
+/// of the hexagon — a genuine 6-fold rotation center (R60..R300 and all
+/// six mirrors through it verified numerically), so the declared group is
+/// p6m.
+///
+/// The cell holds 15 tiles: 1 hexagon (seed 0, the largest class), 6
+/// squares (seed 1), and 8 equilateral triangles — 6 from the first
+/// triangle orbit (seed 2) and 2 from the second (seed 3). Area 3√3/2 +
+/// 6·1 + 8·(√3/4) = 6+7√3/2 = |det|.
+pub fn kuniform_n9() -> LatticeTiling {
+    // hexagon (seed 0, largest class)
+    let mut cells: Vec<Cell> = vec![Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-3.0/2.0 - H, -3.0/2.0 - H),
+            Vec2::new(-2.0 - H, -3.0/2.0 - 2.0 * H),
+            Vec2::new(-3.0/2.0 - H, -3.0/2.0 - 3.0 * H),
+            Vec2::new(-1.0/2.0 - H, -3.0/2.0 - 3.0 * H),
+            Vec2::new(-H, -3.0/2.0 - 2.0 * H),
+            Vec2::new(-1.0/2.0 - H, -3.0/2.0 - H),
+        ]),
+        seed: 0,
+    }];
+
+    // squares (seed 1)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-3.0/2.0 - H, -3.0/2.0 - 3.0 * H),
+            Vec2::new(-2.0 - H, -3.0/2.0 - 2.0 * H),
+            Vec2::new(-2.0 - 2.0 * H, -2.0 - 2.0 * H),
+            Vec2::new(-3.0/2.0 - 2.0 * H, -2.0 - 3.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-3.0/2.0 - 2.0 * H, -1.0 - H),
+            Vec2::new(-2.0 - 2.0 * H, -1.0 - 2.0 * H),
+            Vec2::new(-2.0 - H, -3.0/2.0 - 2.0 * H),
+            Vec2::new(-3.0/2.0 - H, -3.0/2.0 - H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0/2.0 - H, -5.0/2.0 - 3.0 * H),
+            Vec2::new(-1.0/2.0 - H, -3.0/2.0 - 3.0 * H),
+            Vec2::new(-3.0/2.0 - H, -3.0/2.0 - 3.0 * H),
+            Vec2::new(-3.0/2.0 - H, -5.0/2.0 - 3.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-3.0/2.0 - H, -1.0/2.0 - H),
+            Vec2::new(-3.0/2.0 - H, -3.0/2.0 - H),
+            Vec2::new(-1.0/2.0 - H, -3.0/2.0 - H),
+            Vec2::new(-1.0/2.0 - H, -1.0/2.0 - H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0/2.0 - H, -3.0/2.0 - 3.0 * H),
+            Vec2::new(-1.0/2.0, -2.0 - 3.0 * H),
+            Vec2::new(0.0, -2.0 - 2.0 * H),
+            Vec2::new(-H, -3.0/2.0 - 2.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0/2.0 - H, -3.0/2.0 - H),
+            Vec2::new(-H, -3.0/2.0 - 2.0 * H),
+            Vec2::new(0.0, -1.0 - 2.0 * H),
+            Vec2::new(-1.0/2.0, -1.0 - H),
+        ]),
+        seed: 1,
+    });
+
+    // first triangle orbit (seed 2)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-2.0 - 2.0 * H, -1.0 - 2.0 * H),
+            Vec2::new(-2.0 - 2.0 * H, -2.0 - 2.0 * H),
+            Vec2::new(-2.0 - H, -3.0/2.0 - 2.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-3.0/2.0 - H, -5.0/2.0 - 3.0 * H),
+            Vec2::new(-3.0/2.0 - H, -3.0/2.0 - 3.0 * H),
+            Vec2::new(-3.0/2.0 - 2.0 * H, -2.0 - 3.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0/2.0 - H, -5.0/2.0 - 3.0 * H),
+            Vec2::new(-1.0/2.0, -2.0 - 3.0 * H),
+            Vec2::new(-1.0/2.0 - H, -3.0/2.0 - 3.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0/2.0 - H, -5.0/2.0 - 3.0 * H),
+            Vec2::new(-1.0/2.0, -3.0 - 3.0 * H),
+            Vec2::new(-1.0/2.0, -2.0 - 3.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0/2.0 - H, -1.0/2.0 - H),
+            Vec2::new(-1.0/2.0 - H, -3.0/2.0 - H),
+            Vec2::new(-1.0/2.0, -1.0 - H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-H, -3.0/2.0 - 2.0 * H),
+            Vec2::new(0.0, -2.0 - 2.0 * H),
+            Vec2::new(0.0, -1.0 - 2.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    // second triangle orbit (seed 3)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0/2.0 - H, -5.0/2.0 - 3.0 * H),
+            Vec2::new(-3.0/2.0 - H, -5.0/2.0 - 3.0 * H),
+            Vec2::new(-1.0 - H, -5.0/2.0 - 4.0 * H),
+        ]),
+        seed: 3,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0/2.0, -2.0 - 3.0 * H),
+            Vec2::new(1.0/2.0, -2.0 - 3.0 * H),
+            Vec2::new(0.0, -2.0 - 2.0 * H),
+        ]),
+        seed: 3,
+    });
+    LatticeTiling {
+        id: "kuniform-n9",
+        name: "2-uniform (3.4.6.4; 3².4.3.4)",
+        description: "2-uniform tiling (3.4.6.4; 3².4.3.4) — hexagons ringed by squares with triangle fills (p6m).",
+        lattice: [Vec2::new(-(2.0 + S3), 0.0), Vec2::new(1.0 + S3 / 2.0, -1.5 - S3)],
+        cells,
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::P6m,
+        lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3.4.6.4; 3³.4²), wallpaper group p6m.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n8` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons): t = 4 tile
+/// orbits (hexagon + squares + two triangle orbits), e = 4 edge orbits.
+/// H = √3/2.
+///
+/// The translation lattice is a 60° hexagonal basis with |b1| = |b2| =
+/// 2+√3: b1 = (0, 2+√3), b2 = (−(3/2+√3), −(1+√3/2)); |det| = 6+7√3/2
+/// (left-handed basis, handled by the generator). The origin is the center
+/// of the hexagon — a genuine 6-fold rotation center (R60..R300 and all
+/// six mirrors through it verified numerically), so the declared group is
+/// p6m.
+///
+/// The cell holds 15 tiles: 1 hexagon (seed 0, the largest class), 6
+/// squares (seed 1), and 8 equilateral triangles — 6 from the first
+/// triangle orbit (seed 2) and 2 from the second (seed 3). Area 3√3/2 +
+/// 6·1 + 8·(√3/4) = 6+7√3/2 = |det|.
+pub fn kuniform_n8() -> LatticeTiling {
+    // hexagon (seed 0, largest class)
+    let mut cells: Vec<Cell> = vec![Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0 - 2.0 * H, 1.0 + 2.0 * H),
+            Vec2::new(-2.0 - 2.0 * H, 1.0 + 2.0 * H),
+            Vec2::new(-5.0/2.0 - 2.0 * H, 1.0 + H),
+            Vec2::new(-2.0 - 2.0 * H, 1.0),
+            Vec2::new(-1.0 - 2.0 * H, 1.0),
+            Vec2::new(-1.0/2.0 - 2.0 * H, 1.0 + H),
+        ]),
+        seed: 0,
+    }];
+
+    // squares (seed 1)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-5.0/2.0 - 2.0 * H, 1.0 + H),
+            Vec2::new(-5.0/2.0 - 3.0 * H, 1.0/2.0 + H),
+            Vec2::new(-2.0 - 3.0 * H, 1.0/2.0),
+            Vec2::new(-2.0 - 2.0 * H, 1.0),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-2.0 - 3.0 * H, 3.0/2.0 + 2.0 * H),
+            Vec2::new(-5.0/2.0 - 3.0 * H, 3.0/2.0 + H),
+            Vec2::new(-5.0/2.0 - 2.0 * H, 1.0 + H),
+            Vec2::new(-2.0 - 2.0 * H, 1.0 + 2.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0 - 2.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(-2.0 - 2.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(-2.0 - 2.0 * H, 1.0 + 2.0 * H),
+            Vec2::new(-1.0 - 2.0 * H, 1.0 + 2.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0 - 2.0 * H, 3.0 + 2.0 * H),
+            Vec2::new(-2.0 - 2.0 * H, 3.0 + 2.0 * H),
+            Vec2::new(-2.0 - 2.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(-1.0 - 2.0 * H, 2.0 + 2.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0/2.0 - H, 3.0/2.0 + H),
+            Vec2::new(-1.0 - H, 3.0/2.0 + 2.0 * H),
+            Vec2::new(-1.0 - 2.0 * H, 1.0 + 2.0 * H),
+            Vec2::new(-1.0/2.0 - 2.0 * H, 1.0 + H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0/2.0 - H, 5.0/2.0 + 3.0 * H),
+            Vec2::new(-1.0/2.0 - 2.0 * H, 3.0 + 3.0 * H),
+            Vec2::new(-1.0 - 2.0 * H, 3.0 + 2.0 * H),
+            Vec2::new(-1.0 - H, 5.0/2.0 + 2.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    // first triangle orbit (seed 2)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-2.0 - 3.0 * H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(-2.0 - 4.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(-2.0 - 3.0 * H, 3.0/2.0 + 2.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-5.0/2.0 - 3.0 * H, 3.0/2.0 + H),
+            Vec2::new(-5.0/2.0 - 3.0 * H, 1.0/2.0 + H),
+            Vec2::new(-5.0/2.0 - 2.0 * H, 1.0 + H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-2.0 - 2.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(-2.0 - 3.0 * H, 3.0/2.0 + 2.0 * H),
+            Vec2::new(-2.0 - 2.0 * H, 1.0 + 2.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-2.0 - 2.0 * H, 3.0 + 2.0 * H),
+            Vec2::new(-2.0 - 3.0 * H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(-2.0 - 2.0 * H, 2.0 + 2.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0 - 2.0 * H, 1.0 + 2.0 * H),
+            Vec2::new(-1.0 - H, 3.0/2.0 + 2.0 * H),
+            Vec2::new(-1.0 - 2.0 * H, 2.0 + 2.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0 - 2.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(-1.0 - H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(-1.0 - 2.0 * H, 3.0 + 2.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    // second triangle orbit (seed 3)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-2.0 - 3.0 * H, 3.0/2.0 + 2.0 * H),
+            Vec2::new(-2.0 - 2.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(-2.0 - 3.0 * H, 5.0/2.0 + 2.0 * H),
+        ]),
+        seed: 3,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(-1.0 - H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(-1.0 - 2.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(-1.0 - H, 3.0/2.0 + 2.0 * H),
+        ]),
+        seed: 3,
+    });
+    LatticeTiling {
+        id: "kuniform-n8",
+        name: "2-uniform (3.4.6.4; 3³.4²)",
+        description: "2-uniform tiling (3.4.6.4; 3³.4²) — hexagons ringed by squares with triangle fills, the second p6m 3.4.6.4 form.",
+        lattice: [Vec2::new(0.0, 2.0 + S3), Vec2::new(-1.5 - S3, -1.0 - S3 / 2.0)],
+        cells,
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::P6m,
+        lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

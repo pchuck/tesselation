@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (2)   Laves (11)   Wallpaper (17)   Pentagon
+counts (`Uniform (11)   Two-Uniform (5)   Laves (11)   Wallpaper (17)   Pentagon
 Types (12)   Islamic (9)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (5)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -127,13 +127,13 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-72 built-in tilings (84 tab memberships), all discoverable in both UIs
+75 built-in tilings (87 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 ten tabs:
-**Uniform** (11), **Two-Uniform** (2), **Laves / Catalan duals** (11,
+**Uniform** (11), **Two-Uniform** (5), **Laves / Catalan duals** (11,
 8 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (12), **Islamic** (9), **Arrangements** (5),
@@ -526,7 +526,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 538 tests, all green, zero
+`cargo test --workspace` (currently 550 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

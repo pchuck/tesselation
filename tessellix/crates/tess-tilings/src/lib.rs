@@ -315,6 +315,9 @@ pub fn registry() -> tess_core::Registry {
     {
         r = r.register(kuniform::kuniform_p6m());
         r = r.register(kuniform::kuniform_pmm());
+        r = r.register(kuniform::kuniform_n18());
+        r = r.register(kuniform::kuniform_n9());
+        r = r.register(kuniform::kuniform_n8());
     }
     #[cfg(feature = "laves")]
     {
@@ -516,16 +519,16 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-        // Census of today's taxonomy (M86). 72 built-ins — 63 before
+        // Census of today's taxonomy (M89). 75 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
-        //   TwoUniform 2, Laves 11 (8 primary incl. cairo-pentagonal +
+        //   TwoUniform 5, Laves 11 (8 primary incl. cairo-pentagonal +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
         //   PentagonTypes 12, Islamic 9, Arrangements 5,
         //   Quasiperiodic 8, Aperiodic 5, Nonperiodic 4.
-        // Membership census 84 = 72 primaries + 12 secondaries (3 Laves
+        // Membership census 87 = 75 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -543,15 +546,16 @@ mod tests {
         // -> M84 Wallpaper 15 -> 16 (split-triangle-grid, p31m)
         // -> M85 Wallpaper 16 -> 17 (alcove-cut-grid, p3m1 — the last
         // gap; catalog complete) -> M86 Aperiodic 4 -> 5
-        // (taylor-socolar).
+        // (taylor-socolar) -> M87 TwoUniform 2 -> 3 (kuniform-n18)
+        // -> M88 (kuniform-n9) -> M89 (kuniform-n8).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 2, 11, 17, 12, 9, 5, 8, 5, 4],
+            vec![11, 5, 11, 17, 12, 9, 5, 8, 5, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 72, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 84, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 75, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 87, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -6779,6 +6783,196 @@ mod kuniform_tests {
             }
         }
     }
+
+    #[test]
+    fn kuniform_n18_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n18(),
+            "kuniform-n18",
+            BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n18_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n18(),
+            "kuniform-n18(rot30,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n18_deterministic() {
+        check_det(
+            &kuniform::kuniform_n18(),
+            "kuniform-n18",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch for the p6m
+    /// tiling (3⁶; 3².4.3.4): one 3⁶ orbit (the origin's six-triangle
+    /// vertex class) and six 3².4.3.4 orbits. Counts and reps match
+    /// the Python battery.
+    #[test]
+    fn kuniform_n18_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n18(),
+            &[
+                Figure {
+                    figure: "333333",
+                    count: 36,
+                    orbits: &[(0, 0)],
+                },
+                Figure {
+                    figure: "33434",
+                    count: 260,
+                    orbits: &[
+                        (500, 866),
+                        (500, 1866),
+                        (1000, 2732),
+                        (1366, 1366),
+                        (1866, 2232),
+                        (1866, 3232),
+                    ],
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn kuniform_n9_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n9(),
+            "kuniform-n9",
+            BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n9_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n9(),
+            "kuniform-n9(rot30,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n9_deterministic() {
+        check_det(
+            &kuniform::kuniform_n9(),
+            "kuniform-n9",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch for the p6m
+    /// tiling (3.4.6.4; 3².4.3.4): six 3².4.3.4 orbits (the
+    /// mirror-only, palindromic vertices) and six 3.4.6.4 orbits.
+    /// Counts and reps match the Python battery.
+    #[test]
+    fn kuniform_n9_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n9(),
+            &[
+                Figure {
+                    figure: "33434",
+                    count: 234,
+                    orbits: &[
+                        (-2366, -1366),
+                        (-1866, -500),
+                        (-1366, -1366),
+                        (-500, -1866),
+                        (0, -2732),
+                        (500, -1866),
+                    ],
+                },
+                Figure {
+                    figure: "3464",
+                    count: 287,
+                    orbits: &[
+                        (-2732, 0),
+                        (-1366, -2366),
+                        (-1000, 0),
+                        (-500, -866),
+                        (500, -866),
+                        (1366, -2366),
+                    ],
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn kuniform_n8_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n8(),
+            "kuniform-n8",
+            BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n8_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n8(),
+            "kuniform-n8(rot30,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n8_deterministic() {
+        check_det(
+            &kuniform::kuniform_n8(),
+            "kuniform-n8",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch for the p6m
+    /// tiling (3.4.6.4; 3³.4²): six 3³.4² orbits and six 3.4.6.4
+    /// orbits. Counts and reps match the Python battery.
+    #[test]
+    fn kuniform_n8_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n8(),
+            &[
+                Figure {
+                    figure: "33344",
+                    count: 260,
+                    orbits: &[
+                        (-2732, 0),
+                        (-1866, -500),
+                        (-1866, 500),
+                        (-1366, 1366),
+                        (-1366, 2366),
+                        (-500, 1866),
+                    ],
+                },
+                Figure {
+                    figure: "3464",
+                    count: 267,
+                    orbits: &[
+                        (-2732, -1000),
+                        (-2732, 1000),
+                        (-2232, 1866),
+                        (-1000, 0),
+                        (-500, 866),
+                        (-500, 2866),
+                    ],
+                },
+            ],
+        );
+    }
 }
 #[cfg(all(
     test,
@@ -6920,6 +7114,9 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
             ("khatam-girih", khatam_girih::khatam_girih()),
             ("kuniform-p6m", kuniform::kuniform_p6m()),
             ("kuniform-pmm", kuniform::kuniform_pmm()),
+            ("kuniform-n18", kuniform::kuniform_n18()),
+            ("kuniform-n9", kuniform::kuniform_n9()),
+            ("kuniform-n8", kuniform::kuniform_n8()),
             ("tetrakis-square", laves::tetrakis_square()),
             ("rhombille", laves::rhombille()),
             ("triakis-triangular", laves::triakis_triangular()),

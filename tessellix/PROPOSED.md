@@ -155,18 +155,18 @@ confirm the diffraction claim during the spike before declaring.
 
   | group | vertex configurations | t,e |
   |---|---|---|
-  | p6m | 3⁶ ; 3².4.3.4 | 3,3 |
-  | p6m | 3.4.6.4 ; 3².4.3.4 | 4,4 |
-  | p6m | 3.4.6.4 ; 3³.4² | 4,4 |
+  | p6m | 3⁶ ; 3².4.3.4 ✅ `kuniform-n18` (M87) | 3,3 |
+  | p6m | 3.4.6.4 ; 3².4.3.4 ✅ `kuniform-n9` (M88) | 4,4 |
+  | p6m | 3.4.6.4 ; 3³.4² ✅ `kuniform-n8` (M89) | 4,4 |
   | p6m | 3.4.6.4 ; 3.4².6 | 5,5 |
   | p6m | 4.6.12 ; 3.4.6.4 (the 3-4-6-12 tiling) | 4,4 |
   | p6m | 3⁶ ; 3².4.12 | 4,4 |
   | p4m | 3.12.12 ; 3.4.3.12 | 3,3 |
-  | p6m | 3⁶ ; 3².6² | 2,3 |
+  | p6m | 3⁶ ; 3².6² ✅ `kuniform-p6m` (M44) | 2,3 |
   | p6  | 3⁶ ; 3.4.6 (variant 1) | 3,3 |
   | p6  | 3⁶ ; 3.4.6 (variant 2) | 5,7 |
   | cmm | 3².6² ; 3.4.6 | 2,4 |
-  | pmm | 3.6.3.6 ; 3².6² | 2,3 |
+  | pmm | 3.6.3.6 ; 3².6² ✅ `kuniform-pmm` (M48) | 2,3 |
   | cmm | 3.4².6 ; 3.6.3.6 (variant 2) | 3,4 |
   | pmm | 3.4².6 ; 3.6.3.6 (variant 1) | 4,4 |
   | p4g | 3³.4² ; 3².4.3.4 (variant 1) | 4,5 |
@@ -190,15 +190,22 @@ confirm the diffraction claim during the spike before declaring.
   check must verify *both* orbit figures, and the two-orbit structure
   itself — assert exactly 2 vertex classes over a large patch), plus
   the culling list.
-- **Status:** implemented (M44 + M48):
-  the p6m entry 3⁶ ; 3².6² as `kuniform-p6m` (index-3 honeycomb
-  dissection, exact Q(√3) table, both vertex orbits + p6m
-  generators verified by an exact-surd Python spike and Rust
-  cell-set probes), and the pmm entry 3.6.3.6 ; 3².6² as
-  `kuniform-pmm` (hexagons on the rectangular lattice
-  span{(2,0),(0,√3)} with up- and down-pointing triangle rows in
-  the gaps, exact Q(√3) table, both vertex orbits + pmm
-  generators verified the same way).
+- **Status:** implemented (M44 + M48 + M87 + M88 + M89) — 5 of 20
+  entries landed, 15 of 20 remain. The p6m entry 3⁶ ; 3².6² as
+  `kuniform-p6m` (M44; index-3 honeycomb dissection, exact Q(√3)
+  table, both vertex orbits + p6m generators verified by an
+  exact-surd Python spike and Rust cell-set probes), the pmm entry
+  3.6.3.6 ; 3².6² as `kuniform-pmm` (M48; hexagons on the rectangular
+  lattice span{(2,0),(0,√3)} with up- and down-pointing triangle rows
+  in the gaps, exact Q(√3) table, both vertex orbits + pmm generators
+  verified the same way), and the three-entry p6m batch (M87
+  `kuniform-n18` 3⁶ ; 3².4.3.4, M88 `kuniform-n9` 3.4.6.4 ;
+  3².4.3.4, M89 `kuniform-n8` 3.4.6.4 ; 3³.4² — exact Q(√3) tables
+  on 60° hexagonal bases with |b1| = |b2| (1+√3 for n18, 2+√3 for
+  n9/n8), all three p6m *632 by numeric group determination about the
+  hexagon center / 3⁶ vertex origin, both vertex orbits +
+  edge-to-edge structure verified by the ±3×±3 Python battery before
+  the Rust port, 4 tess-tilings tests each).
 
 ---
 

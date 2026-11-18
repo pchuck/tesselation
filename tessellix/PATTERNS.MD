@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (72 tilings)
+## Implemented (75 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -80,6 +80,9 @@ figures at the split midpoints, `2.4.4`).
 | `running-bond` | 2:1 dominoes in stretcher rows, half-brick offset | cmm | centered rectangular lattice ⟨(2,0),(1,1)⟩ (M76; the measured lattice is the √2-degenerate square lattice — the legality test's documented exception), 1 split domino per cell; mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions; exact coset group probe (M41) |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | p6m | hexagonal tiling with one of every three hexagons (index-3 sublattice m ≡ n mod 3 of the honeycomb centers) dissected into six-triangle fans; Wikipedia `2-uniform n10`, t = 2, e = 3 |
 | `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | pmm | hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (rectangular lattice, hexagons share full horizontal edges); Wikipedia `2-uniform n11`, t = 2, e = 3 |
+| `kuniform-n18` | 2-uniform (3⁶; 3².4.3.4) | p6m | squares + two triangle orbits around the 3⁶ vertices; 60° hexagonal basis, \|b1\| = \|b2\| = 1+√3, det 3+2√3 (left-handed); origin a 3⁶ vertex = 6-fold center; 11 tiles/cell; Wikipedia `2-uniform n18`, t = 3, e = 3 (M87) |
+| `kuniform-n9` | 2-uniform (3.4.6.4; 3².4.3.4) | p6m | hexagons ringed by squares with triangle fills; 60° hexagonal basis, \|b1\| = \|b2\| = 2+√3, det 6+7√3/2 (left-handed); origin a hexagon center = 6-fold center; 15 tiles/cell; Wikipedia `2-uniform n9`, t = 4, e = 4 (M88) |
+| `kuniform-n8` | 2-uniform (3.4.6.4; 3³.4²) | p6m | the second p6m 3.4.6.4 form — hexagons ringed by squares with triangle fills, one square–square edge per cell (2-folds at square–square edge midpoints, cf. n9's triangle–triangle); same basis class as n9 (det 6+7√3/2); origin a hexagon center; 15 tiles/cell; Wikipedia `2-uniform n8`, t = 4, e = 4 (M89) |
 | `pentagon-13` | Rice pentagon, type 13 (1977, A = 120°) | p2 | 2-isohedral chiral pair (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3); long side split into two collinear a-edges (M49) |
 | `pentagon-14` | Stein pentagon, type 14 (completely determined) | p2 | 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, exact Q(√57, β) with β = √((11√57−25)/8); long sides split into two collinear unit fine edges — 7/5/6-vertex cells (M50) |
 | `pentagon-15` | Mann pentagon, type 15 (MMVD 2015) | pgg | 3-isohedral (seeds 0/1/2), 12 tiles per rectangular cell = 4 congruent 3-tile blocks, exact Q(√3) (a = 2, b = d = e = 1, c = √(2+√3), all vertices on the (p+q√3)/2 grid); non-edge-to-edge — 4 T-split edges per cell (M55) |
@@ -116,13 +119,14 @@ figures at the split midpoints, `2.4.4`).
 ## Gallery taxonomy (M76)
 
 M76 restructured the browse gallery into ten tabs
-(`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (2) ·
+(`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (5) ·
 **Laves (Catalan duals)** (11) · **Wallpaper** (17) · **Pentagon
 Types** (12) · **Islamic** (9) · **Arrangements** (5) ·
-**Quasiperiodic** (8) · **Aperiodic** (4) · **Nonperiodic** (4) —
-83 memberships over the 71 implemented tilings; the 12 extra are
+**Quasiperiodic** (8) · **Aperiodic** (5) · **Nonperiodic** (4) —
+87 memberships over the 75 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
-M74/M77/M78/M79, was re-synced in M81, in M84, and again in M85.)
+M74/M77/M78/M79, was re-synced in M81, in M84, in M85, and again
+with the M87/M88/M89 two-uniform batch.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
@@ -2433,8 +2437,140 @@ documentation pending).
   `socolar` feature exists in Cargo.toml but is not a default feature
   and Cargo.toml is frozen — M74-style deviation, documented in
   `lib.rs`).
-- **Status:** landed (M86; left uncommitted for the coordinator).
+- **Status:** landed (M86).
   72 tilings, 538 tests.
+
+### 37. 2-uniform (3⁶; 3².4.3.4) ✅ (M87)
+
+- **Motif:** first of the three-entry p6m batch of the closed
+  2-uniform list (Krotenheerdt's 20 two-vertex-orbit tilings by
+  regular polygons; Wikipedia `2-uniform n18`, t = 3 tile orbits,
+  e = 3 edge orbits): squares and two triangle orbits, with the
+  3⁶ vertices (six triangles around a point) as the lattice origin.
+  The list's entries have no individual proper names, so the tiling
+  is named by its vertex configurations (house style, as for
+  `kuniform-p6m`/`kuniform-pmm`).
+- **Group:** **p6m** (*632), determined numerically BEFORE the Rust
+  port: R60..R300 about the origin plus all six mirrors through it
+  verified on the full 49-cell window (battery check 5: 5/5
+  rotations T; the global group test `m87x_sym3.py` — 361 window
+  sites vs 49 reference sites, 735/735 matches, 0 color changes).
+  A near-miss was caught and fixed along the way: an earlier probe
+  built its "R60" with a 30° angle (`th = m·π/6` mislabeled as
+  60°) and reported a false R60 failure — the tiling had been
+  misdiagnosed as a twin of itself under R30. See the M87 report.
+- **Lattice & cell:** 60° hexagonal basis with |b1| = |b2| =
+  1+√3: b1 = (0, 1+√3), b2 = ((3+√3)/2, (1+√3)/2) — left-handed
+  (|det| = 3+2√3 ≈ 6.4641, handled by the generator). The cell
+  (parallelogram [0,b1]×[0,b2], offset 0) holds 11 tiles: 3 squares
+  (seed 0, the largest class — no hexagon in this tiling) and 8
+  equilateral triangles, 6 from the first triangle orbit (seed 1)
+  and 2 from the second (seed 2). Area 3·1 + 8·(√3/4) = 3+2√3 =
+  |det| exact in Q(√3). Note: the tile set is not contained in the
+  unit parallelogram — the lattice generator's u-space culling pads
+  the index ranges, as designed.
+- **Seeds:** squares 0; first triangle orbit 1 (#ffff00, 6/cell);
+  second 2 (#808000, 2/cell). The orbit→color mapping was
+  established by vertex-matching the cell's triangles against the
+  Wikipedia reference SVG (SVG offset solved: (−0.000135,
+  −189.230455); tiles 0–5 yellow, 6–7 golden).
+- **Edge structure:** **EDGE-TO-EDGE**: 834 interior edge pairs in
+  the 7×7 (49-cell) window, 0 unpaired, 0 T-junctions (boundary
+  walk closed), 96 boundary edges.
+- **Vertex stars:** exactly two figures — 333333 (36 vertices, 1
+  lattice orbit: the origin) and 33434 (260 vertices, 6 orbits per
+  cell, reps (500,866), (500,1866), (1000,2732), (1366,1366),
+  (1866,2232), (1866,3232) in u-space ×1000).
+- **Coverage:** 140×140 fine grid (irrational-shifted) over the
+  window: 19600 points, 9800 exactly-once in the safe interior, 336
+  on tile boundaries, max count 2 — no gaps, no overlaps.
+- **Rust:** `kuniform_n18()` in `kuniform.rs` (feature `kuniform`) —
+  radical-expr table through `H = √3/2`, `S3 = 2H` (no decimal
+  literals), CCW vertex order, first cell inlined. Standard trio +
+  the two-orbit vertex-figure test (counts + orbit representatives
+  pinned verbatim from the Python battery) + added to the
+  `lattice_culling_matches_brute_force` list (default params and
+  0.7-scale/30°-rotation).
+- **Status:** landed (M87).
+  73 tilings, 85 memberships, 542 tests at this step.
+
+### 38. 2-uniform (3.4.6.4; 3².4.3.4) ✅ (M88)
+
+- **Motif:** second entry of the p6m batch — Wikipedia `2-uniform
+  n9`, t = 4, e = 4: hexagons ringed by six squares, the gaps
+  filled by two triangle orbits. The origin is the **hexagon face
+  center** (v0-relative (−1,0,0,−1)) — a genuine 6-fold rotation
+  center of the tiling, not a vertex.
+- **Group:** **p6m** (*632), verified numerically before the Rust
+  port: R60..R300 about the hexagon center plus all six mirrors
+  through it (`m87x_sym3.py` global test, 0 color changes);
+  3-fold centers at the golden-triangle centroids (2 per cell —
+  yellow centroids are NOT 3-folds), 2-fold centers at the
+  triangle–triangle edge midpoints; square centers tested negative.
+- **Lattice & cell:** 60° hexagonal basis with |b1| = |b2| =
+  2+√3: b1 = (−(2+√3), 0), b2 = (1+√3/2, −(3/2+√3)) —
+  left-handed (|det| = 6+7√3/2 ≈ 12.0622). The cell holds 15 tiles:
+  1 hexagon (seed 0, the largest class), 6 squares (seed 1), and 8
+  equilateral triangles, 6 from the first orbit (seed 2, #ffff00)
+  and 2 from the second (seed 3, #808000). Area 3√3/2 + 6·1 +
+  8·(√3/4) = 6+7√3/2 = |det| exact in Q(√3).
+- **Edge structure:** **EDGE-TO-EDGE**: 1255 interior edge pairs in
+  the 7×7 window, 0 unpaired, 0 T-junctions (boundary walk closed),
+  136 boundary edges.
+- **Vertex stars:** exactly two figures — 33434 (234 vertices, 6
+  orbits, reps (−2366,−1366), (−1866,−500), (−1366,−1366),
+  (−500,−1866), (0,−2732), (500,−1866)) and 3464 (287 vertices, 6
+  orbits, reps (−2732,0), (−1366,−2366), (−1000,0), (−500,−866),
+  (500,−866), (1366,−2366)). Ray sets: 33434 {0,60,120,210,270}°,
+  3464 {0,60,150,270}°.
+- **Coverage:** 160×160 fine grid: 25600 points, 14256 exactly-once
+  in the safe interior, 144 on tile boundaries, max count 2.
+- **Rust:** `kuniform_n9()` in `kuniform.rs` (feature `kuniform`) —
+  same conventions as M87 (radical exprs, CCW, first cell inlined);
+  standard trio + two-orbit vertex-figure test + culling list.
+  Negative orbit representatives are expected: reps live in
+  [0,b1)×[0,b2), which extends to negative coordinates for the
+  left-handed basis.
+- **Status:** landed (M88).
+  74 tilings, 86 memberships, 546 tests at this step.
+
+### 39. 2-uniform (3.4.6.4; 3³.4²) ✅ (M89)
+
+- **Motif:** third entry of the p6m batch — Wikipedia `2-uniform
+  n8`, t = 4, e = 4: the **second** p6m form of the 3.4.6.4
+  configuration. Structurally close to M88's n9 but distinct: the
+  second vertex figure is 3³.4² (three triangles + two squares at
+  one orbit), one square–square edge per cell, and the 2-fold
+  centers sit at the **square–square** edge midpoints (n9's are at
+  the triangle–triangle midpoints). Origin: the hexagon face
+  center, a genuine 6-fold center as in M88.
+- **Group:** **p6m** (*632), verified numerically before the Rust
+  port: R60..R300 about the hexagon center plus all six mirrors
+  through it (`m87x_sym3.py`, 0 color changes); 3-fold centers at
+  the golden-triangle centroids (2 per cell), 2-fold centers at the
+  square–square edge midpoints; square centers tested negative.
+- **Lattice & cell:** 60° hexagonal basis with |b1| = |b2| =
+  2+√3: b1 = (0, 2+√3), b2 = (−(3/2+√3), −(1+√3/2)) —
+  left-handed (|det| = 6+7√3/2 ≈ 12.0622, same cell area as M88).
+  The cell holds 15 tiles: 1 hexagon (seed 0), 6 squares (seed 1),
+  8 equilateral triangles — 6 from the first orbit (seed 2,
+  #ffff00) and 2 from the second (seed 3, #808000). Area
+  3√3/2 + 6·1 + 8·(√3/4) = 6+7√3/2 = |det| exact in Q(√3).
+- **Edge structure:** **EDGE-TO-EDGE**: 1261 interior edge pairs in
+  the 7×7 window, 0 unpaired, 0 T-junctions (boundary walk closed),
+  124 boundary edges; exactly one square–square edge per cell.
+- **Vertex stars:** exactly two figures — 33344 (260 vertices, 6
+  orbits, reps (−2732,0), (−1866,−500), (−1866,500), (−1366,1366),
+  (−1366,2366), (−500,1866)) and 3464 (267 vertices, 6 orbits,
+  reps (−2732,−1000), (−2732,1000), (−2232,1866), (−1000,0),
+  (−500,866), (−500,2866)). Ray set: 33344 {30,120,210,270,330}°.
+- **Coverage:** 160×160 fine grid: 25600 points, 14256 exactly-once
+  in the safe interior, 168 on tile boundaries, max count 2.
+- **Rust:** `kuniform_n8()` in `kuniform.rs` (feature `kuniform`) —
+  same conventions as M87/M88; standard trio + two-orbit
+  vertex-figure test + culling list.
+- **Status:** landed (M89).
+  75 tilings, 87 memberships, 550 tests at this step.
 
 ## Proposed — vetted candidates
 
@@ -3593,3 +3729,57 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   table 1 → 0 (`WALLPAPER_GROUP_GAPS` is now empty; the shared note
   reports the completed catalog). 71 tilings, 529 tests at the
   commit.
+- 2026-11-18 — M86 Taylor–Socolar striped hexagons ✅: aperiodic
+  decorated-hexagon monotile, the paper's forced 529-hexagon patch
+  (arXiv:1008.3103 Fig. 18) as a verbatim state table, each hexagon
+  partitioned into 13 convex pieces preserving the edge-midpoint
+  handoff exactly (handoff battery R1 0/2992, R2 0/2816, R3 0/2904
+  re-derived in tests); no-period probe over 2790 translations to
+  hex-radius 30 finds no period; 4 tess-tilings tests (72 tilings,
+  538 tests at the commit). (Changelog entry added belatedly with
+  the M87 batch — the M86 commit updated §36 but not this list.)
+- 2026-11-18 — M87 2-uniform (3⁶; 3².4.3.4, p6m) ✅: first of the
+  three-entry p6m batch of the closed 2-uniform list (`kuniform-n18`
+  in `kuniform.rs`, feature `kuniform`) — squares + two triangle
+  orbits, the 3⁶ vertices as the lattice origin (a genuine 6-fold
+  center); 60° hexagonal basis |b1| = |b2| = 1+√3, |det| = 3+2√3
+  (left-handed basis, handled by the generator); 11 tiles per cell
+  (3 squares seed 0, 6 triangles seed 1, 2 triangles seed 2), area
+  3+2√3 = |det| exact in Q(√3). Python-first verification (±3×±3 =
+  49-cell window): edge-to-edge 834 interior pairs / 0 unpaired / 0
+  T-junctions, vertex stars 333333 (36 vertices, 1 orbit) + 33434
+  (260, 6 orbits), 19600-point grid 9800 exactly-once / 336
+  on-boundary / max count 2, R60..R300 invariance 5/5 (group
+  determination p6m *632 — an earlier probe's false R60 failure was
+  a 30°-vs-60° bug in the probe, not the tiling). 4 tess-tilings
+  tests (standard trio + two-orbit vertex-figure test pinning the
+  battery's counts and orbit representatives). Census: 72 → 73
+  tilings, 84 → 85 memberships, 538 → 542 tests (commit pending the
+  coordinator).
+- 2026-11-18 — M88 2-uniform (3.4.6.4; 3².4.3.4, p6m) ✅: second
+  entry of the p6m batch (`kuniform-n9`) — hexagons ringed by six
+  squares with triangle fills; origin a hexagon face center
+  (genuine 6-fold rotation center, not a vertex); 60° hexagonal
+  basis |b1| = |b2| = 2+√3, |det| = 6+7√3/2 (left-handed); 15 tiles
+  per cell (1 hexagon seed 0, 6 squares seed 1, 6 triangles seed 2,
+  2 triangles seed 3); 3-fold centers at the golden-triangle
+  centroids, 2-fold centers at the triangle–triangle edge
+  midpoints. Battery: edge-to-edge 1255/0/0, stars 33434 (234, 6
+  orbits) + 3464 (287, 6 orbits), 25600-point grid 14256
+  exactly-once / 144 on-boundary / max 2, p6m group determination
+  (R60..R300 + six mirrors, 0 color changes). 4 tess-tilings
+  tests. Census: 73 → 74 tilings, 85 → 86 memberships, 542 → 546
+  tests (commit pending the coordinator).
+- 2026-11-18 — M89 2-uniform (3.4.6.4; 3³.4², p6m) ✅: third entry
+  of the p6m batch (`kuniform-n8`) — the second p6m form of
+  3.4.6.4 (one square–square edge per cell; 2-folds at the
+  square–square edge midpoints, cf. M88's triangle–triangle); same
+  basis class as M88 (|b1| = |b2| = 2+√3, |det| = 6+7√3/2,
+  left-handed), 15 tiles per cell, origin a hexagon center.
+  Battery: edge-to-edge 1261/0/0, stars 33344 (260, 6 orbits) +
+  3464 (267, 6 orbits), 25600-point grid 14256 exactly-once / 168
+  on-boundary / max 2, p6m group determination. 4 tess-tilings
+  tests. Census: 74 → 75 tilings, 86 → 87 memberships, 546 → 550
+  tests (commit pending the coordinator). All three batch entries
+  leave the full bar green: cargo check + clippy (both target
+  sets) with zero warnings, cargo test --workspace 550/550.
