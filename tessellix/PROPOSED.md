@@ -979,17 +979,17 @@ confirm the diffraction claim during the spike before declaring.
 
 ---
 
-### 21. Wallpaper group completion — the 2 un-realized groups (M76 roadmap queue)
+### 21. Wallpaper group completion — the 1 un-realized group (M76 roadmap queue)
 
-- **Motif:** M76 made the Wallpaper tab a group catalog: 15 of the 17
+- **Motif:** M76 made the Wallpaper tab a group catalog: 16 of the 17
   wallpaper groups have a registered realizer (pg → glide-hexagon-strips,
   pm → trapezoid-courses, cm → wavy-courses, pmg → shifted-trapezoid-courses,
   p1 → stepped-hexominoes, p2 → pentagon-3,
-  p3 → chiral-cut-honeycomb, pmm → kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
+  p3 → chiral-cut-honeycomb, p31m → split-triangle-grid, pmm → kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
   truncated-square, p4g → snub-square, p6 → snub-trihexagonal,
   p6m → hexagon, cmm → elongated-triangular). A
   shared gap note (`tess_core::browse::wallpaper_gap_note`) rendered
-  at the top of the tab in both UIs names the 2 absent groups. (The
+  at the top of the tab in both UIs names the one absent group. (The
   17th group is pmg — the old `WallpaperGroup::Cmc` variant was a 3D
   space group misnamed as a 2D group; M76 renamed it `Pmg`.)
 - **Queue (difficulty per audit §4d):** pm, pg (easy); pmg, cm
@@ -1074,10 +1074,31 @@ confirm the diffraction claim during the spike before declaring.
     HX-STUDY handoff `hx_p3_cell.json` staged below, via the
     scratch emitter (no hand-typed coords) — the handoff's
     complete exact Q(√3) battery reproduced with zero deltas.
-  - p3m1 (hexagonal): 3-folds + mirrors through the vertices; the
-    natural next step after p3.
-  - p31m (hexagonal): 3-folds + mirrors through the edges;
-    distinguishable from p3m1 by where the mirrors fall.
+  - p31m ✅ **landed (M84)**: the catalog's first p31m realizer —
+    split-triangle grid: each small side-2 equilateral triangle of
+    the grid split by its orbit triangle — a generic Q(√3) point P0
+    near a vertex and its two images under 120° about the triangle
+    centroid — into an inner equilateral triangle + 3 corner quads
+    (one per edge), the up-triangle split directly and the
+    down-triangle its mirror — 8 tiles per primitive cell
+    Λ = ⟨(2,0),(1,√3)⟩ (det 2√3 = 2 × area √3), two congruence
+    classes (inner triangles achiral, corner quads chiral; 2
+    seeds). Group p31m by exact ×240-integer probe: the only
+    positive cosets of the 11 D6 linear parts are the zero coset
+    for R120, R240 and the three edge-mirror reflection families
+    (census 43×5 / 28×6), rot60/180/300 and the three remaining
+    reflection families negative (excludes p6, p6m), 25/25 lattice
+    translations, 0/5 off-lattice, rot120 centres in exactly three
+    orbits (0,0), (1,√3/3), (2,2√3/3) — incidence census
+    [on-mirror: T, F, F]: the grid-vertex centres lie on the
+    mirrors, both centroid orbits on none — the p31m signature
+    (p3m1 would put every 3-fold centre on a mirror). Construction
+    transcribed from the HX-STUDY handoff `hx_p31m_cell.json`
+    staged below, via the scratch emitter (no hand-typed coords) —
+    the handoff's complete exact Q(√3) battery reproduced with zero
+    deltas.
+  - p3m1 (hexagonal): 3-folds + mirrors through the vertices;
+    distinguishable from p31m by where the mirrors fall.
 - **Construction:** per the adoption checklist — Python spike first
   (exact geometry + group probe), then the standard battery + a
   group-audit probe like the M40/M41 coset probes, then registry +
@@ -1090,15 +1111,14 @@ confirm the diffraction claim during the spike before declaring.
   extended with the new tab sizes, and the shared gap note (both UIs)
   drops one group name per landing.
 - **Status:** p1 landed (M78), pm landed (M79), pg landed (M80),
-  pmg landed (M81), cm landed (M82), p3 landed (M83); 2 remain —
-  p3m1, p31m (the hexagonal groups), one group per milestone; each
-  landing flips one token in
+  pmg landed (M81), cm landed (M82), p3 landed (M83), p31m landed
+  (M84); 1 remains — p3m1 (the last hexagonal group), one group
+  per milestone; each landing flips one token in
   `wallpaper_gap_note` and the gap note is re-verified in both UIs'
-  tests. HX-STUDY handoffs for the remaining two are staged in
+  tests. The HX-STUDY handoff for the remaining group is staged in
   /tmp/opencode/hexgroups/ (hx_p3m1_cell.json — 18-tile cell,
-  3 classes; hx_p31m_cell.json — 8-tile cell, 2 classes; each with
-  the complete exact Q(√3) battery and full D6 probe battery PASS),
-  feeding the port tasks M84 (p3m1), M85 (p31m).
+  3 classes, with the complete exact Q(√3) battery and full D6
+  probe battery PASS), feeding the port task M85 (p3m1).
 
 ## Parked / rejected (with reasons)
 

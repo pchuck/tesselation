@@ -98,6 +98,8 @@ pub mod shifted_trapezoid_courses;
 pub mod wavy_courses;
 #[cfg(feature = "pavers")]
 pub mod chiral_cut_honeycomb;
+#[cfg(feature = "pavers")]
+pub mod split_triangle_grid;
 #[cfg(feature = "pentagon2")]
 pub mod pentagon2;
 #[cfg(feature = "pentagon3")]
@@ -333,6 +335,7 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(shifted_trapezoid_courses::shifted_trapezoid_courses());
         r = r.register(wavy_courses::wavy_courses());
         r = r.register(chiral_cut_honeycomb::chiral_cut_honeycomb());
+        r = r.register(split_triangle_grid::split_triangle_grid());
     }
     r
 }
@@ -500,16 +503,16 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-        // Census of today's taxonomy (M83). 69 built-ins — 63 before
+        // Census of today's taxonomy (M84). 70 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
         //   TwoUniform 2, Laves 11 (8 primary incl. cairo-pentagonal +
-        //   3 regular secondaries), Wallpaper 15 (group representatives
+        //   3 regular secondaries), Wallpaper 16 (group representatives
         //   as secondaries — one card per represented group),
         //   PentagonTypes 12, Islamic 9, Arrangements 5,
         //   Quasiperiodic 8, Aperiodic 4, Nonperiodic 4.
-        // Membership census 81 = 69 primaries + 12 secondaries (3 Laves
+        // Membership census 82 = 70 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -523,15 +526,16 @@ mod tests {
         // -> M80 Wallpaper 11 -> 12 (glide-hexagon-strips, pg)
         // -> M81 Wallpaper 12 -> 13 (shifted-trapezoid-courses, pmg)
         // -> M82 Wallpaper 13 -> 14 (wavy-courses, cm)
-        // -> M83 Wallpaper 14 -> 15 (chiral-cut-honeycomb, p3).
+        // -> M83 Wallpaper 14 -> 15 (chiral-cut-honeycomb, p3)
+        // -> M84 Wallpaper 15 -> 16 (split-triangle-grid, p31m).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 2, 11, 15, 12, 9, 5, 8, 4, 4],
+            vec![11, 2, 11, 16, 12, 9, 5, 8, 4, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 69, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 81, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 70, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 82, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -552,7 +556,7 @@ mod tests {
                 .unwrap()
         });
         assert_eq!(groups.len(), wall.cards.len(), "every Wallpaper card carries a group");
-        assert_eq!(groups.len(), 15, "fifteen represented wallpaper groups");
+        assert_eq!(groups.len(), 16, "sixteen represented wallpaper groups");
         let expected: Vec<&WallpaperGroup> = WallpaperGroup::ALL
             .iter()
             .filter(|g| !tess_core::browse::WALLPAPER_GROUP_GAPS.contains(*g))
@@ -3351,6 +3355,7 @@ mod pavers_tests {
     use crate::trapezoid_courses;
     use crate::wavy_courses;
     use crate::chiral_cut_honeycomb;
+    use crate::split_triangle_grid;
     use tess_core::geometry::{BBox, Vec2};
 
     /// Candidate matrices (row-major) used by the paver group probes.
@@ -4143,6 +4148,36 @@ mod pavers_tests {
         check_det(
             &chiral_cut_honeycomb::chiral_cut_honeycomb(),
             "chiral-cut-honeycomb",
+            BBox::new(v2(-4.0, -3.0), v2(10.0, 6.0)),
+        );
+    }
+
+    /// Split-triangle-grid (M84) standard trio.
+    #[test]
+    fn split_triangle_grid_covers_region() {
+        check_covers(
+            &split_triangle_grid::split_triangle_grid(),
+            "split-triangle-grid",
+            BBox::new(v2(-5.0, -3.0), v2(11.0, 7.0)),
+        );
+    }
+
+    #[test]
+    fn split_triangle_grid_rotated_scaled() {
+        check_rotated(
+            &split_triangle_grid::split_triangle_grid(),
+            "split-triangle-grid(rot30,scale0.7)",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn split_triangle_grid_deterministic() {
+        check_det(
+            &split_triangle_grid::split_triangle_grid(),
+            "split-triangle-grid",
             BBox::new(v2(-4.0, -3.0), v2(10.0, 6.0)),
         );
     }
@@ -5474,6 +5509,408 @@ mod pavers_tests {
             assert_eq!(*e, want_edges, "squared-edge multiset per tile");
         }
     }
+
+    // ============ split-triangle-grid (M84, p31m) ============
+
+    /// The ten distinct cell vertices, ×240, in first-encounter tile
+    /// order: the p31m probe candidate set.
+    const P31M_VERTS: [[i64; 4]; 10] = [
+        [0, 0, 0, 0],
+        [144, -6, 0, 32],
+        [216, 3, -3, 152],
+        [240, 0, 0, 240],
+        [360, 3, 3, 56],
+        [384, 6, 0, 208],
+        [456, -3, -3, 88],
+        [480, 0, 0, 0],
+        [600, -3, 3, 184],
+        [720, 0, 0, 240],
+    ];
+
+    /// The eight cell tiles, ×240, CCW, JSON order: tile 0 the inner
+    /// equilateral triangle of the up-triangle U, tiles 1–3 its corner
+    /// quads (one per edge), tile 4 the inner triangle of the
+    /// down-triangle D (the mirror image of tile 0), tiles 5–7 its
+    /// corner quads. Tiles 0 and 4 are triangles (3 real vertices; the
+    /// 4th slot is padding [0,0,0,0]).
+    const P31M_TILE_VERTS: [[[i64; 4]; 4]; 8] = [
+        [
+            [144, -6, 0, 32],
+            [360, 3, 3, 56],
+            [216, 3, -3, 152],
+            [0, 0, 0, 0],
+        ],
+        [
+            [0, 0, 0, 0],
+            [480, 0, 0, 0],
+            [360, 3, 3, 56],
+            [144, -6, 0, 32],
+        ],
+        [
+            [480, 0, 0, 0],
+            [240, 0, 0, 240],
+            [216, 3, -3, 152],
+            [360, 3, 3, 56],
+        ],
+        [
+            [240, 0, 0, 240],
+            [0, 0, 0, 0],
+            [144, -6, 0, 32],
+            [216, 3, -3, 152],
+        ],
+        [
+            [456, -3, -3, 88],
+            [600, -3, 3, 184],
+            [384, 6, 0, 208],
+            [0, 0, 0, 0],
+        ],
+        [
+            [384, 6, 0, 208],
+            [600, -3, 3, 184],
+            [720, 0, 0, 240],
+            [240, 0, 0, 240],
+        ],
+        [
+            [600, -3, 3, 184],
+            [456, -3, -3, 88],
+            [480, 0, 0, 0],
+            [720, 0, 0, 240],
+        ],
+        [
+            [456, -3, -3, 88],
+            [384, 6, 0, 208],
+            [240, 0, 0, 240],
+            [480, 0, 0, 0],
+        ],
+    ];
+    const P31M_TILE_LEN: [usize; 8] = [3, 4, 4, 4, 3, 4, 4, 4];
+
+    /// Off-lattice translations that are NOT symmetries, ×240: (1,0),
+    /// (0,1), (1/2,0), (1/2, √3/2), (√3,0).
+    const P31M_TRANSLATION_NEGS: [[i64; 4]; 5] = [
+        [240, 0, 0, 0],
+        [0, 240, 0, 0],
+        [120, 0, 0, 0],
+        [120, 0, 0, 120],
+        [0, 0, 240, 0],
+    ];
+
+    /// Lattice membership in ×240 integer coordinates:
+    /// Λ240 = ⟨(480,0,0,0), (240,0,0,240)⟩, i.e. B = C = 0,
+    /// D ≡ 0 (mod 240), A − D ≡ 0 (mod 480).
+    fn p31m_in_lat(v: [i64; 4]) -> bool {
+        v[1] == 0
+            && v[2] == 0
+            && v[3].rem_euclid(240) == 0
+            && (v[0] - v[3]).rem_euclid(480) == 0
+    }
+
+    /// Coset reduction for ×240 points: j = ⌊D/240⌉ (div_euclid),
+    /// subtract j·a2, then i on A−240j mod 480; canonical reps have
+    /// A ∈ [0,480), D ∈ [0,240) (B, C pass through — Λ has no B, C
+    /// content).
+    fn p31m_reduce(v: [i64; 4]) -> [i64; 4] {
+        let (a, b, c, d) = (v[0], v[1], v[2], v[3]);
+        let j = d.div_euclid(240);
+        let dm = d - 240 * j;
+        let am = a - 240 * j;
+        let i = am.div_euclid(480);
+        [am - 480 * i, b, c, dm]
+    }
+
+    /// Apply g = (L, v) to a ×240 point: L is given as the integer
+    /// matrix 2L (basis images have denominator ≤ 2, so the division
+    /// is exact on the vertex set and the centre reps).
+    fn p31m_apply(l2: &[[i64; 4]; 4], v: [i64; 4], p: [i64; 4]) -> [i64; 4] {
+        let mut out = [0i64; 4];
+        for i in 0..4 {
+            let s = (0..4).map(|j| l2[i][j] * p[j]).sum::<i64>();
+            assert!(s % 2 == 0, "2L·p must be even, got {s}");
+            out[i] = s / 2 + v[i];
+        }
+        out
+    }
+
+    /// Does g = (L, v) map every cell tile onto a cell tile plus a
+    /// lattice translate — the exact symmetry criterion for the
+    /// 8-tile cell? Tiles 0 and 4 are triangles, the other six quads,
+    /// so the vertex count of the target must match before anchor
+    /// matching.
+    fn p31m_maps_cells(l2: &[[i64; 4]; 4], v: [i64; 4]) -> bool {
+        for t in 0..8 {
+            let n = P31M_TILE_LEN[t];
+            let mut gt: Vec<[i64; 4]> = (0..n)
+                .map(|k| p31m_apply(l2, v, P31M_TILE_VERTS[t][k]))
+                .collect();
+            gt.sort_unstable();
+            let mut ok = false;
+            'tiles: for u in 0..8 {
+                if P31M_TILE_LEN[u] != n {
+                    continue;
+                }
+                let mut us: Vec<[i64; 4]> =
+                    (0..n).map(|k| P31M_TILE_VERTS[u][k]).collect();
+                us.sort_unstable();
+                'anchors: for i in 0..n {
+                    for j in 0..n {
+                        let lam = [
+                            gt[i][0] - us[j][0],
+                            gt[i][1] - us[j][1],
+                            gt[i][2] - us[j][2],
+                            gt[i][3] - us[j][3],
+                        ];
+                        if !p31m_in_lat(lam) {
+                            continue;
+                        }
+                        let mut all = true;
+                        for k in 0..n {
+                            if gt[k][0] != us[k][0] + lam[0]
+                                || gt[k][1] != us[k][1] + lam[1]
+                                || gt[k][2] != us[k][2] + lam[2]
+                                || gt[k][3] != us[k][3] + lam[3]
+                            {
+                                all = false;
+                                break;
+                            }
+                        }
+                        if all {
+                            ok = true;
+                            break 'anchors;
+                        }
+                    }
+                }
+                if ok {
+                    break 'tiles;
+                }
+            }
+            if !ok {
+                return false;
+            }
+        }
+        true
+    }
+
+    /// Does the linear part normalize the lattice? (Both basis images
+    /// in Λ; finite index with |det| = 1 then gives equality.)
+    fn p31m_normalizes(l2: &[[i64; 4]; 4]) -> bool {
+        p31m_in_lat(p31m_apply(l2, [0; 4], [480, 0, 0, 0]))
+            && p31m_in_lat(p31m_apply(l2, [0; 4], [240, 0, 0, 240]))
+    }
+
+    /// The exact p31m criterion: g = (L, v) is a symmetry of the
+    /// tiling iff L normalizes Λ240 and it maps every cell tile onto a
+    /// cell tile plus a lattice translate.
+    fn p31m_is_sym(l2: &[[i64; 4]; 4], v: [i64; 4]) -> bool {
+        p31m_normalizes(l2) && p31m_maps_cells(l2, v)
+    }
+
+    /// Is centre c on one of the tiling's mirror lines? The positive
+    /// mirror cosets are exactly the zero cosets of the three grid-line
+    /// families refl0/refl60/refl120 (the probe below), whose mirror
+    /// lines all pass through the origin, so c lies on a mirror iff
+    /// c − L·c ∈ Λ for one of the three linear parts.
+    fn p31m_on_mirror(c: [i64; 4]) -> bool {
+        for l2 in [&P3_LREFL0, &P3_LREFL60, &P3_LREFL120] {
+            let d = p31m_apply(l2, [0; 4], c);
+            if p31m_in_lat([c[0] - d[0], c[1] - d[1], c[2] - d[2], c[3] - d[3]]) {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Exact p31m probe (×240 integer scheme, mirroring
+    /// `m84_verify.py`): positives are exactly the translations
+    /// (25/25 in a ±2 window) and the zero coset of rot120, rot240
+    /// and the three grid-line mirror families refl0/refl60/refl120 —
+    /// everything else negative across the full candidate census
+    /// (43 tested cosets for the five positive parts, 28 for the six
+    /// negative parts: no 60°/180°/300° rotation, so not p6 or p6m;
+    /// no 30°/90°/150° mirror family, no glides). Five off-lattice
+    /// translations are killed. The three rot120 centre orbits — grid
+    /// vertices, up-triangle centroids, down-triangle centroids —
+    /// reduce from the closed form c(i,j) ×240 =
+    /// (240i, 0, 0, 80(i+2j)), and the on-mirror incidence is
+    /// [grid vertex: on, centroids: off, off]: exactly ONE of the three
+    /// orbits on mirrors, which is p31m's fingerprint — p3m1 would put
+    /// all three on mirrors.
+    #[test]
+    fn split_triangle_grid_wallpaper_group_is_p31m() {
+        // Positive: the 25 lattice translations of the ±2 window.
+        for i in -2i64..=2 {
+            for j in -2i64..=2 {
+                assert!(
+                    p31m_is_sym(&P3_LIDENT, [480 * i + 240 * j, 0, 0, 240 * j]),
+                    "lattice translation ({i},{j}) must be a symmetry"
+                );
+            }
+        }
+        // Negative: the five off-lattice translations.
+        for v in P31M_TRANSLATION_NEGS {
+            assert!(
+                !p31m_is_sym(&P3_LIDENT, v),
+                "off-lattice {v:?} must not be a symmetry"
+            );
+        }
+
+        // Full candidate census for the 11 non-identity D6 parts:
+        // candidates = {q − L·p : p, q in the 10-vertex set}, reduced
+        // to one canonical rep per coset. Only the zero coset is
+        // positive, and only for the five p31m parts (rot120, rot240,
+        // refl0, refl60, refl120).
+        const PARTS: [(&str, &[[i64; 4]; 4], usize, bool); 11] = [
+            ("rot60", &P3_LROT60, 28, false),
+            ("rot120", &P3_LROT120, 43, true),
+            ("rot180", &P3_LROT180, 28, false),
+            ("rot240", &P3_LROT240, 43, true),
+            ("rot300", &P3_LROT300, 28, false),
+            ("refl0", &P3_LREFL0, 43, true),
+            ("refl30", &P3_LREFL30, 28, false),
+            ("refl60", &P3_LREFL60, 43, true),
+            ("refl90", &P3_LREFL90, 28, false),
+            ("refl120", &P3_LREFL120, 43, true),
+            ("refl150", &P3_LREFL150, 28, false),
+        ];
+        for (name, l2, tested, has_pos) in PARTS {
+            assert!(
+                p31m_normalizes(l2),
+                "{name}: linear part must normalize the lattice"
+            );
+            let mut cands: Vec<[i64; 4]> = Vec::new();
+            for p in P31M_VERTS {
+                let mp = p31m_apply(l2, [0; 4], p);
+                for q in P31M_VERTS {
+                    let v = p31m_reduce([
+                        q[0] - mp[0],
+                        q[1] - mp[1],
+                        q[2] - mp[2],
+                        q[3] - mp[3],
+                    ]);
+                    if !cands.contains(&v) {
+                        cands.push(v);
+                    }
+                }
+            }
+            assert_eq!(cands.len(), tested, "{name}: tested coset count");
+            let mut pos = 0;
+            for v in &cands {
+                let sym = p31m_is_sym(l2, *v);
+                if sym {
+                    pos += 1;
+                }
+                assert_eq!(
+                    sym,
+                    has_pos && *v == [0, 0, 0, 0],
+                    "{name}: candidate {v:?}"
+                );
+            }
+            assert_eq!(pos, usize::from(has_pos), "{name}: positive cosets");
+        }
+
+        // The three rot120 centre orbits mod the lattice: grid
+        // vertices, up-triangle centroids, down-triangle centroids
+        // (closed form c(i,j) ×240 = (240i, 0, 0, 80(i+2j))).
+        let mut orb: Vec<[i64; 4]> = Vec::new();
+        for i in -3i64..=3 {
+            for j in -3i64..=3 {
+                let v = p31m_reduce([240 * i, 0, 0, 80 * (i + 2 * j)]);
+                if !orb.contains(&v) {
+                    orb.push(v);
+                }
+            }
+        }
+        orb.sort_unstable();
+        let want_orb: [[i64; 4]; 3] = [[0, 0, 0, 0], [0, 0, 0, 160], [240, 0, 0, 80]];
+        assert_eq!(orb, want_orb.to_vec(), "rot120 centre orbits mod lattice");
+        // Each orbit rep c satisfies c − R120·c ∈ Λ (R120 about c is
+        // a symmetry).
+        for c in want_orb {
+            let d = p31m_apply(&P3_LROT120, [0; 4], c);
+            assert!(
+                p31m_in_lat([c[0] - d[0], c[1] - d[1], c[2] - d[2], c[3] - d[3]]),
+                "orbit rep {c:?}: c − R120·c in Λ"
+            );
+        }
+        // Incidence — the p31m/p3m1 discriminator: exactly one of the
+        // three centre orbits lies on a mirror (the grid-vertex orbit);
+        // both centroid orbits are off every mirror. In p3m1 all three
+        // orbits would be on mirrors.
+        assert!(
+            p31m_on_mirror([0, 0, 0, 0]),
+            "grid-vertex centres lie on the grid-line mirrors"
+        );
+        assert!(!p31m_on_mirror([240, 0, 0, 80]), "up-centroid centres off every mirror");
+        assert!(
+            !p31m_on_mirror([0, 0, 0, 160]),
+            "down-centroid centres off every mirror"
+        );
+
+        // Cell arithmetic ×240²: doubled area (re, im) per tile — the
+        // two inner triangles (2592, 24246), the six corner quads
+        // (−864, 30318); sum (0, 230400) = 2·det·240² (det = 2√3).
+        // Squared-edge multiset: two congruence classes — triangles
+        // (48492,1728) × 3, quads (23844,−384) × 2, (48492,1728),
+        // (230400,0).
+        let mut areas: Vec<(i64, i64)> = Vec::new();
+        let mut edges: Vec<Vec<(i64, i64)>> = Vec::new();
+        for (t, n) in P31M_TILE_VERTS.iter().zip(P31M_TILE_LEN.iter()) {
+            let mut area = (0i64, 0i64);
+            let mut es: Vec<(i64, i64)> = Vec::new();
+            for i in 0..*n {
+                let (u, w) = (t[i], t[(i + 1) % n]);
+                area.0 += u[0] * w[1] + 3 * u[2] * w[3] - w[0] * u[1] - 3 * w[2] * u[3];
+                area.1 += u[0] * w[3] + u[2] * w[1] - w[0] * u[3] - w[2] * u[1];
+                let (da, db, dc, dd) = (
+                    w[0] - u[0],
+                    w[1] - u[1],
+                    w[2] - u[2],
+                    w[3] - u[3],
+                );
+                es.push((
+                    da * da + db * db + 3 * dc * dc + 3 * dd * dd,
+                    2 * da * dc + 2 * db * dd,
+                ));
+            }
+            es.sort_unstable();
+            edges.push(es.clone());
+            areas.push(area);
+        }
+        let want_areas: [(i64, i64); 8] = [
+            (2592, 24246),
+            (-864, 30318),
+            (-864, 30318),
+            (-864, 30318),
+            (2592, 24246),
+            (-864, 30318),
+            (-864, 30318),
+            (-864, 30318),
+        ];
+        assert_eq!(areas, want_areas.to_vec(), "doubled tile areas ×240²");
+        assert_eq!(
+            areas.iter().map(|a| a.0).sum::<i64>(),
+            0,
+            "real part of doubled cell area"
+        );
+        assert_eq!(
+            areas.iter().map(|a| a.1).sum::<i64>(),
+            230_400,
+            "sum = 2·det·240² (det 2√3)"
+        );
+        let want_tri: Vec<(i64, i64)> = vec![(48492, 1728); 3];
+        let want_quad: Vec<(i64, i64)> = vec![
+            (23844, -384),
+            (23844, -384),
+            (48492, 1728),
+            (230400, 0),
+        ];
+        for (e, n) in edges.iter().zip(P31M_TILE_LEN.iter()) {
+            let want = if *n == 3 { &want_tri } else { &want_quad };
+            assert_eq!(
+                *e, *want,
+                "squared-edge multiset (two congruence classes: achiral triangles, chiral quads)"
+            );
+        }
+    }
 }
 
 /// Tests for the 2-uniform (k-uniform) `LatticeTiling` tables.
@@ -5903,7 +6340,8 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
         pentagon13,
         pentagon14, pentagon15,
         pic_3_12_12,
-        pic_3_6_3_6, pic_4_8_8, running_bond, shifted_trapezoid_courses, square,
+        pic_3_6_3_6, pic_4_8_8, running_bond, shifted_trapezoid_courses,
+        split_triangle_grid, square,
         stepped_hexominoes, triangle, trapezoid_courses, wavy_courses, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
@@ -6028,6 +6466,10 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
             (
                 "chiral-cut-honeycomb",
                 chiral_cut_honeycomb::chiral_cut_honeycomb(),
+            ),
+            (
+                "split-triangle-grid",
+                split_triangle_grid::split_triangle_grid(),
             ),
             ("pentagon-2", pentagon2::spec()),
             ("pentagon-3", pentagon3::spec()),

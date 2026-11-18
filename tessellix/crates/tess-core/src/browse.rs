@@ -161,10 +161,7 @@ pub fn section_key(tab_category: TilingCategory, card: &CardMeta) -> &'static st
 /// tab renders one card per group it does have; both UIs show the groups
 /// in this table as an explicit gap note in that tab. As roadmap tilings
 /// land, groups are removed from this table.
-pub const WALLPAPER_GROUP_GAPS: [WallpaperGroup; 2] = [
-    WallpaperGroup::P3m1,
-    WallpaperGroup::P31m,
-];
+pub const WALLPAPER_GROUP_GAPS: [WallpaperGroup; 1] = [WallpaperGroup::P3m1];
 
 /// The explicit gap note the Wallpaper tab renders above its cards:
 /// the groups in [`WALLPAPER_GROUP_GAPS`] have no registered realizer
@@ -555,11 +552,11 @@ mod tests {
     #[test]
     fn wallpaper_group_gaps_are_exactly_the_unrepresented_groups() {
         // The gap table plus the groups represented by the real registry
-        // must partition the 17 groups; the 15 represented groups are
+        // must partition the 17 groups; the 16 represented groups are
         // pinned by the tess-tilings census test, which cross-checks the
         // table against the actual declarations. Here: the table is
         // well-formed on its own.
-        assert_eq!(WALLPAPER_GROUP_GAPS.len(), 2);
+        assert_eq!(WALLPAPER_GROUP_GAPS.len(), 1);
         let mut gaps = WALLPAPER_GROUP_GAPS.to_vec();
         gaps.sort_unstable_by_key(|g| group_rank(Some(*g)));
         let n = gaps.len();

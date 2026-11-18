@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (2)   Laves (11)   Wallpaper (15)   Pentagon
+counts (`Uniform (11)   Two-Uniform (2)   Laves (11)   Wallpaper (16)   Pentagon
 Types (12)   Islamic (9)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (4)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -57,7 +57,7 @@ fragment, and `params: n` when the tiling has adjustable parameters. A
 tiling can belong to more than one tab: its primary category (its family)
 plus declared secondaries — the Wallpaper tab is one card per wallpaper
 group (the group catalog) built purely from secondaries, so it opens with an
-explicit note listing the two groups that have no registered realizer.
+explicit note naming the one group that has no registered realizer.
 In the Wallpaper tab the cards are grouped under crystal-system section
 headers (Oblique, Rectangular, Centered, Square, Hexagonal), ordered by
 lattice kind then wallpaper group; all other tabs appear in registry order.
@@ -99,7 +99,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
   computed from the window width (target card ~240 px, fully dynamic
   — no upper bound) and the cards stretch to fill. The Wallpaper tab
   (one card per wallpaper group — the group catalog) opens with an
-  explicit note listing the two groups that have no registered
+  explicit note naming the one group that has no registered
   realizer. Cards show crystal-system section headers (Wallpaper
   tab), a lazily generated preview (rasterized at default parameters
   by the shared `tess-core::raster`, same palette/proto-fallback
@@ -127,14 +127,14 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-69 built-in tilings (81 tab memberships), all discoverable in both UIs
+70 built-in tilings (82 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
-self-dual regular tilings also appear in Laves, and fifteen periodic
+self-dual regular tilings also appear in Laves, and sixteen periodic
 tilings anchor the per-group Wallpaper catalog). The ten tabs:
 **Uniform** (11), **Two-Uniform** (2), **Laves / Catalan duals** (11,
-8 primary + 3 self-dual secondaries), **Wallpaper** (15: one card per
-wallpaper group, 2 of the 17 groups still unrepresented),
+8 primary + 3 self-dual secondaries), **Wallpaper** (16: one card per
+wallpaper group, 1 of the 17 groups still unrepresented),
 **Pentagon Types** (12), **Islamic** (9), **Arrangements** (5),
 **Quasiperiodic** (8: Penrose family, Ammann–Beenker, Stampfli, shield,
 girih Darb-i Imam), **Aperiodic** (4: einstein family, pinwheel), and
@@ -182,6 +182,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `shifted-trapezoid-courses` | Shifted trapezoid courses | paver tiling: the trapezoid-course row stacked in rows of height 1 per 2×2 cell on the rectangular lattice ⟨(2,0),(0,2)⟩ (det 4), alternate rows reflected in y = 1 and shifted by (1,0): eight trapezoids, two incongruent shapes (areas 3/5 and 2/5) × mirror × row-flip; edge-to-edge (slant slope 1/5); the catalog's first pmg realizer — vertical mirror lines x ∈ ℤ, one horizontal glide family (glide 1, axes y ∈ ℤ), half-turns at (m+1/2, n) for all m, n ∈ ℤ; the (1,0) row shift kills the horizontal mirrors that would make it pmm | pmg | rectangular |
 | `wavy-courses` | Wavy courses | paver tiling: zigzag courses of height 4/3 (waves of slope ±1/3, peaks 1/3 above the valleys) per 2×2 cell on the centered-rectangular lattice ⟨(1,1),(2,0)⟩ (det 2; the x+y-even lattice, also square-metric): each column-course quadrilateral split by a diagonal seam alternating slope +1/−1 with column–course parity — four triangles, two incongruent shapes (areas 1/3 and 2/3, squared edges {4,10,18} vs {10,16,18} ×9); edge-to-edge; the catalog's first cm realizer — mirror lines x = integer (all of them), glides (2j+1−x, y+1) on the half-integer axes with glide (0,1), no half-turns, no horizontal mirrors; the lattice's square metric is a degenerate centered-rectangular realization | cm | centered |
 | `chiral-cut-honeycomb` | Chiral-cut honeycomb | paver tiling: a side-2 hexagon (area 6√3 = det Λ) cut by a chiral three-armed Y from the alternating vertices to the centre, each arm bending once (Wk = mid(Vk,O) + rotated delta, delta = (−1/8,−1/10) defined once and rotating with the arm), per hexagonal cell ⟨(2√3,0),(√3,3)⟩ (det 6√3): three tiles, one chiral congruence class (all seed 0); edge-to-edge (450 interior edges, 0 T-junctions); the catalog's first p3 realizer — 120°/240° rotations about three 3-fold centre orbits (hex centres, even corners, odd corners — the "333" fingerprint) plus translations only, no 60°/180°/300° rotations, no mirrors (M83, HX-STUDY handoff) | p3 | hexagonal |
+| `split-triangle-grid` | Split-triangle grid | paver tiling: side-2 triangular grid in which every small equilateral triangle is split by its orbit triangle (a generic Q(√3) point near a vertex, rotated 120° about the triangle's centroid) into an inner equilateral triangle + 3 corner quads, per hexagonal cell ⟨(2,0),(1,√3)⟩ (det 2√3): 8 tiles, two congruence classes (inner triangles achiral, corner quads chiral); edge-to-edge (750 interior edges, 0 T-junctions); the catalog's first p31m realizer — mirrors exactly on the grid lines (0°/60°/120° families), rot120 centres in three orbits (grid vertices, up/down-triangle centroids) with the on-mirror incidence (grid-vertex orbit on mirrors, both centroid orbits off) that separates p31m from p3m1, no 60°/180°/300° rotations, no glides (M84, HX-STUDY handoff) | p31m | hexagonal |
 | `pythagorean` | Pythagorean (two squares) | periodic two-square family (one-parameter ratio); square on the hypotenuse per cell | p4 | square |
 | `windmill` | Periodic pinwheel arrangement (p4) | Conway's periodic "spin" of the pinwheel motif: 1–2–√5 triangles around squares; homochiral, non-edge-to-edge | p4 | square |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | 2-uniform k-uniform: hexagonal tiling with one of every three hexagons dissected into six-triangle fans (Wikipedia `2-uniform n10`) | p6m | hexagonal |
@@ -510,7 +511,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 521 tests, all green, zero
+`cargo test --workspace` (currently 525 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
