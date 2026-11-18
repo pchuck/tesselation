@@ -5,7 +5,8 @@
 //!   ten category tabs + a search field, one wrapping row) over
 //!   crystal-system section headers and cards with lazily generated
 //!   previews (shared `tess_core::raster`). The Wallpaper tab opens
-//!   with a gap note for the groups with no registered realizer.
+//!   with a catalog note (since M85 all 17 groups are represented, the
+//!   note reports the completed catalog).
 //!   Clicking a card opens Render mode.
 //! * **Render** — the whole window is the canvas (drag-pan,
 //!   wheel-zoom) with a top strip (`← back`, `◀`/`▶` prev/next in the
@@ -741,8 +742,8 @@ impl GuiApp {
             return;
         }
         // The Wallpaper tab (one card per group) opens with the
-        // explicit gap note for the groups with no registered
-        // realizer — the catalog is not complete.
+        // explicit catalog note — since M85 all 17 groups are
+        // represented, the note reports the completed catalog.
         if tab.category == tess_core::TilingCategory::Wallpaper {
             ui.add(
                 egui::Label::new(egui::RichText::new(

@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (2)   Laves (11)   Wallpaper (16)   Pentagon
+counts (`Uniform (11)   Two-Uniform (2)   Laves (11)   Wallpaper (17)   Pentagon
 Types (12)   Islamic (9)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (4)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -56,8 +56,8 @@ two lines), a `group · lattice` line (wallpaper tilings), a short description
 fragment, and `params: n` when the tiling has adjustable parameters. A
 tiling can belong to more than one tab: its primary category (its family)
 plus declared secondaries — the Wallpaper tab is one card per wallpaper
-group (the group catalog) built purely from secondaries, so it opens with an
-explicit note naming the one group that has no registered realizer.
+group (the group catalog; since M85 all 17 groups are represented), so it
+opens with a catalog note reporting the completed catalog.
 In the Wallpaper tab the cards are grouped under crystal-system section
 headers (Oblique, Rectangular, Centered, Square, Hexagonal), ordered by
 lattice kind then wallpaper group; all other tabs appear in registry order.
@@ -98,10 +98,10 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
   wrapping row) sits over a responsive card grid: the column count is
   computed from the window width (target card ~240 px, fully dynamic
   — no upper bound) and the cards stretch to fill. The Wallpaper tab
-  (one card per wallpaper group — the group catalog) opens with an
-  explicit note naming the one group that has no registered
-  realizer. Cards show crystal-system section headers (Wallpaper
-  tab), a lazily generated preview (rasterized at default parameters
+  (one card per wallpaper group — the group catalog; since M85 all 17
+  groups are represented) opens with a catalog note reporting the
+  completed catalog. Cards show crystal-system section headers
+  (Wallpaper tab), a lazily generated preview (rasterized at default parameters
   by the shared `tess-core::raster`, same palette/proto-fallback
   semantics as the TUI thumbnails, cached per (id, params, size),
   generated for visible cards only), the bold name (up to two lines,
@@ -127,14 +127,15 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-70 built-in tilings (82 tab memberships), all discoverable in both UIs
+71 built-in tilings (83 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
-self-dual regular tilings also appear in Laves, and sixteen periodic
-tilings anchor the per-group Wallpaper catalog). The ten tabs:
+self-dual regular tilings also appear in Laves, and seventeen periodic
+tilings anchor the per-group Wallpaper catalog — all 17 groups). The
+ten tabs:
 **Uniform** (11), **Two-Uniform** (2), **Laves / Catalan duals** (11,
-8 primary + 3 self-dual secondaries), **Wallpaper** (16: one card per
-wallpaper group, 1 of the 17 groups still unrepresented),
+8 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
+wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (12), **Islamic** (9), **Arrangements** (5),
 **Quasiperiodic** (8: Penrose family, Ammann–Beenker, Stampfli, shield,
 girih Darb-i Imam), **Aperiodic** (4: einstein family, pinwheel), and
@@ -183,6 +184,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `wavy-courses` | Wavy courses | paver tiling: zigzag courses of height 4/3 (waves of slope ±1/3, peaks 1/3 above the valleys) per 2×2 cell on the centered-rectangular lattice ⟨(1,1),(2,0)⟩ (det 2; the x+y-even lattice, also square-metric): each column-course quadrilateral split by a diagonal seam alternating slope +1/−1 with column–course parity — four triangles, two incongruent shapes (areas 1/3 and 2/3, squared edges {4,10,18} vs {10,16,18} ×9); edge-to-edge; the catalog's first cm realizer — mirror lines x = integer (all of them), glides (2j+1−x, y+1) on the half-integer axes with glide (0,1), no half-turns, no horizontal mirrors; the lattice's square metric is a degenerate centered-rectangular realization | cm | centered |
 | `chiral-cut-honeycomb` | Chiral-cut honeycomb | paver tiling: a side-2 hexagon (area 6√3 = det Λ) cut by a chiral three-armed Y from the alternating vertices to the centre, each arm bending once (Wk = mid(Vk,O) + rotated delta, delta = (−1/8,−1/10) defined once and rotating with the arm), per hexagonal cell ⟨(2√3,0),(√3,3)⟩ (det 6√3): three tiles, one chiral congruence class (all seed 0); edge-to-edge (450 interior edges, 0 T-junctions); the catalog's first p3 realizer — 120°/240° rotations about three 3-fold centre orbits (hex centres, even corners, odd corners — the "333" fingerprint) plus translations only, no 60°/180°/300° rotations, no mirrors (M83, HX-STUDY handoff) | p3 | hexagonal |
 | `split-triangle-grid` | Split-triangle grid | paver tiling: side-2 triangular grid in which every small equilateral triangle is split by its orbit triangle (a generic Q(√3) point near a vertex, rotated 120° about the triangle's centroid) into an inner equilateral triangle + 3 corner quads, per hexagonal cell ⟨(2,0),(1,√3)⟩ (det 2√3): 8 tiles, two congruence classes (inner triangles achiral, corner quads chiral); edge-to-edge (750 interior edges, 0 T-junctions); the catalog's first p31m realizer — mirrors exactly on the grid lines (0°/60°/120° families), rot120 centres in three orbits (grid vertices, up/down-triangle centroids) with the on-mirror incidence (grid-vertex orbit on mirrors, both centroid orbits off) that separates p31m from p3m1, no 60°/180°/300° rotations, no glides (M84, HX-STUDY handoff) | p31m | hexagonal |
+| `alcove-cut-grid` | Alcove-cut grid | paver tiling: side-2 triangular grid on the index-3 sublattice in which every grid triangle is cut from its alcove point — the orbit of one generic Q(√3) junction under the edge-line mirrors of the up-triangle — to its three vertices, per hexagonal cell ⟨(3,−√3),(3,√3)⟩ (det 6√3): 18 tiles, three congruence classes (each mirror-closed, achiral as a set); edge-to-edge (1350 interior edges, 0 T-junctions); the catalog's p3m1 realizer — the *333 fingerprint (all three rot120 centre orbits on mirrors, the contrast to M84's p31m one-orbit-on-mirrors), mirrors in the 0°/60°/120° families, no 60°/180°/300° rotations, no glides; closes the last gap of the 17-group wallpaper catalog (M85, HX-STUDY handoff) | p3m1 | hexagonal |
 | `pythagorean` | Pythagorean (two squares) | periodic two-square family (one-parameter ratio); square on the hypotenuse per cell | p4 | square |
 | `windmill` | Periodic pinwheel arrangement (p4) | Conway's periodic "spin" of the pinwheel motif: 1–2–√5 triangles around squares; homochiral, non-edge-to-edge | p4 | square |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | 2-uniform k-uniform: hexagonal tiling with one of every three hexagons dissected into six-triangle fans (Wikipedia `2-uniform n10`) | p6m | hexagonal |
@@ -492,8 +494,8 @@ UIs' card grids for the oblique/rectangular/centered/square/hexagonal
 grouping). A tiling's **primary** category is its family; it may also
 declare `secondary_categories`, so a card can appear in more than one
 tab — the Wallpaper tab is one card per wallpaper group (the group
-catalog) built purely from secondaries, with the remaining unrepresented
-groups surfaced by `wallpaper_gap_note` rather than placeholder cards.
+catalog, complete since M85: all 17 groups are represented), and the
+tab's note (`wallpaper_gap_note`) reports the completed catalog.
 The model knows nothing about tiling ids or rendering — the TUI and the
 egui GUI render these tabs and cards; card previews rasterize through
 the shared `tess-core::raster` (the TUI to character cells over its
@@ -511,7 +513,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 525 tests, all green, zero
+`cargo test --workspace` (currently 529 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

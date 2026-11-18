@@ -160,16 +160,25 @@ pub fn section_key(tab_category: TilingCategory, card: &CardMeta) -> &'static st
 /// The wallpaper groups with no registered realizer (M76). The Wallpaper
 /// tab renders one card per group it does have; both UIs show the groups
 /// in this table as an explicit gap note in that tab. As roadmap tilings
-/// land, groups are removed from this table.
-pub const WALLPAPER_GROUP_GAPS: [WallpaperGroup; 1] = [WallpaperGroup::P3m1];
+/// land, groups are removed from this table — M85 (alcove-cut grid,
+/// p3m1) closed the last gap, so the table is empty and the Wallpaper
+/// tab's one-card-per-group catalog is complete: all 17 wallpaper
+/// groups are represented.
+pub const WALLPAPER_GROUP_GAPS: [WallpaperGroup; 0] = [];
 
-/// The explicit gap note the Wallpaper tab renders above its cards:
-/// the groups in [`WALLPAPER_GROUP_GAPS`] have no registered realizer
-/// yet (roadmap queue), so the tab's one-card-per-group catalog is not
-/// complete. Both UIs derive this text from the gap table.
+/// The catalog note the Wallpaper tab renders above its cards: while
+/// [`WALLPAPER_GROUP_GAPS`] is non-empty it lists the groups with no
+/// registered realizer yet (roadmap queue); since M85 the table is
+/// empty and the note reports the completed catalog instead. Both UIs
+/// derive this text from the gap table.
 pub fn wallpaper_gap_note() -> String {
-    let names: Vec<String> = WALLPAPER_GROUP_GAPS.iter().map(ToString::to_string).collect();
-    format!("no realizer registered for: {} (roadmap queue)", names.join(" · "))
+    if WALLPAPER_GROUP_GAPS.is_empty() {
+        "complete catalog: all 17 wallpaper groups have a registered realizer (M85 closed the p3m1 gap)"
+            .to_string()
+    } else {
+        let names: Vec<String> = WALLPAPER_GROUP_GAPS.iter().map(ToString::to_string).collect();
+        format!("no realizer registered for: {} (roadmap queue)", names.join(" · "))
+    }
 }
 
 /// Capture a tiling's declared metadata as card data. Symmetry facts are
@@ -552,11 +561,16 @@ mod tests {
     #[test]
     fn wallpaper_group_gaps_are_exactly_the_unrepresented_groups() {
         // The gap table plus the groups represented by the real registry
-        // must partition the 17 groups; the 16 represented groups are
+        // must partition the 17 groups; the 17 represented groups are
         // pinned by the tess-tilings census test, which cross-checks the
-        // table against the actual declarations. Here: the table is
-        // well-formed on its own.
-        assert_eq!(WALLPAPER_GROUP_GAPS.len(), 1);
+        // table against the actual declarations. M85 (alcove-cut grid)
+        // closed the last gap — p3m1 — so the table is empty and the
+        // shared note reports the completed catalog.
+        assert_eq!(
+            WALLPAPER_GROUP_GAPS.len(),
+            0,
+            "the p3m1 gap was closed in M85"
+        );
         let mut gaps = WALLPAPER_GROUP_GAPS.to_vec();
         gaps.sort_unstable_by_key(|g| group_rank(Some(*g)));
         let n = gaps.len();
@@ -568,5 +582,9 @@ mod tests {
                 "gap table lists non-wallpaper group {g}"
             );
         }
+        assert_eq!(
+            wallpaper_gap_note(),
+            "complete catalog: all 17 wallpaper groups have a registered realizer (M85 closed the p3m1 gap)"
+        );
     }
 }

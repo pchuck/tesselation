@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (70 tilings)
+## Implemented (71 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -116,17 +116,18 @@ figures at the split midpoints, `2.4.4`).
 
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (2) ·
-**Laves (Catalan duals)** (11) · **Wallpaper** (16) · **Pentagon
+**Laves (Catalan duals)** (11) · **Wallpaper** (17) · **Pentagon
 Types** (12) · **Islamic** (9) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (4) · **Nonperiodic** (4) —
-82 memberships over the 70 implemented tilings; the 12 extra are
+83 memberships over the 71 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
-M74/M77/M78/M79, was re-synced in M81, and again in M84.)
+M74/M77/M78/M79, was re-synced in M81, in M84, and again in M85.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
   `square` and `hexagon` also appear under Laves (self-dual regular
-  patterns), and sixteen tilings appear under the Wallpaper catalog.
+  patterns), and seventeen tilings appear under the Wallpaper
+  catalog.
   `browse_tabs` appends secondary categories to each card's tabs and
   sorts each tab by `section_key`, which now guards on the *tab's*
   category, not the card's (a Wallpaper tab is all-secondary).
@@ -134,20 +135,21 @@ M74/M77/M78/M79, was re-synced in M81, and again in M84.)
   egui geometry test pins the new card budget (2-line card titles,
   no clipping at 1200×900, 640×800 and 2560×900).
 - **Wallpaper catalog.** The Wallpaper tab is a group catalog, not a
-  motif list: one card per realized wallpaper group — 16 of the 17:
+  motif list: one card per realized wallpaper group — all 17:
   p1 → stepped-hexominoes, p2 → pentagon-3, p3 → chiral-cut-honeycomb,
   p31m → split-triangle-grid,
+  p3m1 → alcove-cut-grid,
   pg → glide-hexagon-strips,
   pm → trapezoid-courses, cm → wavy-courses,
   pmg → shifted-trapezoid-courses,
   pmm → kuniform-pmm, pgg → herringbone, p4 → windmill,
   p4m → truncated-square, p4g → snub-square, p6 →
   snub-trihexagonal, p6m → hexagon, cmm →
-  elongated-triangular. The one un-realized group —
-  p3m1 —
-  is named in a shared gap note
+  elongated-triangular. The catalog is complete since M85 (the
+  alcove-cut grid closed the p3m1 gap); the shared note
   (`tess_core::browse::wallpaper_gap_note`) rendered at the top of
-  the tab in both UIs; no placeholder cards. (Historic bug fixed in
+  the tab in both UIs now reports the completed catalog — no
+  placeholder cards. (Historic bug fixed in
   M76: the 17th group is **pmg**, not cmc — Cmc is a 3D space group;
   the misnamed `WallpaperGroup::Cmc` variant is now `Pmg`.)
 - **LatticeKind::CenteredRectangular.** A fifth lattice kind. The
@@ -2276,7 +2278,86 @@ documentation pending).
   legality test + the Python transcript: the exact-Fraction battery
   reproducing the handoff with zero deltas (area sum 2√3 = det,
   e2e 750/0/0, stars 186/0, coverage 4096/0/0).
-- **Status:** committed (M84). 70 tilings, 525 tests at the commit.
+ - **Status:** committed (M84). 70 tilings, 525 tests at the commit.
+
+### 35. Alcove-cut grid ✅ (M85)
+
+- **Motif:** a side-2 triangular grid on the index-3 sublattice in
+  which every grid triangle is cut from its **alcove point** — the
+  orbit of one generic `Q(√3)` junction `P0 = (8/7, 4√3/9)` under the
+  words in the reflections in the up-triangle's edge lines — to its
+  three vertices (three tiles per grid triangle). Each hexagonal cell
+  holds six grid triangles (three up, three down); under the mirror
+  arrangement below every grid triangle has trivial stabilizer, so
+  decorating one alcove extends equivariantly to the whole tiling.
+  Family: the HX-STUDY chiral grid series (the `hx_p3m1_cell.json`
+  handoff, PROPOSED §21). The catalog's first **p3m1** realizer —
+  the seventeenth represented card of the Wallpaper group catalog;
+  **M85 closes the last gap of the 17-group catalog.**
+- **Group:** **p3m1** (*333*) by structure plus exact probe:
+  translations + 120°/240° rotations + the three mirror families on
+  the grid lines (directions 0°/60°/120°), and nothing else. The
+  ×126 exact-integer probe (all 11 D6 linear parts as integer 2L
+  matrices shared with the p3 probe, 169 raw cell-vertex candidates
+  per part (13×13), deduped by the floor coset reduction) is positive
+  in exactly five cosets of the translation group — the zero cosets
+  of rot120, rot240, refl0, refl60, refl120 — and negative for
+  rot60/rot180/rot300 and the 30°/90°/150° reflection families
+  (tested counts 69 × 5 and 42 × 6); 25/25 lattice translations
+  positive, 0/5 named off-lattice negatives. The rot120 centres form
+  exactly three orbits `c(i,j) ×126 = (126(2i+j), 0, 0, 126j)`,
+  representatives (0,0), (2,0), (4,0), each with `c − R120·c ∈ Λ`.
+  **Incidence discriminator (p3m1 vs p31m):** all three centre orbits
+  lie on the mirrors (on-mirror `[true, true, true]`) — the *333
+  fingerprint; M84's p31m probe pins the contrast ([T,F,F]: exactly
+  one orbit on mirrors).
+- **Lattice & cell:** 18 tiles per **hexagonal** primitive cell,
+  basis `a1 = (3,−√3)`, `a2 = (3,√3)` (|a1| = |a2| = 2√3, 60°), det
+  `6√3` = 3 × the side-2 grid's lattice det `2√3` (index-3
+  sublattice; the cell holds six grid triangles).
+- **Edge structure:** **EDGE-TO-EDGE**: 1350 interior edge pairs in
+  the standard window, 0 unpaired, 0 bad; clipped coverage 4096 =
+  4096, 0 overlaps, 0 gaps. Squared-edge multiset per tile class
+  (×126², lex-sorted — the imaginary part is 0 on every edge):
+  class 0 `(21072,0), (30144,0), (63504,0)`; class 1
+  `(15024,0), (21072,0), (63504,0)`; class 2
+  `(15024,0), (30144,0), (63504,0)`.
+- **Vertex stars:** 245 vertex figures, all summing to 360° (0
+  bad), four types — the alcove junctions (three tiles meet:
+  `≈104.110°, ≈115.519°, ≈140.372°`) and, one type per centre orbit,
+  the grid-vertex stars (twelve tiles meet): `(0,0)` orbit
+  `≈26.037° × 6 + ≈33.963° × 6`, `(2,0)` orbit `≈18.073° × 6 +
+  ≈41.927° × 6`, `(4,0)` orbit `≈21.555° × 6 + ≈38.444° × 6`.
+- **Seeds:** `proto` = cell index `[tile0..tile17]`; three
+  congruence classes (six tiles each — the three piece shapes, each
+  realized in up- and down-triangle orientations), areas `4√3/9`,
+  `13√3/63`, `22√3/63` — `seeds [0,1,2,1,0,2,1,0,2,0,1,2,0,1,2,1,0,2]`.
+  Every tile is scalene (chiral individually), but each class is
+  mirror-closed under `y = 0` (three mirror pairs) — achiral as a set.
+- **Verify:** standard trio (coverage, rotated-scaled,
+  deterministic) + the exact p3m1 probe
+  (`alcove_cut_grid_wallpaper_group_is_p3m1`, mirroring the full
+  Python battery `m85_emit.py`: the 11-part candidate census with
+  tested counts 69 × 5 / 42 × 6, positives only at the zero coset of
+  rot120/rot240/refl0/refl60/refl120, 25/25 lattice translations,
+  0/5 off-lattice negatives, the three centre orbits with
+  `c − R120·c ∈ Λ`, the on-mirror incidence [T,T,T], and the cell
+  arithmetic: doubled areas ×126² per tile (0,14112) / (0,6552) /
+  (0,11088) by class, sum (0,190512) = 2·det·126², squared-edge
+  multiset above) + the brute-force culling cross-check + the
+  legality test + the Python transcript: the exact-Fraction battery
+  reproducing the handoff with zero deltas (area sum 6√3 = det,
+  e2e 1350/0/0, stars 245/0, coverage 4096/0/0).
+- **Completion step:** the last of the 17 wallpaper groups is now
+  represented: `WALLPAPER_GROUP_GAPS` is empty
+  (`[WallpaperGroup; 0] = []`) and the shared note
+  (`wallpaper_gap_note`), rendered at the top of the Wallpaper tab in
+  both UIs, reports the completed catalog instead of a gap ("complete
+  catalog: all 17 wallpaper groups have a registered realizer (M85
+  closed the p3m1 gap)"). No placeholder cards; the tess-core test
+  pins the empty table and the note, the TUI pins the note prefix,
+  and the tess-tilings census pins Wallpaper 17.
+- **Status:** committed (M85). 71 tilings, 529 tests at the commit.
 
 ## Proposed — vetted candidates
 
@@ -3400,3 +3481,38 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   Wallpaper tab 15 → 16, gap table 2 → 1 (p31m drops out of
   `WALLPAPER_GROUP_GAPS`; the shared gap note now names one group,
   p3m1). 70 tilings, 525 tests at the commit.
+ - 2026-11-18 — M85 Alcove-cut grid (p3m1) ✅: a side-2 triangular
+  grid on the index-3 sublattice Λ = ⟨(3,−√3),(3,√3)⟩ (det 6√3) in
+  which every grid triangle is cut from its alcove point — the orbit
+  of the generic Q(√3) junction P0 = (8/7, 4√3/9) under the
+  edge-line reflections of the up-triangle (six alcove points per
+  cell) — to its three vertices: 18 tiles per hexagonal primitive
+  cell, three congruence classes (six tiles each — the three piece
+  shapes, each realized in up- and down-triangle orientations; each
+  class mirror-closed, achiral as a set), construction transcribed
+  from the HX-STUDY handoff `hx_p3m1_cell.json` (PROPOSED §21) via
+  the scratch emitter (no hand-typed coords). The catalog's first
+  **p3m1** realizer (all 17 of the 17 groups now represented). Group
+  p3m1 by exact ×126-integer probe: the only positive cosets of the
+  11 D6 linear parts are the zero cosets of rot120, rot240, refl0,
+  refl60, refl120 (candidate census 69 × 5 / 42 × 6), rot60/180/
+  300 and the 30°/90°/150° reflection families negative, 25/25
+  lattice translations + 0/5 off-lattice, the rot120 centres form
+  exactly three orbits c(i,j) ×126 = (126(2i+j), 0, 0, 126j) (reps
+  (0,0), (2,0), (4,0); c − R120·c ∈ Λ), and the on-mirror incidence
+  is the *333 fingerprint that separates p3m1 from p31m (all three
+  centre orbits on mirrors — [true,true,true], versus M84's
+  [true,false,false]). Edge-to-edge (1350 interior edge pairs, 0
+  unpaired, 0 T-junctions; clipped coverage 4096 = 4096, 0
+  overlaps, 0 gaps). Vertex stars: 245 figures (alcove junctions
+  ≈104.110°, ≈115.519°, ≈140.372°; grid-vertex stars one type per
+  centre orbit: ≈26.037°×6+≈33.963°×6, ≈18.073°×6+≈41.927°×6,
+  ≈21.555°×6+≈38.444°×6), all summing to 360°. 4 tess-tilings tests
+  (standard trio + exact p3m1 probe mirroring m85_emit.py: the
+  11-part candidate census, five positive parts positive in the zero
+  coset only, 25/25 translations, 0/5 off-lattice, the three centre
+  orbits + incidence [T,T,T], and the cell arithmetic). Census:
+  70 → 71 tilings, 82 → 83 memberships, Wallpaper tab 16 → 17, gap
+  table 1 → 0 (`WALLPAPER_GROUP_GAPS` is now empty; the shared note
+  reports the completed catalog). 71 tilings, 529 tests at the
+  commit.

@@ -4,9 +4,9 @@
 //! * **Browse** — a category tab bar over a responsive card grid.
 //!   Wallpaper cards are grouped into crystal-system sections (oblique,
 //!   rectangular, centered, square, hexagonal) with a bold header row
-//!   above each section; the Wallpaper tab also opens with a gap note
-//!   for the groups with no registered realizer; the grid scrolls by
-//!   rows.
+//!   above each section; the Wallpaper tab also opens with a catalog
+//!   note (since M85 all 17 groups are represented, it reports the
+//!   completed catalog); the grid scrolls by rows.
 //! * **Render** — the selected tiling full-screen (one cell = one
 //!   pixel, as before) with a status bar; `←`/`→` walk prev/next tiling
 //!   in the current tab's order (the browse cursor follows, so `Esc`
@@ -63,7 +63,7 @@ enum Mode {
 }
 
 /// One row of the card grid plan: either a crystal-system section
-/// header (or the Wallpaper tab's gap note) or one row of cards
+/// header (or the Wallpaper tab's catalog note) or one row of cards
 /// (indices into the tab's card list).
 #[derive(Debug)]
 enum GridRow {
@@ -505,8 +505,9 @@ fn grid_cols_rows(area: Rect) -> (u16, u16, u16, u16) {
 /// Plan the grid rows for the visible card indices of a tab: runs of
 /// equal section key, each preceded by a header row when the key is
 /// non-empty, split into rows of `cols` cards. The Wallpaper tab
-/// opens with the explicit gap note for the groups with no registered
-/// realizer.
+/// opens with the explicit catalog note: while any wallpaper group
+/// lacked a realizer it listed them, and since M85 (all 17 groups
+/// represented) it reports the completed catalog.
 fn plan_grid_rows(tab: &Tab, visible: &[usize], cols: u16) -> Vec<GridRow> {
     let mut rows = Vec::new();
     if tab.category == TilingCategory::Wallpaper && !visible.is_empty() {
@@ -1043,11 +1044,11 @@ mod tests {
         assert_eq!(tui.tabs.len(), 10, "one tab per TilingCategory::ALL entry");
         // Multi-tab membership (M76): a tiling appears in its primary
         // tab plus every secondary tab, so the tab sizes sum to the
-        // 82 memberships of the 70 registered tilings, not to 70.
+        // 83 memberships of the 71 registered tilings, not to 71.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 82, "70 tilings carry 82 tab memberships");
+        assert_eq!(total, 83, "71 tilings carry 83 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 2, 11, 16, 12, 9, 5, 8, 4, 4]);
+        assert_eq!(counts, vec![11, 2, 11, 17, 12, 9, 5, 8, 4, 4]);
     }
 
     #[test]
@@ -1101,7 +1102,7 @@ mod tests {
             ("Uniform", 11),
             ("Two-Uniform", 2),
             ("Laves (Catalan duals)", 11),
-            ("Wallpaper", 16),
+            ("Wallpaper", 17),
             ("Pentagon Types", 12),
             ("Islamic", 9),
             ("Arrangements", 5),
@@ -1130,10 +1131,13 @@ mod tests {
             text.contains(tui.tabs[3].cards[0].name),
             "first wallpaper card name missing"
         );
-        // The gap note opens the tab (groups with no realizer).
+        // The catalog note opens the tab. Since M85 all 17 groups are
+        // represented, it reports the completed catalog; the header is
+        // a single-line row that truncates, so pin the truncation-proof
+        // prefix.
         assert!(
-            text.contains("no realizer registered for"),
-            "wallpaper gap note missing: {text}"
+            text.contains("complete catalog: all 17 wallpaper groups"),
+            "wallpaper catalog note missing: {text}"
         );
         assert!(
             count_symbol(&term, "▀") > 100,

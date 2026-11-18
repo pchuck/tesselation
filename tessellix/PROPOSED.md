@@ -979,17 +979,21 @@ confirm the diffraction claim during the spike before declaring.
 
 ---
 
-### 21. Wallpaper group completion — the 1 un-realized group (M76 roadmap queue)
+### 21. Wallpaper group completion — all 17 groups realized (M76 roadmap queue, closed in M85)
 
-- **Motif:** M76 made the Wallpaper tab a group catalog: 16 of the 17
-  wallpaper groups have a registered realizer (pg → glide-hexagon-strips,
+- **Motif:** M76 made the Wallpaper tab a group catalog: all 17
+  wallpaper groups have a registered realizer (pg →
+  glide-hexagon-strips,
   pm → trapezoid-courses, cm → wavy-courses, pmg → shifted-trapezoid-courses,
   p1 → stepped-hexominoes, p2 → pentagon-3,
-  p3 → chiral-cut-honeycomb, p31m → split-triangle-grid, pmm → kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
+  p3 → chiral-cut-honeycomb, p31m → split-triangle-grid,
+  p3m1 → alcove-cut-grid, pmm → kuniform-pmm, pgg → herringbone, p4 → windmill, p4m →
   truncated-square, p4g → snub-square, p6 → snub-trihexagonal,
-  p6m → hexagon, cmm → elongated-triangular). A
-  shared gap note (`tess_core::browse::wallpaper_gap_note`) rendered
-  at the top of the tab in both UIs names the one absent group. (The
+  p6m → hexagon, cmm → elongated-triangular). The
+  shared note (`tess_core::browse::wallpaper_gap_note`) rendered
+  at the top of the tab in both UIs now reports the completed
+  catalog — since M85 all 17 groups are represented, so there is no
+  gap to name. (The
   17th group is pmg — the old `WallpaperGroup::Cmc` variant was a 3D
   space group misnamed as a 2D group; M76 renamed it `Pmg`.)
 - **Queue (difficulty per audit §4d):** pm, pg (easy); pmg, cm
@@ -1097,8 +1101,29 @@ confirm the diffraction claim during the spike before declaring.
     staged below, via the scratch emitter (no hand-typed coords) —
     the handoff's complete exact Q(√3) battery reproduced with zero
     deltas.
-  - p3m1 (hexagonal): 3-folds + mirrors through the vertices;
-    distinguishable from p31m by where the mirrors fall.
+  - p3m1 ✅ **landed (M85)**: the catalog's first p3m1 realizer —
+    alcove-cut grid: a side-2 triangular grid on the index-3
+    sublattice Λ = ⟨(3,−√3),(3,√3)⟩ (det 6√3 = 3 × area 2√3) in
+    which every grid triangle is cut from its alcove point — the
+    orbit of the generic Q(√3) junction P0 = (8/7, 4√3/9) under the
+    edge-line reflections of the up-triangle (six alcove points per
+    cell) — to its three vertices: 18 tiles per cell, three
+    congruence classes (six tiles each, each class mirror-closed —
+    achiral as a set). Group p3m1 by exact ×126-integer probe: the
+    only positive cosets of the 11 D6 linear parts are the zero
+    coset for R120, R240 and the three grid-mirror reflection
+    families (census 69×5 / 42×6), rot60/180/300 and the three
+    remaining reflection families negative (excludes p6, p6m), 25/25
+    lattice translations, 0/5 off-lattice, rot120 centres in exactly
+    three orbits (0,0), (2,0), (4,0) — incidence census
+    [on-mirror: T, T, T]: all three centre orbits lie on the mirrors
+    — the *333 fingerprint that separates p3m1 from p31m (M84's
+    [T, F, F]: exactly one orbit on mirrors). Construction
+    transcribed from the HX-STUDY handoff `hx_p3m1_cell.json` staged
+    below, via the scratch emitter (no hand-typed coords) — the
+    handoff's complete exact Q(√3) battery reproduced with zero
+    deltas. Closes the last gap of the 17-group catalog:
+    `WALLPAPER_GROUP_GAPS` is now empty.
 - **Construction:** per the adoption checklist — Python spike first
   (exact geometry + group probe), then the standard battery + a
   group-audit probe like the M40/M41 coset probes, then registry +
@@ -1112,13 +1137,11 @@ confirm the diffraction claim during the spike before declaring.
   drops one group name per landing.
 - **Status:** p1 landed (M78), pm landed (M79), pg landed (M80),
   pmg landed (M81), cm landed (M82), p3 landed (M83), p31m landed
-  (M84); 1 remains — p3m1 (the last hexagonal group), one group
-  per milestone; each landing flips one token in
-  `wallpaper_gap_note` and the gap note is re-verified in both UIs'
-  tests. The HX-STUDY handoff for the remaining group is staged in
-  /tmp/opencode/hexgroups/ (hx_p3m1_cell.json — 18-tile cell,
-  3 classes, with the complete exact Q(√3) battery and full D6
-  probe battery PASS), feeding the port task M85 (p3m1).
+  (M84), p3m1 landed (M85) — all 17 wallpaper groups now realized,
+  one group per milestone; the un-realized queue is empty.
+  `WALLPAPER_GROUP_GAPS` is empty and the shared gap note (both UIs)
+  reports the completed catalog. The HX-STUDY handoff
+  `hx_p3m1_cell.json` has been consumed.
 
 ## Parked / rejected (with reasons)
 
