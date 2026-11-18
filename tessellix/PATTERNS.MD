@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (71 tilings)
+## Implemented (72 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -109,6 +109,7 @@ figures at the split midpoints, `2.4.4`).
 | `hat` | Hat (aperiodic monotile, "einstein") | SMKG 2023; H/T/P/F metatile substitution (29-rule patch, 22 kept), exact Eisenstein placements; inflation φ² only in the limit (iterated outlines drift by design); tiles only with its mirror image; per-view seeded lineage blobs with exact clipped-area acceptance; non-edge-to-edge (565 midpoint T-junctions at depth 3) |
 | `turtle` | Turtle ("hats in turtles", einstein family) | turtle (14 sides, area 10√3) + hat prototiles on Kaplan's exact hex lattice; 9-label 8+1 key-point substitution with per-level chirality flip; homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge; turtle:hat ratio → 4+√15 |
 | `spectre` | Spectre (chiral einstein Tile(1,1)) | single equal-edge prototile, aperiodic *without* reflections; 9-label D12 substitution (spectre.js-identical), exact Q(√3) surd geometry; edge-to-edge |
+| `taylor-socolar` | Taylor-Socolar striped hexagon (decorated-hexagon monotile) | the paper's forced 529-hexagon patch (Fig. 18 of arXiv:1008.3103) as a verbatim state table, each hexagon partitioned into 13 non-overlapping convex sub-polygons (3 stripe bands + 2 corner tips + 6 vertex wedges + 2 body halves); stripe bands realize the edge-midpoint handoff rules exactly (R1 0/2992, R2 0/2816, R3 0/2904 re-derived in tests); finite covered patch (girih precedent), no period within hex-radius 30 |
 | `hirschhorn` | Hirschhorn–Hunt pentagon (140°/60°/160°/80°/100°) | not locally forced; C6-symmetric constrained-growth realization |
 | `girih-quasiperiodic` | girih star-and-cross {10/3} (quasiperiodic) | quasiperiodic; Darb-i Imam 3-prototile substitution (Lu & Steinhardt 2007, IF = 2φ³); exact 10-fold seed rosette, edge-to-edge at every generation |
 
@@ -2361,6 +2362,79 @@ documentation pending).
   pins the empty table and the note, the TUI pins the note prefix,
   and the tess-tilings census pins Wallpaper 17.
 - **Status:** committed (M85). 71 tilings, 529 tests at the commit.
+
+### 36. Taylor–Socolar striped hexagons ✅ (M86)
+
+- **Motif:** the decorated-hexagon aperiodic monotile of Taylor &
+  Socolar (arXiv:1008.3103): one hexagon carrying three stripes, the
+  tile state `(a, rbt, sdt)` — `a ∈ Z3` stripe-axis class, `rbt` which
+  end of the polar vertex pair is red, `sdt` the stripe-offset bit —
+  placing the stripe on edge `m` at
+  `mid_m + sigma(state, m) · t0 · u_m` with
+  `sigma(state, m) = SUM[sdt][(m − a) mod 6]`,
+  `SUM[0] = (+,−,−,+,−,+)`, `SUM[1] = (+,−,+,+,−,−)`,
+  `t0/R = 0.24`, stripe width `w/R = 0.0866` (both read off the
+  paper's Figure 2 measurements; 0.24 is the endpoint the two figure
+  bands share: fig02 0.15–0.24, fig20 0.24–0.33). The shipped object
+  is the paper's **forced 529-hexagon patch** (its Figure 18): the
+  23×23 rhombus `{v ∈ [−21, 1], u ∈ [−(v+21), 22−(v+21)]}` in axial
+  coordinates, covered domain = patch (girih precedent: `generate`
+  returns exactly the tiles intersecting the query region, background
+  beyond).
+- **Provenance (AP-STUDY handoff):** the state table, the neighbour
+  table `DELTA`, the `SUM` vectors and the battery numbers are
+  machine-transcribed from the study's `ap_ts_patch.json`; the
+  partition geometry comes from the study's exact-`Q(√3)` scratch
+  generator (`m86_gen.py` → `m86_fill.py` emits every Rust coordinate
+  from the exact model — zero hand-copied numbers, float-eval checked
+  to 1e−9).
+- **Partition mandate:** each hexagon is cut into **13 convex,
+  non-overlapping pieces** — proto 1 the long stripe band (axis
+  perpendicular to `d_a` at offset `−sigma(a+2)·t0`, crossing edges
+  `a+2`/`a+5`, red), protos 4/5 the corner bands (offsets
+  `±(3/4 + t0/2)`, crossing `a`/`a+1` and `a+3`/`a+4`, red iff the
+  polar rule says so), proto 2 the 2 corner tips, proto 3 the 6
+  vertex wedges (chord cut `LW = 0.15`), proto 0 the 2 body halves
+  (notched by the four non-polar wedges). The band offsets are exact
+  in `Q(√3)` and each band passes **precisely through the two stripe
+  points it must**, so the decoration's edge-midpoint handoff /
+  line-continuation graph is preserved; piece areas sum to the
+  hexagon area `3√3/2` exactly for all six `(a, sdt)` geometry
+  classes, all 12 interior cut edges are shared by exactly two
+  pieces, and every piece is convex and CCW.
+- **Colors:** paper's corner-colour rule
+  (`k%3 = a` red iff `k = a + 3·rbt`; `k%3 = a+2` red; else blue)
+  drives the pattern seed (palette index 0 base / 1 blue / 2 red);
+  geometry depends only on `(a, sdt)`, `rbt` is colour-only.
+- **Verify (Rust, re-derived from the shipped table):** handoff
+  battery reproduces the study's JSON numbers **R1 0/2992,
+  R2 0/2816, R3 0/2904**; world stripe points of each shared edge
+  agree from both sides to 1e−12 on all 2992 incidences; the
+  whole-patch emission is exactly 529 × 13 pieces, each matched
+  signature-by-signature against the recomputed placement, every
+  hexagon's piece areas summing to `3√3/2`; no-period probe over the
+  2790 nonzero translations of hex-radius ≤ 30 finds **no period**
+  (overlap ≥ 3 sites); coverage trio inside upstream-verified
+  exactly-once windows (default `(−14, −8.68, 14, 8.68)`,
+  0.6-scaled/25°-rotated `(−9, −5.58, 9, 5.58)`); determinism; empty
+  output beyond the patch.
+- **Scope honesty:** aperiodicity of the plane tiling, the two local-
+  isomorphism classes and the limit-periodic structure are **cited,
+  not proven** (beyond the radius-30 probe on the shipped patch); the
+  inflation/deflation hierarchy is **not reproduced** (the study's
+  algebraic inflation fit aligns only 57.6% of sites, so it is not
+  even verified); "forced" is a local-rule statement — the study's
+  solver extends the patch R9→R10 with zero backtracks under R1–R3;
+  band axes follow each tile's own `a`, so a stripe bends where it
+  crosses a tile edge (the rules fix crossing *positions*, not
+  collinearity); one decoration scale, read off Fig. 2 — no scale
+  family claimed.
+- **Registration:** unconditional module + registry entry (the
+  `socolar` feature exists in Cargo.toml but is not a default feature
+  and Cargo.toml is frozen — M74-style deviation, documented in
+  `lib.rs`).
+- **Status:** landed (M86; left uncommitted for the coordinator).
+  72 tilings, 538 tests.
 
 ## Proposed — vetted candidates
 

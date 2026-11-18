@@ -124,6 +124,10 @@ pub mod pentagon13;
 pub mod pentagon14;
 #[cfg(feature = "pentagon15")]
 pub mod pentagon15;
+// Unconditional: the `socolar` feature exists in Cargo.toml but is not a
+// default feature (M86 deviation — M74-style), so the module and its
+// registration are ungated.
+pub mod taylor_socolar;
 
 /// Registry of all enabled built-in tilings.
 pub fn registry() -> tess_core::Registry {
@@ -340,6 +344,12 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(split_triangle_grid::split_triangle_grid());
         r = r.register(alcove_cut_grid::alcove_cut_grid());
     }
+    {
+        // Unconditional: the socolar feature exists in Cargo.toml
+        // but is not a default feature (M86 deviation — M74-style), so
+        // the module and its registration are ungated.
+        r = r.register(taylor_socolar::TaylorSocolarTiling);
+    }
     r
 }
 
@@ -506,7 +516,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-        // Census of today's taxonomy (M85). 71 built-ins — 63 before
+        // Census of today's taxonomy (M86). 72 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -514,8 +524,8 @@ mod tests {
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
         //   PentagonTypes 12, Islamic 9, Arrangements 5,
-        //   Quasiperiodic 8, Aperiodic 4, Nonperiodic 4.
-        // Membership census 83 = 71 primaries + 12 secondaries (3 Laves
+        //   Quasiperiodic 8, Aperiodic 5, Nonperiodic 4.
+        // Membership census 84 = 72 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -532,15 +542,16 @@ mod tests {
         // -> M83 Wallpaper 14 -> 15 (chiral-cut-honeycomb, p3)
         // -> M84 Wallpaper 15 -> 16 (split-triangle-grid, p31m)
         // -> M85 Wallpaper 16 -> 17 (alcove-cut-grid, p3m1 — the last
-        // gap; catalog complete).
+        // gap; catalog complete) -> M86 Aperiodic 4 -> 5
+        // (taylor-socolar).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 2, 11, 17, 12, 9, 5, 8, 4, 4],
+            vec![11, 2, 11, 17, 12, 9, 5, 8, 5, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 71, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 83, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 72, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 84, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely

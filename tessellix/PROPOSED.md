@@ -42,7 +42,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 14 | Hankin polygons-in-contact strapwork engine | Wallpaper | rendering/generator | XL | P2 |
 | 15 | Random/statistical tilings (Truchet et al.) | — | needs determinism policy | M each | P2 |
 | 16 | Hyperbolic {p,q} tilings | new category | geometry-core arc | XL | P2 |
-| 17 | Socolar–Taylor monotile (half-hex hierarchy) | Aperiodic | substitution + stripes | L–XL | P2 |
+| 17 | Socolar–Taylor monotile ✅ DONE (M86, decorated-hexagon port of the forced 529-site patch; half-hex substitution hierarchy not reproduced) | Aperiodic | substitution + stripes | L–XL | P2 |
 | 18 | n-fold rhomb family (7-fold GS/Harriss, CAST) | Quasiperiodic | degree-3 arithmetic | L+ | P2 |
 | 19 | Second measured ornamental panel | Wallpaper | M35 pipeline | M–L | P2 |
 | 20 | Fractalizing k-uniform (2+√3 dodecagon) | Quasiperiodic | substitution on uniform basis | M | P2 |
@@ -927,6 +927,14 @@ confirm the diffraction claim during the spike before declaring.
   patches are substitution-legal, which is the honest scope; say so
   in the module docs (repo precedent: substitution + seed aperiodicity,
   matching rules not enforced). Park behind the stripe layer.
+- **Status:** landed (M86) — as a **decorated-hexagon data-table
+  port**, not via the substitution hierarchy: `taylor-socolar`
+  (`taylor_socolar.rs`) ships the paper's forced 529-hexagon patch
+  (Fig. 18), each hexagon partitioned into 13 decorated sub-polygons
+  realizing the edge-midpoint stripe handoff rules exactly (AP-STUDY
+  handoff; details in PATTERNS §36). The half-hex pseudo-inflation
+  generator remains unimplemented, and the plane-tiling
+  aperiodicity / limit-periodic hierarchy stays cited, not proven.
 
 ### 18. n-fold rhomb substitution family (7-fold; CAST framework)
 
