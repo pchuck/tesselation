@@ -1,6 +1,14 @@
 //! Chiral-cut honeycomb (M83) — the first **p3** wallpaper-group
 //! realizer in the catalog, expressed as a [`LatticeTiling`] data table.
 //!
+//! At a glance this reads as the rhombille tiling (hexagons cut into
+//! three by a 3-arm star); it is deliberately a *perturbed* rhombille:
+//! straight centre cuts would realize p6m (the existing `rhombille`
+//! entry), so each cut is bent by ±2.83° at a single bend point. The
+//! bend breaks every reflection while preserving the 120° rotations —
+//! that is the entire difference between this tiling and rhombille,
+//! and the source of the slight unevenness of the cut lines.
+//!
 //! # The pattern
 //!
 //! Start with a regular hexagon of circumradius 2 (side 2, area `6√3`)

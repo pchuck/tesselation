@@ -2155,8 +2155,11 @@ documentation pending).
   V4: each arm V_i → W_i runs from the vertex toward the centre
   but stops at W_i, where W_i = mid(V_i, O) + delta with
   delta = (−1/8, −1/10) ROTATED by 120° with each arm — and the
-  three inner seams W_i → O close the Y. The Y cuts the hexagon
-  into 3 congruent hexagonal tiles [O, W0, V0, V1, V2, W2],
+  three inner seams W_i → O close the Y. Read as a near-rhombille:
+  with straight cuts this would be the p6m `rhombille` entry; the
+  ±2.83° bend at each W_i breaks every mirror and realizes p3
+  instead — the cut lines' slight unevenness is the design. The
+  Y cuts the hexagon into 3 congruent hexagonal tiles [O, W0, V0, V1, V2, W2],
   [O, W2, V2, V3, V4, W4], [O, W4, V4, V5, V0, W0]: ONE chiral
   congruence class, with tile1 = R120(tile0) and tile2 =
   R240(tile0) EXACTLY (no translate). The delta is what breaks
