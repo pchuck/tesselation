@@ -200,7 +200,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `penrose` | Penrose (P3) | quasiperiodic, 5-fold local symmetry | — | — |
 | `penrose-p1` | Penrose P1 (pentagon, star, boat, diamond) | quasiperiodic 4-prototile φ²-deflation with short-edge merges across parent boundaries; 5-fold local symmetry | — | — |
 | `penrose_p2` | Penrose (P2) | quasiperiodic kite-dart tiling by half-tile substitution; local 5-fold symmetry | — | — |
-| `penrose-pentagon` | Penrose Pentagon (5-tile φ-substitution) | quasiperiodic five-pentagon substitution tiling; 5-fold local symmetry | — | — |
+| `penrose-pentagon` | Penrose Pentagon (5-tile φ-substitution) | quasiperiodic five-pentagon substitution tiling; 5-fold local symmetry; non-edge-to-edge (φ-substitution split points at t = 1/φ on parent edges) | — | — |
 | `ammann-beenker` | Ammann-Beenker (A5) | quasiperiodic square+45°-rhombus by substitution; local 8-fold symmetry | — | — |
 | `stampfli` | Stampfli (12-fold) | quasiperiodic square+triangle+30°-rhombus by substitution (inflation 2+√3); exact dodecagonal seed star, local 12-fold symmetry | — | — |
 | `shield` | Gähler shield (12-fold) | quasiperiodic shield-hexagon+square+triangle substitution (Gähler; inflation √(2+√3), kinked supertiles, 4 protos / 8 labelled kinds); dodecagonal frame, Bragg 12-fold, no local 30° center | — | — |
