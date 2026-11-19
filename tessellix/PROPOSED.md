@@ -984,7 +984,21 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   falsified, diagonal mirror families x∓y=k with on- and
   off-mirror 2-folds, 0 unexpected outcomes on a 10-element
   radius-4 window battery. Substrate deviations are documented in
-  the module headers. See PATTERNS.MD §54.
+  the module headers. See PATTERNS.MD §54. A sixth configuration
+  landed in M100 — `hankin-3-6-3-6` on the trihexagonal 3.6.3.6
+  substrate (θK = 60°, δ = 0): a regular {6/2} hexagram per
+  hexagon (12-gon core with 60° tips and 240° notches plus six
+  60°-lozenge rhombi, 7 faces) with the two equilateral triangle
+  tiles unpaired (0 pairs) — 9 faces per lattice cell
+  ⟨(2,0),(1,√3)⟩; p6m verified on a ±5-lattice window (517-face
+  interior disk, all 12 D6 elements, 0 mismatches at 1e-6).
+  θK = 60° chosen over 30°/45° (no star: core tips 120°/90°),
+  67.5° (sharper variant, probed), and 90° (star collapse).
+  Distinct from `pic-3-6-3-6` (same substrate, different
+  construction — greedy inference vs. reflection chords).
+  Deviations (no 40-dps Python prototype; machine-emitted
+  expectations) documented in the module header. See PATTERNS.MD
+  §57.
 
 ### 15. Random/statistical tilings (blocked on a determinism policy)
 
@@ -1512,6 +1526,19 @@ that already exists twice.
 
 ## Changelog of this file
 
+- 2026-11-19 — M100: candidate #14 gained a sixth landed inference
+  configuration — `hankin-3-6-3-6` on the trihexagonal 3.6.3.6
+  substrate (θK = 60°, δ = 0, p6m): the classical regular {6/2}
+  hexagram per hexagon — 12-gon core with 60° tips / 240° notches
+  plus six 60°-lozenge rhombi (7 faces); the two equilateral
+  triangle tiles pair with nothing (0 pairs) and stay single-face;
+  9 faces per lattice cell ⟨(2,0),(1,√3)⟩, det 2√3; p6m verified
+  on a ±5-lattice window (517-face interior disk, 12 D6 elements,
+  0 key mismatches at 1e-6). 6 new tests (1 engine self-
+  consistency + 5 registry). Census: 94 → 95 tilings, 106 → 107
+  memberships, Islamic 17 → 18, 662 → 668 tests (landed on main
+  after the najm landing; the fork's step numbers were on its own
+  base). Landed-note added to candidate #14.
 - 2026-11-19 — M99: candidate #14 gained two more landed inference
   configurations — `hankin-3-12-12` (3.12.12 substrate, θK = 45°,
   δ = 0, p6m; the shining twelve-pointed khatam, first hankin entry

@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (94 tilings)
+## Implemented (95 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -140,16 +140,16 @@ figures at the split midpoints, `2.4.4`).
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (11) ·
 **Laves (Catalan duals)** (15) · **Wallpaper** (17) · **Pentagon
-Types** (12) · **Islamic** (14) · **Arrangements** (5) ·
+Types** (12) · **Islamic** (15) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (6) · **Nonperiodic** (4) —
-103 memberships over the 91 implemented tilings; the 12 extra are
+104 memberships over the 92 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
 M74/M77/M78/M79, was re-synced in M81, in M84, in M85, with the
 M87/M88/M89 two-uniform batch, in M90–M92, in M93, with the M94
-Hankin batch, in M98, in M99 (hankin-3-12-12), and in M99 again
-(hankin-square-two-point); M99 then adds the rosette-transform
-tiling — live totals 92 tilings / 104 memberships, Islamic 15 —
-without re-syncing the counts in this block.)
+Hankin batch, in M98, in M99 (hankin-3-12-12), in M99 again
+(hankin-square-two-point), and in M100 (hankin-3-6-3-6) — live
+totals 95 tilings / 107 memberships, Islamic 18 — without
+re-syncing the counts in this block.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
@@ -3463,6 +3463,67 @@ documentation pending).
   [4,4]/[6,3] instances; hole decomposition is per-entry (22a/22c
   consume substrates), spherical/hyperbolic instances belong to 22f.
 
+### 57. Hankin sixfold hexagram (3.6.3.6) ✅ (M100)
+
+- **Motif:** the sixth configuration of the M94 inference engine
+  (`hankin::build_cells`, feature `hankin_ext`) — the first on the
+  trihexagonal 3.6.3.6 substrate (unit flat-top hexagons plus two
+  equilateral triangles per cell, lattice ⟨(2,0),(1,√3)⟩, det 2√3).
+  Single-point contacts (δ = 0), contact angle θK = 60° (θe = 30°):
+  rays from each hexagon edge midpoint lean in at 60° to the edge,
+  greedy min-cost pairing (Kaplan §3.4), planar arrangement against
+  the tile boundary.
+- **Angle choice (θK ∈ {30°, 45°, 60°, 67.5°, 90°} probed):** the
+  hexagon tile pairs completely at every probed angle (12 rays, 6
+  pairs); the two equilateral triangle tiles pair with nothing (6
+  rays, 0 pairs — their contact rays never cross for θK < 90°), so
+  their motif stays the original single-face triangle. Measured
+  minimum interior angle of the hexagon's central core face: θK =
+  30° → 120.0° (a plain hexagon core — no star); θK = 45° → 90.0°
+  (truncated-hexagon 12-gon — no star); **θK = 60° → 60.0° (the
+  classical regular {6/2} hexagram: a 12-gon core with 60° tips and
+  240° notches, vertices alternating on circles of radius 1/2 and
+  √3/2, numerically verified)**; θK = 67.5° → 45.0° (a sharper star
+  variant — probed, not registered); θK = 90° is degenerate (the
+  star core collapses; the hexagon splits into 6 quadrilaterals
+  plus a central equilateral triangle — rejected). 60° is chosen:
+  the largest minimum interior angle among the star candidates (no
+  razor-thin slivers) and the regular hexagram. Per the §22a star
+  heuristic (s = 2 when n > 6 and θ > 2π/n), n = 6 is not a
+  formal star-trigger polygon: the hexagon star first appears at the
+  critical angle 60° = 2π/6, whose regular {6/2} endpoint is this
+  configuration.
+- **Cell structure:** 9 faces per lattice cell — 6 lozenge rhombi
+  plus the 12-gon hexagram core from the hexagon class (7 faces,
+  seed 0), one unpaired triangle face each from classes 1 and 2.
+  Per-class face / ray / pair censuses {7,1,1} / {12,6,6} /
+  {6,0,0}; per-class completeness {true,false,false} — the
+  whole-cell report is therefore not "complete" and the engine test
+  asserts per-class completeness instead.
+- **Rust:** `hankin_3_6_3_6()` in `hankin_3_6_3_6.rs`, registered
+  after `hankin_square_two_point`. Honest deviation: no 40-dps
+  Python prototype for this substrate — the template tiles and the
+  EXPECTED_* constants were machine-emitted from the Rust engine
+  itself, so the engine battery is a self-consistency pin, not an
+  independent cross-check (documented in the module header).
+  Distinct from `pic-3-6-3-6`: same 3.6.3.6 substrate, different
+  construction (greedy inference vs. the δ = 60° reflection-chord
+  strapwork rule) and a different partition. 6 new tests (1 engine
+  self-consistency: face equivalence against the emitted arrays at
+  1e-9 + per-class ray/pair censuses + the θe/θK conjugacy pin; 5
+  registry: covers_region / rotated_scaled / deterministic /
+  unit_structure (9 cells, seed layout {0×6, 1, 2×2}, det = 2√3,
+  Σ areas = det at 1e-9) / symmetry_metadata).
+- **Symmetry:** p6m verified position-aware — the ±5-lattice window
+  (1089 faces) with the radius-8 interior disk (517 faces) is
+  invariant under all 12 D6 elements (rot k·60° + M_0 mirrors), 0
+  key mismatches at 1e-6 quantization. (The ±4 window with R = 6 or
+  8 shows 1–2 mirror mismatches — a boundary artifact; ±4 with
+  R ∈ {4,5} is clean, 127/199 faces.)
+- **Census:** 91 → 92 tilings, 103 → 104 memberships (Islamic 14 →
+  15), 638 → 644 tests.
+- **Status:** landed (M100). Full bar green.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -5069,3 +5130,32 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   landing; the fork's step numbers were on its own base). Full bar
   green on main: cargo check + clippy (both target sets) zero
   warnings, cargo test --workspace --all-features 662/662.
+- 2026-11-19 — M100 Hankin sixfold hexagram (3.6.3.6) ✅ (§57): the
+  sixth configuration of the M94 inference engine — `hankin-3-6-3-6`
+  (θK = 60°, δ = 0) on the trihexagonal 3.6.3.6 substrate: a
+  regular {6/2} hexagram per hexagon (12-gon core with 60° tips
+  and 240° notches, vertices alternating on circles of radius 1/2
+  and √3/2, numerically verified; plus six 60°-lozenge rhombi —
+  7 faces); the two equilateral triangle tiles pair with nothing
+  (6 rays, 0 pairs) and stay single-face — 9 faces per lattice
+  cell ⟨(2,0),(1,√3)⟩, det 2√3 exact in Q(√3). θK = 60° chosen
+  over 30°/45° (no star: core tips 120°/90°), 67.5° (sharper star
+  variant, probed), and 90° (degenerate: the star core collapses,
+  hexagon splits into 6 quads + central triangle); largest minimum
+  interior angle (60°) among the star candidates, no slivers. The
+  §22a star heuristic does not formally fire at n = 6 (n > 6
+  required); the hexagon star first appears at the critical angle
+  60° = 2π/6, whose regular endpoint is this configuration. No
+  40-dps Python prototype: expected-face constants machine-emitted
+  from the Rust engine (self-consistency pin — documented in the
+  module header). p6m verified on a ±5-lattice window (1089 faces;
+  radius-8 interior disk = 517 faces; all 12 D6 elements; 0 key
+  mismatches at 1e-6 quantization). Distinct from
+  `pic-3-6-3-6` — same substrate, different construction (greedy
+  inference vs. δ = 60° reflection-chord strapwork). 6 new tests
+  (1 engine self-consistency + 5 registry). Census: 94 → 95
+  tilings, 106 → 107 memberships, Islamic 17 → 18, 662 → 668
+  tests (landed on main after the najm landing; the fork's step
+  numbers were on its own base). Full bar green: cargo check +
+  clippy (both target sets) zero warnings, cargo test
+  --workspace --all-features 668/668. Details in §57.
