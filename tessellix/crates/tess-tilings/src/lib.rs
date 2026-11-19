@@ -42,6 +42,8 @@ pub mod hankin_4_6_12;
 pub mod hankin_hex;
 #[cfg(feature = "hankin_ext")]
 pub mod hankin_3_12_12;
+#[cfg(feature = "hankin_ext")]
+pub mod hankin_square_two_point;
 #[cfg(feature = "girih_qc")]
 pub mod girih_qc;
 #[cfg(feature = "girih_sc")]
@@ -326,6 +328,7 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(hankin_4_6_12::hankin_4_6_12());
         r = r.register(hankin_hex::hankin_hex_two_point());
         r = r.register(hankin_3_12_12::hankin_3_12_12());
+        r = r.register(hankin_square_two_point::hankin_square_two_point());
     }
     #[cfg(feature = "khatam_girih")]
     {
@@ -557,7 +560,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M99). 90 built-ins — 63 before
+// Census of today's taxonomy (M99). 91 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -565,9 +568,9 @@ mod tests {
         //   + 4 machine-dualized k-uniform duals (M98) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
-//   PentagonTypes 12, Islamic 13, Arrangements 5,
+//   PentagonTypes 12, Islamic 14, Arrangements 5,
 //   Quasiperiodic 8, Aperiodic 6, Nonperiodic 4.
-// Membership census 102 = 90 primaries + 12 secondaries (3 Laves
+// Membership census 103 = 91 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -603,15 +606,18 @@ mod tests {
         // -> M99 Islamic 12 -> 13 (hankin-3-12-12, the first hankin
         // inference entry on the truncated hexagonal 3.12.12
         // substrate; θK = 45° chosen over 30°/60° — the shining
-        // twelve-pointed star, PATTERNS.MD §53).
+        // twelve-pointed star, PATTERNS.MD §53)
+        // -> M99 Islamic 13 -> 14 (hankin-square-two-point, the
+        // two-point hankin entry on the square 4.4.4.4 substrate;
+        // θK = 45°, δ = 0.5, cmm, PATTERNS.MD §54).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 11, 15, 17, 12, 13, 5, 8, 6, 4],
+            vec![11, 11, 15, 17, 12, 14, 5, 8, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 90, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 102, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 91, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 103, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -9460,6 +9466,7 @@ mod hankin_engine_tests {
     use super::hankin_4_6_12;
     use super::hankin_4_8_8;
     use super::hankin_hex;
+    use super::hankin_square_two_point;
     use tess_core::geometry::Vec2;
 
     fn v2(x: f64, y: f64) -> Vec2 {
@@ -9612,6 +9619,30 @@ mod hankin_engine_tests {
     }
 
     #[test]
+    fn engine_matches_emission_square_two_point() {
+        // M99: no 40-dps Python prototype for this substrate — the
+        // expectations were emitted from the Rust engine itself, so
+        // this test pins the self-consistency of that emission.
+        let (cells, report) = hankin::build_cells(
+            &hankin_square_two_point::tiles(),
+            hankin_square_two_point::THETA_E_DEG,
+            hankin_square_two_point::DELTA,
+        );
+        assert!(report.complete);
+        let r0 = &report.per_tile[0];
+        assert_eq!((r0.rays, r0.pairs, r0.faces), (8, 4, 7));
+        assert!((r0.area_sum - r0.tile_area).abs() < 1e-9);
+        assert_faces_match(
+            &cells.iter().map(|c| c.poly.pts.clone()).collect::<Vec<_>>(),
+            &expected_faces(
+                hankin_square_two_point::EXPECTED_0_VERTS,
+                hankin_square_two_point::EXPECTED_0_LENS,
+            ),
+            "hankin-square-two-point",
+        );
+    }
+
+    #[test]
     fn theta_parameters_are_conjugate() {
         // Engine angle θe = 90° − Kaplan contact angle θK, for every
         // shipped configuration (the constants were emitted separately,
@@ -9620,6 +9651,7 @@ mod hankin_engine_tests {
         assert!((hankin_4_6_12::THETA_E_DEG - (90.0 - hankin_4_6_12::THETA_K_DEG)).abs() < 1e-12);
         assert!((hankin_hex::THETA_E_DEG - (90.0 - hankin_hex::THETA_K_DEG)).abs() < 1e-12);
         assert!((hankin_3_12_12::THETA_E_DEG - (90.0 - hankin_3_12_12::THETA_K_DEG)).abs() < 1e-12);
+        assert!((hankin_square_two_point::THETA_E_DEG - (90.0 - hankin_square_two_point::THETA_K_DEG)).abs() < 1e-12);
     }
 }
 
@@ -9888,6 +9920,73 @@ mod hankin_3_12_12_tests {
         assert_eq!(t.id, "hankin-3-12-12");
         assert_eq!(t.group, WallpaperGroup::P6m);
         assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
+        assert_eq!(t.category, TilingCategory::Islamic);
+        assert_eq!(t.secondary, &[]);
+    }
+}
+
+/// M99 hankin-square-two-point tests: registry-level invariants
+/// (cell census, seed orbits, area identity, symmetry metadata,
+/// coverage).
+#[cfg(all(test, feature = "hankin_ext"))]
+mod hankin_square_two_point_tests {
+    use super::hankin_square_two_point::hankin_square_two_point;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    #[test]
+    fn hankin_square_two_point_covers_region() {
+        check_covers(
+            &hankin_square_two_point(),
+            "hankin-square-two-point",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_square_two_point_rotated_scaled() {
+        check_rotated(
+            &hankin_square_two_point(),
+            "hankin-square-two-point(rot20,scale0.6)",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn hankin_square_two_point_deterministic() {
+        check_det(
+            &hankin_square_two_point(),
+            "hankin-square-two-point",
+            BBox::new(Vec2::new(-12.0, -9.0), Vec2::new(12.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_square_two_point_unit_structure() {
+        let t = hankin_square_two_point();
+        assert_eq!(t.cells.len(), 7, "4 + 2 + 1 faces per lattice cell");
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(
+            seeds,
+            crate::hankin_square_two_point::EXPECTED_SEEDS.to_vec(),
+            "seed layout"
+        );
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        assert!((det - 1.0).abs() < 1e-9, "unit square lattice det");
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-9, "Σ areas {sum} vs det {det}");
+    }
+
+    #[test]
+    fn hankin_square_two_point_symmetry_metadata() {
+        let t = hankin_square_two_point();
+        assert_eq!(t.id, "hankin-square-two-point");
+        assert_eq!(t.group, WallpaperGroup::Cmm);
+        assert_eq!(t.lattice_kind, LatticeKind::CenteredRectangular);
         assert_eq!(t.category, TilingCategory::Islamic);
         assert_eq!(t.secondary, &[]);
     }

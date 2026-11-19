@@ -975,7 +975,16 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   the shining twelve-pointed khatam (24-gon star core + 12 petals
   per dodecagon). θK = 45° chosen over 30°/60° (flat / spiky
   limits) for the mid-"shine" twelve-pointed star; p6m verified
-  on a ±4-lattice window, D6-exact. See PATTERNS.MD §53.
+  on a ±4-lattice window, D6-exact. See PATTERNS.MD §53. A fifth
+  configuration landed in the same milestone —
+  `hankin-square-two-point` (θK = 45°, δ = 0.5 two-point) on the
+  square 4.4.4.4 substrate: a decagonal star per unit square
+  (four corner triangles, two pentagonal petals, one 10-gon core,
+  7 faces); cmm (2*22) verified — the p4m 4-fold hypothesis
+  falsified, diagonal mirror families x∓y=k with on- and
+  off-mirror 2-folds, 0 unexpected outcomes on a 10-element
+  radius-4 window battery. Substrate deviations are documented in
+  the module headers. See PATTERNS.MD §54.
 
 ### 15. Random/statistical tilings (blocked on a determinism policy)
 
@@ -1482,11 +1491,14 @@ that already exists twice.
 
 ## Changelog of this file
 
-- 2026-11-19 — M99: candidate #14 gained a fourth landed inference
-  configuration — `hankin-3-12-12` (3.12.12 substrate, θK = 45°,
+- 2026-11-19 — M99: candidate #14 gained two more landed inference
+  configurations — `hankin-3-12-12` (3.12.12 substrate, θK = 45°,
   δ = 0, p6m; the shining twelve-pointed khatam, first hankin entry
-  on the truncated hexagonal substrate). Landed-note added to
-  candidate #14.
+  on the truncated hexagonal substrate) and
+  `hankin-square-two-point` (square 4.4.4.4 substrate, θK = 45°,
+  δ = 0.5 two-point, cmm; a decagonal star per unit square — four
+  corner triangles, two pentagonal petals, one 10-gon core).
+  Landed-note added to candidate #14.
 - 2026-11-19 — §22: Islamic star-pattern extensions extracted from
   Kaplan's dissertation (reference/kaplan_diss_full_print.pdf,
   Ch. 3, pp. 45–115; full text in scratch kaplan_full.txt). Eight

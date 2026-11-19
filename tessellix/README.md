@@ -49,7 +49,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 **Browse mode** — the tab bar lists the ten display categories with card
 counts (`Uniform (11)   Two-Uniform (11)   Laves (15)   Wallpaper (17)   Pentagon
-Types (12)   Islamic (13)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (6)
+Types (12)   Islamic (14)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (6)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
@@ -127,7 +127,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-90 built-in tilings (102 tab memberships), all discoverable in both UIs
+91 built-in tilings (103 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -136,7 +136,7 @@ ten tabs:
 **Uniform** (11), **Two-Uniform** (10), **Laves / Catalan duals** (15,
 12 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
-**Pentagon Types** (12), **Islamic** (13), **Arrangements** (5),
+**Pentagon Types** (12), **Islamic** (14), **Arrangements** (5),
 **Quasiperiodic** (8: Penrose family, Ammann–Beenker, Stampfli, shield,
 girih Darb-i Imam), **Aperiodic** (6: einstein family, pinwheel, Taylor-Socolar,
 Jeandel-Rao 11-tile Wang tiles), and
@@ -178,6 +178,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `hankin-4-6-12` | Hankin inference twelvefold | Hankin motif inference on the 4.6.12 substrate (θK = 60°, δ = 0): 12-petal dodecagon rosette (13 faces), 4-pointed stars in the three squares (5 each), 6-petal hexagon rosettes (7 each) — 42 faces per cell ⟨s(1,0), s(1/2,√3/2)⟩ with s = 3+√3 (det 9+6√3), exact Q(√3) (M94) | p6m | hexagonal |
 | `hankin-hex-two-point` | Hankin two-point weave | Hankin two-point motif inference on the unit hexagon (θK = 45°, split δ = 0.5 — rays leave edge split points and cross): 12 interlaced bracket-and-diamond faces around a central dodecagon per cell ⟨(3/2,√3/2),(0,√3)⟩ (det 3√3/2); Kaplan Fig 3.6 row 1 col c (M94) | p6m | hexagonal |
 | `hankin-3-12-12` | Hankin twelvefold khatam (3.12.12) | Hankin greedy-inference motif on the truncated hexagonal (3.12.12) substrate (θK = 45°, δ = 0): dodecagon twelve-pointed star — 24-gon core + 12 petals (13 faces) — triangle 4-pointed stars with hexagon tips (4 each), 21 faces per cell ⟨(3/2+√3, 1+√3/2), (0, 2+√3)⟩ (det 6+7√3/2), exact Q(√3); θK = 45° chosen over 30°/60° (flat / spiky limits) for the shining star (90° tips, 150° notches); p6m verified on a ±4-lattice window, D6-exact (M99) | p6m | hexagonal |
+| `hankin-square-two-point` | Hankin two-point square weave (4.4.4.4) | Hankin two-point motif inference on the unit square (4.4.4.4) substrate (θK = 45°, split δ = 0.5 — rays leave edge split points and cross): a decagonal star per cell — four corner triangles, two pentagonal petals, one 10-gon core — 7 faces per unit cell ⟨(1,0),(0,1)⟩ (det 1); cmm (2*22) — diagonal mirror families x∓y=k with 2-folds on-mirror at vertices/cell-centers and off-mirror at edge midpoints, no 4-folds (M99) | cmm | centered |
 | `khatam-girih` | Khatam girih decomposition (8-point) | classical kissing {8/3} star-and-cross cut into 8 rhombi + square + 4 pentagons per cell (exact Q(√2) kitab) | p4m | square |
 | `basketweave` | Basketweave (2:1 dominoes) | paver bond: 2×2 blocks of two parallel 2:1 dominoes, checkerboard orientation; long sides split into unit edges | p4g | square |
 | `herringbone` | Herringbone (2:1 dominoes) | paver bond: chiral L-pairs of 2:1 dominoes, single-direction; long sides split into unit edges | pgg | rectangular |
@@ -567,7 +568,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 632 tests, all green, zero
+`cargo test --workspace` (currently 638 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

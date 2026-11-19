@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (90 tilings)
+## Implemented (91 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -132,13 +132,14 @@ figures at the split midpoints, `2.4.4`).
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (11) ·
 **Laves (Catalan duals)** (15) · **Wallpaper** (17) · **Pentagon
-Types** (12) · **Islamic** (13) · **Arrangements** (5) ·
+Types** (12) · **Islamic** (14) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (6) · **Nonperiodic** (4) —
-102 memberships over the 90 implemented tilings; the 12 extra are
+103 memberships over the 91 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
 M74/M77/M78/M79, was re-synced in M81, in M84, in M85, with the
 M87/M88/M89 two-uniform batch, in M90–M92, in M93, with the M94
-Hankin batch, in M98, and in M99.)
+Hankin batch, in M98, in M99 (hankin-3-12-12), and in M99 again
+(hankin-square-two-point).)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
@@ -3275,6 +3276,56 @@ documentation pending).
   13), 626 → 632 tests.
 - **Status:** landed (M99). Full bar green.
 
+### 54. Hankin two-point square weave (4.4.4.4) ✅ (M99)
+
+- **Motif:** the fifth configuration of the M94 inference engine
+  (`hankin::build_cells`, feature `hankin_ext`) — the two-point
+  (`δ = 0.5`) variant on the square 4.4.4.4 substrate. Contact angle
+  θK = 45° (θe = 45°, symmetric like the two-point hex entry), two-point
+  truncation δ = 0.5 edge lengths: from each edge's split pair of
+  points the rays lean in at 45° to the edge and cross, greedy
+  min-cost pairing (Kaplan §3.4), planar arrangement against the tile
+  boundary, bounded faces = the partition.
+- **Angle choice (θK ∈ {30°, 45°, 60°} probed):** all three pair
+  completely on the square (8 rays, 4 pairs per tile). θK = 30° is the
+  flat limiting case — the seed-2 core (an 8-gon) closes at 90° tips
+  with quad petals; θK = 60° is spiky — 60° tips, nine faces per tile.
+  θK = 45° gives the classical decagonal star: a 10-gon core with 90°
+  tips plus two pentagonal petals and four corner triangles — the
+  mid-"shine" range, symmetric θK = θE. Measured on the emitted
+  cells: seed-2 core minimum interior angle 90.0° at θK = 45°
+  (90.0° at θK = 30°, 60.0° at θK = 60°).
+- **Cell structure:** per cell ⟨(1,0),(0,1)⟩ (unit square, det 1,
+  area 1) four corner triangles (seed 0), two pentagonal petals
+  (seed 1), one 10-gon star core (seed 2) — 7 cells, 3 seed orbits
+  {0: 4 triangles, 1: two pentagons, 2: one 10-gon core}.
+- **Rust:** `hankin_square_two_point()` in
+  `hankin_square_two_point.rs`, registered after `hankin_3_12_12`.
+  Honest deviations: (a) no 40-dps Python prototype for this
+  substrate, so the template tile and the EXPECTED_* constants were
+  machine-emitted from the Rust engine itself — the engine battery is
+  a self-consistency pin, not an independent cross-check (documented
+  in the module header); (b) this substrate is defined by
+  `square::spec` (the Uniform family), not the Archimedean substrate
+  family in `archimedean.rs`. 6 new tests (1 engine: face
+  equivalence against the emitted arrays at 1e-9 + per-class
+  ray/pair censuses + the θe/θK conjugacy pin; 5 registry:
+  covers_region / rotated_scaled / deterministic / unit_structure
+  (7 cells, seed layout, det = 1, Σ areas = det at 1e-9) /
+  symmetry_metadata).
+- **Symmetry:** cmm (2*22) verified position-aware — the 4-fold
+  hypothesis (p4m) is falsified: 4-fold probes at the corner, edge
+  midpoint, and cell-center orbits all fail, and the axis-parallel
+  mirrors do not hold. The two diagonal mirror families (lines
+  x − y = k and x + y = k, k ∈ ℤ) each pass on two instances; 2-fold
+  points verified on-mirror at (0,0) and (0.5,0.5) (the family
+  intersections) and off-mirror at (0.5,0) and (0,0.5) (edge
+  midpoints). 10-element battery on radius-4 invariant disks,
+  0 unexpected outcomes, 1e-6 quantization.
+- **Census:** 90 → 91 tilings, 102 → 103 memberships (Islamic 13 →
+  14), 632 → 638 tests.
+- **Status:** landed (M99). Full bar green.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -4814,3 +4865,27 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   Islamic 12 → 13, 626 → 632 tests (landed on main). Full bar
   green: cargo check + clippy (both target sets) zero warnings,
   cargo test --workspace --all-features 632/632. Details in §53.
+- 2026-11-19 — M99 Hankin two-point square weave (4.4.4.4) ✅ (§54):
+  a fifth configuration of the M94 inference engine —
+  `hankin-square-two-point` (θK = 45°, δ = 0.5 two-point) on the
+  square 4.4.4.4 substrate: a decagonal star per unit square — four
+  corner triangles, two pentagonal petals, one 10-gon core — 7
+  cells, 3 seed orbits, per cell ⟨(1,0),(0,1)⟩ det 1. All three of
+  θK ∈ {30°, 45°, 60°} pair completely (8 rays, 4 pairs); 45°
+  chosen as the mid-"shine" choice (10-gon core, 90° tips; 30°
+  flat 8-gon limit, 60° spiky 60° tips), symmetric θK = θE. Two
+  honest deviations: no 40-dps Python prototype (expected-face
+  constants machine-emitted from the Rust engine, self-consistency
+  pin — documented in the module header) and the substrate is
+  `square::spec` (Uniform), not the Archimedean family. cmm (2*22)
+  verified: the p4m 4-fold hypothesis is falsified (4-fold probes
+  at corner / edge-midpoint / cell-center all fail, axis-parallel
+  mirrors fail); the two diagonal mirror families x∓y=k pass on two
+  instances each, 2-folds on-mirror at (0,0),(0.5,0.5) and
+  off-mirror at (0.5,0),(0,0.5); 10-element battery on radius-4
+  invariant disks, 0 unexpected outcomes, 1e-6 quantization. 6 new
+  tests (1 engine self-consistency + 5 registry). Census: 90 → 91
+  tilings, 102 → 103 memberships, Islamic 13 → 14, 632 → 638 tests
+  (landed on main). Full bar green: cargo check + clippy (both
+  target sets) zero warnings, cargo test --workspace --all-features
+  638/638. Details in §54.
