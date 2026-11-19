@@ -46,7 +46,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 18 | n-fold rhomb family (7-fold GS/Harriss, CAST) | Quasiperiodic | degree-3 arithmetic | L+ | P2 |
 | 19 | Second measured ornamental panel | Wallpaper | M35 pipeline | M–L | P2 |
 | 20 | Fractalizing k-uniform (2+√3 dodecagon) | Quasiperiodic | substitution on uniform basis | M | P2 |
-| 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements; 22b Najm template-tiling generator; 22c rosette transform; 22d parquet deformations; 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite; 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
+| 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements; 22b Najm template-tiling generator; 22c rosette transform ✅(M99); 22d parquet deformations; 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite; 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
 
 \* golden-bee tilings are nonperiodic and (canonical form) quasiperiodic;
 confirm the diffraction claim during the spike before declaring.
@@ -1360,6 +1360,18 @@ can be adopted independently through the standard checklist.
   centers, e.g. 4.8.8 rosettes) remain unformalized in the literature
   — candidate heuristics here or in 22i.
   - **Effort** M, **tier** P1.
+  - **Status update (M99): landed.** The transform module
+    `rosette_transform.rs` (hankin_ext) implements the §3.8 bridge
+    (both r′ forms; per-tile rules: regular n-gons → inner n-gon +
+    trapezoid spokes, irregular tiles → perpendicular-bisector faces
+    with cluster-averaged intersections), and the first registry
+    instance `hankin-4-8-8-rosette-transform` (4.8.8, θK = θE = 45°,
+    δ = 0) ships: 93-tile transformed table (16 triangles, 36 quads,
+    32 pentagons, 8 hexagons, one 16-gon per cell), edge-to-edge,
+    area census |det|, cell table p4m-exact to 6.5e-16 (PATTERNS.MD
+    §55). Remaining: 11/13-pointed-star angle-mismatch instances
+    (need 22b/22e substrates) and Bonner's off-center contact
+    adjustments (unformalized).
 - **22d. Islamic parquet deformations** — diss. §3.4.1. θ becomes a
   *function of position*: run the M94 inference along a strip of a
   substrate tiling with θ = θ(x) varying smoothly; the result is a

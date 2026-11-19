@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (91 tilings)
+## Implemented (92 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -62,6 +62,12 @@ every dual is the face-centroid dual of an exact primal table.
 | `pic-4-8-8` | Hankin PIC fourfold khatam (median) | p4m | polygons-in-contact strapwork on the 4.8.8 substrate at δ = 45°: rays run edge-midpoint to edge-midpoint ({8/2} two-square octagram per octagon, midpoint chords per square), face-to-face partition into octagon + small square + 4 house pentagons + 8 star tips, 14 faces per A·Z² cell (A = 1+√2), exact Q(√2) with all vertices (p+q√2)/4; un-interlaced, mirrors and glide probe verified (M53) |
 | `pic-3-6-3-6` | Hankin PIC sixfold khatam | p6m | polygons-in-contact strapwork on the trihexagonal 3.6.3.6 substrate at δ = 60°: rays run edge-midpoint to edge-midpoint ({6/2} hexagram per hexagon, midsegments per triangle), face-to-face partition — the wall network *is* a half-scale 3.6.3.6 — into 4 hexagram-core hexagons + 6 hexagram tips + 2 midsegment triangles, 12 faces per ⟨(2,0),(1,√3)⟩ cell, Σ = 2√3 = |det| exact over Q(√3) with all vertices on the (p+q√3)/4 grid; un-interlaced, rot60/rot120/rot180 + five mirrors probe verified (M54) |
 | `pic-3-12-12` | Hankin PIC twelvefold khatam | p6m | polygons-in-contact strapwork on the truncated-hexagonal 3.12.12 substrate at δ = 60°: the tangent-chord theorem closes a midpoint ray onto another midpoint only at δ = 180°·k/n, so δ = 60° is the single angle that closes both polygons — 12 chords `M_i→M_{i+4}` per dodecagon (the {12/4} rosette, four overlaid triangles) plus the triangle midsegments; face-to-face partition into 45 faces per ⟨(3/2+√3, 1+√3/2),(0,2+√3)⟩ cell in six orbits (1 rosette-core dodecagon + 6 vertex pentagons + 12 band quads + 2 medial triangles + 12 inner quads + 12 star notches), Σ = 6 + 7√3/2 = |det| exact over Q(√3) with all vertices on the (p+q√3)/24 grid and corners only 30–150°; un-interlaced, rot60/rot120/rot180 + three mirrors probe verified and 7 negative probes pin the group to p6m (M56) |
+| `hankin-4-8-8-rosette` | Hankin inference fourfold rosette | p4m | M94 inference on 4.8.8 (θK = 67.5°, δ = 0): 8-petal rosette + core octagon per octagon, 4-pointed star + core diamond per diamond; exact Q(√2) (§44 config A) |
+| `hankin-4-6-12` | Hankin inference twelvefold | p6m | M94 inference on 4.6.12 (θK = 60°, δ = 0): 12-petal dodecagon rosette, 4-pointed stars in the squares, 6-petal hexagon rosettes; exact Q(√3) (§44 config B) |
+| `hankin-hex-two-point` | Hankin two-point weave | p6m | M94 two-point inference on the unit hexagon (θK = 45°, δ = 0.5): 12 bracket-and-diamond faces around a central dodecagon; Kaplan Fig 3.6 (§44 config C) |
+| `hankin-3-12-12` | Hankin twelvefold khatam (3.12.12) | p6m | M99 inference on 3.12.12 (θK = 45°, δ = 0): 24-gon star core + 12 petals per dodecagon, 4-pointed stars + hexagon tips per triangle orbit; exact Q(√3) (§53) |
+| `hankin-square-two-point` | Hankin two-point square weave (4.4.4.4) | cmm | M99 two-point inference on the unit square (θK = 45°, δ = 0.5): decagonal star per tile — 4 corner triangles + 2 pentagons + 10-gon core (§54) |
+| `hankin-4-8-8-rosette-transform` | Hankin rosette-transform khatam | p4m | Kaplan rosette transform (diss. §3.8) on the 4.8.8 substrate at θK = 45°, δ = 0: each octagon → concentric inner octagon (r′ = r·cos(π/8)/(1+sin(π/8)), rotated π/8, spokes = half the inner side) + 8 pentagons; each square → 4 half-squares of side 1/2 (all four bisectors pass through the centre — Kaplan's cluster heuristic fires: 4 of the 6 bisector-pair intersections, one cluster) — 93-tile transformed table per ⟨(1+√2,0),(0,1+√2)⟩ cell (16 triangles, 36 quads, 32 pentagons, 8 hexagons, one 16-gon), edge-to-edge (0 unpaired, 0 T-junctions, w = 4), area census |det| = 3+2√2, exact Q(√2); then M94 inference at θE = 45°; transformed table p4m-exact to 6.5e-16 (M99) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `pythagorean` | two squares (Pythagorean) | p4 | one-parameter ratio r = b/a; each cell is the square on the hypotenuse dissected into the leg squares; T-junctions inherent; the plain p4m square grid at r = 1 |
 | `windmill` | 1–2–√5 triangles around squares ("windmill") | p4 | periodic pinwheel arrangement; homochiral (no mirrors/glides); non-edge-to-edge T-junctions; naming waiver 2026-11-12 (M43) |
@@ -139,7 +145,9 @@ secondary memberships. (Counts at this commit; the block pre-dated
 M74/M77/M78/M79, was re-synced in M81, in M84, in M85, with the
 M87/M88/M89 two-uniform batch, in M90–M92, in M93, with the M94
 Hankin batch, in M98, in M99 (hankin-3-12-12), and in M99 again
-(hankin-square-two-point).)
+(hankin-square-two-point); M99 then adds the rosette-transform
+tiling — live totals 92 tilings / 104 memberships, Islamic 15 —
+without re-syncing the counts in this block.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
@@ -3326,6 +3334,59 @@ documentation pending).
   14), 632 → 638 tests.
 - **Status:** landed (M99). Full bar green.
 
+### 55. Hankin rosette-transform khatam (4.8.8, θK = 45°) ✅ (M99)
+
+- **Motif:** first registry landing of roadmap §22. The Kaplan
+  rosette transform (diss. §3.8, PROPOSED.md §22c) is a
+  tiling-to-tiling operation — a Najm tiling becomes the
+  corresponding Hankin tiling — and ships as the standalone module
+  `rosette_transform.rs` (`hankin_ext`) that maps a substrate cell
+  table (+lattice) to a transformed cell table without touching the
+  M94 inference engine: regular n-gons (n ≥ 5, radius r) become an
+  inner n-gon rotated π/n with radius r′ = r·cos(π/n)/(1+sin(π/n)) —
+  algebraically identical to
+  r′ = r(cos(π/n) − sin(π/n)tan(π(n−2)/4n)) — plus n trapezoid
+  spokes, each exactly half the inner side length; irregular tiles
+  (n ≤ 4) become perpendicular-bisector faces, their intersections
+  clustered (Kaplan's cluster-averaging heuristic) when several
+  bisector pairs coincide at one point.
+- **Construction:** on the 4.8.8 substrate at θK = 45°, δ = 0 the
+  octagon maps to inner octagon + 8 pentagons and each square
+  (n = 4 < 5) to 4 half-squares of side 1/2 — the square's four
+  bisectors all pass through its centre, only the 4 non-parallel of
+  the 6 bisector pairs intersect, and all 4 intersections coincide,
+  so the cluster heuristic fires (intersections = 4, clusters = 1).
+  The transformed table has 93 tiles per ⟨(1+√2,0),(0,1+√2)⟩ cell —
+  census 16 triangles, 36 quads, 32 pentagons, 8 hexagons, one
+  16-gon (seed orbits: 8 octagon-derived groups of [4,4,4,5,5,5,5,6],
+  8 inner-octagon quads + one 16-gon, 4 square-derived [3,3,3,3,4]
+  groups) — and is edge-to-edge (0 interior unpaired edges, 0
+  T-junctions at w = 4) with per-tile area closing to |det| = 3+2√2.
+  θ = 45° chosen over 30° (`build_cells` incomplete: unpaired rays)
+  and 60° (the pentagon rings collapse into a square star-web); 45°
+  preserves the 32 pentagons and reads closest to Kaplan Fig 3.33(d).
+  The M94 inference then runs on the transformed table unchanged
+  (θE = 45°, δ = 0).
+- **Verification:** 13 new tests — both r′ forms agree ≤ 1e-12 for
+  n = 5…12 (identical in f64 at n = 5, 8, 12; anchors at r = 1:
+  0.5095254494944288, 0.6681786379192989, 0.7673269879789604 for
+  n = 5, 8, 12) with spoke = half inner side to machine precision;
+  octagon → inner octagon + 8 pentagons; square → 4 half-squares
+  with all 9 map points used; area census |det|; edge-to-edge at
+  w = 4; fine-grid exactly-once (dual.rs house pattern);
+  covers/rotated_scaled/deterministic at the house regions; per-cell
+  EXPECTED_SEEDS/EXPECTED_LENS transcription machine-verified against
+  the 17-digit dump; and the transformed cell table is p4m-exact to
+  6.497e-16 (all 7 point-group elements about (A/2, A/2) with 9
+  lattice translations; assert ≤ 1e-9).
+- **Census:** 91 → 92 tilings, 103 → 104 memberships, Islamic 14 →
+  15, tab bar `[11,11,15,17,12,15,5,8,6,4]`, suite 638 → 651 tests
+  (landed on main after the two config-level M99 hankin entries; the
+  fork's own step numbers were 89→90/101→102/626→639 on its base).
+- **Status:** landed (M99) — transform module + first tiling; the
+  11/13-pointed-star angle-mismatch instances ride on 22b/22e
+  substrates, and 22d's θ(x) strips stay a rendering feature.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -3366,12 +3427,16 @@ the "mixed floret/cairo/prismatic" patterns.
   absolute-trig case equations (monotone binary search), bowtie
   hole-fillers. A parameterized substrate family replacing
   hand-coded templates (Euclidean [4,4]/[6,3] first).
-- 🔭 **22c Rosette transform** — Najm tiling → Hankin tiling
-  (inner n-gon radius r′ = r(cos(π/n) − sin(π/n)tan(π(n−2)/4n))
-  rotated π/n, spokes to edge midpoints; irregular tiles via
-  perpendicular-bisector inference + cluster averaging). The bridge
-  behind Bonner's same-design-two-tilings observation, and the only
-  route to angle-mismatch designs like 11/13-pointed stars.
+- ✅ **22c Rosette transform (M99).** *Landed: `rosette_transform.rs`
+  (hankin_ext) implements the diss. §3.8 bridge — inner n-gon radius
+  r′ = r(cos(π/n) − sin(π/n)tan(π(n−2)/4n)) rotated π/n, spokes to edge
+  midpoints; irregular tiles via perpendicular-bisector inference +
+  cluster averaging — and the first registry instance
+  `hankin-4-8-8-rosette-transform` (4.8.8, θK = θE = 45°, δ = 0):
+  93-tile transformed table, edge-to-edge, p4m-exact to 6.5e-16;
+  §55. The 11/13-pointed-star angle-mismatch applications
+  ride on 22b/22e substrates; Bonner's off-center contact adjustments
+  remain unformalized.*
 - 🔭 **22d Islamic parquet deformations** — θ as a smooth function
   of position (θ(x) strips); spatial-animation star patterns on the
   M94 engine (an export/render feature, not a registry entry).
@@ -3505,6 +3570,14 @@ the "mixed floret/cairo/prismatic" patterns.
 
 ## Changelog of this file
 
+- 2026-11-19 — M99: rosette transform (Kaplan diss. §3.8) lands as the
+  first registry entry of the §22 arc — `rosette_transform.rs`
+  (hankin_ext) + `hankin-4-8-8-rosette-transform` (4.8.8 substrate,
+  θK = θE = 45°, δ = 0): 93-tile transformed table (16 triangles, 36
+  quads, 32 pentagons, 8 hexagons, one 16-gon per cell), edge-to-edge,
+  area census |det|, p4m-exact to 6.5e-16; queue item 22c marked
+  landed, §55; 91 → 92 tilings, 103 → 104 memberships,
+  Islamic 14 → 15, 651 tests.
 - 2026-11-19 — new proposed-queue group "Islamic star-pattern
   extensions (Kaplan dissertation Ch. 3)": eight sub-items 22a–22h
   extracted from reference/kaplan_diss_full_print.pdf §3.4–3.11

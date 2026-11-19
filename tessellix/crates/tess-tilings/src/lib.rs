@@ -39,11 +39,15 @@ pub mod hankin_4_8_8;
 #[cfg(feature = "hankin_ext")]
 pub mod hankin_4_6_12;
 #[cfg(feature = "hankin_ext")]
+pub mod hankin_4_8_8_rosette_transform;
+#[cfg(feature = "hankin_ext")]
 pub mod hankin_hex;
 #[cfg(feature = "hankin_ext")]
 pub mod hankin_3_12_12;
 #[cfg(feature = "hankin_ext")]
 pub mod hankin_square_two_point;
+#[cfg(feature = "hankin_ext")]
+pub mod rosette_transform;
 #[cfg(feature = "girih_qc")]
 pub mod girih_qc;
 #[cfg(feature = "girih_sc")]
@@ -327,8 +331,9 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(hankin_4_8_8::hankin_4_8_8_rosette());
         r = r.register(hankin_4_6_12::hankin_4_6_12());
         r = r.register(hankin_hex::hankin_hex_two_point());
-        r = r.register(hankin_3_12_12::hankin_3_12_12());
+r = r.register(hankin_3_12_12::hankin_3_12_12());
         r = r.register(hankin_square_two_point::hankin_square_two_point());
+        r = r.register(hankin_4_8_8_rosette_transform::hankin_4_8_8_rosette_transform());
     }
     #[cfg(feature = "khatam_girih")]
     {
@@ -560,7 +565,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M99). 91 built-ins — 63 before
+// Census of today's taxonomy (M99). 92 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -568,9 +573,9 @@ mod tests {
         //   + 4 machine-dualized k-uniform duals (M98) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
-//   PentagonTypes 12, Islamic 14, Arrangements 5,
+//   PentagonTypes 12, Islamic 15, Arrangements 5,
 //   Quasiperiodic 8, Aperiodic 6, Nonperiodic 4.
-// Membership census 103 = 91 primaries + 12 secondaries (3 Laves
+// Membership census 104 = 92 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -603,21 +608,20 @@ mod tests {
         // -> M95 TwoUniform 10 -> 11 (kuniform-n19; the frontier
         // solve corrected the group to p6m — mirrors pass torus-exact,
         // e = 3 under D6, matching the wiki's (t=3, e=3) exactly)
-        // -> M99 Islamic 12 -> 13 (hankin-3-12-12, the first hankin
-        // inference entry on the truncated hexagonal 3.12.12
-        // substrate; θK = 45° chosen over 30°/60° — the shining
-        // twelve-pointed star, PATTERNS.MD §53)
-        // -> M99 Islamic 13 -> 14 (hankin-square-two-point, the
+// -> M99 Islamic 13 -> 14 (hankin-square-two-point, the
         // two-point hankin entry on the square 4.4.4.4 substrate;
         // θK = 45°, δ = 0.5, cmm, PATTERNS.MD §54).
+        // -> M99 Islamic 14 -> 15 (hankin-4-8-8-rosette-transform,
+        // the rosette transform of the 4.8.8 substrate at θK = 45°,
+        // PATTERNS.MD §55).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 11, 15, 17, 12, 14, 5, 8, 6, 4],
+            vec![11, 11, 15, 17, 12, 15, 5, 8, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 91, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 103, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 92, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 104, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -9465,6 +9469,7 @@ mod hankin_engine_tests {
     use super::hankin_3_12_12;
     use super::hankin_4_6_12;
     use super::hankin_4_8_8;
+    use super::hankin_4_8_8_rosette_transform;
     use super::hankin_hex;
     use super::hankin_square_two_point;
     use tess_core::geometry::Vec2;
@@ -9650,8 +9655,12 @@ mod hankin_engine_tests {
         assert!((hankin_4_8_8::THETA_E_DEG - (90.0 - hankin_4_8_8::THETA_K_DEG)).abs() < 1e-12);
         assert!((hankin_4_6_12::THETA_E_DEG - (90.0 - hankin_4_6_12::THETA_K_DEG)).abs() < 1e-12);
         assert!((hankin_hex::THETA_E_DEG - (90.0 - hankin_hex::THETA_K_DEG)).abs() < 1e-12);
-        assert!((hankin_3_12_12::THETA_E_DEG - (90.0 - hankin_3_12_12::THETA_K_DEG)).abs() < 1e-12);
+assert!((hankin_3_12_12::THETA_E_DEG - (90.0 - hankin_3_12_12::THETA_K_DEG)).abs() < 1e-12);
         assert!((hankin_square_two_point::THETA_E_DEG - (90.0 - hankin_square_two_point::THETA_K_DEG)).abs() < 1e-12);
+        assert!((hankin_4_8_8_rosette_transform::THETA_E_DEG
+            - (90.0 - hankin_4_8_8_rosette_transform::THETA_K_DEG))
+            .abs()
+            < 1e-12);
     }
 }
 
@@ -17409,6 +17418,684 @@ mod pentagon6_tests {
         assert!(
             (tr - v2(2.0, s)).length() < 1e-12,
             "t = (2, √3), got {tr:?}"
+        );
+    }
+}
+
+// ---------------------------------------------------------------------
+// M99: rosette transform (Kaplan dissertation §3.8) — the r′ formula,
+// the two per-tile rules on the 4.8.8 substrate shapes, and the
+// edge-to-edge / exactly-once invariants of the transformed table
+// (the dual.rs house patterns, applied to the pre-inference template).
+// ---------------------------------------------------------------------
+#[cfg(all(test, feature = "hankin_ext"))]
+mod rosette_transform_tests {
+    use super::hankin_4_8_8_rosette_transform::{transformed_cells, LATTICE, TILE_0, TILE_1};
+    use super::rosette_transform::{self, Rule};
+    use crate::lattice::{similarity_map, LatticeTiling, SeedPattern, SIMILARITY_PARAMS};
+    use std::collections::HashMap;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::ParamSet;
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+    use tess_core::tiling::{Query, Tiling};
+    use tess_core::view::ColorMode;
+    use tess_core::TilingCategory;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    /// Absolute shoelace area (house pattern, as in `dual::signed_area`).
+    fn area(pts: &[Vec2]) -> f64 {
+        let mut s = 0.0;
+        for i in 0..pts.len() {
+            let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
+            s += a.x * b.y - b.x * a.y;
+        }
+        s.abs() / 2.0
+    }
+
+    /// Test-view lattice tiling of the transformed table: the edge
+    /// census and exactly-once checks run through the Tiling trait.
+    fn transformed_table() -> LatticeTiling {
+        let (cells, _rep) = transformed_cells();
+        LatticeTiling {
+            id: "rosette-transformed-4-8-8",
+            name: "rosette-transformed 4.8.8 (test view)",
+            description: "test view of the M99 transformed substrate",
+            lattice: LATTICE,
+            cells,
+            offset: Vec2::ZERO,
+            group: WallpaperGroup::P4m,
+            lattice_kind: LatticeKind::Square,
+            category: TilingCategory::Islamic,
+            secondary: &[],
+            seed_pattern: SeedPattern::Uniform,
+            params: &SIMILARITY_PARAMS,
+            make_map: similarity_map,
+            color_mode: ColorMode::Pattern,
+        }
+    }
+
+    #[test]
+    fn inner_radius_forms_agree_and_spoke_is_half_side() {
+        // The two algebraic forms of the dissertation radius agree to
+        // machine precision, and the spoke = half inner side identity
+        // (the Rule-1 defining property) holds for the whole range.
+        for n in 5usize..=12 {
+            let a = rosette_transform::inner_radius(n, 1.0);
+            let b = rosette_transform::inner_radius_closed(n, 1.0);
+            assert!(
+                (a - b).abs() <= 1e-12,
+                "n={n}: dissertation form {a} vs closed form {b}"
+            );
+            let pi_n = std::f64::consts::PI / n as f64;
+            let spoke = pi_n.cos() - a; // apothem (r=1) minus r′
+            let half_side = a * pi_n.sin(); // s′/2 = r′·sin(π/n)
+            assert!(
+                (spoke - half_side).abs() <= 1e-12,
+                "n={n}: spoke {spoke} vs half inner side {half_side}"
+            );
+        }
+        // Anchor values (r = 1) at the ends of the range.
+        assert!(
+            (rosette_transform::inner_radius(5, 1.0) - 0.5095254494944288).abs() < 1e-12,
+            "n=5 anchor"
+        );
+        assert!(
+            (rosette_transform::inner_radius(12, 1.0) - 0.7673269879789604).abs() < 1e-12,
+            "n=12 anchor"
+        );
+    }
+
+    #[test]
+    fn octagon_maps_to_inner_octagon_and_8_pentagons() {
+        let (faces, rep) = rosette_transform::transform_tile(&TILE_0);
+        assert_eq!(rep.rule, Rule::RegularPolygon);
+        assert_eq!(rep.n, 8);
+        assert_eq!(faces.len(), 9, "inner octagon + 8 corner pentagons");
+        let n5 = faces.iter().filter(|f| f.len() == 5).count();
+        let n8 = faces.iter().filter(|f| f.len() == 8).count();
+        assert_eq!((n5, n8), (8, 1), "face census");
+        let sum: f64 = faces.iter().map(|f| area(f)).sum();
+        assert!(
+            (sum - rep.tile_area).abs() < 1e-9,
+            "area closure {sum} vs {}",
+            rep.tile_area
+        );
+        // Pentagon side multiset: two spokes (s′/2), two half outer
+        // edges (the substrate octagon has edge 1 → ½), one inner edge
+        // (s′) — all derived from the dissertation formula.
+        let mut acc = Vec2::ZERO;
+        for p in TILE_0 {
+            acc += p;
+        }
+        let c = acc / 8.0;
+        let r = (TILE_0[0] - c).length();
+        let pi8 = std::f64::consts::PI / 8.0;
+        let rp = rosette_transform::inner_radius(8, r);
+        let half_side = rp * pi8.sin(); // s′/2
+        let s_prime = 2.0 * half_side;
+        let mut want = [half_side, half_side, 0.5, 0.5, s_prime];
+        want.sort_by(f64::total_cmp);
+        for f in faces.iter().filter(|f| f.len() == 5) {
+            let mut got: Vec<f64> = (0..5)
+                .map(|k| (f[(k + 1) % 5] - f[k]).length())
+                .collect();
+            got.sort_by(f64::total_cmp);
+            for (g, w) in got.iter().zip(want.iter()) {
+                assert!((g - w).abs() < 1e-9, "pentagon side {g} vs {w}");
+            }
+        }
+        // The inner face is the regular octagon of circumradius r′,
+        // concentric with the substrate octagon.
+        let inner = faces.iter().find(|f| f.len() == 8).unwrap();
+        for &p in inner {
+            assert!(
+                ((p - c).length() - rp).abs() < 1e-9,
+                "inner octagon vertex off radius: |{p} − c| vs r′"
+            );
+        }
+    }
+
+    #[test]
+    fn square_maps_to_4_half_squares_centre_clustered() {
+        // The n = 4 substrate tile falls to the bisector rule: the six
+        // pairwise bisector intersections collapse to a single cluster
+        // (all four meeting at the centre) and the map is four small
+        // squares of side 1/2.
+        let (faces, rep) = rosette_transform::transform_tile(&TILE_1);
+        assert_eq!(rep.rule, Rule::Bisectors);
+        assert_eq!(rep.n, 4);
+        assert_eq!(faces.len(), 4, "four small squares");
+        assert_eq!(
+            rep.intersections,
+            4,
+            "4 of the 6 bisector pairs meet inside (opposite-side pairs are parallel)"
+        );
+        assert_eq!(rep.clusters, 1, "all 4 intersections cluster at the centre");
+        assert!(rep.clustered, "Kaplan averaging heuristic must fire");
+        let sum: f64 = faces.iter().map(|f| area(f)).sum();
+        assert!(
+            (sum - rep.tile_area).abs() < 1e-9,
+            "area closure {sum} vs {}",
+            rep.tile_area
+        );
+        // The only geometric points in the map: the centre, the 4
+        // corners, and the 4 edge midpoints — every face vertex must
+        // come from that set, and every point of the set must be used.
+        let mut pts9: Vec<Vec2> = vec![Vec2::ZERO];
+        for i in 0..4 {
+            pts9.push(TILE_1[i]);
+            pts9.push((TILE_1[i] + TILE_1[(i + 1) % 4]) / 2.0);
+        }
+        let mut used9 = [false; 9];
+        for f in &faces {
+            assert_eq!(f.len(), 4, "each face is a quadrilateral");
+            for k in 0..4 {
+                let e1 = f[(k + 1) % 4] - f[k];
+                assert!((e1.length() - 0.5).abs() < 1e-9, "small square side");
+                let e2 = f[(k + 2) % 4] - f[(k + 1) % 4];
+                assert!(e1.dot(e2).abs() < 1e-9, "small square right angle");
+            }
+            for &p in f {
+                let idx = pts9
+                    .iter()
+                    .position(|q| (*q - p).length() < 1e-9)
+                    .unwrap_or_else(|| panic!("face vertex {p} not in the 9-point set"));
+                used9[idx] = true;
+            }
+        }
+        assert!(
+            used9.iter().all(|&u| u),
+            "every point of the 9-point set is a face vertex"
+        );
+    }
+
+    #[test]
+    fn transformed_488_area_census() {
+        let (cells, rep) = transformed_cells();
+        assert_eq!(cells.len(), 13, "1 oct + 8 pent + 4 sq per lattice cell");
+        assert_eq!(rep.per_tile.len(), 2, "one report per substrate tile");
+        for t in &rep.per_tile {
+            assert!((t.area_sum - t.tile_area).abs() < 1e-9, "per-tile closure");
+        }
+        let a = 1.0 + core::f64::consts::SQRT_2;
+        assert!((rep.lattice_area - a * a).abs() < 1e-12, "|det| = (1+√2)²");
+        let sum: f64 = cells.iter().map(|c| area(&c.poly.pts)).sum();
+        assert!(
+            (sum - rep.lattice_area).abs() < 1e-9,
+            "Σ face areas {sum} vs |det| {}",
+            rep.lattice_area
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Edge census helpers (duplicates of the dual.rs test helpers —
+    // those are private to the dual test module).
+    // ------------------------------------------------------------------
+
+    /// Inverse of the lattice matrix A = [a1 a2] (basis as columns).
+    struct LatticeInv {
+        m: [[f64; 2]; 2],
+    }
+
+    impl LatticeInv {
+        fn new(a1: Vec2, a2: Vec2) -> Option<Self> {
+            let det = a1.cross(a2);
+            if det.abs() < 1e-12 {
+                return None;
+            }
+            let d = 1.0 / det;
+            Some(Self {
+                m: [
+                    [a2.y * d, -a2.x * d],
+                    [-a1.y * d, a1.x * d],
+                ],
+            })
+        }
+
+        /// Lattice (u-space) coordinates of a cell-space point.
+        fn apply(&self, p: Vec2) -> Vec2 {
+            Vec2::new(
+                self.m[0][0] * p.x + self.m[0][1] * p.y,
+                self.m[1][0] * p.x + self.m[1][1] * p.y,
+            )
+        }
+    }
+
+    /// Undirected edge key on the 1e-6 grid (AGENTS.md edge-parity
+    /// convention; shared edges between lattice translates agree to ~1
+    /// ulp).
+    fn edge_key(a: Vec2, b: Vec2) -> [i64; 4] {
+        let mut k = [
+            (a.x * 1e6).round() as i64,
+            (a.y * 1e6).round() as i64,
+            (b.x * 1e6).round() as i64,
+            (b.y * 1e6).round() as i64,
+        ];
+        if (k[0], k[1]) > (k[2], k[3]) {
+            k.swap(0, 2);
+            k.swap(1, 3);
+        }
+        k
+    }
+
+    /// The partner table edge for every table edge of `t`: for each
+    /// edge of cell `ci`, the unique `(cell, lattice offset)` whose
+    /// drawn edge is a lattice translate of it. Panics if any edge has
+    /// a different number of partners than one (a table that is not
+    /// edge-to-edge at the period level). Result is indexed per cell:
+    /// `partners[ci][e]`.
+    fn edge_partners(t: &LatticeTiling) -> Vec<Vec<(usize, i64, i64)>> {
+        let (a1, a2) = (t.lattice[0], t.lattice[1]);
+        let inv = LatticeInv::new(a1, a2).expect("non-degenerate lattice");
+        let n = t.cells.len();
+        let mut partners = Vec::new();
+        for ci in 0..n {
+            let pts = &t.cells[ci].poly.pts;
+            let m = pts.len();
+            let mut row = Vec::new();
+            for e in 0..m {
+                let p = pts[e];
+                let q = pts[(e + 1) % m];
+                let mut found: Vec<(usize, i64, i64)> = Vec::new();
+                for cj in 0..n {
+                    let p2 = &t.cells[cj].poly.pts;
+                    let m2 = p2.len();
+                    for f in 0..m2 {
+                        if cj == ci && f == e {
+                            continue;
+                        }
+                        for (pa, pb) in [
+                            (p2[f], p2[(f + 1) % m2]),
+                            (p2[(f + 1) % m2], p2[f]),
+                        ] {
+                            for (ta, tb) in [(p, q), (q, p)] {
+                                let s = pa - ta;
+                                let u = inv.apply(s);
+                                if (u.x - u.x.round()).abs() > 1e-6
+                                    || (u.y - u.y.round()).abs() > 1e-6
+                                {
+                                    continue;
+                                }
+                                if (pb - tb - s).length() > 1e-9 {
+                                    continue;
+                                }
+                                found.push((cj, u.x.round() as i64, u.y.round() as i64));
+                                break;
+                            }
+                        }
+                    }
+                }
+                // Dedup: the same partner edge is one solution, but a
+                // non-edge-to-edge table could carry several.
+                found.sort();
+                found.dedup();
+                assert_eq!(
+                    found.len(),
+                    1,
+                    "table edge {} of cell {} has {} partners",
+                    e,
+                    ci,
+                    found.len()
+                );
+                row.push(found[0]);
+            }
+            partners.push(row);
+        }
+        partners
+    }
+
+    #[test]
+    fn transformed_488_is_edge_to_edge() {
+        let t = transformed_table();
+        // Period level: every table edge has exactly one partner table
+        // edge (0 unpaired edges at the period level).
+        let partners = edge_partners(&t);
+        let (a1, a2) = (t.lattice[0], t.lattice[1]);
+        // Tile the window and count each edge by rounded endpoints:
+        // interior edges exactly twice (0 T-junctions → n ≤ 2), the
+        // partner's window membership decides the expected count.
+        let w = 4i64;
+        let mut counts: HashMap<[i64; 4], (usize, bool)> = HashMap::new();
+        for i in -w..=w {
+            for j in -w..=w {
+                let tr = a1 * i as f64 + a2 * j as f64;
+                for (ci, cell) in t.cells.iter().enumerate() {
+                    let pts = &cell.poly.pts;
+                    for e in 0..pts.len() {
+                        let pa = pts[e] + tr;
+                        let pb = pts[(e + 1) % pts.len()] + tr;
+                        let (_pc, poi, pojj) = partners[ci][e];
+                        let pi = i - poi;
+                        let pj = j - pojj;
+                        let inwin = (-w..=w).contains(&pi) && (-w..=w).contains(&pj);
+                        let entry = counts.entry(edge_key(pa, pb)).or_insert((0, false));
+                        entry.0 += 1;
+                        entry.1 |= inwin;
+                    }
+                }
+            }
+        }
+        for (k, (n, inwin)) in &counts {
+            assert!(
+                *n <= 2,
+                "edge {k:?} shared by {n} tiles (T-junction?)"
+            );
+            if *inwin {
+                assert_eq!(*n, 2, "unpaired interior edge {k:?}");
+            } else {
+                assert_eq!(
+                    *n, 1,
+                    "edge {k:?} appears {n} times though its partner lies outside the window"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn transformed_488_fine_grid_exactly_once() {
+        let t = transformed_table();
+        let region = BBox::new(v2(-6.5, -6.5), v2(6.5, 6.5));
+        let step = 0.25;
+        let nsteps = (region.size().x / step) as usize;
+        let p = ParamSet::default_for(t.params());
+        let r = t.generate(&p, &Query { region });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        let tiles = &r.tiles;
+        for gy in 0..nsteps {
+            for gx in 0..nsteps {
+                let pt = region.min
+                    + v2(step * (gx as f64 + 0.5), step * (gy as f64 + 0.5));
+                let cnt = tiles.iter().filter(|t| t.poly.contains(pt)).count();
+                assert!(cnt >= 1, "gap at {pt}");
+                if cnt == 2 {
+                    // Must be a point on the shared edge of the two tiles.
+                    let idx: Vec<usize> = tiles
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, t)| t.poly.contains(pt))
+                        .map(|(i, _)| i)
+                        .collect();
+                    let a = &tiles[idx[0]].poly;
+                    let b = &tiles[idx[1]].poly;
+                    let mut on_shared = false;
+                    for e0 in 0..a.pts.len() {
+                        let p0 = a.pts[e0];
+                        let p1 = a.pts[(e0 + 1) % a.pts.len()];
+                        let k = edge_key(p0, p1);
+                        for e1 in 0..b.pts.len() {
+                            if edge_key(b.pts[e1], b.pts[(e1 + 1) % b.pts.len()]) == k {
+                                let ab = p1 - p0;
+                                let tt =
+                                    ((pt - p0).dot(ab) / ab.dot(ab)).clamp(0.0, 1.0);
+                                on_shared = (p0 + ab * tt - pt).length() <= 1e-6;
+                                break;
+                            }
+                        }
+                        if on_shared {
+                            break;
+                        }
+                    }
+                    assert!(
+                        on_shared,
+                        "double-covered point {pt} not on a shared edge"
+                    );
+                } else if cnt > 2 {
+                    let near = tiles
+                        .iter()
+                        .filter(|t| t.poly.pts.iter().any(|&v| (v - pt).length() <= 1e-6))
+                        .count();
+                    assert_eq!(
+                        near, cnt,
+                        "vertex fan count {near} != coverage {cnt} at {pt}"
+                    );
+                }
+            }
+        }
+        // Clipped area closes against the region area.
+        let mut area = 0.0;
+        for t in tiles {
+            if let Some(cl) = t.poly.clipped_to(&region) {
+                area += cl.area();
+            }
+        }
+        let ra = region.area();
+        assert!(
+            (area - ra).abs() <= 1e-6 * ra,
+            "clipped area {area} vs region {ra} (rel {})",
+            (area - ra) / ra
+        );
+    }
+}
+
+// ---------------------------------------------------------------------
+// M99: hankin-4-8-8-rosette-transform — registry checks, inference
+// census, and the p4m cell-table probe.
+// ---------------------------------------------------------------------
+#[cfg(all(test, feature = "hankin_ext"))]
+mod hankin_4_8_8_rosette_transform_tests {
+    use super::hankin;
+    use super::hankin_4_8_8_rosette_transform::{
+        hankin_4_8_8_rosette_transform, transformed_cells, DELTA, EXPECTED_LENS,
+        EXPECTED_SEEDS, LATTICE, THETA_E_DEG,
+    };
+    use super::tests::{check_covers, check_det, check_rotated};
+    use std::collections::HashMap;
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    #[test]
+    fn hankin_4_8_8_rosette_transform_covers_region() {
+        check_covers(
+            &hankin_4_8_8_rosette_transform(),
+            "hankin-4-8-8-rosette-transform",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_4_8_8_rosette_transform_rotated_scaled() {
+        check_rotated(
+            &hankin_4_8_8_rosette_transform(),
+            "hankin-4-8-8-rosette-transform(rot20,scale0.6)",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn hankin_4_8_8_rosette_transform_deterministic() {
+        check_det(
+            &hankin_4_8_8_rosette_transform(),
+            "hankin-4-8-8-rosette-transform",
+            BBox::new(Vec2::new(-12.0, -9.0), Vec2::new(12.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_4_8_8_rosette_transform_unit_structure() {
+        let t = hankin_4_8_8_rosette_transform();
+        assert_eq!(
+            t.cells.len(),
+            93,
+            "16×3 + 36×4 + 32×5 + 8×6 + 1×16 faces per lattice cell"
+        );
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(seeds, EXPECTED_SEEDS.to_vec(), "seed layout");
+        let lens: Vec<usize> = t.cells.iter().map(|c| c.poly.pts.len()).collect();
+        assert_eq!(lens, EXPECTED_LENS.to_vec(), "face census layout");
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        let a = 1.0 + core::f64::consts::SQRT_2;
+        assert!((det - a * a).abs() < 1e-9, "det = (1+√2)²");
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-9, "Σ areas {sum} vs det {det}");
+    }
+
+    #[test]
+    fn hankin_4_8_8_rosette_transform_symmetry_metadata() {
+        let t = hankin_4_8_8_rosette_transform();
+        assert_eq!(t.id, "hankin-4-8-8-rosette-transform");
+        assert_eq!(t.group, WallpaperGroup::P4m);
+        assert_eq!(t.lattice_kind, LatticeKind::Square);
+        assert_eq!(t.category, TilingCategory::Islamic);
+        assert_eq!(t.secondary, &[]);
+    }
+
+    #[test]
+    fn hankin_4_8_8_rosette_transform_inference_census() {
+        let (sub, _trep) = transformed_cells();
+        let tiles: Vec<&[Vec2]> = sub.iter().map(|c| c.poly.pts.as_slice()).collect();
+        let (cells, report) = hankin::build_cells(&tiles, THETA_E_DEG, DELTA);
+        assert!(report.complete, "pairing must be complete at the selected θK");
+        let lens: Vec<usize> = report.per_tile.iter().map(|r| r.faces).collect();
+        // 8 pentagons → 8 faces each, inner octagon → 9, 4 small
+        // squares → 5 each (machine-transcribed order).
+        assert_eq!(
+            lens,
+            vec![8, 8, 8, 8, 8, 8, 8, 8, 9, 5, 5, 5, 5],
+            "face census per transformed tile"
+        );
+        for r in &report.per_tile {
+            assert!((r.area_sum - r.tile_area).abs() < 1e-9, "per-tile closure");
+            assert_eq!(r.rays, r.pairs * 2, "every ray paired exactly once");
+        }
+        assert_eq!(cells.len(), 93, "inference table size");
+        let a = 1.0 + core::f64::consts::SQRT_2;
+        let sum: f64 = cells.iter().map(|c| c.poly.area().abs()).sum();
+        assert!((sum - a * a).abs() < 1e-9, "Σ inference areas {sum} vs (1+√2)²");
+    }
+
+    /// Canonical face key: CCW (flipped images reversed), rotated to
+    /// the lexicographically smallest vertex, rounded to a 1e-10 grid.
+    fn canon_pts(pts: &[Vec2], flip: bool) -> Vec<Vec2> {
+        let mut v: Vec<Vec2> = if flip {
+            pts.iter().rev().copied().collect()
+        } else {
+            pts.to_vec()
+        };
+        let mut k = 0;
+        for i in 1..v.len() {
+            let dx = v[i].x - v[k].x;
+            let dy = v[i].y - v[k].y;
+            if dx < -1e-12 || (dx.abs() <= 1e-12 && dy < -1e-12) {
+                k = i;
+            }
+        }
+        v.rotate_left(k);
+        v
+    }
+
+    fn key_of(v: &[Vec2]) -> (usize, Vec<i64>) {
+        let mut k = Vec::with_capacity(v.len() * 2);
+        for p in v {
+            k.push((p.x * 1e10).round() as i64);
+            k.push((p.y * 1e10).round() as i64);
+        }
+        (v.len(), k)
+    }
+
+    /// Multiset invariance of the cell table under a point symmetry
+    /// `g` of the infinite tiling: the image of every table cell (up to
+    /// a lattice translation and, for mirrors, orientation reversal)
+    /// must coincide with a unique, still-unmatched table cell to
+    /// 1e-9. Returns the worst vertex mismatch.
+    fn assert_p4m_exact(label: &str, flip: bool, g: impl Fn(Vec2) -> Vec2) -> f64 {
+        let t = hankin_4_8_8_rosette_transform();
+        let (a1, a2) = (LATTICE[0], LATTICE[1]);
+        let mut unused: HashMap<(usize, Vec<i64>), Vec<usize>> = HashMap::new();
+        for (j, c) in t.cells.iter().enumerate() {
+            let cp = canon_pts(&c.poly.pts, false);
+            unused.entry(key_of(&cp)).or_default().push(j);
+        }
+        let mut worst = 0.0f64;
+        for (i, c) in t.cells.iter().enumerate() {
+            let img: Vec<Vec2> = c.poly.pts.iter().map(|p| g(*p)).collect();
+            let mut best: Option<(f64, usize)> = None;
+            for ta in -1i64..=1 {
+                for tb in -1i64..=1 {
+                    let tr = a1 * ta as f64 + a2 * tb as f64;
+                    let shifted: Vec<Vec2> = img.iter().map(|p| *p + tr).collect();
+                    let cp = canon_pts(&shifted, flip);
+                    let key = key_of(&cp);
+                    if let Some(v) = unused.get(&key) {
+                        if let Some(&j) = v.first() {
+                            let cj = canon_pts(&t.cells[j].poly.pts, false);
+                            let d = (0..cp.len())
+                                .map(|k| (cp[k] - cj[k]).length())
+                                .fold(0.0f64, f64::max);
+                            if d <= 1e-9 && best.is_none_or(|(bd, _)| d < bd) {
+                                best = Some((d, j));
+                            }
+                        }
+                    }
+                }
+            }
+            let (d, j) = best.unwrap_or_else(|| {
+                panic!("{label}: image of table cell {i} matches no table cell")
+            });
+            if let Some(v) = unused.get_mut(&key_of(&canon_pts(&t.cells[j].poly.pts, false)))
+            {
+                v.retain(|&x| x != j);
+            }
+            worst = worst.max(d);
+        }
+        let residual: usize = unused.values().map(Vec::len).sum();
+        assert_eq!(
+            residual,
+            0,
+            "{label}: {residual} table cells unmatched by the point symmetry"
+        );
+        assert!(worst <= 1e-9, "{label}: worst mismatch {worst}");
+        worst
+    }
+
+    #[test]
+    fn hankin_4_8_8_rosette_transform_cell_table_is_p4m_exact() {
+        let a = LATTICE[0].x; // 1 + √2, the period side
+        let c = a / 2.0;
+        let mut worst = 0.0f64;
+        worst = worst.max(assert_p4m_exact(
+            "R90 about cell centre",
+            false,
+            |p| Vec2::new(c - (p.y - c), c + (p.x - c)),
+        ));
+        worst = worst.max(assert_p4m_exact(
+            "R180 about cell centre",
+            false,
+            |p| Vec2::new(2.0 * c - p.x, 2.0 * c - p.y),
+        ));
+        worst = worst.max(assert_p4m_exact(
+            "R270 about cell centre",
+            false,
+            |p| Vec2::new(c + (p.y - c), c - (p.x - c)),
+        ));
+        worst = worst.max(assert_p4m_exact(
+            "x-mirror (line x = A/2)",
+            true,
+            |p| Vec2::new(a - p.x, p.y),
+        ));
+        worst = worst.max(assert_p4m_exact(
+            "y-mirror (line y = A/2)",
+            true,
+            |p| Vec2::new(p.x, a - p.y),
+        ));
+        worst = worst.max(assert_p4m_exact(
+            "diagonal mirror y = x",
+            true,
+            |p| Vec2::new(p.y, p.x),
+        ));
+        worst = worst.max(assert_p4m_exact(
+            "anti-diagonal mirror y = A − x",
+            true,
+            |p| Vec2::new(a - p.y, a - p.x),
+        ));
+        assert!(
+            worst <= 1e-9,
+            "p4m point group not exact on the cell table (worst {worst})"
         );
     }
 }
