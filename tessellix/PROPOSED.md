@@ -186,6 +186,12 @@ confirm the diffraction claim during the spike before declaring.
   batch should be 3–5 tables. Duals of 2-uniform tilings are a cheap
   bonus family later (mixed floret/cairo-like duals) via the
   dual-construction helper (PATTERNS.MD research area 2).
+  **First dual batch landed (M98):** the helper now exists —
+  `dual()` in `tess-tilings/src/dual.rs`, oracle-validated exactly
+  against all 7 hand-built Laves tables — and the four p6m duals
+  `kuniform-dual-p6m/n18/n9/n8` are registered (Laves primaries).
+  The other 16 duals of this list (square-family rows included)
+  still queue behind the same helper.
 - **Verify:** the standard ±3×±3 battery per table (the vertex-figure
   check must verify *both* orbit figures, and the two-orbit structure
   itself — assert exactly 2 vertex classes over a large patch), plus

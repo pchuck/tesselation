@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (82 tilings)
+## Implemented (86 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -86,6 +86,10 @@ figures at the split midpoints, `2.4.4`).
 | `kuniform-n5` | 2-uniform (3.4.6.4; 3.4².6) | p6m | hexagons ringed by squares and triangles; 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); origin a hexagon center, 6-fold center c the cell's minority-hexagon center (not O); 18 tiles/cell; the 3.4².6 vertex orbit is chiral (three figure strings, M90 report); Wikipedia `2-uniform n5`, t = 5, e = 5 (M90) |
 | `kuniform-n1` | 2-uniform (4.6.12; 3.4.6.4) | p6m | the 3-4-6-12 tiling: dodecagons alternating with hexagons, squares and triangles; 60° hexagonal basis, \|b1\| = \|b2\| = 2+2√3, det 12+8√3 (right-handed); origin a hexagon center, 6-fold center c the cell's dodecagon center (not O); 12 tiles/cell; Wikipedia `2-uniform n1`, t = 4, e = 4 (M91) |
 | `kuniform-n13` | 2-uniform (3⁶; 3².4.12) | p6m | dodecagons ringed by squares and two triangle orbits around 3⁶ vertices; 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); origin a 3⁶ vertex, 6-fold center c the cell's dodecagon center (off-ring, not O); 16 tiles/cell; Wikipedia `2-uniform n13`, t = 4, e = 4 (M92) |
+| `kuniform-dual-p6m` | dual of 2-uniform (3⁶; 3².6²) | p6m | face-centroid dual of `kuniform-p6m`, constructed by the `dual()` helper (M98); 7 faces/cell — 1 regular hexagon (side 1/√3, area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3, 2√3/3, √3; angles 60°/60°/120°/120°; area 2√3/3); Σ = 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) |
+| `kuniform-dual-n18` | dual of 2-uniform (3⁶; 3².4.3.4) | p6m | face-centroid dual of `kuniform-n18`, constructed by the `dual()` helper; 7 faces/cell — 1 regular hexagon (side 1/√3) + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6; angles 90°/90°/120°/120°/120°; area (2+√3)/4); Σ = 3+2√3 = \|det\|, edge-to-edge, origin a 3⁶ vertex = 6-fold center (M98) |
+| `kuniform-dual-n9` | dual of 2-uniform (3.4.6.4; 3².4.3.4) | p6m | face-centroid dual of `kuniform-n9`, constructed by the `dual()` helper; 12 faces/cell — 6 congruent quadrilaterals (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/120°; area (3+2√3)/6) + 6 pentagons congruent to the n18-dual pentagons (area (2+√3)/4); Σ = 6+7√3/2 = \|det\|, edge-to-edge, origin a hexagon center = 6-fold center (M98) |
+| `kuniform-dual-n8` | dual of 2-uniform (3.4.6.4; 3³.4²) | p6m | face-centroid dual of `kuniform-n8`, constructed by the `dual()` helper; 12 faces/cell — 6 quadrilaterals (same shape as the n9-dual quadrilaterals) + 6 congruent pentagons (two sides 1/√3, two sides (3+√3)/6, one side 1; angles 90°/90°/120°/120°/120°; area (2+√3)/4 — equal area, different shape than the n18/n9-dual pentagons); Σ = 6+7√3/2 = \|det\|, edge-to-edge, origin a hexagon center (M98) |
 | `pentagon-13` | Rice pentagon, type 13 (1977, A = 120°) | p2 | 2-isohedral chiral pair (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3); long side split into two collinear a-edges (M49) |
 | `pentagon-14` | Stein pentagon, type 14 (completely determined) | p2 | 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, exact Q(√57, β) with β = √((11√57−25)/8); long sides split into two collinear unit fine edges — 7/5/6-vertex cells (M50) |
 | `pentagon-15` | Mann pentagon, type 15 (MMVD 2015) | pgg | 3-isohedral (seeds 0/1/2), 12 tiles per rectangular cell = 4 congruent 3-tile blocks, exact Q(√3) (a = 2, b = d = e = 1, c = √(2+√3), all vertices on the (p+q√3)/2 grid); non-edge-to-edge — 4 T-split edges per cell (M55) |
@@ -124,14 +128,14 @@ figures at the split midpoints, `2.4.4`).
 
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (8) ·
-**Laves (Catalan duals)** (11) · **Wallpaper** (17) · **Pentagon
+**Laves (Catalan duals)** (15) · **Wallpaper** (17) · **Pentagon
 Types** (12) · **Islamic** (9) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (6) · **Nonperiodic** (4) —
-94 memberships over the 82 implemented tilings; the 12 extra are
+98 memberships over the 86 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
 M74/M77/M78/M79, was re-synced in M81, in M84, in M85, with the
-M87/M88/M89 two-uniform batch, in M90–M92, in M93, and again with
-the M94 Hankin batch.)
+M87/M88/M89 two-uniform batch, in M90–M92, in M93, with the M94
+Hankin batch, and in M98.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
@@ -2913,6 +2917,94 @@ documentation pending).
   550 → 569 tests.
 - **Status:** landed (M94).
 
+### 48. p6m 2-uniform duals — first batch: p6m, n18, n9, n8 ✅ (M98)
+
+- **Motif:** the face-centroid duals of the first four p6m 2-uniform
+  primals (`kuniform-p6m`, `kuniform-n18`, `kuniform-n9`,
+  `kuniform-n8`) — the first k-uniform duals in the registry and the
+  first landing of the "mixed floret" dual family proposed in Research
+  area 2. Every dual is *constructed at runtime* by the new `dual()`
+  helper from the registered primal table — no hand-transcribed dual
+  geometry anywhere.
+- **The `dual()` helper (research area 2 landed):**
+  `dual(primal: &LatticeTiling) -> Option<LatticeTiling>` in
+  `tess-tilings/src/dual.rs`. Centroid dual: one dual vertex at each
+  primal face centroid (vertex average — exact since the primal faces
+  are regular), one dual edge per primal edge, one dual face per
+  primal vertex = the polygon of the surrounding face centroids sorted
+  CCW by atan2 around the vertex. The dual **shares the primal
+  lattice** (same basis, same LatticeKind, zero offset); each dual
+  face is emitted by exactly one cell, and the cell count equals the
+  number of distinct vertex orbits. Orbit bookkeeping: each primal
+  vertex is grouped by its fractional lattice coordinate `frac(A⁻¹ p)`
+  on a 1e6 grid (grouping only — never a coordinate source); the orbit
+  representative is the *stored* table vertex (a grid-reconstructed
+  representative drifted ~5e-7 and broke the 1e-9 oracle), and each
+  incident cell contributes `v_rep + (centroid_f − p_f)`. `build()`
+  fills the spec (Laves primary, `secondary: &[]`, "Dual of 2-uniform
+  (…)" display) and `proper_seeds()` assigns congruence-aware
+  proper-coloring seeds (base = congruence-class index by first
+  appearance; a greedy bump keeps edge-adjacent dual faces differing
+  in `seed % 8`). Returns `None` when the primal has no cells or a
+  vertex orbit is not fully consistent across cells.
+- **Oracle gate:** `dual()` applied to all seven Archimedean primals
+  reproduces the seven hand-built Laves tables exactly — same lattice
+  basis, same cell count, cells matching as a bijection up to lattice
+  translation + polygon vertex rotation/reversal, max vertex residual
+  0.0 (pairing found by lattice-translation search + DFS bipartite
+  matching). Gated test `dual_reproduces_laves_tables`
+  (`#[cfg(all(feature = "archimedean", feature = "laves"))]`).
+- **The four duals (per cell, 6-fold center at the origin):**
+  - `kuniform-dual-p6m` (det 9√3/2): 1 regular hexagon (side 1/√3,
+    area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3,
+    2√3/3, √3; angles 60°/60°/120°/120°; area 2√3/3); Σ = 9√3/2.
+  - `kuniform-dual-n18` (det 3+2√3): 1 regular hexagon (side 1/√3)
+    + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6;
+    angles 90°/90°/120°/120°/120°; area (2+√3)/4); Σ = 3+2√3.
+  - `kuniform-dual-n9` (det 6+7√3/2): 6 congruent quadrilaterals
+    (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/
+    120°; area (3+2√3)/6) + 6 pentagons congruent to the n18-dual
+    pentagons (area (2+√3)/4); Σ = 6+7√3/2.
+  - `kuniform-dual-n8` (det 6+7√3/2): 6 quadrilaterals (same shape as
+    the n9-dual quadrilaterals) + 6 congruent pentagons (two sides
+    1/√3, two sides (3+√3)/6, one side 1; angles 90°/90°/120°/
+    120°/120°; area (2+√3)/4 — equal area, different shape than the
+    n18/n9-dual pentagons); Σ = 6+7√3/2.
+- **Group:** all four **p6m**, determined numerically (house
+  `probe_symmetry` replica + lattice-preservation check): R60/R120/
+  R180/R240/R300 about the origin and the six mirrors through it all
+  hold on the generated patch; R30 fails. The 6-fold center is the
+  origin in each case (p6m: fan apex; n18: 3⁶ vertex; n9/n8:
+  hexagon center).
+- **Verification (19 new tests, all in `dual.rs`):** convex + CCW
+  per face (both face orbits checked separately, per-face areas vs
+  exact Q(√3) values to 1e-9); edge-to-edge over a ±4 tile window
+  (0 unpaired, 0 T-junctions); boundary walks closed; per-cell Σ face
+  areas = |det| to 1e-9; fine-grid exactly-once coverage (0.25 grid,
+  double cover allowed only within 1e-6 of a shared edge/vertex);
+  proper coloring by 1e-6 edge-key multiset over `generate()`; p6m
+  group + R30 negative; orbit correspondence (BTreeSet of primal
+  orbit keys over all stored vertices == dual cell count, and
+  per-orbit incident-tile recount == dual face degree); the
+  coverage/rotation/|det| trio per dual. Seed maxima observed: p6m
+  {0,1,2}, n18 {0..3}, n9 3, n8 4 (all < 8).
+- **Category placement:** Laves **primary only**, `secondary: &[]` —
+  these are 2-uniform duals, not entries of the Two-Uniform arc
+  (deviation from the brief's "Two-Uniform secondary" prose; the
+  brief's own census numbers are self-consistent only without it).
+- **Rust:** `dual.rs` (helper + four constructors
+  `kuniform_dual_p6m/n18/n9/n8()`, feature `kuniform`), registry +4
+  (after the k-uniform block, before laves), culling list +4, census
+  79 → 83 tilings / 91 → 95 memberships (Laves 11 → 15 = 12 primary +
+  3 self-dual secondaries; Two-Uniform unchanged at 8), tess-tui tab
+  pins updated to the same counts.
+- **Status:** landed (M98). 83 tilings, 95 memberships, 590 tests at
+  this step (commit pending the coordinator). Full bar green: cargo
+  check + clippy (both target sets) with zero warnings, cargo test
+  --workspace 590/590. First batch of the k-uniform dual family —
+  the remaining p6m duals (n5, n1, n13) and the pmm duals queue
+  behind the same helper.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -3005,10 +3097,16 @@ the "mixed floret/cairo/prismatic" patterns.
    inter-parent consistency, count-matrix match) and emit exact
    coordinates. Build it as a standalone Python module in scratch,
    then document the workflow in AGENTS.md.
-2. **Automated dual construction** — this arc dualizes 7 tables by
-   hand-transcribed Python. A `dual(primal: LatticeTiling) -> Option<LatticeTiling>`
-   helper (centroid dual, when all faces are regular) would make
-   k-uniform duals cheap and remove transcription risk.
+2. **Automated dual construction** ✅ (M98) — the arc that motivated
+   this entry dualized 7 tables by hand-transcribed Python; the
+   `dual(primal: &LatticeTiling) -> Option<LatticeTiling>` helper
+   (centroid dual, exact for regular primal faces) now exists in
+   `tess-tilings/src/dual.rs`. It was first validated as an oracle
+   against all 7 hand-built Laves tables (exact reproduction, max
+   vertex residual 0.0) and then used to construct the first batch of
+   k-uniform duals (p6m, n18, n9, n8) — transcription risk for these
+   classes is gone, and the remaining p6m/pmm 2-uniform duals queue
+   behind the same helper (see §48).
 3. **Coloring engine** — seeds are currently hand-assigned per table
    (cairo's 4-coloring, rhombille's orientation 3-coloring). A small
    adjacency-graph proper-coloring helper (test-side, like the brute
@@ -4262,3 +4360,33 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   strand closure), group determination on the torus multiset.
   19 tess-tilings tests. Census: 75 → 78 tilings, 87 → 90
   memberships, 550 → 569 tests (commit pending the coordinator).
+- 2026-11-19 — M98 p6m 2-uniform duals (first batch) ✅: the
+  face-centroid duals of the first four p6m 2-uniform primals —
+  `kuniform-dual-p6m`, `kuniform-dual-n18`, `kuniform-dual-n9`,
+  `kuniform-dual-n8` — constructed at runtime by the new `dual()`
+  helper (`tess-tilings/src/dual.rs`, research area 2 landed): one
+  dual vertex per primal face centroid, one dual edge per primal
+  edge, one dual face per primal vertex (surrounding centroids,
+  CCW), shared primal lattice, orbit reps taken from the stored
+  table vertices (1e6 grid for grouping only). Oracle gate:
+  `dual()` on all 7 Archimedean primals reproduces the 7 hand-built
+  Laves tables exactly (same lattice, same cell count, bijection up
+  to lattice translation + polygon vertex rotation/reversal, max
+  vertex residual 0.0). The four duals: p6m → 1 regular hexagon +
+  6 congruent quads (Σ = 9√3/2 = |det|); n18 → 1 regular hexagon +
+  6 congruent pentagons (Σ = 3+2√3); n9 → 6 congruent quads + 6
+  pentagons congruent to the n18-dual pentagons (Σ = 6+7√3/2);
+  n8 → 6 quads (same shape as n9) + 6 congruent pentagons, equal
+  area but different shape than the n18/n9-dual pentagons (Σ =
+  6+7√3/2). All four p6m (R60–R300 + the six mirrors through the
+  origin all hold, R30 negative; 6-fold center at the origin),
+  edge-to-edge (0 unpaired, 0 T-junctions), convex + CCW per face,
+  per-cell Σ face areas = |det| to 1e-9, fine-grid exactly-once
+  coverage, proper coloring (seeds < 8). Laves primary,
+  `secondary: &[]` (the brief's "Two-Uniform secondary" prose is
+  inconsistent with its own census — no secondary). 19 new
+  tess-tilings tests incl. the oracle. Census: 79 → 83 tilings,
+  91 → 95 memberships, Laves 11 → 15, 571 → 590 tests (commit
+  pending the coordinator). Full bar green: cargo check + clippy
+  (both target sets) with zero warnings, cargo test --workspace
+  590/590. Details in §48.

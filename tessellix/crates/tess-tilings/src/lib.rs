@@ -20,6 +20,8 @@ pub mod archimedean;
 pub mod cairo;
 #[cfg(feature = "chair")]
 pub mod chair;
+#[cfg(feature = "kuniform")]
+pub mod dual;
 #[cfg(feature = "girih")]
 pub mod girih;
 #[cfg(feature = "girih_ext")]
@@ -337,6 +339,13 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(kuniform::kuniform_n1());
         r = r.register(kuniform::kuniform_n13());
     }
+    #[cfg(feature = "kuniform")]
+    {
+        r = r.register(dual::kuniform_dual_p6m());
+        r = r.register(dual::kuniform_dual_n18());
+        r = r.register(dual::kuniform_dual_n9());
+        r = r.register(dual::kuniform_dual_n8());
+    }
     #[cfg(feature = "laves")]
     {
         r = r.register(laves::tetrakis_square());
@@ -542,16 +551,17 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M94). 82 built-ins — 63 before
+// Census of today's taxonomy (M98). 86 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
-        //   TwoUniform 8, Laves 11 (8 primary incl. cairo-pentagonal +
+        //   TwoUniform 8, Laves 15 (12 primary: 8 incl. cairo-pentagonal
+        //   + 4 machine-dualized k-uniform duals (M98) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
 //   PentagonTypes 12, Islamic 12, Arrangements 5,
 //   Quasiperiodic 8, Aperiodic 6, Nonperiodic 4.
-        // Membership census 94 = 82 primaries + 12 secondaries (3 Laves
+// Membership census 98 = 86 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -573,16 +583,18 @@ mod tests {
 // -> M88 (kuniform-n9) -> M89 (kuniform-n8)
         // -> M90 TwoUniform 5 -> 6 (kuniform-n5) -> M91 (kuniform-n1)
         // -> M92 (kuniform-n13) -> M93 Aperiodic 5 -> 6 (jeandel-rao)
-        // -> M94 Islamic 9 -> 12 (hankin-4-8-8-rosette,
-        // hankin-4-6-12, hankin-hex-two-point).
+// -> M94 Islamic 9 -> 12 (hankin-4-8-8-rosette,
+        // hankin-4-6-12, hankin-hex-two-point)
+        // -> M98 Laves 11 -> 15 (the dual() helper dualizes
+        // kuniform-p6m / -n18 / -n9 / -n8; Laves-primary only).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 8, 11, 17, 12, 12, 5, 8, 6, 4],
+            vec![11, 8, 15, 17, 12, 12, 5, 8, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 82, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 94, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 86, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 98, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -7265,7 +7277,8 @@ mod kuniform_tests {
 mod lattice_culling_tests {
     use super::lattice::LatticeTiling;
     use crate::{
-        alcove_cut_grid, archimedean, basketweave, cairo, chiral_cut_honeycomb, girih, girih_sc,
+        alcove_cut_grid, archimedean, basketweave, cairo, chiral_cut_honeycomb, dual, girih,
+        girih_sc,
         girih_w85, glide_hexagon_strips, hexagon, herringbone,
 khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, pentagon8, pentagon9, pentagon10, pentagon11, pentagon12,
         pentagon13,
@@ -7388,6 +7401,10 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
             ("kisrhombille", laves::kisrhombille()),
             ("prismatic-pentagonal", laves::prismatic_pentagonal()),
             ("floret-pentagonal", laves::floret_pentagonal()),
+            ("kuniform-dual-p6m", dual::kuniform_dual_p6m()),
+            ("kuniform-dual-n18", dual::kuniform_dual_n18()),
+            ("kuniform-dual-n9", dual::kuniform_dual_n9()),
+            ("kuniform-dual-n8", dual::kuniform_dual_n8()),
             ("windmill", windmill::spec()),
             ("basketweave", basketweave::basketweave()),
             ("herringbone", herringbone::herringbone()),
