@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (92 tilings)
+## Implemented (94 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -69,6 +69,8 @@ every dual is the face-centroid dual of an exact primal table.
 | `hankin-square-two-point` | Hankin two-point square weave (4.4.4.4) | cmm | M99 two-point inference on the unit square (θK = 45°, δ = 0.5): decagonal star per tile — 4 corner triangles + 2 pentagons + 10-gon core (§54) |
 | `hankin-4-8-8-rosette-transform` | Hankin rosette-transform khatam | p4m | Kaplan rosette transform (diss. §3.8) on the 4.8.8 substrate at θK = 45°, δ = 0: each octagon → concentric inner octagon (r′ = r·cos(π/8)/(1+sin(π/8)), rotated π/8, spokes = half the inner side) + 8 pentagons; each square → 4 half-squares of side 1/2 (all four bisectors pass through the centre — Kaplan's cluster heuristic fires: 4 of the 6 bisector-pair intersections, one cluster) — 93-tile transformed table per ⟨(1+√2,0),(0,1+√2)⟩ cell (16 triangles, 36 quads, 32 pentagons, 8 hexagons, one 16-gon), edge-to-edge (0 unpaired, 0 T-junctions, w = 4), area census |det| = 3+2√2, exact Q(√2); then M94 inference at θE = 45°; transformed table p4m-exact to 6.5e-16 (M99) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
+| `najm-63-2e-0-3e-ac` | Najm template ([6,3]; 2e, 0, 3e; AC) | p6m | najm-generator substrate (diss. §3.6.1 Fig. 3.21): dodecagons + enneagons sharing equal chords, x = 2/(cot 15° + cot 20°), concave equilateral bowties (70°/220°) at the 2-fold points; 6 tiles/cell, |det| = 3√3/2 (M99) |
+| `najm-44-3e-0-0-a` | Najm template ([4,4]; 3e, 0, 0; A) | p4m | najm-generator substrate (diss. §3.6.1 Fig. 3.22): dodecagons r = √6−√2 on 2Z² sharing chords across odd grid lines + concave equilateral 4-pointed stars (side 4−2√3, 60° tips, 210° notches); exact Q(√2,√3) (M99) |
 | `pythagorean` | two squares (Pythagorean) | p4 | one-parameter ratio r = b/a; each cell is the square on the hypotenuse dissected into the leg squares; T-junctions inherent; the plain p4m square grid at r = 1 |
 | `windmill` | 1–2–√5 triangles around squares ("windmill") | p4 | periodic pinwheel arrangement; homochiral (no mirrors/glides); non-edge-to-edge T-junctions; naming waiver 2026-11-12 (M43) |
 
@@ -3387,6 +3389,80 @@ documentation pending).
   11/13-pointed-star angle-mismatch instances ride on 22b/22e
   substrates, and 22d's θ(x) strips stay a rendering feature.
 
+### 56. Najm template substrates — ([6,3]; 2e, 0, 3e; AC) and ([4,4]; 3e, 0, 0; A) ✅ (M99)
+
+- **Motif:** the two substrate tilings of the Najm construction
+  (Kaplan diss. §3.6.1, Fig. 3.21 / Fig. 3.22 second row), produced by
+  the first **template-tiling generator** (roadmap 22b) instead of
+  hand-coded coordinates. The notation `([p,q]; m_A o_A, m_B o_B,
+  m_C o_C; inflation)` places a p·m_A-gon at the p-fold vertex A, a
+  2·m_B-gon at the right-angle vertex B and a q·m_C-gon at the q-fold
+  vertex C of the [p,q] orbifold triangle, oriented so the designated
+  ray (A→AB, B→BC, C→CA) meets the named feature (v/e; features recur
+  every π/n and alternate type), sized by one of four inflation cases.
+  Reflecting the triangle tiles the plane; the polygons' union leaves
+  the bowtie/star hole tiles.
+- **Generator (`najm.rs`, feature `najm`):** `NajmSpec` (notation) →
+  `radii()` (f64): case 3 (diad pair) closed form
+  x = |edge|/(g_u + g_v), g = 1/(2 sin(π/n)) (vertex extent) or
+  1/(2 tan(π/n)) (edge-midpoint extent); case 4 (ABC) by bisection on
+  r_A (the BC gap is monotone); cases 1/2 as a sequential step list
+  (touch-along-shared-edge and reach-the-opposite-edge constraints,
+  minimum wins). Validation: m_B = 1 forbidden, every nonzero polygon
+  sized exactly once, triangle edges must carry features. All world
+  coordinates in the entries are *derived* from the solved radii by
+  trig — no pasted tables.
+- **Deviation from the diss. text:** the extracted case-3 formula
+  reads `T(l) = T(x)/sin(π/n)`, i.e. l = x/sin(π/n), which exceeds the
+  polygon's own circumradius x/(2 sin(π/n)) — Fig. 3.21 could not
+  close. Independent re-derivation (and 60-digit chord-coincidence
+  verification, agreement < 1e-55): **l = x/(2 sin(π/n))** vertex-type,
+  **x/(2 tan(π/n))** edge-type — the text is missing a factor ½. The
+  apothem reading of edge extents in cases 1/2 (l = r cos(π/n)) is
+  likewise documented there.
+- **`najm-63-2e-0-3e-ac` (p6m, hexagonal):** dodecagons at the 6-fold
+  points of Λ = ⟨(√3,0),(√3/2,3/2)⟩ (phase 15°, chord midpoints at
+  30k), enneagons at both C-orbits with **different absolute
+  orientations** (phases 190° at C0 = (√3/2,½) and 250° at
+  C1 = (√3,1) — the orientation rule applies per triangle copy; the
+  rot180 about the 2-fold point B0 = (√3/2,0) maps one class onto the
+  other translated by −a2, 190° + 180° ≡ 250° mod 40°), concave
+  equilateral bowties (angles {70×4, 220×2}) at the three 2-fold
+  points per cell. Case-3 AC with |AC| = 1:
+  x = 2/(cot 15° + cot 20°) = 0.30866…, r_A = x/(2 sin 15°) =
+  0.59629392…, r_C = x/(2 sin 20°) = 0.45123723… (cot 20° is cubic —
+  this entry is floating-point, solved to < 1e-55 at 60 working
+  digits). 1 doz + 2 enne + 3 bowties per cell; area census
+  3r_A² + 9r_C² sin 40° + 3A_bowtie = 3√3/2 = |det| exact; vertex
+  figures 150.140.70 ×12 and 140.220 ×6.
+- **`najm-44-3e-0-0-a` (p4m, square):** dodecagons r_A = 1/cos 15° =
+  √6−√2 (case-2 inflation on the [4,4] triangle, leg-scaled to |AB| =
+  1) centered on 2Z²; the ±15° vertices land exactly on the odd grid
+  lines, so horizontal/vertical neighbors share full chords through
+  the 2-fold points. The interstice at (1,1) is a concave equilateral
+  4-pointed star: tips on the axes at radius √3−1 (60°), reflex
+  notches at the diagonal dodecagon vertices, offset 2−√3 (210°);
+  side 4−2√3 = the dodecagon side. Exact in Q(√2,√3); areas 24−12√3
+  + 12√3−20 = 4 = |det| exactly; vertex figures 60.150.150 ×4 and
+  150.210 ×4.
+- **Verification (spike `t22b_spike.py`, mpmath-60 + sympy; Rust
+  `najm_tests`, 11 tests):** both tilings verified edge-to-edge
+  (588/588 and 192/192 torus edge pairings), exactly-once coverage on
+  130²/140² grids, area censuses closed exactly (sympy), shared-chord
+  identities < 1e-55, bowtie/star equilateral + angle multisets,
+  rot180 orientation witness, solver fidelity against two extra
+  dissertation examples ([6,3];4e,3v,3e ABC and [4,4];3e,2e,3v;A=0.6
+  sequential). Rust tests: covers/rotated/deterministic per entry,
+  radii vs emitted f64 constants (1e-14), regularity/equilateral/
+  angle checks, area census vs |det|, primitive-lattice witness
+  (dodecagon centers = exactly the declared lattice over a generated
+  patch). M76 symmetry-legality test passes both bases (p6m/Hexagonal
+  via the 60° equal pair, p4m/Square via the orthonormal pair).
+- **Status:** landed (M99). 89 → 91 tilings, 101 → 103 memberships,
+  Islamic 12 → 14, 626 → 637 tests. The generator covers Euclidean
+  [4,4]/[6,3] instances; hole decomposition is per-entry (22a/22c
+  consume substrates), spherical/hyperbolic instances belong to 22f.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -3570,23 +3646,6 @@ the "mixed floret/cairo/prismatic" patterns.
 
 ## Changelog of this file
 
-- 2026-11-19 — M99: rosette transform (Kaplan diss. §3.8) lands as the
-  first registry entry of the §22 arc — `rosette_transform.rs`
-  (hankin_ext) + `hankin-4-8-8-rosette-transform` (4.8.8 substrate,
-  θK = θE = 45°, δ = 0): 93-tile transformed table (16 triangles, 36
-  quads, 32 pentagons, 8 hexagons, one 16-gon per cell), edge-to-edge,
-  area census |det|, p4m-exact to 6.5e-16; queue item 22c marked
-  landed, §55; 91 → 92 tilings, 103 → 104 memberships,
-  Islamic 14 → 15, 651 tests.
-- 2026-11-19 — new proposed-queue group "Islamic star-pattern
-  extensions (Kaplan dissertation Ch. 3)": eight sub-items 22a–22h
-  extracted from reference/kaplan_diss_full_print.pdf §3.4–3.11
-  (design elements, Najm template-tiling generator, rosette
-  transform, parquet deformations, quasiperiodic substrates +
-  (n,c)-monsters + Kepler Aa, absolute-geometry patterns,
-  decoration styles, Moroccan/optimization/strange stars), each with
-  the chapter's formulas transcribed and the existing M53–M57/M94
-  coverage audited. Dossier: PROPOSED.md §22.
 - 2026-11-07 — created; arc "complete the classics" queued
   (M19–M27: 7 Laves duals, Pythagorean, Ammann–Beenker).
 - 2026-11-07 — arc complete: M19–M25 Laves duals, M26 Pythagorean,
@@ -4918,6 +4977,17 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   cargo check + clippy (both target sets) zero warnings, cargo test
   --workspace --all-features 626/626. 11 of the 20 closed-list
   entries landed, 9 remain. Details in §50.
+
+
+- 2026-11-19 — new proposed-queue group "Islamic star-pattern
+  extensions (Kaplan dissertation Ch. 3)": eight sub-items 22a–22h
+  extracted from reference/kaplan_diss_full_print.pdf §3.4–3.11
+  (design elements, Najm template-tiling generator, rosette
+  transform, parquet deformations, quasiperiodic substrates +
+  (n,c)-monsters + Kepler Aa, absolute-geometry patterns,
+  decoration styles, Moroccan/optimization/strange stars), each with
+  the chapter's formulas transcribed and the existing M53–M57/M94
+  coverage audited. Dossier: PROPOSED.md §22.
 - 2026-11-19 — M99 Hankin twelvefold khatam (3.12.12) ✅ (§53): the
   fourth configuration of the M94 inference engine — `hankin-3-12-12`
   (θK = 45°, δ = 0) on the truncated hexagonal 3.12.12 substrate:
@@ -4962,3 +5032,40 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   (landed on main). Full bar green: cargo check + clippy (both
   target sets) zero warnings, cargo test --workspace --all-features
   638/638. Details in §54.
+- 2026-11-19 — M99: rosette transform (Kaplan diss. §3.8) lands as the
+  first registry entry of the §22 arc — `rosette_transform.rs`
+  (hankin_ext) + `hankin-4-8-8-rosette-transform` (4.8.8 substrate,
+  θK = θE = 45°, δ = 0): 93-tile transformed table (16 triangles, 36
+  quads, 32 pentagons, 8 hexagons, one 16-gon per cell), edge-to-edge,
+  area census |det|, p4m-exact to 6.5e-16; queue item 22c marked
+  landed, §55; 91 → 92 tilings, 103 → 104 memberships,
+  Islamic 14 → 15, 651 tests.
+- 2026-11-19 — M99 Najm template-tiling generator (roadmap 22b) ✅
+  (§56): new module `najm.rs` (feature `najm`, in defaults) —
+  notation `([p,q]; m_A o_A, m_B o_B, m_C o_C; inflation)` →
+  circumradii via the absolute-trig extent equations (case-3 diad
+  closed form, case-4 ABC by monotone bisection, cases 1/2 as a
+  sequential min-constraint list; m_B = 1 rejected, every nonzero
+  polygon sized exactly once) → substrate cell tables, all
+  coordinates derived from the solved radii. Two Islamic entries:
+  `najm-63-2e-0-3e-ac` (p6m; dodecagons + enneagons sharing equal
+  chords x = 2/(cot 15° + cot 20°) + equilateral bowties {70°×4,
+  220°×2}; 6 tiles/cell, areas closing 3√3/2 = |det| to 1e-50; the
+  two enneagon orbits carry phases 190°/250° — rot180(B0) witness)
+  and `najm-44-3e-0-0-a` (p4m; dodecagons √6−√2 on 2Z² sharing
+  chords across odd grid lines + equilateral 4-pointed stars, side
+  4−2√3; exact Q(√2,√3), 24−12√3 + 12√3−20 = 4 = |det|). Documented
+  deviation: the extracted diss. case-3 formula `T(l) = T(x)/sin(π/n)`
+  is missing a factor ½ (l = x/sin(π/n) exceeds the circumradius;
+  Fig. 3.21 cannot close) — re-derived l = x/(2 sin), x/(2 tan),
+  verified by exact chord coincidence at 60 digits. Spike
+  `t22b_spike.py` (mpmath-60 + sympy): both tilings edge-to-edge
+  588/588 + 192/192, exactly-once 130²/140² grids, solver fidelity on
+  two extra diss. examples. 11 Rust tests (covers/rotated/
+  deterministic ×2, radii 1e-14 vs emitted constants, shape/angle
+  multisets, area census, primitive-lattice witness). Census:
+  92 → 94 tilings, 104 → 106 memberships, Islamic 15 → 17,
+  651 → 662 tests (landed on main after the rosette-transform
+  landing; the fork's step numbers were on its own base). Full bar
+  green on main: cargo check + clippy (both target sets) zero
+  warnings, cargo test --workspace --all-features 662/662.

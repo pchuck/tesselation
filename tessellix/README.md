@@ -127,7 +127,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-92 built-in tilings (104 tab memberships), all discoverable in both UIs
+94 built-in tilings (106 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -136,7 +136,7 @@ ten tabs:
 **Uniform** (11), **Two-Uniform** (11), **Laves / Catalan duals** (15,
 12 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
-**Pentagon Types** (12), **Islamic** (15), **Arrangements** (5),
+**Pentagon Types** (12), **Islamic** (17), **Arrangements** (5),
 **Quasiperiodic** (8: Penrose family, Ammann–Beenker, Stampfli, shield,
 girih Darb-i Imam), **Aperiodic** (6: einstein family, pinwheel, Taylor-Socolar,
 Jeandel-Rao 11-tile Wang tiles), and
@@ -181,6 +181,8 @@ grouping is honest about what the mathematics distinguishes; see
 | `hankin-square-two-point` | Hankin two-point square weave (4.4.4.4) | Hankin two-point motif inference on the unit square (4.4.4.4) substrate (θK = 45°, split δ = 0.5 — rays leave edge split points and cross): a decagonal star per cell — four corner triangles, two pentagonal petals, one 10-gon core — 7 faces per unit cell ⟨(1,0),(0,1)⟩ (det 1); cmm (2*22) — diagonal mirror families x∓y=k with 2-folds on-mirror at vertices/cell-centers and off-mirror at edge midpoints, no 4-folds (M99) | cmm | centered |
 | `hankin-4-8-8-rosette-transform` | Hankin rosette-transform khatam | Kaplan rosette transform (§3.8) of the 4.8.8 substrate at θK = 45° — each octagon maps to a concentric inner octagon + 8 pentagons (r′ radius, spokes = half inner side), each square to 4 half-squares (bisectors meet in a centre cluster) — then Hankin motif inference (θE = 45°) on the transformed table: 16 triangles, 36 quads, 32 pentagons, 8 hexagons and one 16-gon per cell ⟨(1+√2,0),(0,1+√2)⟩ (det 3+2√2), exact Q(√2); the cell table is p4m-exact to 6.5e-16 (M99) | p4m | square |
 | `khatam-girih` | Khatam girih decomposition (8-point) | classical kissing {8/3} star-and-cross cut into 8 rhombi + square + 4 pentagons per cell (exact Q(√2) kitab) | p4m | square |
+| `najm-63-2e-0-3e-ac` | Najm template ([6,3]; 2e, 0, 3e; AC) | Najm-template substrate (Kaplan diss. §3.6.1 Fig. 3.21) from the najm generator: regular dodecagons + enneagons sharing equal chords, case-3 inflation x = 2/(cot 15° + cot 20°), + concave equilateral bowties (70°/220°) at the 2-fold points; 1 doz + 2 enne + 3 bowties per cell, |det| = 3√3/2 | p6m | hexagonal |
+| `najm-44-3e-0-0-a` | Najm template ([4,4]; 3e, 0, 0; A) | Najm-template substrate (Kaplan diss. §3.6.1 Fig. 3.22 second row): dodecagons r = √6−√2 on 2Z² sharing chords across the odd grid lines + concave equilateral 4-pointed stars (side 4−2√3, tips 60°, notches 210°); exact Q(√2,√3), areas 24−12√3 and 12√3−20 per cell | p4m | square |
 | `basketweave` | Basketweave (2:1 dominoes) | paver bond: 2×2 blocks of two parallel 2:1 dominoes, checkerboard orientation; long sides split into unit edges | p4g | square |
 | `herringbone` | Herringbone (2:1 dominoes) | paver bond: chiral L-pairs of 2:1 dominoes, single-direction; long sides split into unit edges | pgg | rectangular |
 | `running-bond` | Running bond (2:1 dominoes) | paver bond: stretcher rows of 2:1 dominoes, each row offset by half a brick; long sides split into unit edges | cmm | centered |
@@ -531,6 +533,15 @@ cross-check plus a ratio-sweep coverage test.
   decagon, and edge-to-edge, T-junction-free patches at every
   generation (frozen core: tiles are depth-independent inside radius
   ~79).
+- **Najm** (`najm.rs`, feature `najm`) — the Najm template-tiling
+  generator (Kaplan diss. §3.6.1, roadmap 22b): notation
+  `([p,q]; m_A o_A, m_B o_B, m_C o_C; inflation)` → circumradii
+  (`NajmSpec::radii`, inflation cases 1–4 via the absolute-trig extent
+  equations) → substrate cell tables. First two entries:
+  `najm-63-2e-0-3e-ac` (dodecagons + enneagons + bowties) and
+  `najm-44-3e-0-0-a` (dodecagons + 4-pointed stars). Hole tiles use
+  construction-specific formulas; a generic hole decomposition and the
+  motif layers (22a/22c) are future work.
 
 ### Shared UI state
 
@@ -569,7 +580,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 651 tests, all green, zero
+`cargo test --workspace` (currently 662 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

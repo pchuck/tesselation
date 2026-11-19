@@ -58,6 +58,8 @@ pub mod khatam_girih;
 pub mod kuniform;
 #[cfg(feature = "laves")]
 pub mod laves;
+#[cfg(feature = "najm")]
+pub mod najm;
 #[cfg(feature = "hexagram")]
 pub mod hexagram;
 #[cfg(feature = "hexagon")]
@@ -339,6 +341,11 @@ r = r.register(hankin_3_12_12::hankin_3_12_12());
     {
         r = r.register(khatam_girih::khatam_girih());
     }
+    #[cfg(feature = "najm")]
+    {
+        r = r.register(najm::najm_63_2e_0_3e_ac());
+        r = r.register(najm::najm_44_3e_0_0_a());
+    }
     #[cfg(feature = "kuniform")]
     {
         r = r.register(kuniform::kuniform_p6m());
@@ -565,7 +572,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M99). 92 built-ins — 63 before
+// Census of today's taxonomy (M99). 94 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -573,9 +580,9 @@ mod tests {
         //   + 4 machine-dualized k-uniform duals (M98) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
-//   PentagonTypes 12, Islamic 15, Arrangements 5,
+//   PentagonTypes 12, Islamic 17, Arrangements 5,
 //   Quasiperiodic 8, Aperiodic 6, Nonperiodic 4.
-// Membership census 104 = 92 primaries + 12 secondaries (3 Laves
+// Membership census 106 = 94 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -607,21 +614,24 @@ mod tests {
         // first cmm entry)
         // -> M95 TwoUniform 10 -> 11 (kuniform-n19; the frontier
         // solve corrected the group to p6m — mirrors pass torus-exact,
-        // e = 3 under D6, matching the wiki's (t=3, e=3) exactly)
+// e = 3 under D6, matching the wiki's (t=3, e=3) exactly)
 // -> M99 Islamic 13 -> 14 (hankin-square-two-point, the
         // two-point hankin entry on the square 4.4.4.4 substrate;
         // θK = 45°, δ = 0.5, cmm, PATTERNS.MD §54).
         // -> M99 Islamic 14 -> 15 (hankin-4-8-8-rosette-transform,
         // the rosette transform of the 4.8.8 substrate at θK = 45°,
         // PATTERNS.MD §55).
+        // -> M99 Islamic 15 -> 17 (najm-63-2e-0-3e-ac, najm-44-3e-0-0-a;
+        // roadmap item 22b: the najm template generator, diss. §3.6.1,
+        // PATTERNS.MD §56).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 11, 15, 17, 12, 15, 5, 8, 6, 4],
+            vec![11, 11, 15, 17, 12, 17, 5, 8, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 92, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 104, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 94, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 106, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -18099,3 +18109,376 @@ mod hankin_4_8_8_rosette_transform_tests {
         );
     }
 }
+
+#[cfg(all(test, feature = "najm"))]
+mod najm_tests {
+    use super::tests::{check_covers, check_det, check_rotated};
+    use crate::najm::{self, Axis, Diad, Feature, Inflation, NajmSpec};
+    use tess_core::geometry::{BBox, Vec2};
+
+    const PI: f64 = std::f64::consts::PI;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    fn spec_63() -> NajmSpec {
+        NajmSpec {
+            p: 6,
+            q: 3,
+            mult: [2, 0, 3],
+            orient: [Feature::Edge, Feature::Vertex, Feature::Edge],
+            inflation: Inflation::Pair(Diad::Ac),
+        }
+    }
+
+    fn spec_44() -> NajmSpec {
+        NajmSpec {
+            p: 4,
+            q: 4,
+            mult: [3, 0, 0],
+            orient: [Feature::Edge, Feature::Vertex, Feature::Vertex],
+            inflation: Inflation::Order(&[najm::Step::Inflate(Axis::A)]),
+        }
+    }
+
+    /// Signed interior angle (degrees, may be reflex) at vertex `i` of a
+    /// CCW polygon.
+    fn interior_angle_deg(pts: &[Vec2], i: usize) -> f64 {
+        let n = pts.len();
+        let (p0, p1, p2) = (pts[(i + n - 1) % n], pts[i], pts[(i + 1) % n]);
+        let (u, w) = (p0 - p1, p2 - p1);
+        let unsigned = u.cross(w).abs().atan2(u.dot(w)) * 180.0 / PI;
+        if u.cross(w) < 0.0 {
+            unsigned
+        } else {
+            360.0 - unsigned
+        }
+    }
+
+    fn centroid(pts: &[Vec2]) -> Vec2 {
+        let mut c = Vec2::ZERO;
+        for &p in pts {
+            c += p;
+        }
+        c * (1.0 / pts.len() as f64)
+    }
+
+    fn angles(pts: &[Vec2]) -> Vec<f64> {
+        let mut a: Vec<f64> = (0..pts.len())
+            .map(|i| interior_angle_deg(pts, i))
+            .collect();
+        a.sort_by(|x, y| x.partial_cmp(y).unwrap());
+        a
+    }
+
+    fn close(a: f64, b: f64) -> bool {
+        (a - b).abs() < 1e-10
+    }
+
+    #[test]
+    fn radii_match_the_spike() {
+        // 60-digit spike values (t22b_spike.py), case 3 on AC.
+        let rr = spec_63().radii();
+        assert_eq!(rr[1], 0.0);
+        assert!((rr[0] - 0.5962939229190058).abs() < 1e-14, "r_A = {}", rr[0]);
+        assert!((rr[2] - 0.45123723482970224).abs() < 1e-14, "r_C = {}", rr[2]);
+        // Exact identities of the case-3 solution.
+        let x = 2.0 * rr[0] * (PI / 12.0).sin();
+        assert!((x - 2.0 * rr[2] * (PI / 9.0).sin()).abs() < 1e-14, "equal chords");
+        assert!(
+            (rr[0] * (PI / 12.0).cos() + rr[2] * (PI / 9.0).cos() - 1.0).abs() < 1e-14,
+            "extents sum to |AC| = 1"
+        );
+        let closed = 0.5 * x * ((PI / 12.0).cos() / (PI / 12.0).sin()
+            + (PI / 9.0).cos() / (PI / 9.0).sin());
+        assert!((closed - 1.0).abs() < 1e-14, "x = 2/(cot 15° + cot 20°)");
+
+        // Case 2 at unit |AC|: r_A = |AB|/cos 15° = cos 45°/cos 15°;
+        // rescaled to |AB| = 1 this is 1/cos 15° = √6 − √2 (exact).
+        let r44 = spec_44().radii()[0];
+        assert!((r44 - (PI / 4.0).cos() / (PI / 12.0).cos()).abs() < 1e-14);
+        let ra = r44 / (PI / 4.0).cos();
+        assert!((ra - (6.0f64.sqrt() - 2.0f64.sqrt())).abs() < 1e-14);
+        assert!((ra * (PI / 12.0).cos() - 1.0).abs() < 1e-14, "apothem = 1");
+    }
+
+    #[test]
+    fn najm_63_covers_region() {
+        let t = najm::najm_63_2e_0_3e_ac();
+        check_covers(&t, "najm-63-2e-0-3e-ac", BBox::new(v2(-2.5, -2.0), v2(7.5, 5.5)));
+    }
+
+    #[test]
+    fn najm_63_rotated_scaled() {
+        let t = najm::najm_63_2e_0_3e_ac();
+        check_rotated(
+            &t,
+            "najm-63-2e-0-3e-ac",
+            BBox::new(v2(-3.0, -3.0), v2(6.0, 5.0)),
+            1.5,
+            37.0,
+        );
+    }
+
+    #[test]
+    fn najm_63_deterministic() {
+        let t = najm::najm_63_2e_0_3e_ac();
+        check_det(&t, "najm-63-2e-0-3e-ac", BBox::new(v2(-2.5, -2.0), v2(7.5, 5.5)));
+    }
+
+    #[test]
+    fn najm_44_covers_region() {
+        let t = najm::najm_44_3e_0_0_a();
+        check_covers(&t, "najm-44-3e-0-0-a", BBox::new(v2(-2.0, -2.0), v2(8.0, 8.0)));
+    }
+
+    #[test]
+    fn najm_44_rotated_scaled() {
+        let t = najm::najm_44_3e_0_0_a();
+        check_rotated(
+            &t,
+            "najm-44-3e-0-0-a",
+            BBox::new(v2(-3.0, -3.0), v2(7.0, 7.0)),
+            2.5,
+            64.0,
+        );
+    }
+
+    #[test]
+    fn najm_44_deterministic() {
+        let t = najm::najm_44_3e_0_0_a();
+        check_det(&t, "najm-44-3e-0-0-a", BBox::new(v2(-2.0, -2.0), v2(8.0, 8.0)));
+    }
+
+    #[test]
+    fn najm_63_tile_shapes_and_orientations() {
+        let t = najm::najm_63_2e_0_3e_ac();
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(seeds, vec![0, 1, 1, 2, 2, 2]);
+        let lens: Vec<usize> = t.cells.iter().map(|c| c.poly.pts.len()).collect();
+        assert_eq!(lens, vec![12, 9, 9, 6, 6, 6]);
+
+        let dod = &t.cells[0].poly.pts;
+        let c = centroid(dod);
+        let r = (dod[0] - c).length();
+        let side = (dod[1] - dod[0]).length();
+        for i in 0..12 {
+            assert!(((dod[i] - c).length() - r).abs() < 1e-12);
+            assert!(((dod[(i + 1) % 12] - dod[i]).length() - side).abs() < 1e-12);
+            assert!(close(interior_angle_deg(dod, i), 150.0));
+        }
+
+        // Both enneagons regular (radius/side/140° angles), equal areas.
+        for k in 1..=2 {
+            let e = &t.cells[k].poly.pts;
+            let c = centroid(e);
+            let r = (e[0] - c).length();
+            let side = (e[1] - e[0]).length();
+            for i in 0..9 {
+                assert!(((e[i] - c).length() - r).abs() < 1e-12);
+                assert!(((e[(i + 1) % 9] - e[i]).length() - side).abs() < 1e-12);
+                assert!(close(interior_angle_deg(e, i), 140.0));
+            }
+        }
+        assert!((t.cells[1].poly.area() - t.cells[2].poly.area()).abs() < 1e-14);
+
+        // Orientation witnesses: a vertex ray of enne0 points at the
+        // 2-fold point (√3/2, 0) (m_C = 3 flips the CB edge to a vertex);
+        // an edge-midpoint ray of enne1 points at its partner a1.
+        let s3 = 3.0f64.sqrt();
+        let e0 = &t.cells[1].poly.pts;
+        let c0 = centroid(e0);
+        assert!(
+            e0.iter()
+                .any(|v| ((*v - c0).y.atan2((*v - c0).x) + PI / 2.0).abs() < 1e-9),
+            "no enne0 vertex on the ray toward the 2-fold point"
+        );
+        let e1 = &t.cells[2].poly.pts;
+        let c1 = centroid(e1);
+        assert!(
+            (0..9).any(|i| {
+                let m = (e1[i] + e1[(i + 1) % 9]) * 0.5 - c1;
+                (m.y.atan2(m.x) + PI / 2.0).abs() < 1e-9
+            }),
+            "no enne1 edge-midpoint ray toward a1"
+        );
+
+        // 2-fold witness: rot180 about (√3/2, 0) maps enne0's vertices
+        // exactly onto enne1's translated by −a2 (phases 190° + 180° =
+        // 250° mod 40° — the classes' orientations differ).
+        let b0 = v2(s3 / 2.0, 0.0);
+        let a2 = v2(s3 / 2.0, 1.5);
+        for v in e0 {
+            let w = b0 * 2.0 - *v + a2;
+            assert!(
+                e1.iter().any(|u| (*u - w).length() < 1e-12),
+                "rot180(B0) does not map enne0 onto enne1 − a2"
+            );
+        }
+
+        // Bowties: equilateral with the common edge x, angles
+        // {70, 70, 70, 70, 220, 220}, equal areas.
+        let x = 2.0 * r * (PI / 12.0).sin();
+        for k in 3..6 {
+            let b = &t.cells[k].poly.pts;
+            for i in 0..6 {
+                assert!(((b[(i + 1) % 6] - b[i]).length() - x).abs() < 1e-12);
+            }
+            let angs = angles(b);
+            for (&want, &got) in [70.0, 70.0, 70.0, 70.0, 220.0, 220.0].iter().zip(&angs) {
+                assert!(close(want, got), "bowtie angles {angs:?}");
+            }
+            assert!((t.cells[k].poly.area() - t.cells[3].poly.area()).abs() < 1e-14);
+        }
+    }
+
+    #[test]
+    fn najm_44_tile_shapes() {
+        let t = najm::najm_44_3e_0_0_a();
+        assert_eq!(t.cells.len(), 2);
+        let s = 4.0 - 2.0 * 3.0f64.sqrt();
+
+        let dod = &t.cells[0].poly.pts;
+        assert_eq!(dod.len(), 12);
+        for i in 0..12 {
+            assert!(((dod[(i + 1) % 12] - dod[i]).length() - s).abs() < 1e-13);
+            assert!(close(interior_angle_deg(dod, i), 150.0));
+        }
+        // The ±15° vertices sit exactly on x = 1 (the chord through B).
+        assert_eq!(dod.iter().filter(|p| (p.x - 1.0).abs() < 1e-12).count(), 2);
+
+        let star = &t.cells[1].poly.pts;
+        assert_eq!(star.len(), 8);
+        let c = v2(1.0, 1.0);
+        let td = 3.0f64.sqrt() - 1.0;
+        let nqr = (2.0 - 3.0f64.sqrt()) * 2.0f64.sqrt();
+        let mut tips = 0;
+        let mut notches = 0;
+        for i in 0..8 {
+            assert!(((star[(i + 1) % 8] - star[i]).length() - s).abs() < 1e-13);
+            let rad = (star[i] - c).length();
+            let ang = interior_angle_deg(star, i);
+            if (rad - td).abs() < 1e-12 {
+                assert!(close(ang, 60.0), "star tip angle {ang}");
+                tips += 1;
+            } else if (rad - nqr).abs() < 1e-12 {
+                assert!(close(ang, 210.0), "star notch angle {ang}");
+                notches += 1;
+            } else {
+                panic!("star vertex at unexpected radius {rad}");
+            }
+        }
+        assert_eq!((tips, notches), (4, 4));
+    }
+
+    #[test]
+    fn area_census_matches_the_cell() {
+        let t1 = najm::najm_63_2e_0_3e_ac();
+        let det1 = t1.lattice[0].cross(t1.lattice[1]).abs();
+        assert!((det1 - 3.0 * 3.0f64.sqrt() / 2.0).abs() < 1e-14);
+        let rr = spec_63().radii();
+        let a12 = t1.cells[0].poly.area();
+        let a9 = t1.cells[1].poly.area();
+        let abt = t1.cells[3].poly.area();
+        assert!((a12 - 3.0 * rr[0] * rr[0]).abs() < 1e-13, "12-gon = 3 r_A²");
+        assert!(
+            (a9 - 4.5 * rr[2] * rr[2] * (2.0 * PI / 9.0).sin()).abs() < 1e-13,
+            "9-gon = (9/2) r_C² sin 40°"
+        );
+        assert!(
+            (a12 + 2.0 * a9 + 3.0 * abt - det1).abs() < 1e-13,
+            "1·A12 + 2·A9 + 3·Abt = |det|"
+        );
+
+        let t2 = najm::najm_44_3e_0_0_a();
+        let det2 = t2.lattice[0].cross(t2.lattice[1]).abs();
+        assert!((det2 - 4.0).abs() < 1e-14);
+        let s3 = 3.0f64.sqrt();
+        let a12 = t2.cells[0].poly.area();
+        let ast = t2.cells[1].poly.area();
+        assert!((a12 - (24.0 - 12.0 * s3)).abs() < 1e-12, "24 − 12√3");
+        assert!((ast - (12.0 * s3 - 20.0)).abs() < 1e-12, "12√3 − 20");
+        assert!((a12 + ast - det2).abs() < 1e-12, "sum = |det| = 4");
+    }
+
+    #[test]
+    fn translation_lattices_are_primitive() {
+        // Each entry holds exactly one 12-gon class per cell (centered at
+        // the origin), and no other class has 12 vertices. Any translation
+        // symmetry must map the dodecagon orbit to itself, so the
+        // translation group is contained in the orbit's center set;
+        // generating a patch and checking that the emitted dodecagon
+        // centers are *precisely* the declared lattice points witnesses
+        // the declared basis is primitive (no denser lattice underlies
+        // the tiling).
+        use tess_core::params::ParamSet;
+        use tess_core::tiling::{Query, Tiling};
+        for t in [najm::najm_63_2e_0_3e_ac(), najm::najm_44_3e_0_0_a()] {
+            let lens: Vec<usize> = t.cells.iter().map(|c| c.poly.pts.len()).collect();
+            assert_eq!(
+                lens.iter().filter(|&&n| n == 12).count(),
+                1,
+                "{}: exactly one 12-gon class witnesses primitivity",
+                t.id
+            );
+            let (a, b) = (t.lattice[0], t.lattice[1]);
+            let det = a.cross(b);
+            let coords =
+                |p: Vec2| ((p.x * b.y - p.y * b.x) / det, (a.x * p.y - a.y * p.x) / det);
+            let region = BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0));
+            // Mirrors generate()'s inclusion rule: the cell's AABB,
+            // translated to each lattice point, must intersect the region.
+            let cell = t.cells.iter().find(|c| c.poly.pts.len() == 12).unwrap();
+            let cc = centroid(&cell.poly.pts);
+            let la = cell.poly.aabb();
+            let hits = |c: Vec2| {
+                c.x + la.max.x - cc.x > region.min.x
+                    && c.x + la.min.x - cc.x < region.max.x
+                    && c.y + la.max.y - cc.y > region.min.y
+                    && c.y + la.min.y - cc.y < region.max.y
+            };
+            let pset = ParamSet::default_for(t.params());
+            let r = t.generate(&pset, &Query { region });
+            let mut counts: std::collections::BTreeMap<(i32, i32), u32> =
+                std::collections::BTreeMap::new();
+            let mut total = 0;
+            for tile in &r.tiles {
+                if tile.poly.pts.len() != 12 {
+                    continue;
+                }
+                total += 1;
+                let c = centroid(&tile.poly.pts);
+                let (u, v) = coords(c);
+                assert!(
+                    (u - u.round()).abs() < 1e-7 && (v - v.round()).abs() < 1e-7,
+                    "{}: dodecagon center {c:?} off the declared lattice ({u}, {v})",
+                    t.id
+                );
+                *counts.entry((u.round() as i32, v.round() as i32)).or_insert(0) += 1;
+            }
+            assert!(total >= 9, "{}: patch too small to witness", t.id);
+            // Every lattice point whose dodecagon meets the region appears
+            // exactly once, and there are no others.
+            let mut expected = 0;
+            for iu in -8..=8i32 {
+                for iv in -8..=8i32 {
+                    if hits(a * iu as f64 + b * iv as f64) {
+                        expected += 1;
+                        assert_eq!(
+                            counts.get(&(iu, iv)).copied(),
+                            Some(1),
+                            "{}: lattice point ({iu}, {iv}) has no unique dodecagon",
+                            t.id
+                        );
+                    }
+                }
+            }
+            assert_eq!(
+                counts.values().sum::<u32>() as usize,
+                expected,
+                "{}: no dodecagon outside the lattice-point window",
+                t.id
+            );
+        }
+    }}

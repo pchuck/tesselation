@@ -9,7 +9,7 @@ is archived, gitignored, in `tessellix/.git.bak/`.
 ## Commands
 
 ```sh
-cargo test --workspace        # full suite (651 tests); must stay green
+cargo test --workspace        # full suite (662 tests); must stay green
 cargo test -p tess-tilings <test_name>   # single test
 cargo check --workspace       # convention: ZERO warnings (enforced on every commit)
 

@@ -1342,6 +1342,15 @@ can be adopted independently through the standard checklist.
     the notation (Euclidean first); feeds 22a assignments + M94
     inference. Spherical/hyperbolic instances belong to 22f.
   - **Effort** L, **tier** P1.
+  - **Status:** landed (M99) — `najm.rs`, feature `najm`, with two
+    Islamic substrates: `najm-63-2e-0-3e-ac` (Fig. 3.21, p6m) and
+    `najm-44-3e-0-0-a` (Fig. 3.22, p4m). Radii cases 1–4 all
+    implemented; hole tiles (bowties, stars) come from
+    construction-specific formulas verified in the spike — a generic
+    hole decomposition remains open. Deviation: the extracted case-3
+    text `T(l) = T(x)/sin(π/n)` is missing a factor ½; re-derived and
+    verified at 60 digits (see PATTERNS.MD §56). Euclidean [4,4]/[6,3]
+    only, as before.
 - **22c. Rosette transform (Najm ↔ Hankin bridge)** — diss. §3.8.
   A tiling-to-tiling operation: a Najm tiling becomes the
   corresponding Hankin tiling (regular polygons ringed by irregular
