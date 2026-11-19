@@ -48,8 +48,8 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (11)   Laves (19)   Wallpaper (17)   Pentagon
-Types (12)   Islamic (14)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (6)
+counts (`Uniform (11)   Two-Uniform (13)   Laves (19)   Wallpaper (17)   Pentagon
+Types (12)   Islamic (19)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (6)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
@@ -127,13 +127,13 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-100 built-in tilings (112 tab memberships), all discoverable in both UIs
+102 built-in tilings (114 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 ten tabs:
-**Uniform** (11), **Two-Uniform** (11), **Laves / Catalan duals** (19,
+**Uniform** (11), **Two-Uniform** (13), **Laves / Catalan duals** (19,
 16 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (12), **Islamic** (19), **Arrangements** (5),
@@ -209,6 +209,8 @@ grouping is honest about what the mathematics distinguishes; see
 | `kuniform-n20` | 2-uniform (3⁶; 3⁴.6) | 2-uniform k-uniform: flower form — unit triangular lattice with hexagons dissected at the points of an index-13 sublattice, the two-uniform family's first p6 entry (Wikipedia `2-uniform n20`, t = 5; e = 6 exact vs. the wiki's parenthetical 7); 60° hexagonal basis, \|b1\| = \|b2\| = √13, det 13√3/2 (right-handed); 21 tiles/cell; A:B = 1:1 vertex orbits pinned by k = 4X+3Y mod 13 (M96) | p6 | hexagonal |
 | `kuniform-n12` | 2-uniform (3².6²; 3⁴.6) | 2-uniform k-uniform: rows of edge-sharing hexagons with unit-triangle bands between the rows, the two-uniform family's first cmm entry (Wikipedia `2-uniform n12`, t = 2, e = 4); centered rectangular basis ⟨(√3, 0), (√3/2, 5/2)⟩ with the centering vector as basis, det 5√3/2 (right-handed); 5 tiles/cell (1 hexagon + 4 triangles, the 2-hexagon + 8-triangle centered cell is S ⊎ (S + c)); both vertex orbits 2 translation classes per cell (M97) | cmm | centered |
 | `kuniform-n19` | 2-uniform (3⁶; 3⁴.6)₁ | 2-uniform k-uniform: the t = 3 flower form of the 3⁴.6 pair — unit triangular lattice with hexagons dissected at the points of the index-9 sublattice ⟨(3,0),(0,3)⟩ (Wikipedia `2-uniform n19`, t = 3, e = 3); 60° hexagonal basis, \|b1\| = \|b2\| = 3, det 9√3/2 (right-handed); 13 tiles/cell; A:B = 1:3 vertex orbits pinned by v mod 3; both mirror classes verified exactly, so the wiki's p6 group label under-states the symmetry — this is the achiral p6m form (n20 is the chiral p6 form) (M95) | p6m | hexagonal |
+| `kuniform-n4` | 2-uniform (4⁴; 3³.4²)₁ | 2-uniform k-uniform: staggered two-square-tall bands alternating with alternating-triangle bands one triangle high (Wikipedia `2-uniform n4`, t = 2, e = 4); centered rectangular basis ⟨(1, 0), (1/2, 2+√3/2)⟩ with orthogonal index-2 pair (1, 0), (0, 4+√3), det 2+√3/2 (right-handed); 4 tiles/cell (2 squares + 2 triangles); vertex orbits 4444 (1 class/cell) + 33344 (2 classes/cell) (M103) | cmm | centered |
+| `kuniform-n14` | 2-uniform (3⁶; 3³.4²)₁ | 2-uniform k-uniform: single square rows alternating with double triangle strips — two counterposed unit-triangle rows, strip height √3 (Wikipedia `2-uniform n14`, t = 3, e = 4); rectangular (primitive) basis ⟨(1, 0), (0, 1+√3)⟩, det 1+√3 (right-handed); 5 tiles/cell (1 square + 4 triangles in three orbits {strip1-up, strip2-down}, {strip1-down, strip2-up}); 3⁶ vertex orbit 1 class/cell, 33344 2 classes/cell (M103) | pmm | rectangular |
 | `kuniform-dual-p6m` | Dual of 2-uniform (3⁶; 3².6²) | face-centroid dual of `kuniform-p6m` (p6m, det 9√3/2): 1 regular hexagon (side 1/√3, area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3, 2√3/3, √3 in cyclic order; angles 60°/60°/120°/120°; area 2√3/3) per cell, sum 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
 | `kuniform-dual-n18` | Dual of 2-uniform (3⁶; 3².4.3.4) | face-centroid dual of `kuniform-n18` (p6m, det 3+2√3): 1 regular hexagon (side 1/√3) + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6; angles 90°/90°/120°/120°/120°; area (2+√3)/4) per cell, sum 3+2√3 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
 | `kuniform-dual-n9` | Dual of 2-uniform (3.4.6.4; 3².4.3.4) | face-centroid dual of `kuniform-n9` (p6m, det 6+7√3/2): 6 congruent quadrilaterals (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/120°; area (3+2√3)/6) + 6 congruent pentagons (congruent to the `kuniform-dual-n18` pentagons; area (2+√3)/4) per cell, sum 6+7√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
@@ -586,7 +588,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 690 tests, all green, zero
+`cargo test --workspace` (currently 698 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

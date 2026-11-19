@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (100 tilings)
+## Implemented (102 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -3678,6 +3678,82 @@ documentation pending).
   batch: pmm and n12; the square-family rows (n19 dual, etc.) stay
   blocked on unimplemented primals.
 
+### 60. 2-uniform [4⁴; 3³.4²]₁ (n4) + [3⁶; 3³.4²]₁ (n14) ✅ (M103)
+
+- **Numbering note:** renumbered from the fork's provisional §61 to
+  §60 by landing order (§59 = k-uniform duals batch 2, M102).
+- **Motif:** two entries from Krotenheerdt's closed list of 20
+  two-vertex-orbit tilings: Wikipedia `2-uniform n4`,
+  `[4⁴; 3³.4²]₁ (t=2, e=4)`, annotated cmm, and Wikipedia
+  `2-uniform n14`, `[3⁶; 3³.4²]₁ (t=3, e=4)`, annotated pmm. Label
+  caveat: the sprint brief carried stale row labels for these indices;
+  re-fetching the current wiki table and mapping the SVG filenames to
+  their caption cells gives `2-uniform_n4.svg` ↔ `[44; 33.42]1(t=2,
+  e=4)` and `2-uniform_n14.svg` ↔ `[36; 33.42]1(t=3, e=4)` — and both
+  independent torus enumerations below reproduce exactly those t/e,
+  confirming the corrected labels. n4 construction: horizontal square
+  bands two unit squares tall, alternating with one-row bands of
+  alternating up/down unit triangles (height H = √3/2); consecutive
+  square bands staggered by half a unit (the b2 shift), triangle-band
+  vertices join both square rows edge-to-edge. Basis b1 = (1,0),
+  b2 = (1/2, 2+√3/2), |det| = 2+√3/2; cell = 2 squares + 2 triangles.
+  n14 construction: rows of edge-sharing unit squares alternating
+  with double triangle strips — two counterposed unit-triangle rows
+  joined tip-to-base along the strip midline (total strip height √3),
+  square row sitting on the strip top line. Primitive basis
+  b1 = (1,0), b2 = (0, 1+√3), |det| = 1+√3; cell = 1 square +
+  4 triangles.
+- **Exact solve (tku3_core.py / tku3_run.py, Q(√3) surd-pair
+  arithmetic):** n4 — area identity |det| = Σ areas exact; ±6 patch
+  edge census 1235 distinct edges, 104 rim singles, 0 edges with >2
+  sides; coverage 1.0; interior figures 33344: 300, 4444: 156; full
+  symmetry scan passes only R180 (52 centers), mirror0 (16 axes),
+  mirror90 (156 axes); translation scan (radius 3.2) finds exactly
+  ⟨b1, b2⟩ — the cmm signature. Torus 2×2-cell quotient with the
+  68 deduped generator classes: F = 4, V = 3 per cell; tile orbits
+  t = 2 (squares 2/cell + triangles 2/cell); edge orbits e = 4
+  (sizes 1+2+2+2 = 7); vertex orbits 4444 (1/cell — the four-square
+  crossing inside a band) and 33344 (2/cell — band junctions), both
+  single-figure → 2-uniform. n14 — same battery: area identity exact;
+  1404 edges, 104 rim singles, 0 triple; coverage 1.0; figures
+  333333: 156, 33344: 300; scan passes only R180 (56), mirror0 (56),
+  mirror90 (164) — pmm; translation scan finds exactly
+  ⟨(1,0), (0,1+√3)⟩ (the earlier candidate's 3-periodic square row
+  is disproved: (1,0) is a period, so the PRIMITIVE lattice is the
+  correct one). Torus: F = 5, V = 3/cell; tile orbits t = 3
+  (square 1/cell + two triangle orbits {strip1-up, strip2-down} and
+  {strip1-down, strip2-up} of 2/cell — the same pairing as the wiki
+  figure's two triangle colors, level-census-verified against
+  `wiki_n14.svg`: dark = up-based-at-square-top ∪ down-based-at-next-square-bottom,
+  yellow = the complementary pair at the strip midline); edge orbits
+  e = 4 (sizes 1+1+2+4 = 8); vertex orbits 3⁶ (1/cell, strip-midline
+  junctions) and 3³.4² (2/cell, square-row corners) → 2-uniform.
+  Both t/e match the wiki parentheticals (2,4) and (3,4) exactly.
+- **Rust:** `kuniform_n4()` / `kuniform_n14()` in `kuniform.rs`
+  (module header "Eleven entries" → "Thirteen entries"), registered
+  after `kuniform_n19`; 4 tests each (`covers_region`,
+  `rotated_scaled` 0.7/30°, `deterministic`, `vertex_figures`). The
+  vertex-figure tests pin the ±3×±3 patch census from the bit-exact
+  Python replica `rust_expect` (tku3_core.py): n4 figure `33344`
+  count 78 with reps {(0,0), (1000,2000)} (the two band-junction
+  translation classes) and `4444` count 42 with rep {(1000,1000)};
+  n14 figure `333333` count 42 with rep {(500,866)} and `33344`
+  count 78 with reps {(0,0), (0,1732)}. One winding fix at port time:
+  the spike's `st2_up` triangle (winding-agnostic Python battery) is
+  reversed in the Rust table so the CCW sector walk closes.
+- **Census:** 96 → 98 tilings, 108 → 110 memberships, TwoUniform
+  11 → 13, 674 → 682 tests.
+- **Status:** landed (M103). Full bar green. 13 of the 20 closed-list
+  entries landed, 7 remain. Not landed this batch: `2-uniform n16`
+  (`[3³.4²; 3².4.3.4]₁ (t=4, e=5)`, p4g, stretch goal) — its wiki
+  SVG resisted strict exact probing (the figure's own tile-extraction
+  noise is ~3% at unit-edge scale), but a noise-tolerant translation
+  probe extracts its translation lattice: square lattice
+  ⟨((3+√3)/2, (3+√3)/2), (−(3+√3)/2, (3+√3)/2)⟩, area 6+3√3
+  (8 vertices/cell ⇒ t = 4 with 2 reps/orbit, consistent with the
+  wiki parenthetical); full combinatorial derivation + construction
+  stays open.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -5370,3 +5446,27 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
 - 2026-11-19 — M101 pentagon census coverage audit ✅: docs + 4
   condition tests, 0 new tilings, 686 → 690 tests
   (fork-local on 339e57f)
+- 2026-11-19 — M103 2-uniform n4 + n14 (kuniform-n4 cmm,
+  kuniform-n14 pmm) ✅ (§60): two more closed-list 2-uniform entries.
+  `kuniform-n4` = `[4⁴; 3³.4²]₁ (t=2, e=4)`, cmm: staggered
+  two-square-tall bands + alternating-triangle one-row bands, basis
+  ⟨(1,0), (1/2, 2+√3/2)⟩, det 2+√3/2, 4 tiles/cell; centered
+  rectangular lattice (orthogonal index-2 pair (1,0), (0, 4+√3)).
+  `kuniform-n14` = `[3⁶; 3³.4²]₁ (t=3, e=4)`, pmm: square rows +
+  double triangle strips, primitive basis ⟨(1,0), (0, 1+√3)⟩,
+  det 1+√3, 5 tiles/cell in 3 orbits (wiki-figure colors confirm the
+  orbit pairing). Both solved exactly in the tku3 Q(√3) spike
+  (coverage 1.0, edge-to-edge, torus orbits reproduce the wiki
+  parentheticals (2,4)/(3,4) exactly; full scans give cmm/pmm
+  respectively — R180 + both mirror classes, nothing else). The
+  brief's stale row labels were corrected against the current wiki
+  table before porting (filename↔caption mapping quoted in §60).
+  n16 (p4g) stretch: lattice extracted
+  (⟨((3+√3)/2, ±(3+√3)/2)⟩, area 6+3√3, noise-tolerant probe) but
+  construction not derived — stays open. 8 new tests (4 per entry,
+  incl. vertex_figures pinned by the bit-exact rust_expect replica).
+  Census: 100 → 102 tilings, 112 → 114 memberships, TwoUniform
+  11 → 13, 690 → 698 tests (landed on main after the M101/M102
+  landings; the fork's step numbers were on its own base). Full bar
+  green: cargo check + clippy (both target sets) zero warnings,
+  cargo test --workspace --all-features 698/698. Details in §60.

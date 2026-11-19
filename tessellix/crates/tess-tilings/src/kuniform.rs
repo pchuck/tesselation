@@ -1,10 +1,10 @@
 //! 2-uniform (k-uniform) tilings, expressed as [`LatticeTiling`] data
 //! tables.
 //!
-//! Eleven entries are from the closed list of 20 two-vertex-orbit
+//! Thirteen entries are from the closed list of 20 two-vertex-orbit
 //! tilings by regular polygons (Krotenheerdt; see the Wikipedia
 //! "k-uniform tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`,
-//! `n8`, `n5`, `n1`, `n13`, `n20`, `n12`, `n19`). The
+//! `n8`, `n5`, `n1`, `n13`, `n20`, `n12`, `n19`, `n4`, `n14`). The
 //! list's entries have no individual proper names, so these are named by
 //! their vertex configurations, following that convention:
 //!
@@ -54,6 +54,14 @@
 //!   hexagons with unit-triangle bands between the rows; the origin
 //!   is a hexagon center and a 2-fold point, and the centered
 //!   lattice's centering vector c = (√3/2, 5/2) is a basis vector.
+//! * `kuniform-n4` — vertex figures 4⁴ ; 3³.4², group cmm, t = 2,
+//!   e = 4. Staggered square bands (two squares tall) alternating with
+//!   alternating-triangle bands one triangle high; the 4⁴ vertex is the
+//!   interior corner of a square band crossing.
+//! * `kuniform-n14` — vertex figures 3⁶ ; 3³.4², group pmm, t = 3,
+//!   e = 4. Single square rows alternating with double triangle strips
+//!   (two counterposed triangle rows); the origin is a 3³.4² vertex,
+//!   the 3⁶ vertices sit at the strip-strip junction line.
 //!
 //! All coordinates lie in Z + (√3/2)·Q, stored through [`H`].
 
@@ -1606,6 +1614,168 @@ pub fn kuniform_n19() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6m,
         lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (4⁴; 3³.4²), wallpaper group cmm.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n4` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons):
+/// `[4⁴; 3³.4²]₁ (t = 2, e = 4)`, group cmm.
+///
+/// Construction: horizontal square bands two unit squares tall, separated
+/// by alternating-triangle bands one triangle (height H) tall; consecutive
+/// square bands are staggered by half a unit so the triangle band between
+/// them is a single row of alternating up/down triangles sharing full
+/// edges with both square bands. The primitive cell holds 2 squares +
+/// 2 triangles (area 2 + √3/2 = 2.866025403).
+///
+/// The translation lattice is b1 = (1, 0), b2 = (1/2, 2 + √3/2),
+/// |det| = 2 + √3/2 (right-handed); the full translation scan finds
+/// exactly this lattice (min period (1, 0), second period b2). As with
+/// `kuniform-n12` the lattice is centered-rectangular: the orthogonal
+/// index-2 pair (1, 0), (0, 4 + √3) generates a sublattice whose centering
+/// vector b2 it lacks. Torus enumeration over the 2×2-cell quotient
+/// (exact surd arithmetic, tku3 battery): F = 4, V = 3 per cell; tile
+/// orbits t = 2 (squares 2/cell, triangles 2/cell); edge orbits e = 4
+/// (sizes 1 + 2 + 2 + 2 = 7/cell); vertex orbits 4444 (1/cell — the
+/// crossing of four squares inside a band) and 33344 (2/cell — square-band
+/// / triangle-band junctions), so the tiling is 2-uniform. t and e match
+/// the Wikipedia parenthetical exactly.
+///
+/// Symmetry: the full scan finds R180 (52 centers), horizontal mirrors
+/// (16 axes) and vertical mirrors (156 axes), and no rotations of other
+/// order — the cmm signature, matching the wiki table.
+pub fn kuniform_n4() -> LatticeTiling {
+    // Square band column: two stacked unit squares (seed 0).
+    let s1 = Polygon::from_slice(&[
+        Vec2::new(0.0, 0.0),
+        Vec2::new(1.0, 0.0),
+        Vec2::new(1.0, 1.0),
+        Vec2::new(0.0, 1.0),
+    ]);
+    let s2 = Polygon::from_slice(&[
+        Vec2::new(0.0, 1.0),
+        Vec2::new(1.0, 1.0),
+        Vec2::new(1.0, 2.0),
+        Vec2::new(0.0, 2.0),
+    ]);
+    // Triangle band above the squares (seed 1): up triangle on the square
+    // row's top edge, down triangle between two up translates.
+    let t_up = Polygon::from_slice(&[
+        Vec2::new(0.0, 2.0),
+        Vec2::new(1.0, 2.0),
+        Vec2::new(0.5, 2.0 + H),
+    ]);
+    let t_dn = Polygon::from_slice(&[
+        Vec2::new(0.5, 2.0 + H),
+        Vec2::new(1.0, 2.0),
+        Vec2::new(1.5, 2.0 + H),
+    ]);
+    LatticeTiling {
+        id: "kuniform-n4",
+        name: "2-uniform (4⁴; 3³.4²)₁",
+        description: "2-uniform tiling (4⁴; 3³.4²) — staggered two-square bands alternating with alternating-triangle bands, the cmm two-uniform 4⁴/3³.4² form (cmm).",
+        lattice: [Vec2::new(1.0, 0.0), Vec2::new(0.5, 2.0 + H)],
+        cells: vec![
+            Cell { poly: s1, seed: 0 },
+            Cell { poly: s2, seed: 0 },
+            Cell { poly: t_up, seed: 1 },
+            Cell { poly: t_dn, seed: 1 },
+        ],
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::Cmm,
+        lattice_kind: LatticeKind::CenteredRectangular,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3⁶; 3³.4²), wallpaper group pmm.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n14` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons):
+/// `[3⁶; 3³.4²]₁ (t = 3, e = 4)`, group pmm.
+///
+/// Construction: rows of edge-sharing unit squares, alternating with double
+/// triangle strips — two counterposed rows of unit triangles (a strip of
+/// up triangles on the strip-bottom line joined down-triangle-to-up-triangle
+/// with a strip on the junction line), total strip height √3. Squares sit
+/// directly on the strip top line; consecutive square rows share the strip
+/// on their other side. The primitive cell holds 1 square + 4 triangles
+/// (area 1 + √3 = 2.732050808).
+///
+/// The translation lattice is the PRIMITIVE one: b1 = (1, 0),
+/// b2 = (0, 1 + √3), |det| = 1 + √3 (right-handed); the full translation
+/// scan finds exactly ⟨b1, b2⟩ — notably (1, 0) is a period, so the
+/// square row is NOT 3-periodic as an early candidate assumed. Torus
+/// enumeration over the 2×2-cell quotient (exact surd arithmetic, tku3
+/// battery): F = 5, V = 3 per cell; tile orbits t = 3 (square 1/cell and
+/// two triangle orbits of 2/cell — {strip1-up, strip2-down} and
+/// {strip1-down, strip2-up}, matching the wiki figure's two triangle
+/// colors); edge orbits e = 4 (sizes 1 + 1 + 2 + 4 = 8/cell); vertex
+/// orbits 3⁶ (1/cell, on the strip-junction line) and 3³.4² (2/cell,
+/// the square-row corners), so the tiling is 2-uniform. t and e match the
+/// Wikipedia parenthetical exactly.
+///
+/// Symmetry: the full scan finds R180 (56 centers), horizontal mirrors
+/// (56 axes) and vertical mirrors (164 axes), and nothing else — the pmm
+/// signature, matching the wiki table.
+pub fn kuniform_n14() -> LatticeTiling {
+    // Double triangle strip between y = 0 and y = √3 (strip1: 0..H,
+    // strip2: H..√3), square row on the strip top line. Seeds: 0 square,
+    // 1 = {strip1 up, strip2 down}, 2 = {strip1 down, strip2 up}.
+    let st1_up = Polygon::from_slice(&[
+        Vec2::new(0.0, 0.0),
+        Vec2::new(1.0, 0.0),
+        Vec2::new(0.5, H),
+    ]);
+    let st1_dn = Polygon::from_slice(&[
+        Vec2::new(-0.5, H),
+        Vec2::new(0.0, 0.0),
+        Vec2::new(0.5, H),
+    ]);
+    let st2_up = Polygon::from_slice(&[
+        Vec2::new(-0.5, H),
+        Vec2::new(0.5, H),
+        Vec2::new(0.0, S3),
+    ]);
+    let st2_dn = Polygon::from_slice(&[
+        Vec2::new(0.0, S3),
+        Vec2::new(0.5, H),
+        Vec2::new(1.0, S3),
+    ]);
+    let sq = Polygon::from_slice(&[
+        Vec2::new(0.0, S3),
+        Vec2::new(1.0, S3),
+        Vec2::new(1.0, 1.0 + S3),
+        Vec2::new(0.0, 1.0 + S3),
+    ]);
+    LatticeTiling {
+        id: "kuniform-n14",
+        name: "2-uniform (3⁶; 3³.4²)₁",
+        description: "2-uniform tiling (3⁶; 3³.4²) — square rows alternating with double triangle strips (two counterposed triangle rows), the pmm two-uniform 3⁶/3³.4² form (pmm).",
+        lattice: [Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0 + S3)],
+        cells: vec![
+            Cell { poly: st1_up, seed: 1 },
+            Cell { poly: st1_dn, seed: 2 },
+            Cell { poly: st2_up, seed: 2 },
+            Cell { poly: st2_dn, seed: 1 },
+            Cell { poly: sq, seed: 0 },
+        ],
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::Pmm,
+        lattice_kind: LatticeKind::Rectangular,
         category: TilingCategory::TwoUniform,
         secondary: &[],
         seed_pattern: SeedPattern::Uniform,

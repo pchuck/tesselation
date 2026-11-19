@@ -365,6 +365,8 @@ r = r.register(hankin_4_8_8_rosette_transform::hankin_4_8_8_rosette_transform())
         r = r.register(kuniform::kuniform_n20());
 r = r.register(kuniform::kuniform_n12());
         r = r.register(kuniform::kuniform_n19());
+        r = r.register(kuniform::kuniform_n4());
+        r = r.register(kuniform::kuniform_n14());
     }
     #[cfg(feature = "kuniform")]
     {
@@ -582,17 +584,17 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M102). 100 built-ins — 63 before
+// Census of today's taxonomy (M103). 102 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
-        //   TwoUniform 11, Laves 19 (16 primary: 8 incl. cairo-pentagonal
+        //   TwoUniform 13, Laves 19 (16 primary: 8 incl. cairo-pentagonal
         //   + 8 machine-dualized k-uniform duals (M98, M102) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
 //   PentagonTypes 12, Islamic 19, Arrangements 5,
 //   Quasiperiodic 8, Aperiodic 6, Nonperiodic 4.
-// Membership census 112 = 100 primaries + 12 secondaries (3 Laves
+// Membership census 114 = 102 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -640,18 +642,23 @@ mod tests {
         // -> M100 Islamic 18 -> 19 (hankin-3-4-6-4, the hankin
         // inference entry on the rhombitrihexagonal 3.4.6.4
         // substrate; θK = 60°, PATTERNS.MD §58).
-        // -> M102 Laves 15 -> 19 (the dual() helper dualizes
+// -> M102 Laves 15 -> 19 (the dual() helper dualizes
         // kuniform-n5 / -n1 / -n13 / -n20, k-uniform batch 2;
         // Laves-primary only; provisional numbering, renumbered at
         // integration).
+        // -> M103 TwoUniform 11 -> 13 (kuniform-n4, the cmm
+        // 4⁴;3³.4² form, and kuniform-n14, the pmm 3⁶;3³.4² form;
+        // torus-exact t/e vs the wiki parentheticals (2,4)/(3,4),
+        // PATTERNS.MD §60 — the fork's provisional §61 renumbered
+        // by landing order).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 11, 19, 17, 12, 19, 5, 8, 6, 4],
+            vec![11, 13, 19, 17, 12, 19, 5, 8, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 100, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 112, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 102, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 114, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -7709,6 +7716,114 @@ fn kuniform_n12_deterministic() {
                         (2000, 1732),
                         (2500, 866),
                     ],
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn kuniform_n4_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n4(),
+            "kuniform-n4",
+            BBox::new(v2(-4.0, -4.0), v2(9.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n4_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n4(),
+            "kuniform-n4(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(4.0, 4.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n4_deterministic() {
+        check_det(
+            &kuniform::kuniform_n4(),
+            "kuniform-n4",
+            BBox::new(v2(-3.0, -3.0), v2(6.0, 6.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch: the 3³.4² orbit
+    /// (2 translation classes per cell — the square-band/triangle-band
+    /// junctions, 78 interior points) and the 4⁴ orbit (1 class — the
+    /// crossing of four squares inside a band, 42 interior points).
+    /// Both counts and all 3 orbit reps match the Python torus battery
+    /// (tku3_run.py rust_expect).
+    #[test]
+    fn kuniform_n4_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n4(),
+            &[
+                Figure {
+                    figure: "33344",
+                    count: 78,
+                    orbits: &[(0, 0), (1000, 2000)],
+                },
+                Figure {
+                    figure: "4444",
+                    count: 42,
+                    orbits: &[(1000, 1000)],
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn kuniform_n14_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n14(),
+            "kuniform-n14",
+            BBox::new(v2(-4.0, -4.0), v2(9.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n14_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n14(),
+            "kuniform-n14(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(4.0, 4.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n14_deterministic() {
+        check_det(
+            &kuniform::kuniform_n14(),
+            "kuniform-n14",
+            BBox::new(v2(-3.0, -3.0), v2(6.0, 6.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch: the 3⁶ orbit
+    /// (1 translation class per cell — the double-strip junction line,
+    /// 42 interior points) and the 3³.4² orbit (2 classes — the
+    /// square-row corners, 78 interior points). Both counts and all 3
+    /// orbit reps match the Python torus battery (tku3_run.py
+    /// rust_expect).
+    #[test]
+    fn kuniform_n14_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n14(),
+            &[
+                Figure {
+                    figure: "333333",
+                    count: 42,
+                    orbits: &[(500, 866)],
+                },
+                Figure {
+                    figure: "33344",
+                    count: 78,
+                    orbits: &[(0, 0), (0, 1732)],
                 },
             ],
         );

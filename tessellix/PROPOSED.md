@@ -172,9 +172,9 @@ confirm the diffraction claim during the spike before declaring.
   | pmm | 3.4².6 ; 3.6.3.6 (variant 1) | 4,4 |
   | p4g | 3³.4² ; 3².4.3.4 (variant 1) | 4,5 |
   | pgg | 3³.4² ; 3².4.3.4 (variant 2) | 3,6 |
-  | cmm | 4⁴ ; 3³.4² (variant 1) | 2,4 |
+  | cmm | 4⁴ ; 3³.4² (variant 1) ✅ `kuniform-n4` (M103) | 2,4 (confirmed exact, M103 torus enumeration; PATTERNS.MD §60) |
   | cmm | 4⁴ ; 3³.4² (variant 2) | 3,5 |
-  | pmm | 3⁶ ; 3³.4² (variant 1) | 3,4 |
+  | pmm | 3⁶ ; 3³.4² (variant 1) ✅ `kuniform-n14` (M103) | 3,4 (confirmed exact, M103 torus enumeration; PATTERNS.MD §60) |
   | cmm | 3⁶ ; 3³.4² (variant 2) | 4,5 |
 
 - **Construction:** `LatticeTiling` tables like the Archimedean ones —
@@ -202,7 +202,7 @@ confirm the diffraction claim during the spike before declaring.
   itself — assert exactly 2 vertex classes over a large patch), plus
   the culling list.
 - **Status:** implemented (M44 + M48 + M87 + M88 + M89 + M90 + M91
-+ M92 + M96 + M97 + M95) — 11 of 20 entries landed, 9 of 20
++ M92 + M96 + M97 + M95 + M103) — 13 of 20 entries landed, 7 of 20
   remain. The p6m entry 3⁶ ; 3².6² as
   `kuniform-p6m` (M44; index-3 honeycomb dissection, exact Q(√3)
   table, both vertex orbits + p6m generators verified by an
@@ -268,7 +268,16 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   with edge orbits {6,12,3} — matching the table's 3,3 parenthetical,
   though the wiki's p6 group label under-states the symmetry: both
   mirror classes pass exactly, so the entry registers as p6m; see
-  PATTERNS.MD §50).
+  PATTERNS.MD §50). The two-entry cmm/pmm batch (M103
+  `kuniform-n4` 4⁴ ; 3³.4² variant 1 — staggered two-square-tall bands
+  with alternating-triangle one-row bands, basis ⟨(1,0), (1/2,
+  2+√3/2)⟩, |det| = 2+√3/2 RIGHT-handed, centered rectangular lattice
+  kind, cmm pinned by full scan — and `kuniform-n14` 3⁶ ; 3³.4²
+  variant 1 — square rows with double triangle strips on the PRIMITIVE
+  lattice ⟨(1,0), (0,1+√3)⟩, |det| = 1+√3, pmm pinned by full scan;
+  both exact torus enumerations reproduce the wiki parentheticals
+  (2,4) and (3,4); the sprint brief's stale row labels were corrected
+  against the current wiki table first — see PATTERNS.MD §60).
 
 ---
 
