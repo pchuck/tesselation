@@ -30,6 +30,14 @@ pub mod pic_3_12_12;
 pub mod pic_3_6_3_6;
 #[cfg(feature = "hankin_ext")]
 pub mod pic_4_8_8;
+#[cfg(feature = "hankin_ext")]
+pub mod hankin;
+#[cfg(feature = "hankin_ext")]
+pub mod hankin_4_8_8;
+#[cfg(feature = "hankin_ext")]
+pub mod hankin_4_6_12;
+#[cfg(feature = "hankin_ext")]
+pub mod hankin_hex;
 #[cfg(feature = "girih_qc")]
 pub mod girih_qc;
 #[cfg(feature = "girih_sc")]
@@ -310,6 +318,9 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(pic_4_8_8::pic_4_8_8());
         r = r.register(pic_3_6_3_6::pic_3_6_3_6());
         r = r.register(pic_3_12_12::pic_3_12_12());
+        r = r.register(hankin_4_8_8::hankin_4_8_8_rosette());
+        r = r.register(hankin_4_6_12::hankin_4_6_12());
+        r = r.register(hankin_hex::hankin_hex_two_point());
     }
     #[cfg(feature = "khatam_girih")]
     {
@@ -531,16 +542,16 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M93). 79 built-ins — 63 before
+// Census of today's taxonomy (M94). 82 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
         //   TwoUniform 8, Laves 11 (8 primary incl. cairo-pentagonal +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
-        //   PentagonTypes 12, Islamic 9, Arrangements 5,
+//   PentagonTypes 12, Islamic 12, Arrangements 5,
 //   Quasiperiodic 8, Aperiodic 6, Nonperiodic 4.
-        // Membership census 91 = 79 primaries + 12 secondaries (3 Laves
+        // Membership census 94 = 82 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -561,15 +572,17 @@ mod tests {
         // (taylor-socolar) -> M87 TwoUniform 2 -> 3 (kuniform-n18)
 // -> M88 (kuniform-n9) -> M89 (kuniform-n8)
         // -> M90 TwoUniform 5 -> 6 (kuniform-n5) -> M91 (kuniform-n1)
-        // -> M92 (kuniform-n13) -> M93 Aperiodic 5 -> 6 (jeandel-rao).
+        // -> M92 (kuniform-n13) -> M93 Aperiodic 5 -> 6 (jeandel-rao)
+        // -> M94 Islamic 9 -> 12 (hankin-4-8-8-rosette,
+        // hankin-4-6-12, hankin-hex-two-point).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 8, 11, 17, 12, 9, 5, 8, 6, 4],
+            vec![11, 8, 11, 17, 12, 12, 5, 8, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 79, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 91, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 82, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 94, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -9215,6 +9228,346 @@ mod pic_3_12_12_tests {
         assert_eq!(t.group, WallpaperGroup::P6m);
         assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
         assert_eq!(t.category, TilingCategory::Islamic);
+    }
+}
+
+/// M94 Hankin-method engine tests: output equivalence with the validated
+/// 40-dps Python prototype (machine-transcribed expectations), engine
+/// invariants, and the standard registry checks for the three shipped
+/// configurations.
+#[cfg(all(test, feature = "hankin_ext"))]
+mod hankin_engine_tests {
+    use super::hankin;
+    use super::hankin_4_6_12;
+    use super::hankin_4_8_8;
+    use super::hankin_hex;
+    use tess_core::geometry::Vec2;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    /// Rebuild canonical faces from the flat machine-transcribed arrays.
+    fn expected_faces(verts: &[f64], lens: &[usize]) -> Vec<Vec<Vec2>> {
+        let mut out = Vec::new();
+        let mut k = 0;
+        for &n in lens {
+            let face: Vec<Vec2> = verts[k..k + 2 * n]
+                .chunks_exact(2)
+                .map(|c| v2(c[0], c[1]))
+                .collect();
+            k += 2 * n;
+            out.push(face);
+        }
+        out
+    }
+
+    fn assert_faces_match(actual: &[Vec<Vec2>], expected: &[Vec<Vec2>], label: &str) {
+        assert_eq!(
+            actual.len(),
+            expected.len(),
+            "{label}: face count {} vs expected {}",
+            actual.len(),
+            expected.len()
+        );
+        for (a, e) in actual.iter().zip(expected.iter()) {
+            assert_eq!(a.len(), e.len(), "{label}: vertex count differs");
+            for (p, q) in a.iter().zip(e.iter()) {
+                assert!(
+                    (p.x - q.x).abs() < 1e-9 && (p.y - q.y).abs() < 1e-9,
+                    "{label}: vertex {p} vs expected ({}, {})",
+                    q.x,
+                    q.y
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn engine_matches_prototype_4_8_8() {
+        let (cells, report) = hankin::build_cells(
+            &hankin_4_8_8::tiles(),
+            hankin_4_8_8::THETA_E_DEG,
+            hankin_4_8_8::DELTA,
+        );
+        assert!(report.complete, "octagon+diamond pairing must be complete");
+        let lens: Vec<usize> = report.per_tile.iter().map(|r| r.faces).collect();
+        assert_eq!(lens, vec![9, 5], "face census per tile class");
+        for r in &report.per_tile {
+            assert!((r.area_sum - r.tile_area).abs() < 1e-9);
+            assert_eq!(r.rays, r.pairs * 2, "every ray paired exactly once");
+        }
+        // Output equivalence against the machine-transcribed prototype.
+        let expected: Vec<Vec<Vec2>> = expected_faces(
+            hankin_4_8_8::EXPECTED_0_VERTS,
+            hankin_4_8_8::EXPECTED_0_LENS,
+        )
+        .into_iter()
+        .chain(expected_faces(
+            hankin_4_8_8::EXPECTED_1_VERTS,
+            hankin_4_8_8::EXPECTED_1_LENS,
+        ))
+        .collect();
+        let actual: Vec<Vec<Vec2>> = cells.iter().map(|c| c.poly.pts.clone()).collect();
+        assert_faces_match(&actual, &expected, "hankin-4-8-8");
+    }
+
+    #[test]
+    fn engine_matches_prototype_4_6_12() {
+        let (cells, report) = hankin::build_cells(
+            &hankin_4_6_12::tiles(),
+            hankin_4_6_12::THETA_E_DEG,
+            hankin_4_6_12::DELTA,
+        );
+        assert!(report.complete);
+        let lens: Vec<usize> = report.per_tile.iter().map(|r| r.faces).collect();
+        assert_eq!(lens, vec![13, 5, 5, 5, 7, 7], "face census per tile class");
+        for r in &report.per_tile {
+            assert!((r.area_sum - r.tile_area).abs() < 1e-9);
+            assert_eq!(r.rays, r.pairs * 2);
+        }
+        let mut expected: Vec<Vec<Vec2>> = Vec::new();
+        for k in 0..6 {
+            expected.extend(match k {
+                0 => expected_faces(hankin_4_6_12::EXPECTED_0_VERTS, hankin_4_6_12::EXPECTED_0_LENS),
+                1 => expected_faces(hankin_4_6_12::EXPECTED_1_VERTS, hankin_4_6_12::EXPECTED_1_LENS),
+                2 => expected_faces(hankin_4_6_12::EXPECTED_2_VERTS, hankin_4_6_12::EXPECTED_2_LENS),
+                3 => expected_faces(hankin_4_6_12::EXPECTED_3_VERTS, hankin_4_6_12::EXPECTED_3_LENS),
+                4 => expected_faces(hankin_4_6_12::EXPECTED_4_VERTS, hankin_4_6_12::EXPECTED_4_LENS),
+                _ => expected_faces(hankin_4_6_12::EXPECTED_5_VERTS, hankin_4_6_12::EXPECTED_5_LENS),
+            });
+        }
+        let actual: Vec<Vec<Vec2>> = cells.iter().map(|c| c.poly.pts.clone()).collect();
+        assert_faces_match(&actual, &expected, "hankin-4-6-12");
+    }
+
+    #[test]
+    fn engine_matches_prototype_hex_two_point() {
+        let (cells, report) = hankin::build_cells(
+            &hankin_hex::tiles(),
+            hankin_hex::THETA_E_DEG,
+            hankin_hex::DELTA,
+        );
+        assert!(report.complete);
+        let r0 = &report.per_tile[0];
+        assert_eq!((r0.rays, r0.pairs, r0.faces), (12, 6, 13));
+        assert!((r0.area_sum - r0.tile_area).abs() < 1e-9);
+        assert_faces_match(
+            &cells.iter().map(|c| c.poly.pts.clone()).collect::<Vec<_>>(),
+            &expected_faces(hankin_hex::EXPECTED_0_VERTS, hankin_hex::EXPECTED_0_LENS),
+            "hankin-hex-two-point",
+        );
+    }
+
+    #[test]
+    fn theta_parameters_are_conjugate() {
+        // Engine angle θe = 90° − Kaplan contact angle θK, for every
+        // shipped configuration (the constants were emitted separately,
+        // so this pins their relationship independently).
+        assert!((hankin_4_8_8::THETA_E_DEG - (90.0 - hankin_4_8_8::THETA_K_DEG)).abs() < 1e-12);
+        assert!((hankin_4_6_12::THETA_E_DEG - (90.0 - hankin_4_6_12::THETA_K_DEG)).abs() < 1e-12);
+        assert!((hankin_hex::THETA_E_DEG - (90.0 - hankin_hex::THETA_K_DEG)).abs() < 1e-12);
+    }
+}
+
+/// M94 Hankin tiling tests: registry-level invariants for the three
+/// configurations (cell census, seed orbits, area identity, symmetry
+/// metadata, coverage).
+#[cfg(all(test, feature = "hankin_ext"))]
+mod hankin_4_8_8_tests {
+    use super::hankin_4_8_8::hankin_4_8_8_rosette;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    #[test]
+    fn hankin_4_8_8_covers_region() {
+        check_covers(
+            &hankin_4_8_8_rosette(),
+            "hankin-4-8-8-rosette",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_4_8_8_rotated_scaled() {
+        check_rotated(
+            &hankin_4_8_8_rosette(),
+            "hankin-4-8-8-rosette(rot20,scale0.6)",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn hankin_4_8_8_deterministic() {
+        check_det(
+            &hankin_4_8_8_rosette(),
+            "hankin-4-8-8-rosette",
+            BBox::new(Vec2::new(-12.0, -9.0), Vec2::new(12.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_4_8_8_unit_structure() {
+        let t = hankin_4_8_8_rosette();
+        assert_eq!(t.cells.len(), 14);
+        // Machine-transcribed seed layout: 4 orbit classes in canonical
+        // face order.
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(
+            seeds,
+            crate::hankin_4_8_8::EXPECTED_SEEDS.to_vec(),
+            "seed layout"
+        );
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        let a = 1.0 + core::f64::consts::SQRT_2;
+        assert!((det - a * a).abs() < 1e-9);
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-9, "Σ areas {sum} vs det {det}");
+    }
+
+    #[test]
+    fn hankin_4_8_8_symmetry_metadata() {
+        let t = hankin_4_8_8_rosette();
+        assert_eq!(t.id, "hankin-4-8-8-rosette");
+        assert_eq!(t.group, WallpaperGroup::P4m);
+        assert_eq!(t.lattice_kind, LatticeKind::Square);
+        assert_eq!(t.category, TilingCategory::Islamic);
+        assert_eq!(t.secondary, &[]);
+    }
+}
+
+#[cfg(all(test, feature = "hankin_ext"))]
+mod hankin_4_6_12_tests {
+    use super::hankin_4_6_12::hankin_4_6_12;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    #[test]
+    fn hankin_4_6_12_covers_region() {
+        check_covers(
+            &hankin_4_6_12(),
+            "hankin-4-6-12",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_4_6_12_rotated_scaled() {
+        check_rotated(
+            &hankin_4_6_12(),
+            "hankin-4-6-12(rot20,scale0.6)",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn hankin_4_6_12_deterministic() {
+        check_det(
+            &hankin_4_6_12(),
+            "hankin-4-6-12",
+            BBox::new(Vec2::new(-12.0, -9.0), Vec2::new(12.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_4_6_12_unit_structure() {
+        let t = hankin_4_6_12();
+        assert_eq!(t.cells.len(), 42, "13 + 3×5 + 2×7 faces per lattice cell");
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(
+            seeds,
+            crate::hankin_4_6_12::EXPECTED_SEEDS.to_vec(),
+            "seed layout"
+        );
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        // √3 as a literal: std's SQRT_3 constant is still unstable.
+        const RT3: f64 = 1.732_050_807_568_877_2;
+        let s = 3.0 + RT3;
+        assert!((det - s * s * RT3 / 2.0).abs() < 1e-9);
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-9, "Σ areas {sum} vs det {det}");
+    }
+
+    #[test]
+    fn hankin_4_6_12_symmetry_metadata() {
+        let t = hankin_4_6_12();
+        assert_eq!(t.id, "hankin-4-6-12");
+        assert_eq!(t.group, WallpaperGroup::P6m);
+        assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
+        assert_eq!(t.category, TilingCategory::Islamic);
+        assert_eq!(t.secondary, &[]);
+    }
+}
+
+#[cfg(all(test, feature = "hankin_ext"))]
+mod hankin_hex_tests {
+    use super::hankin_hex::hankin_hex_two_point;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    #[test]
+    fn hankin_hex_covers_region() {
+        check_covers(
+            &hankin_hex_two_point(),
+            "hankin-hex-two-point",
+            BBox::new(Vec2::new(-16.0, -14.0), Vec2::new(16.0, 14.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_hex_rotated_scaled() {
+        check_rotated(
+            &hankin_hex_two_point(),
+            "hankin-hex-two-point(rot20,scale0.6)",
+            BBox::new(Vec2::new(-16.0, -14.0), Vec2::new(16.0, 14.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn hankin_hex_deterministic() {
+        check_det(
+            &hankin_hex_two_point(),
+            "hankin-hex-two-point",
+            BBox::new(Vec2::new(-8.0, -7.0), Vec2::new(8.0, 7.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_hex_unit_structure() {
+        let t = hankin_hex_two_point();
+        assert_eq!(t.cells.len(), 13, "12 motif faces + 1 centre dodecagon");
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(
+            seeds,
+            crate::hankin_hex::EXPECTED_SEEDS.to_vec(),
+            "seed layout"
+        );
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        assert!((det - 3.0f64.sqrt() / 2.0 * 3.0).abs() < 1e-9, "det = |u1×u2| = 3√3/2");
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-9, "Σ areas {sum} vs det {det}");
+    }
+
+    #[test]
+    fn hankin_hex_symmetry_metadata() {
+        let t = hankin_hex_two_point();
+        assert_eq!(t.id, "hankin-hex-two-point");
+        assert_eq!(t.group, WallpaperGroup::P6m);
+        assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
+        assert_eq!(t.category, TilingCategory::Islamic);
+        assert_eq!(t.secondary, &[]);
     }
 }
 

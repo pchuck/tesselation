@@ -917,6 +917,15 @@ confirm the diffraction claim during the spike before declaring.
 - **Verify:** for layer mode — strapwork lines cross edges at
   midpoints by construction; for tiling mode — the M35 partition
   battery generalized.
+- **Status update (M94):** the *tiling-mode* half of this candidate
+  landed: the inference engine (ray growth + greedy min-length
+  pairing + planar arrangement to bounded faces, Kaplan §3.4) ships
+  as `hankin::build_cells` (`hankin_ext`) with three first-class
+  configurations — `hankin-4-8-8-rosette` (4.8.8, θK = 67.5°),
+  `hankin-4-6-12` (4.6.12, θK = 60°), `hankin-hex-two-point` (6³,
+  θK = 45°, δ = 0.5 two-point) — see PATTERNS.MD §44. The layer-mode
+  generalization (one engine × every substrate × 3 openings) remains
+  open for further substrates/angles.
 
 ### 15. Random/statistical tilings (blocked on a determinism policy)
 

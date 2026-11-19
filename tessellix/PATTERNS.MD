@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (79 tilings)
+## Implemented (82 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -127,10 +127,11 @@ M76 restructured the browse gallery into ten tabs
 **Laves (Catalan duals)** (11) · **Wallpaper** (17) · **Pentagon
 Types** (12) · **Islamic** (9) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (6) · **Nonperiodic** (4) —
-91 memberships over the 79 implemented tilings; the 12 extra are
+94 memberships over the 82 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
-M74/M77/M78/M79, was re-synced in M81, in M84, in M85, and again
-with the M87/M88/M89 two-uniform batch, in M90–M92, and again in M93.)
+M74/M77/M78/M79, was re-synced in M81, in M84, in M85, with the
+M87/M88/M89 two-uniform batch, in M90–M92, in M93, and again with
+the M94 Hankin batch.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
@@ -2825,6 +2826,92 @@ documentation pending).
 - **Status:** landed (M93).
   79 tilings, 91 memberships, 571 tests at this step (landed on the
   post-M90-M92 base).
+### 44. Hankin motif-inference tilings ✅ (M94)
+
+- **Method:** the *inference* half of Hankin's polygons-in-contact
+  method (Kaplan dissertation §3.4) — the part that turns a substrate
+  + contact angle into a finished star-pattern tiling, as opposed to
+  the strapwork *layer* engine of M53–M57 (candidate 14's line
+  rendering): from every substrate-edge contact, two rays lean into
+  the tile (Kaplan contact angle θK measured from the edge; the
+  engine uses the conjugate angle θe = 90° − θK so that the ray
+  formula is `sin(θe)·t + cos(θe)·n` with t the unit edge direction
+  and n the inward normal); every ray grows until it meets another
+  ray; pairs are chosen greedily in order of total induced segment
+  length, same-contact rays never pair (their crossing is shared),
+  and colinear head-on rays join into one straight segment. The
+  two-point variant splits each contact along the edge by ±δ/2 with
+  the rays leaning so same-contact rays cross (dissertation Fig 3.5);
+  neighbour tiles compute the same split points on shared edges, so
+  motifs line up for any global δ. The paired segments are arranged
+  against the substrate boundary (full planar arrangement, curves
+  split at every crossing) and the bounded faces are the tiling.
+- **Engine:** `hankin::build_cells` in `hankin.rs` (feature
+  `hankin_ext`) — f64 port of a 40-dps mpmath prototype with the
+  port-faithfulness argument measured, not assumed: greedy
+  order-invariance under candidate tie permutations (the constructions
+  are highly symmetric; mathematically equal costs tie exactly), with
+  distinct cost classes ≥ 0.13 apart ≫ f64 noise; minimum accepted
+  ray parameter 3.5e-2, minimum arrangement piece 2.5e-1, minimum
+  half-edge angular gap 7.9e-1, minimum face area 6.3e-2, minimum
+  canonical sort-key gap 1.8e-1 — each ≥ 7 orders above the 1e-9
+  tolerances. Canonicalization (snap |v| < 1e-12 → 0, CCW,
+  min-vertex-first with a 1e-12 comparison tolerance so ulp-level
+  mirror ties resolve identically on both engines, faces sorted by
+  (vertex count, vertices)) is applied identically in the prototype's
+  transcription step and the engine, and the pattern seeds are
+  congruence clusters (vertex count + area within 1e-9,
+  first-appearance order). Emitted per-configuration modules
+  (`hankin_4_8_8.rs`, `hankin_4_6_12.rs`, `hankin_hex.rs`) carry
+  machine-transcribed constants — zero hand-copied numbers.
+- **Validation battery (per configuration):** pairing complete and
+  tie-invariant; per-tile face partition exact (Σ face areas = tile
+  area, < 1e-25 in the prototype); 400-point planar coverage exact;
+  torus fold of ONE fundamental cell's segment multiset (endpoint
+  fold mod the lattice, re-wrapped after rounding) with valence
+  census and closure of every strand; X-consistency at valence-4
+  vertices only (valence-2 split-point bends carry no colinearity
+  requirement — that IS the Kaplan semantics of Fig 3.5);
+  wallpaper-group determination on the torus segment multiset
+  (finite patches shed their boundary faces).
+- **A. `hankin-4-8-8-rosette` (p4m, square):** 4.8.8 substrate
+  (octagon + diamond), θK = 67.5° (θe = 22.5°), δ = 0 — the classic
+  fourfold rosette: 8-petal rosette + core octagon in each octagon
+  (9 faces), 4-pointed star + core diamond in each diamond (5
+  faces); 14 cells, 4 seed orbits, per cell ⟨(1+√2,0),(0,1+√2)⟩,
+  det = 3+2√2 exact in Q(√2). Torus: 4 strands × 12 segments,
+  valences {4:6, 2:12}; symmetry p4m (rot90 + 2 mirrors) verified on
+  the torus multiset. Matches Kaplan Fig 3.3 column 3. Not a
+  duplicate of `pic-4-8-8` (that is the reflection-variant {8/2}
+  midpoint-chord wall at δ = 45°; this is the greedy rosette at
+  θK = 67.5° — different construction, different partition).
+- **B. `hankin-4-6-12` (p6m, hexagonal):** 4.6.12 substrate
+  (dodecagon + 3 squares + 2 hexagons), θK = 60° (θe = 30°), δ = 0 —
+  12-petal rosette + core dodecagon (13 faces), 4-pointed stars in
+  the three squares (5 each), 6-petal rosettes + core hexagons (7
+  each); 42 cells, 6 seed orbits, per cell
+  ⟨s(1,0), s(1/2,√3/2)⟩ with s = 3+√3, det = 9+6√3 ≈ 19.3923 exact
+  in Q(√3). Torus: 12 strands × 12 segments, valences {4:18, 2:36};
+  symmetry p6m (rot60 + mirror). Not a duplicate of
+  `pic-3-12-12` (3.12.12 substrate; this is the true 4.6.12 — the
+  dodecagon's 12-petal greedy rosette with the squares participating).
+- **C. `hankin-hex-two-point` (p6m, hexagonal):** 6³ substrate (unit
+  hexagon), θK = 45° (θe = 45°), δ = 0.5 two-point — the
+  bracket-and-diamond weave: 12 interlaced faces around a central
+  dodecagon, 13 cells, 3 seed orbits, per cell
+  ⟨(3/2,√3/2),(0,√3)⟩, det = 3√3/2. Torus: 4 strands × 6 segments,
+  valences {2:12}; symmetry p6m. Figure-verified against Kaplan
+  Fig 3.6 row 1: (c) two-point weave (programmatic cross-correlation,
+  F1 plateau 0.38–0.39 over θK ∈ [45°, 47.5°], δ ∈ [0.5, 0.58]; the
+  δ = 0 weave of the same substrate matches column (b)).
+- **Tests:** 19 new (4 engine tests — output equivalence against the
+  machine-transcribed prototype expectations at 1e-9 per vertex for
+  all three configurations, θe/θK conjugacy, engine reports; 15
+  registry tests — covers/rotated-scaled/deterministic/structure
+  (seed layout, Σ face areas = |det| at 1e-9)/symmetry-metadata per
+  configuration). Census: 75 → 78 tilings, 87 → 90 memberships,
+  550 → 569 tests.
+- **Status:** landed (M94).
 
 ## Proposed — vetted candidates
 
@@ -4161,3 +4248,17 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   cargo check + clippy (both target sets) 0 warnings, cargo test
   --workspace 551/551; R1 0/2992 / R2 0/2816 / R3 0/2904 and the
   radius-30 no-period probe untouched and still passing.
+- 2026-11-19 — M94 Hankin motif-inference tilings ✅ (§44): the
+  inference half of Hankin's PIC method (Kaplan §3.4) — contact-ray
+  growth + greedy min-length pairing + planar arrangement to bounded
+  faces — as first-class tilings, f64 port of a 40-dps mpmath
+  prototype with measured margins and proven greedy tie
+  order-invariance; three configurations on three template families:
+  `hankin-4-8-8-rosette` (4.8.8, θK = 67.5°, p4m), `hankin-4-6-12`
+  (4.6.12, θK = 60°, p6m), `hankin-hex-two-point` (6³, θK = 45°,
+  δ = 0.5 two-point, p6m — Kaplan Fig 3.6 row 1 col c). Battery per
+  config: pairing complete + tie-invariant, partition exact,
+  400-point coverage exact, single-cell torus fold (valences +
+  strand closure), group determination on the torus multiset.
+  19 tess-tilings tests. Census: 75 → 78 tilings, 87 → 90
+  memberships, 550 → 569 tests (commit pending the coordinator).
