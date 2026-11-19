@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (5)   Laves (11)   Wallpaper (17)   Pentagon
+counts (`Uniform (11)   Two-Uniform (8)   Laves (11)   Wallpaper (17)   Pentagon
 Types (12)   Islamic (9)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (5)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -127,13 +127,13 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-75 built-in tilings (87 tab memberships), all discoverable in both UIs
+78 built-in tilings (90 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 ten tabs:
-**Uniform** (11), **Two-Uniform** (5), **Laves / Catalan duals** (11,
+**Uniform** (11), **Two-Uniform** (8), **Laves / Catalan duals** (11,
 8 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (12), **Islamic** (9), **Arrangements** (5),
@@ -190,6 +190,9 @@ grouping is honest about what the mathematics distinguishes; see
 | `windmill` | Periodic pinwheel arrangement (p4) | Conway's periodic "spin" of the pinwheel motif: 1–2–√5 triangles around squares; homochiral, non-edge-to-edge | p4 | square |
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | 2-uniform k-uniform: hexagonal tiling with one of every three hexagons dissected into six-triangle fans (Wikipedia `2-uniform n10`) | p6m | hexagonal |
 | `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | 2-uniform k-uniform: hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (Wikipedia `2-uniform n11`) | pmm | rectangular |
+| `kuniform-n5` | 2-uniform (3.4.6.4; 3.4².6) | 2-uniform k-uniform: hexagons ringed by squares with triangle fills, two hexagon orbits + two square orbits + one triangle orbit (Wikipedia `2-uniform n5`, t = 5, e = 5); 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); 18 tiles/cell; the 3.4².6 vertex orbit is chiral (M90) | p6m | hexagonal |
+| `kuniform-n1` | 2-uniform (4.6.12; 3.4.6.4) | 2-uniform k-uniform: the 3-4-6-12 tiling — dodecagons alternating with hexagons, squares and triangles; first 12-gon in the module (Wikipedia `2-uniform n1`, t = 4, e = 4); 60° hexagonal basis, \|b1\| = \|b2\| = 2+2√3, det 12+8√3 (right-handed); 12 tiles/cell (M91) | p6m | hexagonal |
+| `kuniform-n13` | 2-uniform (3⁶; 3².4.12) | 2-uniform k-uniform: dodecagons ringed by squares and two triangle orbits around 3⁶ vertices (Wikipedia `2-uniform n13`, t = 4, e = 4); 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); 16 tiles/cell; 6-fold center off-ring (M92) | p6m | hexagonal |
 | `pentagon-9` | Pentagon type 9 (Rice) | pentagonal (Rice 1977): A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; 2-isohedral, 8 tiles per rectangular cell, two perpendicular glide families squaring to the primitive translations | pgg | rectangular |
 | `pentagon-10` | Pentagon type 10 (James) | pentagonal (James 1975): A = 90°, B + E = 180°, a = b = c + e, d² = c² + e² (reference instance B = 90°, c = 1: A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2); 3-isohedral, 6 tiles per cell, non-edge-to-edge (each length-2 side split at its exact midpoint), mirrors y = x and y = −x, half-turn at the origin, genuine glide (axis x + y = 3/2), centered rectangular lattice | cmm | centered |
 | `pentagon-11` | Pentagon type 11 (Rice) | pentagonal (Rice 1977): A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, 2a + c = d = e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side carries one c-side and two a-sides), two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
@@ -526,7 +529,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 550 tests, all green, zero
+`cargo test --workspace` (currently 562 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

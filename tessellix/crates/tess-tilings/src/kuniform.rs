@@ -1,9 +1,10 @@
 //! 2-uniform (k-uniform) tilings, expressed as [`LatticeTiling`] data
 //! tables.
 //!
-//! Five entries are from the closed list of 20 two-vertex-orbit tilings
-//! by regular polygons (Krotenheerdt; see the Wikipedia "k-uniform
-//! tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`, `n8`). The
+//! Eight entries are from the closed list of 20 two-vertex-orbit
+//! tilings by regular polygons (Krotenheerdt; see the Wikipedia
+//! "k-uniform tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`,
+//! `n8`, `n5`, `n1`, `n13`). The
 //! list's entries have no individual proper names, so these are named by
 //! their vertex configurations, following that convention:
 //!
@@ -24,6 +25,18 @@
 //! * `kuniform-n8` — vertex figures 3.4.6.4 ; 3³.4², group p6m,
 //!   t = 4, e = 4. The second p6m 3.4.6.4 form: hexagons ringed by
 //!   squares with triangle fills; the origin is a hexagon center.
+//! * `kuniform-n5` — vertex figures 3.4.6.4 ; 3.4².6, group p6m,
+//!   t = 5, e = 5. Hexagons ringed by squares and triangles; the origin
+//!   is a hexagon center, and the 6-fold center c is the center of the
+//!   cell's single minority hexagon.
+//! * `kuniform-n1` — vertex figures 4.6.12 ; 3.4.6.4, group p6m,
+//!   t = 4, e = 4. The 3-4-6-12 tiling: dodecagons alternating with
+//!   hexagons, squares and triangles; the origin is a hexagon center,
+//!   and the 6-fold center c is the center of the cell's dodecagon.
+//! * `kuniform-n13` — vertex figures 3⁶ ; 3².4.12, group p6m,
+//!   t = 4, e = 4. A dodecagon ringed by squares and two triangle
+//!   orbits around 3⁶ vertices; the origin is a 3⁶ vertex, and the
+//!   6-fold center c is the center of the cell's dodecagon.
 //!
 //! All coordinates lie in Z + (√3/2)·Q, stored through [`H`].
 
@@ -682,6 +695,616 @@ pub fn kuniform_n8() -> LatticeTiling {
         name: "2-uniform (3.4.6.4; 3³.4²)",
         description: "2-uniform tiling (3.4.6.4; 3³.4²) — hexagons ringed by squares with triangle fills, the second p6m 3.4.6.4 form.",
         lattice: [Vec2::new(0.0, 2.0 + S3), Vec2::new(-1.5 - S3, -1.0 - S3 / 2.0)],
+        cells,
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::P6m,
+        lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+/// 2-uniform tiling (3.4.6.4; 3.4².6), wallpaper group p6m.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n5` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons): t = 5 tile
+/// orbits, e = 5 edge orbits. H = √3/2.
+///
+/// The translation lattice is a 60° hexagonal basis with |b1| = |b2| =
+/// 3+√3: b1 = (3+√3, 0), b2 = (−(3+√3)/2, 3(1+√3)/2); |det| = 9+6√3
+/// (right-handed). The origin is a hexagon face center, and the 6-fold
+/// center c is the center of the cell's lone #00ff00 hexagon (O-frame
+/// (4.732051, 5.464102), the exact O-relative tuple (6,2,4,4)) — R60..R300
+/// about c plus all six mirrors through it verified numerically (the
+/// Python battery check 5 + m90x_sym_n5.json), so the declared group is
+/// p6m.
+///
+/// The cell holds 18 tiles: 3 hexagons (2 #008000 seed 0, the largest
+/// class, 1 #00ff00 seed 1), 9 squares (6 #ff0000 seed 2, 3 #ff8989
+/// seed 3), and 6 equilateral triangles (seed 4). Area 3·(3√3/2) + 9·1 +
+/// 6·(√3/4) = 9+6√3 = |det|.
+///
+/// Vertex figures: two vertex orbits, three figure strings — the 3.4.6.4
+/// orbit is achiral (figure "3464") while the 3.4.4.6 orbit is CHIRAL:
+/// its figure "3446" differs from the mirror orbit's "3644" (100%
+/// bidirectional mirror pairing, m90x_dbg7.py). Counts over the ±3×±3
+/// patch: 3446 ×266, 3464 ×267, 3644 ×267.
+pub fn kuniform_n5() -> LatticeTiling {
+    // hexagons, first orbit (seed 0, largest class — 2 of the 3 cell hexagons)
+    let mut cells: Vec<Cell> = vec![Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0 + H, 3.0/2.0 + 2.0 * H),
+            Vec2::new(2.0 + H, 3.0/2.0 + 2.0 * H),
+            Vec2::new(5.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+            Vec2::new(2.0 + H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(1.0 + H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(1.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+        ]),
+        seed: 0,
+    }];
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(5.0/2.0 + H, 5.0/2.0 + 5.0 * H),
+            Vec2::new(2.0 + H, 5.0/2.0 + 6.0 * H),
+            Vec2::new(1.0 + H, 5.0/2.0 + 6.0 * H),
+            Vec2::new(1.0/2.0 + H, 5.0/2.0 + 5.0 * H),
+        ]),
+        seed: 0,
+    });
+
+    // hexagons, second orbit (seed 1)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0 + 2.0 * H, 1.0 + 4.0 * H),
+            Vec2::new(3.0 + 3.0 * H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(3.0 + 3.0 * H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(3.0 + 2.0 * H, 3.0 + 4.0 * H),
+            Vec2::new(3.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(3.0 + H, 3.0/2.0 + 4.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    // squares, first orbit (seed 2)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(1.0/2.0 + H, 5.0/2.0 + 5.0 * H),
+            Vec2::new(1.0/2.0, 3.0 + 5.0 * H),
+            Vec2::new(0.0, 3.0 + 4.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(1.0 + H, 3.0/2.0 + 4.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0 + H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(3.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + H, 3.0/2.0 + 4.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(5.0/2.0 + 2.0 * H, 1.0 + 3.0 * H),
+            Vec2::new(3.0 + 2.0 * H, 1.0 + 4.0 * H),
+            Vec2::new(3.0 + H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(5.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0 + 2.0 * H, 3.0 + 4.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 3.0 + 5.0 * H),
+            Vec2::new(5.0/2.0 + H, 5.0/2.0 + 5.0 * H),
+            Vec2::new(3.0 + H, 5.0/2.0 + 4.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(7.0/2.0 + 3.0 * H, 3.0/2.0 + 3.0 * H),
+            Vec2::new(3.0 + 3.0 * H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(3.0 + 2.0 * H, 1.0 + 4.0 * H),
+            Vec2::new(7.0/2.0 + 2.0 * H, 1.0 + 3.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    // squares, second orbit (seed 3)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(1.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(1.0 + H, 3.0/2.0 + 4.0 * H),
+        ]),
+        seed: 3,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + 2.0 * H, 1.0 + 2.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 1.0 + 3.0 * H),
+            Vec2::new(5.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+            Vec2::new(2.0 + H, 3.0/2.0 + 2.0 * H),
+        ]),
+        seed: 3,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(4.0 + 3.0 * H, 3.0/2.0 + 2.0 * H),
+            Vec2::new(7.0/2.0 + 3.0 * H, 3.0/2.0 + 3.0 * H),
+            Vec2::new(7.0/2.0 + 2.0 * H, 1.0 + 3.0 * H),
+            Vec2::new(4.0 + 2.0 * H, 1.0 + 2.0 * H),
+        ]),
+        seed: 3,
+    });
+
+    // triangles (seed 4)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0 + H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(1.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+        ]),
+        seed: 4,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(1.0/2.0 + H, 5.0/2.0 + 5.0 * H),
+            Vec2::new(H, 5.0/2.0 + 4.0 * H),
+        ]),
+        seed: 4,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0/2.0 + H, 3.0/2.0 + H),
+            Vec2::new(2.0 + H, 3.0/2.0 + 2.0 * H),
+            Vec2::new(1.0 + H, 3.0/2.0 + 2.0 * H),
+        ]),
+        seed: 4,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0 + H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + H, 3.0/2.0 + 4.0 * H),
+            Vec2::new(5.0/2.0 + H, 3.0/2.0 + 3.0 * H),
+        ]),
+        seed: 4,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(5.0/2.0 + H, 5.0/2.0 + 5.0 * H),
+            Vec2::new(2.0 + H, 5.0/2.0 + 4.0 * H),
+            Vec2::new(3.0 + H, 5.0/2.0 + 4.0 * H),
+        ]),
+        seed: 4,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0 + 2.0 * H, 1.0 + 4.0 * H),
+            Vec2::new(5.0/2.0 + 2.0 * H, 1.0 + 3.0 * H),
+            Vec2::new(7.0/2.0 + 2.0 * H, 1.0 + 3.0 * H),
+        ]),
+        seed: 4,
+    });
+    LatticeTiling {
+        id: "kuniform-n5",
+        name: "2-uniform (3.4.6.4; 3.4².6)",
+        description: "2-uniform tiling (3.4.6.4; 3.4².6) — hexagons ringed by squares with triangle fills, the p6m n5 form (p6m).",
+        lattice: [Vec2::new(3.0 + 2.0 * H, 0.0), Vec2::new(-3.0/2.0 - H, 3.0/2.0 + 3.0 * H)],
+        cells,
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::P6m,
+        lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (4.6.12; 3.4.6.4), wallpaper group p6m.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n1` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons; the
+/// 3-4-6-12 tiling): t = 4 tile orbits, e = 4 edge orbits. H = √3/2.
+///
+/// The translation lattice is a 60° hexagonal basis with |b1| = |b2| =
+/// 2+2√3: b1 = (2+2√3, 0), b2 = (1+√3/2, 3+√3/2); |det| = 12+8√3
+/// (right-handed). The origin is a hexagon face center; the 6-fold center
+/// c is the center of the cell dodecagon (O-frame (4.098076, 2.366025),
+/// the exact O-relative tuple (3,3,3,1)) — R60..R300 about c plus all six
+/// mirrors through it verified numerically (the Python battery check 5 +
+/// m90x_sym_n1.json), so the declared group is p6m.
+///
+/// The cell holds 12 tiles: 1 dodecagon (seed 0, the largest class),
+/// 3 hexagons (seed 1), 6 squares (seed 2), and 2 equilateral triangles
+/// (seed 3). Area (6+3√3) + 3·(3√3/2) + 6·1 + 2·(√3/4) = 12+8√3 = |det|.
+///
+/// Vertex figures: two vertex orbits, three figure strings — the 4.6.12
+/// orbit is CHIRAL: its figure "4612" differs from the mirror orbit's
+/// "4126" (100% bidirectional mirror pairing, m90x_dbg7.py; the ring
+/// labels there are the string-concatenation "1246"/"1264" of the same
+/// orbits), while the 3.4.6.4 orbit ("3464") is achiral. Counts over the
+/// ±3×±3 patch: 4126 ×266, 4612 ×266, 3464 ×267.
+pub fn kuniform_n1() -> LatticeTiling {
+    // dodecagon (seed 0, largest class)
+    let mut cells: Vec<Cell> = vec![Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0 + 2.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(1.0/2.0 + 2.0 * H, 2.0 + H),
+            Vec2::new(1.0/2.0 + 2.0 * H, 1.0 + H),
+            Vec2::new(1.0 + 2.0 * H, 1.0),
+            Vec2::new(1.0 + 3.0 * H, 1.0/2.0),
+            Vec2::new(2.0 + 3.0 * H, 1.0/2.0),
+            Vec2::new(2.0 + 4.0 * H, 1.0),
+            Vec2::new(5.0/2.0 + 4.0 * H, 1.0 + H),
+            Vec2::new(5.0/2.0 + 4.0 * H, 2.0 + H),
+            Vec2::new(2.0 + 4.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(2.0 + 3.0 * H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(1.0 + 3.0 * H, 5.0/2.0 + 2.0 * H),
+        ]),
+        seed: 0,
+    }];
+
+    // hexagons (seed 1)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + 4.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(2.0 + 5.0 * H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(2.0 + 5.0 * H, 7.0/2.0 + 2.0 * H),
+            Vec2::new(2.0 + 4.0 * H, 4.0 + 2.0 * H),
+            Vec2::new(2.0 + 3.0 * H, 7.0/2.0 + 2.0 * H),
+            Vec2::new(2.0 + 3.0 * H, 5.0/2.0 + 2.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(5.0/2.0 + 4.0 * H, 1.0 + H),
+            Vec2::new(5.0/2.0 + 5.0 * H, 1.0/2.0 + H),
+            Vec2::new(5.0/2.0 + 6.0 * H, 1.0 + H),
+            Vec2::new(5.0/2.0 + 6.0 * H, 2.0 + H),
+            Vec2::new(5.0/2.0 + 5.0 * H, 5.0/2.0 + H),
+            Vec2::new(5.0/2.0 + 4.0 * H, 2.0 + H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0 + 6.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(3.0 + 7.0 * H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(3.0 + 7.0 * H, 7.0/2.0 + 2.0 * H),
+            Vec2::new(3.0 + 6.0 * H, 4.0 + 2.0 * H),
+            Vec2::new(3.0 + 5.0 * H, 7.0/2.0 + 2.0 * H),
+            Vec2::new(3.0 + 5.0 * H, 5.0/2.0 + 2.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    // squares (seed 2)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0/2.0 + H, 1.0/2.0 + H),
+            Vec2::new(1.0 + H, 1.0/2.0),
+            Vec2::new(1.0 + 2.0 * H, 1.0),
+            Vec2::new(1.0/2.0 + 2.0 * H, 1.0 + H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + 3.0 * H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(2.0 + 3.0 * H, 7.0/2.0 + 2.0 * H),
+            Vec2::new(1.0 + 3.0 * H, 7.0/2.0 + 2.0 * H),
+            Vec2::new(1.0 + 3.0 * H, 5.0/2.0 + 2.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + 4.0 * H, 1.0),
+            Vec2::new(2.0 + 5.0 * H, 1.0/2.0),
+            Vec2::new(5.0/2.0 + 5.0 * H, 1.0/2.0 + H),
+            Vec2::new(5.0/2.0 + 4.0 * H, 1.0 + H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(5.0/2.0 + 4.0 * H, 2.0 + H),
+            Vec2::new(5.0/2.0 + 5.0 * H, 5.0/2.0 + H),
+            Vec2::new(2.0 + 5.0 * H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(2.0 + 4.0 * H, 2.0 + 2.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0 + 5.0 * H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(3.0 + 5.0 * H, 7.0/2.0 + 2.0 * H),
+            Vec2::new(2.0 + 5.0 * H, 7.0/2.0 + 2.0 * H),
+            Vec2::new(2.0 + 5.0 * H, 5.0/2.0 + 2.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(5.0/2.0 + 6.0 * H, 2.0 + H),
+            Vec2::new(3.0 + 6.0 * H, 2.0 + 2.0 * H),
+            Vec2::new(3.0 + 5.0 * H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(5.0/2.0 + 5.0 * H, 5.0/2.0 + H),
+        ]),
+        seed: 2,
+    });
+
+    // triangles (seed 3)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(H, 1.0/2.0),
+            Vec2::new(1.0 + H, 1.0/2.0),
+            Vec2::new(1.0/2.0 + H, 1.0/2.0 + H),
+        ]),
+        seed: 3,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(5.0/2.0 + 5.0 * H, 5.0/2.0 + H),
+            Vec2::new(3.0 + 5.0 * H, 5.0/2.0 + 2.0 * H),
+            Vec2::new(2.0 + 5.0 * H, 5.0/2.0 + 2.0 * H),
+        ]),
+        seed: 3,
+    });
+    LatticeTiling {
+        id: "kuniform-n1",
+        name: "2-uniform (4.6.12; 3.4.6.4)",
+        description: "2-uniform tiling (4.6.12; 3.4.6.4) — dodecagons alternating with hexagons, squares and triangles, the p6m 3-4-6-12 form (p6m).",
+        lattice: [Vec2::new(2.0 + 4.0 * H, 0.0), Vec2::new(1.0 + 2.0 * H, 3.0 + 2.0 * H)],
+        cells,
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::P6m,
+        lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3⁶; 3².4.12), wallpaper group p6m.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n13` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons): t = 4 tile
+/// orbits, e = 4 edge orbits. H = √3/2.
+///
+/// The translation lattice is a 60° hexagonal basis with |b1| = |b2| =
+/// 3+√3: b1 = ((3+3√3)/2, (3+√3)/2), b2 = (0, 3+√3); |det| = 9+6√3
+/// (right-handed). The origin is a 3⁶ vertex; the 6-fold center c is the
+/// center of the cell dodecagon (O-frame (6.830127, 11.830127) — off-ring:
+/// the dodecagon-center radius (√6+√2)/2 ∉ Q(√3), float only). R60..R300
+/// about c plus all six mirrors through it verified numerically (the Python
+/// battery check 5 + m90x_sym_n13.json), so the declared group is p6m.
+///
+/// The cell holds 16 tiles: 1 dodecagon (seed 0, the largest class),
+/// 3 squares (seed 1), and 12 equilateral triangles — 6 from the first
+/// triangle orbit (seed 2, #808000) and 6 from the second (seed 3,
+/// #ffff00; the two orbits tie at 6/6 per cell, so the seed order is the
+/// documented first-appearance order in the cell). Area (6+3√3) + 3·1 +
+/// 12·(√3/4) = 9+6√3 = |det|.
+///
+/// Vertex figures: two vertex orbits, three figure strings — the 3².4.12
+/// orbit is CHIRAL: its figure "33412" differs from the mirror orbit's
+/// "33124" (100% bidirectional mirror pairing, m90x_dbg7.py; the ring
+/// labels there are the string-concatenation "12334"/"12433" of the same
+/// orbits), while the 3⁶ orbit ("333333", the 6-fold vertices) is achiral.
+/// Counts over the ±3×±3 patch: 33412 ×241, 33124 ×240, 333333 ×84.
+pub fn kuniform_n13() -> LatticeTiling {
+    // dodecagon (seed 0, largest class)
+    let mut cells: Vec<Cell> = vec![Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0 + 5.0 * H, 13.0/2.0 + 4.0 * H),
+            Vec2::new(3.0 + 6.0 * H, 7.0 + 4.0 * H),
+            Vec2::new(7.0/2.0 + 6.0 * H, 7.0 + 5.0 * H),
+            Vec2::new(7.0/2.0 + 6.0 * H, 8.0 + 5.0 * H),
+            Vec2::new(3.0 + 6.0 * H, 8.0 + 6.0 * H),
+            Vec2::new(3.0 + 5.0 * H, 17.0/2.0 + 6.0 * H),
+            Vec2::new(2.0 + 5.0 * H, 17.0/2.0 + 6.0 * H),
+            Vec2::new(2.0 + 4.0 * H, 8.0 + 6.0 * H),
+            Vec2::new(3.0/2.0 + 4.0 * H, 8.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 4.0 * H, 7.0 + 5.0 * H),
+            Vec2::new(2.0 + 4.0 * H, 7.0 + 4.0 * H),
+            Vec2::new(2.0 + 5.0 * H, 13.0/2.0 + 4.0 * H),
+        ]),
+        seed: 0,
+    }];
+
+    // squares (seed 1)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0/2.0 + 2.0 * H, 5.0 + 3.0 * H),
+            Vec2::new(1.0/2.0 + 2.0 * H, 4.0 + 3.0 * H),
+            Vec2::new(3.0/2.0 + 2.0 * H, 4.0 + 3.0 * H),
+            Vec2::new(3.0/2.0 + 2.0 * H, 5.0 + 3.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + 3.0 * H, 11.0/2.0 + 4.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 11.0/2.0 + 3.0 * H),
+            Vec2::new(3.0/2.0 + 4.0 * H, 5.0 + 3.0 * H),
+            Vec2::new(2.0 + 4.0 * H, 5.0 + 4.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + 4.0 * H, 7.0 + 4.0 * H),
+            Vec2::new(3.0/2.0 + 4.0 * H, 7.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 13.0/2.0 + 5.0 * H),
+            Vec2::new(2.0 + 3.0 * H, 13.0/2.0 + 4.0 * H),
+        ]),
+        seed: 1,
+    });
+
+    // triangles, first orbit (seed 2 — the two triangle orbits tie at 6/6 per cell, seed order = first appearance in the cell)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0/2.0 + H, 9.0/2.0 + 3.0 * H),
+            Vec2::new(1.0/2.0 + 2.0 * H, 4.0 + 3.0 * H),
+            Vec2::new(1.0/2.0 + 2.0 * H, 5.0 + 3.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0/2.0 + 2.0 * H, 7.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 15.0/2.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 2.0 * H, 8.0 + 5.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0/2.0 + 4.0 * H, 7.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 15.0/2.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 13.0/2.0 + 5.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0/2.0 + 4.0 * H, 8.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 17.0/2.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 15.0/2.0 + 5.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + 4.0 * H, 6.0 + 4.0 * H),
+            Vec2::new(2.0 + 3.0 * H, 11.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + 4.0 * H, 5.0 + 4.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + 4.0 * H, 7.0 + 4.0 * H),
+            Vec2::new(2.0 + 3.0 * H, 13.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + 4.0 * H, 6.0 + 4.0 * H),
+        ]),
+        seed: 2,
+    });
+
+    // triangles, second orbit (seed 3)
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0/2.0 + H, 9.0/2.0 + 3.0 * H),
+            Vec2::new(1.0/2.0 + H, 7.0/2.0 + 3.0 * H),
+            Vec2::new(1.0/2.0 + 2.0 * H, 4.0 + 3.0 * H),
+        ]),
+        seed: 3,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(1.0/2.0 + H, 11.0/2.0 + 3.0 * H),
+            Vec2::new(1.0/2.0 + H, 9.0/2.0 + 3.0 * H),
+            Vec2::new(1.0/2.0 + 2.0 * H, 5.0 + 3.0 * H),
+        ]),
+        seed: 3,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0/2.0 + 2.0 * H, 5.0 + 3.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 9.0/2.0 + 3.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 11.0/2.0 + 3.0 * H),
+        ]),
+        seed: 3,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0/2.0 + 3.0 * H, 15.0/2.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 2.0 * H, 7.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 13.0/2.0 + 5.0 * H),
+        ]),
+        seed: 3,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(3.0/2.0 + 4.0 * H, 8.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 3.0 * H, 15.0/2.0 + 5.0 * H),
+            Vec2::new(3.0/2.0 + 4.0 * H, 7.0 + 5.0 * H),
+        ]),
+        seed: 3,
+    });
+
+    cells.push(Cell {
+        poly: Polygon::from_slice(&[
+            Vec2::new(2.0 + 3.0 * H, 11.0/2.0 + 4.0 * H),
+            Vec2::new(2.0 + 4.0 * H, 6.0 + 4.0 * H),
+            Vec2::new(2.0 + 3.0 * H, 13.0/2.0 + 4.0 * H),
+        ]),
+        seed: 3,
+    });
+    LatticeTiling {
+        id: "kuniform-n13",
+        name: "2-uniform (3⁶; 3².4.12)",
+        description: "2-uniform tiling (3⁶; 3².4.12) — a dodecagon ringed by squares and two triangle orbits around 3⁶ vertices (p6m).",
+        lattice: [Vec2::new(3.0/2.0 + 3.0 * H, 3.0/2.0 + H), Vec2::new(0.0, 3.0 + 2.0 * H)],
         cells,
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6m,

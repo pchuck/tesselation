@@ -158,9 +158,9 @@ confirm the diffraction claim during the spike before declaring.
   | p6m | 3⁶ ; 3².4.3.4 ✅ `kuniform-n18` (M87) | 3,3 |
   | p6m | 3.4.6.4 ; 3².4.3.4 ✅ `kuniform-n9` (M88) | 4,4 |
   | p6m | 3.4.6.4 ; 3³.4² ✅ `kuniform-n8` (M89) | 4,4 |
-  | p6m | 3.4.6.4 ; 3.4².6 | 5,5 |
-  | p6m | 4.6.12 ; 3.4.6.4 (the 3-4-6-12 tiling) | 4,4 |
-  | p6m | 3⁶ ; 3².4.12 | 4,4 |
+  | p6m | 3.4.6.4 ; 3.4².6 ✅ `kuniform-n5` (M90) | 5,5 |
+  | p6m | 4.6.12 ; 3.4.6.4 (the 3-4-6-12 tiling) ✅ `kuniform-n1` (M91) | 4,4 |
+  | p6m | 3⁶ ; 3².4.12 ✅ `kuniform-n13` (M92) | 4,4 |
   | p4m | 3.12.12 ; 3.4.3.12 | 3,3 |
   | p6m | 3⁶ ; 3².6² ✅ `kuniform-p6m` (M44) | 2,3 |
   | p6  | 3⁶ ; 3.4.6 (variant 1) | 3,3 |
@@ -190,8 +190,8 @@ confirm the diffraction claim during the spike before declaring.
   check must verify *both* orbit figures, and the two-orbit structure
   itself — assert exactly 2 vertex classes over a large patch), plus
   the culling list.
-- **Status:** implemented (M44 + M48 + M87 + M88 + M89) — 5 of 20
-  entries landed, 15 of 20 remain. The p6m entry 3⁶ ; 3².6² as
+- **Status:** implemented (M44 + M48 + M87 + M88 + M89 + M90 + M91
+  + M92) — 8 of 20 entries landed, 12 of 20 remain. The p6m entry 3⁶ ; 3².6² as
   `kuniform-p6m` (M44; index-3 honeycomb dissection, exact Q(√3)
   table, both vertex orbits + p6m generators verified by an
   exact-surd Python spike and Rust cell-set probes), the pmm entry
@@ -205,7 +205,24 @@ confirm the diffraction claim during the spike before declaring.
   n9/n8), all three p6m *632 by numeric group determination about the
   hexagon center / 3⁶ vertex origin, both vertex orbits +
   edge-to-edge structure verified by the ±3×±3 Python battery before
-  the Rust port, 4 tess-tilings tests each).
+  the Rust port, 4 tess-tilings tests each). The second p6m batch
+  (M90 `kuniform-n5` 3.4.6.4 ; 3.4².6, M91 `kuniform-n1` 4.6.12 ;
+  3.4.6.4 — the 3-4-6-12 tiling, the module's first 12-gon, M92
+  `kuniform-n13` 3⁶ ; 3².4.12) lands exact Q(√3) tables on
+  RIGHT-handed 60° hexagonal bases with |b1| = |b2| = 3+√3 (n5/n13,
+  |det| = 9+6√3) and 2+2√3 (n1, |det| = 12+8√3); each has three
+  figure strings over two vertex orbits — a chiral orbit pair
+  (100% bidirectional mirror pairing) plus one achiral orbit — and
+  the pinned canonical figure keys are the lex-min integer rotations
+  (the battery's original check-3 canonicalized by string-rotation,
+  which differs for 12-gon figures: ring labels 1246/1264 and
+  12334/12433 map to the pinned 4612/4126 and 33412/33124); the
+  battery's area-FD table needed the unit-dodecagon 2·area entry
+  12+6√3 = (48,24) in radical form; check 4 (coverage) runs over
+  the maximal fully-covered rectangle containing the block centre
+  (the jagged 49-cell union bites past the 1-unit inset by up to
+  0.675 units, e.g. at n13), 4 tess-tilings tests each, completing
+  the six-entry p6m block of the closed list).
 
 ---
 

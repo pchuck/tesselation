@@ -318,6 +318,9 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(kuniform::kuniform_n18());
         r = r.register(kuniform::kuniform_n9());
         r = r.register(kuniform::kuniform_n8());
+        r = r.register(kuniform::kuniform_n5());
+        r = r.register(kuniform::kuniform_n1());
+        r = r.register(kuniform::kuniform_n13());
     }
     #[cfg(feature = "laves")]
     {
@@ -519,16 +522,16 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-        // Census of today's taxonomy (M89). 75 built-ins — 63 before
+        // Census of today's taxonomy (M92). 78 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
-        //   TwoUniform 5, Laves 11 (8 primary incl. cairo-pentagonal +
+        //   TwoUniform 8, Laves 11 (8 primary incl. cairo-pentagonal +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
         //   PentagonTypes 12, Islamic 9, Arrangements 5,
         //   Quasiperiodic 8, Aperiodic 5, Nonperiodic 4.
-        // Membership census 87 = 75 primaries + 12 secondaries (3 Laves
+        // Membership census 90 = 78 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -547,15 +550,17 @@ mod tests {
         // -> M85 Wallpaper 16 -> 17 (alcove-cut-grid, p3m1 — the last
         // gap; catalog complete) -> M86 Aperiodic 4 -> 5
         // (taylor-socolar) -> M87 TwoUniform 2 -> 3 (kuniform-n18)
-        // -> M88 (kuniform-n9) -> M89 (kuniform-n8).
+        // -> M88 (kuniform-n9) -> M89 (kuniform-n8)
+        // -> M90 TwoUniform 5 -> 6 (kuniform-n5) -> M91 (kuniform-n1)
+        // -> M92 (kuniform-n13).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 5, 11, 17, 12, 9, 5, 8, 5, 4],
+            vec![11, 8, 11, 17, 12, 9, 5, 8, 5, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 75, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 87, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 78, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 90, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -6973,6 +6978,240 @@ mod kuniform_tests {
             ],
         );
     }
+
+    #[test]
+    fn kuniform_n5_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n5(),
+            "kuniform-n5",
+            BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n5_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n5(),
+            "kuniform-n5(rot30,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n5_deterministic() {
+        check_det(
+            &kuniform::kuniform_n5(),
+            "kuniform-n5",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch for the p6m
+    /// tiling (3.4.6.4; 3.4².6): the achiral 3.4.6.4 orbit ("3464")
+    /// and the CHIRAL 3.4.4.6 orbit, whose figure "3446" differs from
+    /// its mirror image "3644" (three figure strings, two orbits).
+    /// Counts and reps match the Python battery.
+    #[test]
+    fn kuniform_n5_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n5(),
+            &[
+                Figure {
+                    figure: "3446",
+                    count: 266,
+                    orbits: &[
+                        (-1866, 3232),
+                        (-500, 1866),
+                        (-500, 3598),
+                        (500, 866),
+                        (1000, 2732),
+                        (3732, 0),
+                    ],
+                },
+                Figure {
+                    figure: "3464",
+                    count: 267,
+                    orbits: &[
+                        (1500, 866),
+                        (1500, 1866),
+                        (2366, 366),
+                        (2366, 2366),
+                        (3232, 866),
+                        (3232, 1866),
+                    ],
+                },
+                Figure {
+                    figure: "3644",
+                    count: 267,
+                    orbits: &[
+                        (-1000, 2732),
+                        (-500, 866),
+                        (500, 1866),
+                        (500, 3598),
+                        (1000, 0),
+                        (1866, 3232),
+                    ],
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn kuniform_n1_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n1(),
+            "kuniform-n1",
+            BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n1_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n1(),
+            "kuniform-n1(rot30,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n1_deterministic() {
+        check_det(
+            &kuniform::kuniform_n1(),
+            "kuniform-n1",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch for the p6m
+    /// 3-4-6-12 tiling (4.6.12; 3.4.6.4): the achiral 3.4.6.4 orbit
+    /// ("3464") and the CHIRAL 4.6.12 orbit, whose figure "4612"
+    /// differs from its mirror image "4126" (three figure strings, two
+    /// orbits — the canonical strings are the Vec<u32> lex-min
+    /// rotations; the string-concatenation ring labels are "1246"/
+    /// "1264"). Counts and reps match the Python battery.
+    #[test]
+    fn kuniform_n1_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n1(),
+            &[
+                Figure {
+                    figure: "3464",
+                    count: 267,
+                    orbits: &[
+                        (866, 500),
+                        (1366, 1366),
+                        (1866, 500),
+                        (6330, 4232),
+                        (6830, 3366),
+                        (7330, 4232),
+                    ],
+                },
+                Figure {
+                    figure: "4126",
+                    count: 266,
+                    orbits: &[
+                        (2232, 1866),
+                        (2732, 3732),
+                        (3598, 500),
+                        (4598, 4232),
+                        (5464, 1000),
+                        (5964, 2866),
+                    ],
+                },
+                Figure {
+                    figure: "4612",
+                    count: 266,
+                    orbits: &[
+                        (2232, 2866),
+                        (2732, 1000),
+                        (3598, 4232),
+                        (4598, 500),
+                        (5464, 3732),
+                        (5964, 1866),
+                    ],
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn kuniform_n13_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n13(),
+            "kuniform-n13",
+            BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n13_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n13(),
+            "kuniform-n13(rot30,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n13_deterministic() {
+        check_det(
+            &kuniform::kuniform_n13(),
+            "kuniform-n13",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch for the p6m
+    /// tiling (3⁶; 3².4.12): the achiral 3⁶ orbit ("333333", the
+    /// 6-fold vertices) and the CHIRAL 3².4.12 orbit, whose figure
+    /// "33412" differs from its mirror image "33124" (three figure
+    /// strings, two orbits — the canonical strings are the Vec<u32>
+    /// lex-min rotations; the string-concatenation ring labels are
+    /// "12334"/"12433"). Counts and reps match the Python battery.
+    #[test]
+    fn kuniform_n13_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n13(),
+            &[
+                Figure {
+                    figure: "33124",
+                    count: 240,
+                    orbits: &[
+                        (0, 3732),
+                        (500, 1866),
+                        (866, 500),
+                        (1366, 3366),
+                        (2232, 1866),
+                        (3232, 2866),
+                    ],
+                },
+                Figure {
+                    figure: "333333",
+                    count: 84,
+                    orbits: &[(0, 0), (1366, 2366)],
+                },
+                Figure {
+                    figure: "33412",
+                    count: 241,
+                    orbits: &[
+                        (0, 1000),
+                        (500, 2866),
+                        (866, 4232),
+                        (1366, 1366),
+                        (2232, 2866),
+                        (3232, 1866),
+                    ],
+                },
+            ],
+        );
+    }
 }
 #[cfg(all(
     test,
@@ -7117,6 +7356,9 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
             ("kuniform-n18", kuniform::kuniform_n18()),
             ("kuniform-n9", kuniform::kuniform_n9()),
             ("kuniform-n8", kuniform::kuniform_n8()),
+            ("kuniform-n5", kuniform::kuniform_n5()),
+            ("kuniform-n1", kuniform::kuniform_n1()),
+            ("kuniform-n13", kuniform::kuniform_n13()),
             ("tetrakis-square", laves::tetrakis_square()),
             ("rhombille", laves::rhombille()),
             ("triakis-triangular", laves::triakis_triangular()),
