@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (10)   Laves (15)   Wallpaper (17)   Pentagon
+counts (`Uniform (11)   Two-Uniform (11)   Laves (15)   Wallpaper (17)   Pentagon
 Types (12)   Islamic (12)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (6)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -127,7 +127,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-88 built-in tilings (100 tab memberships), all discoverable in both UIs
+89 built-in tilings (101 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -201,6 +201,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `kuniform-n13` | 2-uniform (3⁶; 3².4.12) | 2-uniform k-uniform: dodecagons ringed by squares and two triangle orbits around 3⁶ vertices (Wikipedia `2-uniform n13`, t = 4, e = 4); 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); 16 tiles/cell; 6-fold center off-ring (M92) | p6m | hexagonal |
 | `kuniform-n20` | 2-uniform (3⁶; 3⁴.6) | 2-uniform k-uniform: flower form — unit triangular lattice with hexagons dissected at the points of an index-13 sublattice, the two-uniform family's first p6 entry (Wikipedia `2-uniform n20`, t = 5; e = 6 exact vs. the wiki's parenthetical 7); 60° hexagonal basis, \|b1\| = \|b2\| = √13, det 13√3/2 (right-handed); 21 tiles/cell; A:B = 1:1 vertex orbits pinned by k = 4X+3Y mod 13 (M96) | p6 | hexagonal |
 | `kuniform-n12` | 2-uniform (3².6²; 3⁴.6) | 2-uniform k-uniform: rows of edge-sharing hexagons with unit-triangle bands between the rows, the two-uniform family's first cmm entry (Wikipedia `2-uniform n12`, t = 2, e = 4); centered rectangular basis ⟨(√3, 0), (√3/2, 5/2)⟩ with the centering vector as basis, det 5√3/2 (right-handed); 5 tiles/cell (1 hexagon + 4 triangles, the 2-hexagon + 8-triangle centered cell is S ⊎ (S + c)); both vertex orbits 2 translation classes per cell (M97) | cmm | centered |
+| `kuniform-n19` | 2-uniform (3⁶; 3⁴.6)₁ | 2-uniform k-uniform: the t = 3 flower form of the 3⁴.6 pair — unit triangular lattice with hexagons dissected at the points of the index-9 sublattice ⟨(3,0),(0,3)⟩ (Wikipedia `2-uniform n19`, t = 3, e = 3); 60° hexagonal basis, \|b1\| = \|b2\| = 3, det 9√3/2 (right-handed); 13 tiles/cell; A:B = 1:3 vertex orbits pinned by v mod 3; both mirror classes verified exactly, so the wiki's p6 group label under-states the symmetry — this is the achiral p6m form (n20 is the chiral p6 form) (M95) | p6m | hexagonal |
 | `kuniform-dual-p6m` | Dual of 2-uniform (3⁶; 3².6²) | face-centroid dual of `kuniform-p6m` (p6m, det 9√3/2): 1 regular hexagon (side 1/√3, area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3, 2√3/3, √3 in cyclic order; angles 60°/60°/120°/120°; area 2√3/3) per cell, sum 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
 | `kuniform-dual-n18` | Dual of 2-uniform (3⁶; 3².4.3.4) | face-centroid dual of `kuniform-n18` (p6m, det 3+2√3): 1 regular hexagon (side 1/√3) + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6; angles 90°/90°/120°/120°/120°; area (2+√3)/4) per cell, sum 3+2√3 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
 | `kuniform-dual-n9` | Dual of 2-uniform (3.4.6.4; 3².4.3.4) | face-centroid dual of `kuniform-n9` (p6m, det 6+7√3/2): 6 congruent quadrilaterals (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/120°; area (3+2√3)/6) + 6 congruent pentagons (congruent to the `kuniform-dual-n18` pentagons; area (2+√3)/4) per cell, sum 6+7√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
@@ -565,7 +566,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 622 tests, all green, zero
+`cargo test --workspace` (currently 626 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

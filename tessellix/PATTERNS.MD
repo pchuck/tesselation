@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (88 tilings)
+## Implemented (89 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -88,6 +88,7 @@ figures at the split midpoints, `2.4.4`).
 | `kuniform-n13` | 2-uniform (3⁶; 3².4.12) | p6m | dodecagons ringed by squares and two triangle orbits around 3⁶ vertices; 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); origin a 3⁶ vertex, 6-fold center c the cell's dodecagon center (off-ring, not O); 16 tiles/cell; Wikipedia `2-uniform n13`, t = 4, e = 4 (M92) |
 | `kuniform-n20` | 2-uniform (3⁶; 3⁴.6) | p6 | flower form: unit triangular lattice, hexagons dissected at the points of the index-13 sublattice ⟨(1,3),(−3,4)⟩; 60° hexagonal basis, \|b1\| = \|b2\| = √13, det 13√3/2 (right-handed); origin a hexagon center = 6-fold point; 21 tiles/cell; the two-uniform family's first p6 entry — R60 PASS + six mirror probes FAIL + full translation scan pin p6; Wikipedia `2-uniform n20`, t = 5 (e = 6 exact; the wiki parenthetical's e = 7 disagrees, see §46) (M96) |
 | `kuniform-n12` | 2-uniform (3².6²; 3⁴.6) | cmm | rows of edge-sharing hexagons with unit-triangle bands between the rows; centered rectangular primitive basis ⟨(√3,0),(√3/2,5/2)⟩, det 5√3/2 (right-handed) — the centering vector is a basis vector; origin a hexagon center = 2-fold point; 5 tiles/cell (1 hex + 4 tri; the 10-tile centered cell is S ⊎ (S + c)); the two-uniform family's first cmm entry — six 2-fold probes + both mirror families PASS, valley 2-folds FAIL, no 3/4/6-fold; Wikipedia `2-uniform n12`, t = 2, e = 4 (both confirmed exactly) (M97) |
+| `kuniform-n19` | 2-uniform (3⁶; 3⁴.6)₁ | p6m | the t = 3 flower form of the 3⁴.6 pair: unit triangular lattice, hexagons dissected at the points of the index-9 sublattice ⟨(3,0),(0,3)⟩; 60° hexagonal basis, \|b1\| = \|b2\| = 3, det 9√3/2 (right-handed); origin a hexagon center = 6-fold point; 13 tiles/cell (1 hex + 6 petals + 6 gap triangles); Wikipedia `2-uniform n19`, t = 3, e = 3 — e = 3 confirmed under the full group (edge orbits {6,12,3}; under p6 alone the petal edges split 6+6 giving e = 4); the wiki table's p6 label under-states the symmetry: both mirror classes (axes 0°/30°/60°/90°) pass exactly, so the group is p6m — n20 is the genuinely chiral p6 form (M95) |
 | `kuniform-dual-p6m` | dual of 2-uniform (3⁶; 3².6²) | p6m | face-centroid dual of `kuniform-p6m`, constructed by the `dual()` helper (M98); 7 faces/cell — 1 regular hexagon (side 1/√3, area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3, 2√3/3, √3; angles 60°/60°/120°/120°; area 2√3/3); Σ = 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) |
 | `kuniform-dual-n18` | dual of 2-uniform (3⁶; 3².4.3.4) | p6m | face-centroid dual of `kuniform-n18`, constructed by the `dual()` helper; 7 faces/cell — 1 regular hexagon (side 1/√3) + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6; angles 90°/90°/120°/120°/120°; area (2+√3)/4); Σ = 3+2√3 = \|det\|, edge-to-edge, origin a 3⁶ vertex = 6-fold center (M98) |
 | `kuniform-dual-n9` | dual of 2-uniform (3.4.6.4; 3².4.3.4) | p6m | face-centroid dual of `kuniform-n9`, constructed by the `dual()` helper; 12 faces/cell — 6 congruent quadrilaterals (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/120°; area (3+2√3)/6) + 6 pentagons congruent to the n18-dual pentagons (area (2+√3)/4); Σ = 6+7√3/2 = \|det\|, edge-to-edge, origin a hexagon center = 6-fold center (M98) |
@@ -3135,6 +3136,75 @@ documentation pending).
 - **Status:** landed (M97). 88 tilings, 100 memberships, 622 tests
   at this step.
 
+### 50. 2-uniform [3⁶; 3⁴.6]₁ (n19) ✅ (M95)
+
+- **Motif:** the t = 3 member of the two-vertex-orbit 3⁴.6 pair —
+  Wikipedia `2-uniform n19`, `[3⁶; 3⁴.6]₁ (t=3, e=3)`, the row the
+  wiki table annotates p6. The construction is the flower form on the
+  index-9 sublattice: the unit triangular lattice Λ with the 6-face
+  flower at each point of L9 = ⟨B1 = (3,0), B2 = (0,3)⟩ (lattice
+  coordinates; index 9, min center-center norm² 9) dissected into a
+  regular unit hexagon, all other unit triangles intact. Flowers never
+  touch (center spacing 3 vs. the norm² ≥ 7 hard-core bound); along a
+  center line neighbors leave a one-unit gap spanned by two unit
+  triangles. 13 tiles/cell (1 hex + 6 petal triangles + 6 gap
+  triangles), 60° hexagonal basis |b1| = |b2| = 3, |det| = 9√3/2
+  (right-handed), origin a hexagon center = 6-fold point; torus census
+  V = 8, E = 21, F = 13, V − E + F = 0.
+- **Exact solve (m95x_torus.py, integer arithmetic throughout):**
+  2-uniformity pinned by v mod 3 (kernel L9) — the 3⁶ orbit is the
+  petal-tip classes {(1,1),(2,2)} (one R60 2-cycle; tips at distance
+  √3 from the flower centers, 3-fold points), the 3⁴.6 orbit the six
+  hexagon-corner classes (one R60 6-cycle); A:B = 2:6 = 1:3 per cell.
+  Triangle orbits {6,6} (petals, gap triangles) + the hexagon → t = 3.
+  Cross-check: the coordination sequences match Galebach's #19 (= RCSR
+  layer net krb) 12/12 terms — B (deg 5) [1,5,10,15,22,27,31,38,43,
+  47,54,59] = A301722, A (deg 6) [1,6,9,18,21,24,36,36,39,54,51,54] =
+  A301720 (m95x_coordseq.py).
+- **The group is p6m, not the wiki's p6:** both mirror classes pass
+  exactly — the x-axis mirror F: (X,Y)→(X+Y,−Y) and the 30° mirror
+  M30: (X,Y)→(Y,X) (lattice coordinates) normalize L9 and carry every
+  one of the 13 table tiles to a table position mod L9 (torus-exact);
+  under the full point group D6 (12 elements, distinctness-checked on
+  the torus) the vertex orbits stay {2,6}, the triangle orbits {6,6},
+  and the 21 edges fall as {6, 12, 3} (hexagon sides; the 12 petal
+  edges — the mirror merges the two C6 petal-edge orbits of 6, which
+  is why the rotation subgroup alone would give e = 4; the 3 Q–Q
+  edges) → **e = 3**, matching the wiki parenthetical. The wiki table
+  lists p6 for *both* 3⁴.6 variants; only n20 (t = 5) is genuinely
+  chiral (all six of its mirror probes fail). For n19 the p6 label
+  under-states the symmetry — same annotation-reliability class as
+  n20's e = 7 (§46).
+- **±3×±3 window battery (m95x_battery.py, exact vertex-set
+  matching):** edge-to-edge pairing over the 7×7-cell patch — 941
+  interior edges pair-perfect, 176 rim singles (0 odd boundary
+  vertices, each re-pairs in the ±4 patch), 0 edges with >2 sides, 0
+  T-junctions; fine grid 1600/1600 exactly-once (max coverage 1);
+  vertex figures exact per class (A: 6 triangles = 3⁶, B: 4 triangles
+  + 1 hexagon = 3⁴.6); R60–R300 PASS 181/181 (radius-6 window);
+  mirrors at axes 0°/30°/60°/90° PASS 181/181, mid-axes 15°/45°/75°
+  FAIL 0/181; translation scan over all 64 Λ candidates with norm² ≤
+  20 (both directions tested) finds exactly ±(3,0), ±(0,3), ±(3,−3)
+  (lattice coords) — the translation lattice is exactly 3Λ, min
+  period norm² 9.
+- **Rust:** `kuniform_n19()` in `kuniform.rs` (module header
+  "Ten entries" → "Eleven entries"), registered after
+  `kuniform_n12` (the n12 fork landed first; both appended after
+  `kuniform_n20` on their forks); 4 tests
+  (`covers_region`, `rotated_scaled` 0.7/30°, `deterministic`,
+  `vertex_figures`). The vertex-figure test pins the ±3×±3 patch
+  census from the bit-exact Python replica `m95x_rust_expect.py`:
+  figure `333333` count 72 with orbit reps {(1500,866),(3000,1732)}
+  — the two petal-tip classes are exactly the two L9-translation
+  orbits — and figure `33336` count 241 with reps {(500,866),
+  (1000,0),(1000,1732),(2000,0),(2000,1732),(2500,866)} (one per
+  hexagon-corner class). Census (cumulative on main, after M97):
+  88 → 89 tilings, 100 → 101 memberships, TwoUniform 10 → 11.
+- **Status:** landed (M95). 88 tilings, 100 memberships, 622 tests
+  at this step on the worker fork (landed on main at 89 tilings,
+  101 memberships, 626 tests, after M97). Full bar green. 11 of
+  the 20 closed-list entries landed, 9 remain.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -4340,7 +4410,7 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   exactly-once / 144 on-boundary / max 2, p6m group determination
   (R60..R300 + six mirrors, 0 color changes). 4 tess-tilings
   tests. Census: 73 → 74 tilings, 85 → 86 memberships, 542 → 546
-  tests (commit pending the coordinator).
+  tests (landed on main).
 - 2026-11-18 — M89 2-uniform (3.4.6.4; 3³.4², p6m) ✅: third entry
   of the p6m batch (`kuniform-n8`) — the second p6m form of
   3.4.6.4 (one square–square edge per cell; 2-folds at the
@@ -4351,7 +4421,7 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   3464 (267, 6 orbits), 25600-point grid 14256 exactly-once / 168
   on-boundary / max 2, p6m group determination. 4 tess-tilings
   tests. Census: 74 → 75 tilings, 86 → 87 memberships, 546 → 550
-  tests (commit pending the coordinator). All three batch entries
+  tests (landed on main). All three batch entries
   leave the full bar green: cargo check + clippy (both target
   sets) with zero warnings, cargo test --workspace 550/550.
 - 2026-11-19 — M90 2-uniform (3.4.6.4; 3.4².6, p6m) ✅: fourth
@@ -4365,7 +4435,7 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   split of the 3.4².6 orbit), 25600-point grid 18492 exactly-once
   / 0 on-boundary / max 1, p6m group determination. 4 tess-tilings
   tests. Census: 75 → 76 tilings, 87 → 88 memberships, 550 → 554
-  tests (commit pending the coordinator).
+  tests (landed on main).
 - 2026-11-19 — M91 2-uniform 3-4-6-12 (4.6.12; 3.4.6.4, p6m) ✅:
   fifth entry of the p6m batch (`kuniform-n1`) — the first tiling
   in the module with dodecagons; 12 tiles per cell (1 doz, 3 hex,
@@ -4391,7 +4461,7 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   grid 16674 exactly-once / 326 on-boundary / max 2 (grid lines
   coincide with tile edges — expected), p6m group determination.
   4 tess-tilings tests. Census: 77 → 78 tilings, 89 → 90
-  memberships, 558 → 562 tests (commit pending the coordinator).
+  memberships, 558 → 562 tests (landed on main).
   All three batch entries leave the full bar green: cargo check +
   clippy (both target sets) with zero warnings, cargo test
   --workspace 562/562 — the six-entry p6m block of the closed list
@@ -4489,7 +4559,7 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   400-point coverage exact, single-cell torus fold (valences +
   strand closure), group determination on the torus multiset.
   19 tess-tilings tests. Census: 75 → 78 tilings, 87 → 90
-  memberships, 550 → 569 tests (commit pending the coordinator).
+  memberships, 550 → 569 tests (landed on main).
 - 2026-11-19 — M98 p6m 2-uniform duals (first batch) ✅: the
   face-centroid duals of the first four p6m 2-uniform primals —
   `kuniform-dual-p6m`, `kuniform-dual-n18`, `kuniform-dual-n9`,
@@ -4538,7 +4608,7 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   rings. Vertex-figure test 333333 (266, 6 reps) + 33336 (240, 6
   reps), Python replica m96b_rust_expect.py matches bit-exact. 4
   tess-tilings tests. Census: 78 → 79 tilings, 90 → 91
-  memberships, 562 → 566 tests (commit pending the coordinator).
+  memberships, 562 → 566 tests (landed on main).
   Full bar green: cargo check + clippy (both target sets) zero
   warnings, cargo test --workspace 566/566. 9 of the 20 closed-list
   entries landed, 11 remain.
@@ -4564,7 +4634,37 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   bit-exact first try; battery 406 edge pairs / 0 interior unpaired
   / 0 T-junctions, fine grid 8000/8000 exactly-once. 4 tess-tilings
   tests. Census: 87 → 88 tilings, 99 → 100 memberships, 618 → 622
-  tests (commit pending the coordinator). Full bar green: cargo
+  tests (landed on main). Full bar green: cargo
   check + clippy (both target sets) zero warnings, cargo test
   --workspace 622/622. 10 of the 20 closed-list entries landed,
   10 remain.
+- 2026-11-19 — M95 2-uniform (3⁶; 3⁴.6)₁ (n19, p6m) ✅: the t = 3
+  member of the two-vertex-orbit 3⁴.6 pair (`kuniform-n19`, §50) —
+  flower form on the index-9 sublattice L9 = ⟨(3,0),(0,3)⟩ of the
+  unit triangular lattice (center spacing 3, one-unit gaps along
+  center lines); 13 tiles/cell (1 hex + 6 petals + 6 gap triangles),
+  60° hexagonal basis |b1| = |b2| = 3, |det| = 9√3/2 (right-handed),
+  origin a hexagon center = 6-fold point; torus V−E+F = 8−21+13 = 0;
+  2-uniformity pinned by v mod 3 (kernel L9): 3⁶ = petal-tip classes
+  {(1,1),(2,2)} (R60 2-cycle), 3⁴.6 = the six hexagon-corner classes
+  (R60 6-cycle), A:B = 1:3; triangle orbits {6,6} + hex → t = 3.
+  **The wiki table's p6 label under-states the symmetry:** both
+  mirror classes pass exactly (x-axis and 30° mirrors normalize L9
+  and map all 13 table tiles to table positions, torus-exact; window
+  probes at axes 0°/30°/60°/90° PASS 181/181, mid-axes FAIL 0/181);
+  under the full D6 point group the edge orbits are {6,12,3} → e = 3
+  (the mirror merges the two C6 petal-edge orbits 6+6 → 12; under p6
+  alone e would be 4) — matching the wiki parenthetical; only n20
+  (t = 5) is genuinely chiral p6. Battery: edge-to-edge 941 interior
+  pairs / 0 unpaired re-pairing at ±4 / 0 T-junctions, fine grid
+  1600/1600 exactly-once, vertex figures exact per class (A 3⁶, B
+  3⁴.6), translation scan over all 64 Λ candidates norm² ≤ 20 finds
+  exactly ±(3,0), ±(0,3), ±(3,−3) (min period norm² 9). Vertex-figure
+  test 333333 (72, 2 reps) + 33336 (241, 6 reps), Python replica
+  m95x_rust_expect.py matches bit-exact. 4 tess-tilings tests.
+  Census (cumulative on main, after M97): 88 → 89 tilings,
+  100 → 101 memberships, TwoUniform 10 → 11, 622 → 626 tests
+  (landed on main). Full bar green:
+  cargo check + clippy (both target sets) zero warnings, cargo test
+  --workspace --all-features 626/626. 11 of the 20 closed-list
+  entries landed, 9 remain. Details in §50.

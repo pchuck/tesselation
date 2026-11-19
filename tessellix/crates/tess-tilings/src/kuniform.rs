@@ -1,10 +1,10 @@
 //! 2-uniform (k-uniform) tilings, expressed as [`LatticeTiling`] data
 //! tables.
 //!
-//! Ten entries are from the closed list of 20 two-vertex-orbit
+//! Eleven entries are from the closed list of 20 two-vertex-orbit
 //! tilings by regular polygons (Krotenheerdt; see the Wikipedia
 //! "k-uniform tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`,
-//! `n8`, `n5`, `n1`, `n13`, `n20`, `n12`). The
+//! `n8`, `n5`, `n1`, `n13`, `n20`, `n12`, `n19`). The
 //! list's entries have no individual proper names, so these are named by
 //! their vertex configurations, following that convention:
 //!
@@ -37,6 +37,12 @@
 //!   t = 4, e = 4. A dodecagon ringed by squares and two triangle
 //!   orbits around 3⁶ vertices; the origin is a 3⁶ vertex, and the
 //!   6-fold center c is the center of the cell's dodecagon.
+//! * `kuniform-n19` — vertex figures 3⁶ ; 3⁴.6, group p6m,
+//!   t = 3, e = 3. The t = 3 flower form of the two 3⁴.6 entries:
+//!   hexagon flowers on the index-9 sublattice ⟨(3,0),(0,3)⟩ of the
+//!   unit triangular lattice. Both mirror classes verified exactly,
+//!   so the wiki table's p6 label under-states the symmetry — n20
+//!   below is the genuinely chiral p6 form of the same pair.
 //! * `kuniform-n20` — vertex figures 3⁶ ; 3⁴.6, group p6 (the
 //!   module's first chiral entry), t = 5, e = 6 (e = 7 in the
 //!   Wikipedia parenthetical — the exact torus enumeration
@@ -1506,6 +1512,100 @@ pub fn kuniform_n12() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::Cmm,
         lattice_kind: LatticeKind::CenteredRectangular,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3⁶; 3⁴.6), wallpaper group p6m.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n19` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons): t = 3 tile
+/// orbits. The flower construction: take the unit triangular lattice Λ
+/// and dissect, at each point of the index-9 sublattice
+/// L9 = ⟨B1 = (3,0), B2 = (0,3)⟩ (lattice coordinates, 60° basis), the
+/// 6-face flower around that point into a regular unit hexagon. All
+/// remaining unit triangles stay intact. Center-center distances are 3,
+/// so flowers never touch (hard-core bound: norm² ≥ 7); along each
+/// center line neighboring flowers leave a one-unit gap spanned by two
+/// unit triangles.
+///
+/// The translation lattice is ⟨B1, B2⟩ in real coordinates
+/// b1 = (3, 0), b2 = (3/2, 3H); |b1| = |b2| = 3 at 60°,
+/// |det| = 9√3/2 (right-handed). The origin is a hexagon center and the
+/// 6-fold point. Cell content: 1 hexagon + 12 triangles (18 lattice
+/// faces per cell: the 6-face flower plus 12 intact triangles),
+/// vertices V = 8, edges E = 21, V − E + F = 0 on the torus.
+///
+/// Two vertex orbits, pinned by exact modular arithmetic (class
+/// k(v) = v mod 3, kernel = L9): the 3⁶ orbit is the petal-tip classes
+/// {(1,1),(2,2)} (a single R60 2-cycle — the tips sit at distance √3
+/// from the flower centers and are 3-fold points), the 3⁴.6 orbit is
+/// the hexagon-corner class set {(1,0),(0,1),(2,1),(2,0),(0,2),(1,2)}
+/// (a single R60 6-cycle) — so the tiling is 2-uniform and A:B = 2:6 =
+/// 1:3 per cell (m95x_torus.py). Under the full group G = L9 ⋊ D6 the
+/// triangle orbits are the 6 hexagon-edge petals and the 6 gap
+/// triangles, plus the hexagon: t = 3; the edge orbits are {6, 12, 3}
+/// (hexagon sides; the 12 petal edges — which the mirror merges from
+/// two C6 orbits of 6; the 3 Q–Q edges) so e = 3, matching the
+/// Wikipedia parenthetical; under the rotation subgroup C6 alone the
+/// petal edges split 6+6 and e would be 4.
+///
+/// Symmetry: R60–R300 about the origin verified on a radius-6 window
+/// (181/181 tiles), and — unlike the chiral n20 — both mirror classes
+/// pass exactly (axes at 0°/30°/60°/90° through the origin: the lines
+/// through the A tips and the lines through the Q–Q edge midpoints;
+/// torus-exact tile mapping in m95x_torus.py), and the full translation
+/// scan finds exactly 3Λ (min period norm² 9). The group is therefore
+/// p6m. The Wikipedia table lists p6 for both 3⁴.6 variants, but only
+/// n20 (the t = 5 variant, this module's chiral entry) is genuinely
+/// p6: the t = 3 flower is forced by the orbit arithmetic (petals on
+/// the six hexagon sides, tips at 3-fold points) and realizes the full
+/// dihedral symmetry, so the wiki's p6 label under-states it.
+pub fn kuniform_n19() -> LatticeTiling {
+    // Unit-triangle-lattice coordinates: real(v) = (X + Y/2, √3/2 · Y).
+    // Hexagon at the origin (seed 0), corners at the 6 unit neighbors.
+    let hex_c = [
+        Vec2::new(1.0, 0.0),
+        Vec2::new(0.5, H),
+        Vec2::new(-0.5, H),
+        Vec2::new(-1.0, 0.0),
+        Vec2::new(-0.5, -H),
+        Vec2::new(0.5, -H),
+    ];
+    let mut cells: Vec<Cell> = vec![Cell {
+        poly: Polygon::from_slice(&hex_c),
+        seed: 0,
+    }];
+
+    // 12 triangles: the 6 hexagon-edge petals (seed 1) and the 6 gap
+    // triangles at the petal tips (seed 2), one per translation class,
+    // all CCW.
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.5, H), Vec2::new(0.5, H), Vec2::new(1.0, 0.0)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.5, H), Vec2::new(0.0, 2.0 * H), Vec2::new(-0.5, H)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(-0.5, H), Vec2::new(-1.5, H), Vec2::new(-1.0, 0.0)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(-1.0, 0.0), Vec2::new(-1.5, -H), Vec2::new(-0.5, -H)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(-0.5, -H), Vec2::new(0.0, -2.0 * H), Vec2::new(0.5, -H)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.5, -H), Vec2::new(1.5, -H), Vec2::new(1.0, 0.0)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.5, H), Vec2::new(1.0, 0.0), Vec2::new(2.0, 0.0)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.5, H), Vec2::new(2.5, H), Vec2::new(2.0, 2.0 * H)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.5, H), Vec2::new(1.0, 2.0 * H), Vec2::new(0.5, H)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.0, 2.0 * H), Vec2::new(0.5, H), Vec2::new(1.0, 2.0 * H)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.0, 2.0 * H), Vec2::new(0.5, 3.0 * H), Vec2::new(-0.5, 3.0 * H)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.0, 2.0 * H), Vec2::new(-1.0, 2.0 * H), Vec2::new(-0.5, H)]), seed: 2 });
+    LatticeTiling {
+        id: "kuniform-n19",
+        name: "2-uniform (3⁶; 3⁴.6)₁",
+        description: "2-uniform tiling (3⁶; 3⁴.6) — unit triangular lattice with index-9 sublattice hexagon flowers, the achiral p6m form of the two-uniform 3⁴.6 family (the wiki table's p6 label under-states the symmetry; n20 is the chiral p6 form).",
+        lattice: [Vec2::new(3.0, 0.0), Vec2::new(1.5, 3.0 * H)],
+        cells,
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::P6m,
+        lattice_kind: LatticeKind::Hexagonal,
         category: TilingCategory::TwoUniform,
         secondary: &[],
         seed_pattern: SeedPattern::Uniform,

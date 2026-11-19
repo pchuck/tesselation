@@ -163,7 +163,7 @@ confirm the diffraction claim during the spike before declaring.
   | p6m | 3⁶ ; 3².4.12 ✅ `kuniform-n13` (M92) | 4,4 |
   | p4m | 3.12.12 ; 3.4.3.12 | 3,3 |
   | p6m | 3⁶ ; 3².6² ✅ `kuniform-p6m` (M44) | 2,3 |
-  | p6  | 3⁶ ; 3.4.6 (variant 1) | 3,3 |
+  | p6  | 3⁶ ; 3.4.6 (variant 1) ✅ `kuniform-n19` (M95) | 3,3 (group p6m exact: both mirror classes verified — the wiki's p6 label under-states it, see PATTERNS.MD §50) |
   | p6  | 3⁶ ; 3.4.6 (variant 2) ✅ `kuniform-n20` (M96) | 5,7 → e = 6 exact (M96 torus enumeration, see PATTERNS.MD §46) |
   | cmm | 3².6² ; 3.4.6 ✅ `kuniform-n12` (M97) | 2,4 (both confirmed exact, M97 orbit enumeration — t = 2, e = 4) |
   | pmm | 3.6.3.6 ; 3².6² ✅ `kuniform-pmm` (M48) | 2,3 |
@@ -197,7 +197,8 @@ confirm the diffraction claim during the spike before declaring.
   itself — assert exactly 2 vertex classes over a large patch), plus
   the culling list.
 - **Status:** implemented (M44 + M48 + M87 + M88 + M89 + M90 + M91
-  + M92 + M96 + M97) — 10 of 20 entries landed, 10 of 20 remain. The p6m entry 3⁶ ; 3².6² as
++ M92 + M96 + M97 + M95) — 11 of 20 entries landed, 9 of 20
+  remain. The p6m entry 3⁶ ; 3².6² as
   `kuniform-p6m` (M44; index-3 honeycomb dissection, exact Q(√3)
   table, both vertex orbits + p6m generators verified by an
   exact-surd Python spike and Rust cell-set probes), the pmm entry
@@ -239,7 +240,7 @@ confirm the diffraction claim during the spike before declaring.
   a full translation scan finding exactly L13; exact torus orbit
   count t = 5 with triangle orbits {6,6,6,2}, edge orbits
   {6,6,6,6,6,3} → e = 6, correcting the 5,7 parenthetical in the
-  table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
+table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   3⁴.6 — rows of edge-sharing hexagons with unit-triangle bands
   between the rows; 5 tiles/cell on the PRIMITIVE cell of the
   centered rectangular lattice ⟨(√3,0), (√3/2,5/2)⟩ (the centering
@@ -251,7 +252,18 @@ confirm the diffraction claim during the spike before declaring.
   mirror intersection; all triangles one orbit (the origin 2-fold
   swaps the visual A/B pairs mod Λ) → t = 2, and edge orbits by
   adjacency + corner classes → e = 4, matching the 2,4 parenthetical
-  in the table above exactly).
+  in the table above exactly). The t = 3 sibling (M95 `kuniform-n19`
+  3⁶ ; 3⁴.6 variant 1 — the flower construction on the index-9
+  sublattice ⟨(3,0),(0,3)⟩ of the unit triangular lattice,
+  13 tiles/cell, 60° hexagonal basis |b1| = |b2| = 3, |det| = 9√3/2
+  RIGHT-handed; 2-uniformity and A:B = 1:3 pinned exactly by v mod 3
+  (kernel = L9, R60 acting as a 2-cycle on the petal-tip classes and
+  a 6-cycle on the corner classes); exact torus orbit count t = 3
+  with triangle orbits {6,6}, e = 3 under the full D6 point group
+  with edge orbits {6,12,3} — matching the table's 3,3 parenthetical,
+  though the wiki's p6 group label under-states the symmetry: both
+  mirror classes pass exactly, so the entry registers as p6m; see
+  PATTERNS.MD §50).
 
 ---
 
