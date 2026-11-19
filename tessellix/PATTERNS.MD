@@ -115,7 +115,7 @@ figures at the split midpoints, `2.4.4`).
 | `hat` | Hat (aperiodic monotile, "einstein") | SMKG 2023; H/T/P/F metatile substitution (29-rule patch, 22 kept), exact Eisenstein placements; inflation φ² only in the limit (iterated outlines drift by design); tiles only with its mirror image; per-view seeded lineage blobs with exact clipped-area acceptance; non-edge-to-edge (565 midpoint T-junctions at depth 3) |
 | `turtle` | Turtle ("hats in turtles", einstein family) | turtle (14 sides, area 10√3) + hat prototiles on Kaplan's exact hex lattice; 9-label 8+1 key-point substitution with per-level chirality flip; homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge; turtle:hat ratio → 4+√15 |
 | `spectre` | Spectre (chiral einstein Tile(1,1)) | single equal-edge prototile, aperiodic *without* reflections; 9-label D12 substitution (spectre.js-identical), exact Q(√3) surd geometry; edge-to-edge |
-| `taylor-socolar` | Taylor-Socolar striped hexagon (decorated-hexagon monotile) | the paper's forced 529-hexagon patch (Fig. 18 of arXiv:1008.3103) as a verbatim state table, each hexagon partitioned into 13 non-overlapping convex sub-polygons (3 stripe bands + 2 corner tips + 6 vertex wedges + 2 body halves); stripe bands realize the edge-midpoint handoff rules exactly (R1 0/2992, R2 0/2816, R3 0/2904 re-derived in tests); finite covered patch (girih precedent), no period within hex-radius 30 |
+| `taylor-socolar` | Taylor-Socolar striped hexagon (decorated-hexagon monotile) | the paper's forced 529-hexagon patch (Fig. 18 of arXiv:1008.3103) as a verbatim state table, each hexagon partitioned into 8 non-overlapping convex sub-polygons carrying one thick vertex-to-vertex chord plus a centre-split axis (2 chord-band halves + 2 axis half-bands + 2 body pentagons + 2 body triangles, 12 templates); the chords close into complete equilateral Taylor triangles on three scales (60 / 12 / 2 of side √3, 3√3, 7√3), and the state rules stay exact (R1 0/2992, R2 0/2816, R3 0/2904 re-derived in tests); finite covered patch (girih precedent), no period within hex-radius 30 |
 | `jeandel-rao` | Jeandel-Rao 11-tile Wang tiles (smallest aperiodic Wang set) | the author's canonical 100x100 patch (arXiv:1506.06492, cited not re-proven) as an emitted table, each unit cell partitioned into 5 non-overlapping convex sub-polygons (4 edge bands of width 0.08 + interior, areas exact in Q) whose band colors make the Wang edge matching visible (H 0/9900, V 0/9900 on exact 9-color ids re-derived in tests); tile frequencies pinned; no grid translation period |t| ≤ 30 (2820 probes); finite covered patch (Taylor-Socolar precedent); no generator port — the study's DFS growth is a proven dead end (M93) |
 | `hirschhorn` | Hirschhorn–Hunt pentagon (140°/60°/160°/80°/100°) | not locally forced; C6-symmetric constrained-growth realization |
 | `girih-quasiperiodic` | girih star-and-cross {10/3} (quasiperiodic) | quasiperiodic; Darb-i Imam 3-prototile substitution (Lu & Steinhardt 2007, IF = 2φ³); exact 10-fold seed rosette, edge-to-edge at every generation |
@@ -2371,61 +2371,93 @@ documentation pending).
   and the tess-tilings census pins Wallpaper 17.
 - **Status:** committed (M85). 71 tilings, 529 tests at the commit.
 
-### 36. Taylor–Socolar striped hexagons ✅ (M86)
+### 36. Taylor–Socolar striped hexagons ✅ (M86; decoration reworked in M86-fix)
 
 - **Motif:** the decorated-hexagon aperiodic monotile of Taylor &
-  Socolar (arXiv:1008.3103): one hexagon carrying three stripes, the
-  tile state `(a, rbt, sdt)` — `a ∈ Z3` stripe-axis class, `rbt` which
+  Socolar (arXiv:1008.3103): one hexagon carrying one decoration band,
+  the tile state `(a, rbt, sdt)` — `a ∈ Z3` stripe-axis class, `rbt` which
   end of the polar vertex pair is red, `sdt` the stripe-offset bit —
-  placing the stripe on edge `m` at
-  `mid_m + sigma(state, m) · t0 · u_m` with
+  whose edge-midpoint handoff rule is
   `sigma(state, m) = SUM[sdt][(m − a) mod 6]`,
-  `SUM[0] = (+,−,−,+,−,+)`, `SUM[1] = (+,−,+,+,−,−)`,
-  `t0/R = 0.24`, stripe width `w/R = 0.0866` (both read off the
-  paper's Figure 2 measurements; 0.24 is the endpoint the two figure
-  bands share: fig02 0.15–0.24, fig20 0.24–0.33). The shipped object
+  `SUM[0] = (+,−,−,+,−,+)`, `SUM[1] = (+,−,+,+,−,−)`
+  (rules R1–R3, re-derived in tests; the state table is unchanged by
+  M86-fix, only the drawing of it). The shipped object
   is the paper's **forced 529-hexagon patch** (its Figure 18): the
   23×23 rhombus `{v ∈ [−21, 1], u ∈ [−(v+21), 22−(v+21)]}` in axial
   coordinates, covered domain = patch (girih precedent: `generate`
   returns exactly the tiles intersecting the query region, background
   beyond).
+- **Decoration (canonical chord + split axis, as in the reference
+  figures of arXiv:1504.06823 checked against `HLR_trap.jpg` /
+  `Hex_tiling_3digit.jpg`):** with vertex `V_k` at bearing `30° + 60k`
+  (`R = 1`) and `kappa = (a + 3·sdt) mod 6`, each hexagon carries the
+  chord `V_{kappa+1} — V_{kappa−1}` as a straight band of width
+  `W = 0.2·R`, plus the full diameter `V_kappa — V_{kappa+3}` split at
+  the centre into two half-bands, the half toward vertex
+  `t = a + 3·(1 − rbt)` red and the other blue (`t == V_kappa` exactly
+  when `rbt ≠ sdt`). Chord ends sit on hexagon vertices (shared by three
+  hexagons) and R1 pairs them there: 1058 chord ends → **505 interior
+  degree-2 junctions (264 straight-through, 241 at 60° corners) + 48
+  open boundary ends**, and the network **closes**: half-edge face
+  enumeration gives 172 cycles whose 74 closed rings are **all**
+  equilateral triangles — 60 of side `√3`, 12 of side `3√3`, 2 of side
+  `7√3` (three nested scales, areas in the ratio 1 : 9 : 49; a larger
+  triangle just carries chord vertices along its sides) — with 24 chains
+  streaming out of the boundary (in tests).
 - **Provenance (AP-STUDY handoff):** the state table, the neighbour
   table `DELTA`, the `SUM` vectors and the battery numbers are
   machine-transcribed from the study's `ap_ts_patch.json`; the
-  partition geometry comes from the study's exact-`Q(√3)` scratch
-  generator (`m86_gen.py` → `m86_fill.py` emits every Rust coordinate
-  from the exact model — zero hand-copied numbers, float-eval checked
-  to 1e−9).
-- **Partition mandate:** each hexagon is cut into **13 convex,
-  non-overlapping pieces** — proto 1 the long stripe band (axis
-  perpendicular to `d_a` at offset `−sigma(a+2)·t0`, crossing edges
-  `a+2`/`a+5`, red), protos 4/5 the corner bands (offsets
-  `±(3/4 + t0/2)`, crossing `a`/`a+1` and `a+3`/`a+4`, red iff the
-  polar rule says so), proto 2 the 2 corner tips, proto 3 the 6
-  vertex wedges (chord cut `LW = 0.15`), proto 0 the 2 body halves
-  (notched by the four non-polar wedges). The band offsets are exact
-  in `Q(√3)` and each band passes **precisely through the two stripe
-  points it must**, so the decoration's edge-midpoint handoff /
-  line-continuation graph is preserved; piece areas sum to the
-  hexagon area `3√3/2` exactly for all six `(a, sdt)` geometry
-  classes, all 12 interior cut edges are shared by exactly two
-  pieces, and every piece is convex and CCW.
-- **Colors:** paper's corner-colour rule
-  (`k%3 = a` red iff `k = a + 3·rbt`; `k%3 = a+2` red; else blue)
-  drives the pattern seed (palette index 0 base / 1 blue / 2 red);
-  geometry depends only on `(a, sdt)`, `rbt` is colour-only.
+  decoration geometry comes from the study's exact-`Q(√3)` scratch
+  generator (`m86fix_part2.py` → `m86fix_emit.py` emits every Rust
+  coordinate plus the four reference placements from the exact model —
+  zero hand-copied numbers, float-eval checked to 1e−9, worst delta
+  0.0).
+- **Partition mandate:** each hexagon is cut into **8 convex,
+  non-overlapping pieces** — proto 1 the two chord-band halves (split by
+  the axis line), protos 2/3 the red/blue axis half-bands, proto 0 the
+  two body pentagons and two body triangles between them. All cuts are
+  exact in `Q(√3)`; areas sum to the hexagon area `3√3/2` exactly, every
+  piece is convex and CCW, and the coverage check's clipped-intersection
+  accounting reports 0 overlaps. Geometry depends only on `kappa`, and
+  `rbt ≠ sdt` flips which axis half is red → **12 templates**, indexed
+  `kappa * 2 + flag`.
+- **Colors:** chord band and red axis half → palette 2 (red), blue axis
+  half → 1, body → 0, i.e. `seed_of(proto)`: every band colour is
+  state-determined (this is what fixes the "mostly red but sometimes
+  white, sometimes blue at the apexes" complaint). The palette has no
+  black, so red stands in uniformly for the canonical black stripe.
+  Geometry depends only on `(a, sdt)` through `kappa`; `rbt` is colour
+  (and axis-half choice) only.
 - **Verify (Rust, re-derived from the shipped table):** handoff
   battery reproduces the study's JSON numbers **R1 0/2992,
-  R2 0/2816, R3 0/2904**; world stripe points of each shared edge
-  agree from both sides to 1e−12 on all 2992 incidences; the
-  whole-patch emission is exactly 529 × 13 pieces, each matched
+  R2 0/2816, R3 0/2904**; the chord network closes (junction/boundary
+  census `(505, 48)` and bearing-delta census `(264, 241)`, no vertex
+  carrying more than two chord ends); triangle census (172 cycles; the
+  74 closed rings are all triangles — corner count 3 with 120° exterior
+  angle, side-scale census 60/12/2 at 1·√3 / 3·√3 / 7·√3; 24 zero-area
+  chains); whole-patch emission is exactly 529 × 8 pieces, each matched
   signature-by-signature against the recomputed placement, every
   hexagon's piece areas summing to `3√3/2`; no-period probe over the
   2790 nonzero translations of hex-radius ≤ 30 finds **no period**
   (overlap ≥ 3 sites); coverage trio inside upstream-verified
   exactly-once windows (default `(−14, −8.68, 14, 8.68)`,
   0.6-scaled/25°-rotated `(−9, −5.58, 9, 5.58)`); determinism; empty
-  output beyond the patch.
+  output beyond the patch; the runtime templates reproduce the emitter's
+  four reference placements vertex-exact (1e−12).
+- **Decoration corrected in M86-fix** to the canonical closed-triangle
+  chord/split-axis structure after owner review against the
+  arXiv:1504.06823 figures: the first attempt drew three straight stripe
+  bands per hexagon (one long across edges `a+2`/`a+5` at `±sigma·t0`,
+  two corner bands at `±(3/4 + t0/2)`, `t0 = 0.24`) from the Processing
+  sketch's edge-crossing data, and that construction was **disproved**
+  as unable to close triangles — under the handoff rules its chains only
+  ever continue straight (the crossing bearing is preserved, and stubs
+  are collinear dead ends), so its curve network has no closed polygon
+  face; of all 1296 affine rules `kappa = (p·a + q·rbt + r·sdt + s) mod 6`,
+  125 pair every interior chord end on this state table, and
+  `kappa = a + 3·sdt` is the **only** one of those whose network closes
+  anything (74 rings / 60 unit triangles; the other 124 close 0 rings —
+  census artifact `m86fix_rulecensus.json`).
 - **Scope honesty:** aperiodicity of the plane tiling, the two local-
   isomorphism classes and the limit-periodic structure are **cited,
   not proven** (beyond the radius-30 probe on the shipped patch); the
@@ -2433,16 +2465,16 @@ documentation pending).
   algebraic inflation fit aligns only 57.6% of sites, so it is not
   even verified); "forced" is a local-rule statement — the study's
   solver extends the patch R9→R10 with zero backtracks under R1–R3;
-  band axes follow each tile's own `a`, so a stripe bends where it
-  crosses a tile edge (the rules fix crossing *positions*, not
-  collinearity); one decoration scale, read off Fig. 2 — no scale
-  family claimed.
+  band width `W/R = 0.2` is a **compromise** of the reference figures
+  (measured ≈ 0.19–0.21 in `HLR_trap.jpg`, ≈ 0.12 in
+  `Hex_tiling_3digit.jpg`), and one decoration scale is drawn — no
+  scale family claimed.
 - **Registration:** unconditional module + registry entry (the
   `socolar` feature exists in Cargo.toml but is not a default feature
   and Cargo.toml is frozen — M74-style deviation, documented in
   `lib.rs`).
-- **Status:** landed (M86).
-  72 tilings, 538 tests.
+- **Status:** landed (M86), decoration reworked (M86-fix).
+  75 tilings, 551 tests at this commit.
 
 ### 37. 2-uniform (3⁶; 3².4.3.4) ✅ (M87)
 
@@ -3959,7 +3991,9 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   re-derived in tests); no-period probe over 2790 translations to
   hex-radius 30 finds no period; 4 tess-tilings tests (72 tilings,
   538 tests at the commit). (Changelog entry added belatedly with
-  the M87 batch — the M86 commit updated §36 but not this list.)
+  the M87 batch — the M86 commit updated §36 but not this list.
+  **Decoration superseded** by the 2026-11-19 M86-fix entry below: the
+  13-piece stripe/corner-band drawing is gone, the state table is not.)
 - 2026-11-18 — M87 2-uniform (3⁶; 3².4.3.4, p6m) ✅: first of the
   three-entry p6m batch of the closed 2-uniform list (`kuniform-n18`
   in `kuniform.rs`, feature `kuniform`) — squares + two triangle
@@ -4088,3 +4122,42 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   end and the author's 100×100 is the only renderable artifact;
   the band width W = 0.08 is a porting choice for the edge
   encoding, not a claim of the paper. Details in §43.
+
+- 2026-11-19 — M86-fix Taylor–Socolar decoration rework ✅: the owner
+  rejected the M86 render against Resnikoff's figures
+  (arXiv:1504.06823) — the bands must form **complete closed triangles**
+  and the band colouring must be regular — so the invented 13-piece
+  stripe/corner-band decoration is replaced by the canonical chord +
+  split-axis decoration on the same, unchanged 529-site state table:
+  with `kappa = (a + 3·sdt) mod 6` each hexagon carries the chord
+  `V_{kappa+1}—V_{kappa−1}` as a straight band of width `W = 0.2·R`,
+  plus the diameter `V_kappa—V_{kappa+3}` split at the centre into a red
+  half (toward vertex `t = a + 3·(1 − rbt)`) and a blue half. 8 convex
+  pieces per hexagon, 12 templates indexed `kappa * 2 + (rbt != sdt)`,
+  area sum `3√3/2` exact in Q(√3), 0 overlaps, strict convexity. The
+  chord rule is unique in the sense that matters: of the 1296 affine
+  rules `kappa = (p·a + q·rbt + r·sdt + s) mod 6`, 125 pair every
+  interior chord end (0 of 1058 unpaired), and only `a + 3·sdt` closes
+  any ring at all (the other 124 close 0), and the network **closes**
+  — 505 interior degree-2 junctions (264 straight-through, 241 at 60°
+  corners) + 48 boundary ends, face census 172 cycles whose 74 closed
+  rings are all equilateral triangles (60 of side √3, 12 of side 3√3,
+  2 of side 7√3 — three nested scales) seen from both sides plus 24
+  zero-area boundary chains. The
+  Processing sketch's stripe + perpendicular-stub reading was
+  **disproved** as closure-incapable (under R1–R3 its chains only ever
+  continue straight and stubs are collinear dead ends), so the shipped
+  decoration follows the reference chord figures instead — documented as
+  a deviation in the module docs and §36, together with the `W/R = 0.2`
+  compromise between the two reference images (≈0.19–0.21 vs ≈0.12).
+  Tests: the stripe-continuity test is replaced by chord-closure +
+  triangle-census tests and the area test by a partition-exactness test
+  (convexity, hexagon containment, 0 overlaps, whole-patch 529 × 8
+  signature match); the reference test now checks the four emitted
+  template placements vertex-exact to 1e−12. Module 9 → 10 tests.
+  Census: 79
+  tilings and 91 memberships **unchanged**, 571 → 572 tests (landed on the
+  post-M93 base). Bar green:
+  cargo check + clippy (both target sets) 0 warnings, cargo test
+  --workspace 551/551; R1 0/2992 / R2 0/2816 / R3 0/2904 and the
+  radius-30 no-period probe untouched and still passing.

@@ -219,7 +219,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `hat` | Hat (aperiodic monotile) | aperiodic einstein (SMKG 2023); H/T/P/F metatile substitution; tiles only with its mirror image; non-edge-to-edge | — | — |
 | `turtle` | Turtle (hats in turtles) | aperiodic einstein family (SMKG 2023); chiral hats-in-turtles: turtle + hat prototiles, 9-label substitution, homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge hex-lattice geometry | — | — |
 | `spectre` | Spectre (chiral einstein, Tile(1,1)) | aperiodic chiral einstein family (SMKG 2023); single equal-edge prototile, aperiodic without reflections, 9-label substitution, exact Q(√3) geometry | — | — |
-| `taylor-socolar` | Taylor-Socolar striped hexagon | aperiodic decorated-hexagon monotile (Taylor & Socolar, arXiv:1008.3103); the paper's forced 529-hexagon patch (its Fig. 18), each hexagon partitioned into 13 decorated sub-polygons whose stripe bands realize the edge-midpoint handoff rules exactly (R1 0/2992, R2 0/2816, R3 0/2904, re-derived in tests); finite covered patch, no period within hex-radius 30 | — | — |
+| `taylor-socolar` | Taylor-Socolar striped hexagon | aperiodic decorated-hexagon monotile (Taylor & Socolar, arXiv:1008.3103); the paper's forced 529-hexagon patch (its Fig. 18), each hexagon partitioned into 8 decorated sub-polygons carrying the canonical chord + split-axis decoration (one thick vertex-to-vertex chord plus a centre-split red/blue axis) whose chords close into nested equilateral Taylor triangles, state rules realized exactly (R1 0/2992, R2 0/2816, R3 0/2904, re-derived in tests); finite covered patch, no period within hex-radius 30 | — | — |
 | `jeandel-rao` | Jeandel-Rao 11-tile Wang tiles | aperiodic 11-tile edge-colored Wang set (Jeandel-Rao, arXiv:1506.06492); the author's canonical 100x100 patch, each unit cell partitioned into 5 sub-polygons whose edge bands carry the Wang edge colors (H 0/9900, V 0/9900, exact 9-color ids, re-derived in tests); finite covered patch, no period |t|<=30 | — | — |
 | `hirschhorn` | Hirschhorn pentagon | nonperiodic monohedral (Hirschhorn–Hunt 1985) | — | — |
 | `chair` | Chair (L-tromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge | — | — |
@@ -465,14 +465,24 @@ cross-check plus a ratio-sweep coverage test.
   exact Python surd reference.
 - **Taylor-Socolar striped hexagon** (`taylor_socolar.rs`) — the
   decorated-hexagon aperiodic monotile (arXiv:1008.3103), ported as a
-  data table from the audited upstream study (M86): the paper's forced
+  data table from the audited upstream study (M86; decoration reworked
+  in M86-fix to the canonical closed-triangle form): the paper's forced
   529-site patch (Fig. 18) with its 12 tile states `(a, rbt, sdt)`,
-  every hexagon partitioned into 13 non-overlapping convex
-  sub-polygons — 3 stripe bands (long + two corner), 2 corner tips,
-  6 vertex wedges, 2 body halves — whose band offsets are exact in
-  Q(√3) and pass precisely through the stripe points mandated by the
-  edge-midpoint decoration rule, so the handoff / line-continuation
-  graph is preserved (R1 0/2992, R2 0/2816, R3 0/2904). The covered
+  every hexagon partitioned into 8 non-overlapping convex sub-polygons
+  — the band around one thick vertex-to-vertex chord (proto 1, two
+  halves), the two halves of the centre-split diameter (red proto 2 /
+  blue proto 3, the red end picked by `rbt`), and 2 body pentagons +
+  2 body triangles (proto 0). All cuts are exact in Q(√3) (area sum
+  `3√3/2`, 0 overlaps, strict convexity), the chord rule
+  `kappa = (a + 3·sdt) mod 6` pairs every interior chord end (0 of 1058
+  unpaired) and is the only one of the 125 pairing rules among all 1296
+  affine candidates that closes any ring at all, so the chord network
+  **closes** into
+  nested equilateral Taylor triangles on three scales (60 of side √3,
+  12 of side 3√3, 2 of side 7√3) and every band colour is
+  state-determined. The
+  underlying rules are unchanged and re-derived in tests (R1 0/2992,
+  R2 0/2816, R3 0/2904). The covered
   domain is the finite patch (girih precedent), not the plane.
 - **Jeandel-Rao 11-tile Wang tiles** (`jr_aperiodic.rs`) — the smallest
   known aperiodic set of Wang tiles (edge-colored unit squares, no

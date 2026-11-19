@@ -11,65 +11,72 @@
 //! `rbt` which end of the polar vertex pair is red, `sdt` the stripe-offset
 //! bit. The state table is transcribed verbatim from the study's
 //! `ap_ts_patch.json`; nothing is re-derived and no coordinate is
-//! hand-copied (the generator is `m86_gen.py`, checked against the exact
-//! `Q(√3)` model to 1e−9 by float evaluation).
+//! hand-copied: the state table comes from `m86_gen.py` and the decoration
+//! tables are machine-emitted by `m86fix_emit.py` from an exact `Q(√3)`
+//! model, both checked to 1e−9 by float evaluation).
 //!
 //! The covered domain is that **finite patch**, not the plane: as with the
 //! girih patches, `generate` returns exactly the tiles intersecting the
 //! query region, and a query reaching beyond the patch boundary legitimately
 //! returns only the patch tiles that reach into it, with background beyond.
 //!
-//! # Decoration: each hexagon partitioned into non-overlapping sub-polygons
+//! # Decoration: chord + split axis, closing the Taylor triangles
 //!
-//! A hexagon (circumradius `R = 1`, vertex `V_k` at bearing 30°+60k, edge `m`
-//! from `V_{m−1}` to `V_m`, outward normal at bearing 60m, tangent `u_m`
-//! toward `V_m`) carries three stripes. The stripe on edge `m` crosses it at
+//! The decoration is the reference figures' device (Resnikoff's figures of
+//! the Socolar–Taylor monotile, arXiv:1504.06823, checked against
+//! `HLR_trap.jpg` and `Hex_tiling_3digit.jpg`): one thick vertex-to-vertex
+//! CHORD per hexagon plus a centre-split AXIS. With vertex `V_k` at bearing
+//! 30°+60k (`R = 1`), a site in state `(a, rbt, sdt)` carries
 //!
-//! ```text
-//! mid_m + sigma(state, m) * t0 * u_m,   sigma(state, m) = SUM[sdt][(m - a) mod 6]
-//! SUM[0] = (+,-,-,+,-,+),  SUM[1] = (+,-,+,+,-,-),  t0/R = 0.24
-//! ```
+//! * `kappa = (a + 3*sdt) mod 6`: the chord `V_{kappa+1} — V_{kappa-1}`, a
+//!   straight band of width `W = 0.2` around that chord. Its endpoints sit
+//!   on hexagon vertices (shared by three hexagons), and rule R1 forces the
+//!   neighbours' chord ends to pair up exactly there: 1058 chord ends form
+//!   505 closed interior junctions (every one straight-through or a 60°
+//!   corner) with 48 open ends on the patch boundary. The network CLOSES:
+//!   half-edge face enumeration gives 172 cycles, of which 74 are closed
+//!   rings and EVERY one of them is an equilateral triangle — 60 of side
+//!   `sqrt(3)`, 12 of side `3*sqrt(3)`, 2 of side `7*sqrt(3)` (three
+//!   nested scales, areas in the ratio 1 : 9 : 49) — while 24 chains
+//!   stream out of the patch boundary (see `taylor_socolar_triangle_census`).
+//! * the full diameter `V_kappa — V_{kappa+3}`, split at the centre into
+//!   two half-bands: the half toward vertex `t = a + 3*(1 − rbt)` is red,
+//!   the other blue (the paper's fig18 spin rule — `rbt` says which end of
+//!   the polar pair is red). `t == V_kappa` exactly when `rbt != sdt`.
 //!
-//! and the three stripe *bands* (width `w/R = 0.0866`; both constants from
-//! the paper's Figure 2 measurements) are straight strips whose axis is
-//! perpendicular to `d_a = V_a`, at three exact offsets along `d_a`:
+//! Center marks, simplified honestly: the reference sketch draws TWO cross
+//! diameters plus a half-diameter mark per hexagon; shipping all three over
+//! a chord band leaves no convex partition, so this port draws the ONE
+//! polar axis (the only one whose red/blue ends are fixed by `rbt`) and
+//! drops the other cross diameter — a documented deviation, not a claim
+//! that the reference has one axis.
 //!
-//! | band | offset | crosses edges | colour |
-//! |---|---|---|---|
-//! | long stripe | `-sigma(a+2) * t0` | `a+2`, `a+5` | red |
-//! | corner band at `V_a` | `+(3/4 + t0/2)` | `a`, `a+1` | red iff `rbt = 0` |
-//! | corner band at `V_a+3` | `-(3/4 + t0/2)` | `a+3`, `a+4` | red iff `rbt = 1` |
+//! Colour (`seed`): chord band and red axis half → 2 red, blue axis half →
+//! 1, body → 0. The palette has no black; red stands in uniformly for the
+//! canonical black stripe, so every band colour is state-determined.
 //!
-//! Those offsets are exact in `Q(√3)` and each band passes precisely through
-//! the two stripe points it must: `3/4 + t0/2` is the `d_a`-projection of the
-//! stripe points of edges `a` and `a+1`, and `-sigma(a+2) * t0` that of edges
-//! `a+2` and `a+5`. The band windows therefore reproduce the stripe
-//! edge-midpoint data exactly, and rule R1 (sigma complementarity across a
-//! shared edge) makes the two adjacent tiles' windows coincide at their
-//! shared stripe point — the handoff / line-continuation graph of the paper's
-//! decoration is preserved. A band axis follows its own tile's `a`, so a
-//! stripe bends where it crosses a tile edge: the rules fix the crossing
-//! *positions*, not collinearity.
+//! The hexagon is partitioned (the partition mandate) into **8 convex,
+//! non-overlapping pieces** that tile it exactly — the two chord-band
+//! halves above/below the axis (proto 1), the two axis half-bands (protos
+//! 2 red / 3 blue), two body pentagons and two body triangles between them
+//! (proto 0). All cuts are exact in `Q(√3)`; the area sum is `3*sqrt(3)/2`
+//! exactly. Geometry depends only on `kappa`, and `rbt != sdt` flips which
+//! axis half is red — **12 templates**, indexed `kappa * 2 + flag`.
 //!
-//! The hexagon is then partitioned (the partition mandate) into **13 convex,
-//! non-overlapping pieces** that tile it exactly:
-//!
-//! * 3 stripe bands — protos 1 (long), 4 (at `V_a`), 5 (at `V_a+3`);
-//! * 2 corner tips between a corner band and its vertex wedge — proto 2,
-//!   tagged with the vertex slot;
-//! * 6 vertex wedges (chord cut at arc `LW = 0.15` from the vertex) — proto
-//!   3, tagged with the vertex slot;
-//! * 2 body halves between the bands — proto 0, notched by the four non-polar
-//!   wedges.
-//!
-//! The piece areas sum to the hexagon area `3*sqrt(3)/2` **exactly in
-//! `Q(√3)`** for all six `(a, sdt)` geometry classes, every interior cut edge
-//! is shared by exactly two pieces, and all pieces are convex and CCW. Piece
-//! colours come from the paper's corner-colour rule (`k%3 = a` -> red iff
-//! `k = a + 3*rbt`, `k%3 = a+2` -> red, else blue): geometry depends only on
-//! `(a, sdt)`, while `rbt` flips which end of the polar pair is red. `seed`
-//! is the palette index — 0 base gray, 1 blue, 2 red — and the long band is
-//! always red because both its ends sit on red corners.
+//! Superseded (first M86 attempt): three straight stripe bands (one long
+//! across edges `a+2`/`a+5` at `±sigma*t0`, two "corner bands" at
+//! `±(3/4 + t0/2)`) built from the Processing sketch's edge-crossing data.
+//! A segment-by-segment check against the patch showed that construction
+//! cannot close the Taylor triangles: stripe chains there only ever
+//! continue straight (handoff keeps the bearing; stubs are collinear dead
+//! ends), so no face of its curve network is a closed polygon — and they
+//! kinked at every axis change. Rule selection (census
+//! `m86fix_rulecensus.py`), measured over ALL 1296
+//! affine rules `kappa = (p*a + q*rbt + r*sdt + s) mod 6`: 125 of them
+//! pair every interior chord end (no vertex carries more than two ends),
+//! and `kappa = a + 3*sdt` is the only one of those whose network CLOSES
+//! anything at all — 74 closed rings, 60 of them equilateral triangles,
+//! where the other 124 candidates close 0 rings.
 //!
 //! # Frame
 //!
@@ -83,11 +90,15 @@
 //!
 //! * Handoff battery on the shipped table, re-derived in Rust: **R1 0/2992,
 //!   R2 0/2816, R3 0/2904** violations — the study's JSON numbers.
-//! * Stripe continuity: the world stripe point of a shared edge computed from
-//!   either side agrees to 1e−12 on all 2992 shared edges.
-//! * Partition exactness: 13 pieces per hexagon, convex, CCW, area sum
-//!   `3*sqrt(3)/2`, no overlaps (clipped-area accounting in the coverage
-//!   check catches overlap as well as gaps).
+//! * Chord network closure: of the 1058 chord ends, 505 interior vertex
+//!   junctions pair exactly (degree 2 — 264 straight-through, 241 at 60°
+//!   corners) and 48 open ends sit on the patch boundary; the face census
+//!   gives 172 cycles whose 74 closed rings are ALL equilateral triangles
+//!   — 60 of side `sqrt(3)`, 12 of side `3*sqrt(3)`, 2 of side
+//!   `7*sqrt(3)` — while 24 chains stream out of the boundary.
+//! * Partition exactness: 8 pieces per hexagon, convex, CCW, area sum
+//!   `3*sqrt(3)/2`, no overlaps (Sutherland–Hodgman clipped-intersection
+//!   accounting in the coverage check catches overlap as well as gaps).
 //! * No-period probe: of the 2790 nonzero lattice translations of hex-radius
 //!   `<= 30`, none leaves the patch's state assignment invariant on an
 //!   overlap of three or more sites.
@@ -105,11 +116,12 @@
 //! only 57.6% of sites, so it is not even verified here), and neither is the
 //! claim that this patch sits inside a unique plane tiling — the patch is
 //! genuine in the sense that the study's solver extends it (R9→R10) with zero
-//! backtracks under rules R1–R3, which is a *local-rule* statement. The
-//! single scale pair `t0/R = 0.24`, `w/R = 0.0866` is read off the paper's
-//! Figure 2 (0.24 is the shared endpoint of the two figures' measured bands,
-//! fig02 0.15–0.24 and fig20 0.24–0.33); the shipped object is one finite
-//! patch drawn once, so no scale family is claimed.
+//! backtracks under rules R1–R3, which is a *local-rule* statement.
+//!
+//! * Band width `W/R = 0.2` is a compromise of the reference figures'
+//!   measured bands (`HLR_trap.jpg` ≈ 0.19–0.21, `Hex_tiling_3digit.jpg`
+//!   ≈ 0.12); the shipped object is one finite patch drawn once, so no
+//!   scale family is claimed.
 
 use tess_core::geometry::{BBox, Polygon, Vec2};
 use tess_core::params::{ParamSet, ParamSpec};
@@ -666,822 +678,938 @@ const SITES: [(i8, i8, u8); 529] = [
 /// One piece of the hexagon partition, tile-local (circumradius 1), CCW.
 struct Piece {
     proto: u8,
-    slot: u8,
     pts: &'static [[f64; 2]],
 }
 
-const P00: [Piece; 13] = [
+/// Machine-emitted (m86fix_emit.py) from the exact Q(sqrt3) model;
+/// index = kappa * 2 + flag, kappa = (a + 3*sdt) mod 6, flag = (rbt != sdt).
+/// Pieces: 0-1 chord band halves (proto 1), 2 +axis-half / 3 -axis-half
+/// (proto 2 red / 3 blue by flag), 4-7 body pieces (proto 0). CCW, R = 1.
+const TEMPLATES: [&[Piece; 8]; 12] = [&T00, &T01, &T10, &T11, &T20, &T21, &T30, &T31, &T40, &T41, &T50, &T51];
+
+const T00: [Piece; 8] = [
     Piece {
         proto: 1,
-        slot: 255,
         pts: &[
-            [-0.18766770500008784, 0.89165],
-            [-0.26266550496782026, 0.84835],
-            [0.6033598988166183, -0.65165],
-            [0.6783576987843507, -0.60835],
-        ],
-    },
-    Piece {
-        proto: 4,
-        slot: 0,
-        pts: &[
-            [0.715856598768217, 0.5867],
-            [0.5658609988327522, 0.6733],
-            [0.8660254037844386, 0.1534],
-            [0.8660254037844386, 0.3266],
-        ],
-    },
-    Piece {
-        proto: 5,
-        slot: 3,
-        pts: &[
-            [-0.8660254037844386, -0.1534],
-            [-0.8660254037844386, -0.3266],
-            [-0.715856598768217, -0.5867],
-            [-0.5658609988327522, -0.6733],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 0,
-        pts: &[
-            [0.8660254037844386, 0.5],
-            [0.7361215932167728, 0.575],
-            [0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 1,
-        pts: &[
-            [0.12990381056766578, 0.925],
+            [0.29641016151377547, 0.2866025403784439],
+            [0.46961524227066315, 0.3866025403784439],
+            [0.17320508075688773, 0.9],
             [0.0, 1.0],
-            [-0.12990381056766578, 0.925],
+            [-0.08660254037844387, 0.95],
         ],
     },
     Piece {
-        proto: 3,
-        slot: 2,
+        proto: 1,
         pts: &[
-            [-0.7361215932167728, 0.575],
-            [-0.8660254037844386, 0.5],
-            [-0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 3,
-        pts: &[
-            [-0.8660254037844386, -0.35],
-            [-0.8660254037844386, -0.5],
-            [-0.7361215932167728, -0.575],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 4,
-        pts: &[
-            [-0.12990381056766578, -0.925],
-            [0.0, -1.0],
-            [0.12990381056766578, -0.925],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 5,
-        pts: &[
-            [0.7361215932167728, -0.575],
+            [0.39641016151377545, 0.11339745962155615],
+            [0.7794228634059948, -0.55],
             [0.8660254037844386, -0.5],
-            [0.8660254037844386, -0.35],
+            [0.8660254037844386, -0.3],
+            [0.5696152422706632, 0.21339745962155612],
+        ],
+    },
+    Piece {
+        proto: 3,
+        pts: &[
+            [0.05, -0.08660254037844387],
+            [0.8660254037844386, 0.38452994616207486],
+            [0.8660254037844386, 0.5],
+            [0.7660254037844386, 0.5577350269189626],
+            [-0.05, 0.08660254037844387],
         ],
     },
     Piece {
         proto: 2,
-        slot: 0,
         pts: &[
-            [0.7361215932167728, 0.575],
-            [0.715856598768217, 0.5867],
-            [0.8660254037844386, 0.3266],
-            [0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 2,
-        slot: 3,
-        pts: &[
-            [-0.8660254037844386, -0.3266],
-            [-0.8660254037844386, -0.35],
-            [-0.7361215932167728, -0.575],
-            [-0.715856598768217, -0.5867],
+            [-0.8660254037844386, -0.38452994616207486],
+            [-0.8660254037844386, -0.5],
+            [-0.7660254037844386, -0.5577350269189626],
+            [0.05, -0.08660254037844387],
+            [-0.05, 0.08660254037844387],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [0.5658609988327522, 0.6733],
-            [0.12990381056766578, 0.925],
-            [-0.12990381056766578, 0.925],
-            [-0.18766770500008784, 0.89165],
-            [0.6783576987843507, -0.60835],
-            [0.7361215932167728, -0.575],
-            [0.8660254037844386, -0.35],
-            [0.8660254037844386, 0.1534],
+            [-0.08660254037844387, 0.95],
+            [-0.8660254037844386, 0.5],
+            [-0.8660254037844386, -0.38452994616207486],
+            [0.29641016151377547, 0.2866025403784439],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [-0.26266550496782026, 0.84835],
-            [-0.7361215932167728, 0.575],
-            [-0.8660254037844386, 0.35],
-            [-0.8660254037844386, -0.1534],
-            [-0.5658609988327522, -0.6733],
-            [-0.12990381056766578, -0.925],
-            [0.12990381056766578, -0.925],
-            [0.6033598988166183, -0.65165],
+            [-0.7660254037844386, -0.5577350269189626],
+            [0.0, -1.0],
+            [0.7794228634059948, -0.55],
+            [0.39641016151377545, 0.11339745962155615],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.7660254037844386, 0.5577350269189626],
+            [0.17320508075688773, 0.9],
+            [0.46961524227066315, 0.3866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.8660254037844386, -0.3],
+            [0.8660254037844386, 0.38452994616207486],
+            [0.5696152422706632, 0.21339745962155612],
         ],
     },
 ];
 
-const P01: [Piece; 13] = [
+const T01: [Piece; 8] = [
     Piece {
         proto: 1,
-        slot: 255,
         pts: &[
-            [-0.6033598988166183, 0.65165],
-            [-0.6783576987843507, 0.60835],
-            [0.18766770500008784, -0.89165],
-            [0.26266550496782026, -0.84835],
-        ],
-    },
-    Piece {
-        proto: 4,
-        slot: 0,
-        pts: &[
-            [0.715856598768217, 0.5867],
-            [0.5658609988327522, 0.6733],
-            [0.8660254037844386, 0.1534],
-            [0.8660254037844386, 0.3266],
-        ],
-    },
-    Piece {
-        proto: 5,
-        slot: 3,
-        pts: &[
-            [-0.8660254037844386, -0.1534],
-            [-0.8660254037844386, -0.3266],
-            [-0.715856598768217, -0.5867],
-            [-0.5658609988327522, -0.6733],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 0,
-        pts: &[
-            [0.8660254037844386, 0.5],
-            [0.7361215932167728, 0.575],
-            [0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 1,
-        pts: &[
-            [0.12990381056766578, 0.925],
+            [0.29641016151377547, 0.2866025403784439],
+            [0.46961524227066315, 0.3866025403784439],
+            [0.17320508075688773, 0.9],
             [0.0, 1.0],
-            [-0.12990381056766578, 0.925],
+            [-0.08660254037844387, 0.95],
         ],
     },
     Piece {
-        proto: 3,
-        slot: 2,
+        proto: 1,
         pts: &[
-            [-0.7361215932167728, 0.575],
-            [-0.8660254037844386, 0.5],
-            [-0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 3,
-        pts: &[
-            [-0.8660254037844386, -0.35],
-            [-0.8660254037844386, -0.5],
-            [-0.7361215932167728, -0.575],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 4,
-        pts: &[
-            [-0.12990381056766578, -0.925],
-            [0.0, -1.0],
-            [0.12990381056766578, -0.925],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 5,
-        pts: &[
-            [0.7361215932167728, -0.575],
+            [0.39641016151377545, 0.11339745962155615],
+            [0.7794228634059948, -0.55],
             [0.8660254037844386, -0.5],
-            [0.8660254037844386, -0.35],
+            [0.8660254037844386, -0.3],
+            [0.5696152422706632, 0.21339745962155612],
         ],
     },
     Piece {
         proto: 2,
-        slot: 0,
         pts: &[
-            [0.7361215932167728, 0.575],
-            [0.715856598768217, 0.5867],
-            [0.8660254037844386, 0.3266],
-            [0.8660254037844386, 0.35],
+            [0.05, -0.08660254037844387],
+            [0.8660254037844386, 0.38452994616207486],
+            [0.8660254037844386, 0.5],
+            [0.7660254037844386, 0.5577350269189626],
+            [-0.05, 0.08660254037844387],
         ],
     },
     Piece {
-        proto: 2,
-        slot: 3,
+        proto: 3,
         pts: &[
-            [-0.8660254037844386, -0.3266],
-            [-0.8660254037844386, -0.35],
-            [-0.7361215932167728, -0.575],
-            [-0.715856598768217, -0.5867],
-        ],
-    },
-    Piece {
-        proto: 0,
-        slot: 255,
-        pts: &[
-            [0.5658609988327522, 0.6733],
-            [0.12990381056766578, 0.925],
-            [-0.12990381056766578, 0.925],
-            [-0.6033598988166183, 0.65165],
-            [0.26266550496782026, -0.84835],
-            [0.7361215932167728, -0.575],
-            [0.8660254037844386, -0.35],
-            [0.8660254037844386, 0.1534],
+            [-0.8660254037844386, -0.38452994616207486],
+            [-0.8660254037844386, -0.5],
+            [-0.7660254037844386, -0.5577350269189626],
+            [0.05, -0.08660254037844387],
+            [-0.05, 0.08660254037844387],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [-0.6783576987843507, 0.60835],
-            [-0.7361215932167728, 0.575],
-            [-0.8660254037844386, 0.35],
-            [-0.8660254037844386, -0.1534],
-            [-0.5658609988327522, -0.6733],
-            [-0.12990381056766578, -0.925],
-            [0.12990381056766578, -0.925],
-            [0.18766770500008784, -0.89165],
+            [-0.08660254037844387, 0.95],
+            [-0.8660254037844386, 0.5],
+            [-0.8660254037844386, -0.38452994616207486],
+            [0.29641016151377547, 0.2866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.7660254037844386, -0.5577350269189626],
+            [0.0, -1.0],
+            [0.7794228634059948, -0.55],
+            [0.39641016151377545, 0.11339745962155615],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.7660254037844386, 0.5577350269189626],
+            [0.17320508075688773, 0.9],
+            [0.46961524227066315, 0.3866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.8660254037844386, -0.3],
+            [0.8660254037844386, 0.38452994616207486],
+            [0.5696152422706632, 0.21339745962155612],
         ],
     },
 ];
 
-const P10: [Piece; 13] = [
+const T10: [Piece; 8] = [
     Piece {
         proto: 1,
-        slot: 255,
         pts: &[
-            [-0.8660254037844386, 0.2833],
-            [-0.8660254037844386, 0.1967],
-            [0.8660254037844386, 0.1967],
-            [0.8660254037844386, 0.2833],
-        ],
-    },
-    Piece {
-        proto: 4,
-        slot: 1,
-        pts: &[
-            [0.30016440495168645, 0.8267],
-            [0.15016880501622165, 0.9133],
-            [-0.15016880501622165, 0.9133],
-            [-0.30016440495168645, 0.8267],
-        ],
-    },
-    Piece {
-        proto: 5,
-        slot: 4,
-        pts: &[
-            [-0.30016440495168645, -0.8267],
-            [-0.15016880501622165, -0.9133],
-            [0.15016880501622165, -0.9133],
-            [0.30016440495168645, -0.8267],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 0,
-        pts: &[
-            [0.8660254037844386, 0.5],
-            [0.7361215932167728, 0.575],
-            [0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 1,
-        pts: &[
-            [0.12990381056766578, 0.925],
-            [0.0, 1.0],
-            [-0.12990381056766578, 0.925],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 2,
-        pts: &[
-            [-0.7361215932167728, 0.575],
+            [-0.1, 0.4],
+            [-0.1, 0.6],
+            [-0.6928203230275509, 0.6],
             [-0.8660254037844386, 0.5],
-            [-0.8660254037844386, 0.35],
+            [-0.8660254037844386, 0.4],
+        ],
+    },
+    Piece {
+        proto: 1,
+        pts: &[
+            [0.1, 0.4],
+            [0.8660254037844386, 0.4],
+            [0.8660254037844386, 0.5],
+            [0.6928203230275509, 0.6],
+            [0.1, 0.6],
         ],
     },
     Piece {
         proto: 3,
-        slot: 3,
         pts: &[
-            [-0.8660254037844386, -0.35],
-            [-0.8660254037844386, -0.5],
-            [-0.7361215932167728, -0.575],
+            [0.1, 0.0],
+            [0.1, 0.9422649730810374],
+            [0.0, 1.0],
+            [-0.1, 0.9422649730810374],
+            [-0.1, 0.0],
         ],
     },
     Piece {
-        proto: 3,
-        slot: 4,
+        proto: 2,
         pts: &[
-            [-0.12990381056766578, -0.925],
+            [-0.1, -0.9422649730810374],
             [0.0, -1.0],
-            [0.12990381056766578, -0.925],
+            [0.1, -0.9422649730810374],
+            [0.1, 0.0],
+            [-0.1, 0.0],
         ],
     },
     Piece {
-        proto: 3,
-        slot: 5,
+        proto: 0,
         pts: &[
-            [0.7361215932167728, -0.575],
+            [-0.8660254037844386, 0.4],
+            [-0.8660254037844386, -0.5],
+            [-0.1, -0.9422649730810374],
+            [-0.1, 0.4],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.1, -0.9422649730810374],
             [0.8660254037844386, -0.5],
-            [0.8660254037844386, -0.35],
-        ],
-    },
-    Piece {
-        proto: 2,
-        slot: 1,
-        pts: &[
-            [0.15016880501622165, 0.9133],
-            [0.12990381056766578, 0.925],
-            [-0.12990381056766578, 0.925],
-            [-0.15016880501622165, 0.9133],
-        ],
-    },
-    Piece {
-        proto: 2,
-        slot: 4,
-        pts: &[
-            [-0.15016880501622165, -0.9133],
-            [-0.12990381056766578, -0.925],
-            [0.12990381056766578, -0.925],
-            [0.15016880501622165, -0.9133],
+            [0.8660254037844386, 0.4],
+            [0.1, 0.4],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [0.7361215932167728, 0.575],
-            [0.30016440495168645, 0.8267],
-            [-0.30016440495168645, 0.8267],
-            [-0.7361215932167728, 0.575],
-            [-0.8660254037844386, 0.35],
-            [-0.8660254037844386, 0.2833],
-            [0.8660254037844386, 0.2833],
-            [0.8660254037844386, 0.35],
+            [-0.1, 0.9422649730810374],
+            [-0.6928203230275509, 0.6],
+            [-0.1, 0.6],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [-0.8660254037844386, 0.1967],
-            [-0.8660254037844386, -0.35],
-            [-0.7361215932167728, -0.575],
-            [-0.30016440495168645, -0.8267],
-            [0.30016440495168645, -0.8267],
-            [0.7361215932167728, -0.575],
-            [0.8660254037844386, -0.35],
-            [0.8660254037844386, 0.1967],
+            [0.6928203230275509, 0.6],
+            [0.1, 0.9422649730810374],
+            [0.1, 0.6],
         ],
     },
 ];
 
-const P11: [Piece; 13] = [
+const T11: [Piece; 8] = [
     Piece {
         proto: 1,
-        slot: 255,
         pts: &[
-            [-0.8660254037844386, -0.1967],
-            [-0.8660254037844386, -0.2833],
-            [0.8660254037844386, -0.2833],
-            [0.8660254037844386, -0.1967],
-        ],
-    },
-    Piece {
-        proto: 4,
-        slot: 1,
-        pts: &[
-            [0.30016440495168645, 0.8267],
-            [0.15016880501622165, 0.9133],
-            [-0.15016880501622165, 0.9133],
-            [-0.30016440495168645, 0.8267],
-        ],
-    },
-    Piece {
-        proto: 5,
-        slot: 4,
-        pts: &[
-            [-0.30016440495168645, -0.8267],
-            [-0.15016880501622165, -0.9133],
-            [0.15016880501622165, -0.9133],
-            [0.30016440495168645, -0.8267],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 0,
-        pts: &[
-            [0.8660254037844386, 0.5],
-            [0.7361215932167728, 0.575],
-            [0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 1,
-        pts: &[
-            [0.12990381056766578, 0.925],
-            [0.0, 1.0],
-            [-0.12990381056766578, 0.925],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 2,
-        pts: &[
-            [-0.7361215932167728, 0.575],
+            [-0.1, 0.4],
+            [-0.1, 0.6],
+            [-0.6928203230275509, 0.6],
             [-0.8660254037844386, 0.5],
-            [-0.8660254037844386, 0.35],
+            [-0.8660254037844386, 0.4],
+        ],
+    },
+    Piece {
+        proto: 1,
+        pts: &[
+            [0.1, 0.4],
+            [0.8660254037844386, 0.4],
+            [0.8660254037844386, 0.5],
+            [0.6928203230275509, 0.6],
+            [0.1, 0.6],
+        ],
+    },
+    Piece {
+        proto: 2,
+        pts: &[
+            [0.1, 0.0],
+            [0.1, 0.9422649730810374],
+            [0.0, 1.0],
+            [-0.1, 0.9422649730810374],
+            [-0.1, 0.0],
         ],
     },
     Piece {
         proto: 3,
-        slot: 3,
         pts: &[
-            [-0.8660254037844386, -0.35],
-            [-0.8660254037844386, -0.5],
-            [-0.7361215932167728, -0.575],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 4,
-        pts: &[
-            [-0.12990381056766578, -0.925],
+            [-0.1, -0.9422649730810374],
             [0.0, -1.0],
-            [0.12990381056766578, -0.925],
+            [0.1, -0.9422649730810374],
+            [0.1, 0.0],
+            [-0.1, 0.0],
         ],
     },
     Piece {
-        proto: 3,
-        slot: 5,
+        proto: 0,
         pts: &[
-            [0.7361215932167728, -0.575],
+            [-0.8660254037844386, 0.4],
+            [-0.8660254037844386, -0.5],
+            [-0.1, -0.9422649730810374],
+            [-0.1, 0.4],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.1, -0.9422649730810374],
             [0.8660254037844386, -0.5],
-            [0.8660254037844386, -0.35],
-        ],
-    },
-    Piece {
-        proto: 2,
-        slot: 1,
-        pts: &[
-            [0.15016880501622165, 0.9133],
-            [0.12990381056766578, 0.925],
-            [-0.12990381056766578, 0.925],
-            [-0.15016880501622165, 0.9133],
-        ],
-    },
-    Piece {
-        proto: 2,
-        slot: 4,
-        pts: &[
-            [-0.15016880501622165, -0.9133],
-            [-0.12990381056766578, -0.925],
-            [0.12990381056766578, -0.925],
-            [0.15016880501622165, -0.9133],
+            [0.8660254037844386, 0.4],
+            [0.1, 0.4],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [0.7361215932167728, 0.575],
-            [0.30016440495168645, 0.8267],
-            [-0.30016440495168645, 0.8267],
-            [-0.7361215932167728, 0.575],
-            [-0.8660254037844386, 0.35],
-            [-0.8660254037844386, -0.1967],
-            [0.8660254037844386, -0.1967],
-            [0.8660254037844386, 0.35],
+            [-0.1, 0.9422649730810374],
+            [-0.6928203230275509, 0.6],
+            [-0.1, 0.6],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [-0.8660254037844386, -0.2833],
-            [-0.8660254037844386, -0.35],
-            [-0.7361215932167728, -0.575],
-            [-0.30016440495168645, -0.8267],
-            [0.30016440495168645, -0.8267],
-            [0.7361215932167728, -0.575],
-            [0.8660254037844386, -0.35],
-            [0.8660254037844386, -0.2833],
+            [0.6928203230275509, 0.6],
+            [0.1, 0.9422649730810374],
+            [0.1, 0.6],
         ],
     },
 ];
 
-const P20: [Piece; 13] = [
+const T20: [Piece; 8] = [
     Piece {
         proto: 1,
-        slot: 255,
         pts: &[
-            [0.26266550496782026, 0.84835],
-            [0.18766770500008784, 0.89165],
-            [-0.6783576987843507, -0.60835],
-            [-0.6033598988166183, -0.65165],
-        ],
-    },
-    Piece {
-        proto: 4,
-        slot: 2,
-        pts: &[
-            [-0.5658609988327522, 0.6733],
-            [-0.715856598768217, 0.5867],
-            [-0.8660254037844386, 0.3266],
-            [-0.8660254037844386, 0.1534],
-        ],
-    },
-    Piece {
-        proto: 5,
-        slot: 5,
-        pts: &[
-            [0.5658609988327522, -0.6733],
-            [0.715856598768217, -0.5867],
-            [0.8660254037844386, -0.3266],
-            [0.8660254037844386, -0.1534],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 0,
-        pts: &[
-            [0.8660254037844386, 0.5],
-            [0.7361215932167728, 0.575],
-            [0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 1,
-        pts: &[
-            [0.12990381056766578, 0.925],
-            [0.0, 1.0],
-            [-0.12990381056766578, 0.925],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 2,
-        pts: &[
-            [-0.7361215932167728, 0.575],
-            [-0.8660254037844386, 0.5],
-            [-0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 3,
-        pts: &[
-            [-0.8660254037844386, -0.35],
+            [-0.39641016151377545, 0.11339745962155615],
+            [-0.5696152422706632, 0.21339745962155612],
+            [-0.8660254037844386, -0.3],
             [-0.8660254037844386, -0.5],
-            [-0.7361215932167728, -0.575],
+            [-0.7794228634059948, -0.55],
+        ],
+    },
+    Piece {
+        proto: 1,
+        pts: &[
+            [-0.29641016151377547, 0.2866025403784439],
+            [0.08660254037844387, 0.95],
+            [0.0, 1.0],
+            [-0.17320508075688773, 0.9],
+            [-0.46961524227066315, 0.3866025403784439],
         ],
     },
     Piece {
         proto: 3,
-        slot: 4,
         pts: &[
-            [-0.12990381056766578, -0.925],
-            [0.0, -1.0],
-            [0.12990381056766578, -0.925],
+            [0.05, 0.08660254037844387],
+            [-0.7660254037844386, 0.5577350269189626],
+            [-0.8660254037844386, 0.5],
+            [-0.8660254037844386, 0.38452994616207486],
+            [-0.05, -0.08660254037844387],
         ],
     },
     Piece {
-        proto: 3,
-        slot: 5,
+        proto: 2,
         pts: &[
-            [0.7361215932167728, -0.575],
+            [0.7660254037844386, -0.5577350269189626],
             [0.8660254037844386, -0.5],
-            [0.8660254037844386, -0.35],
-        ],
-    },
-    Piece {
-        proto: 2,
-        slot: 2,
-        pts: &[
-            [-0.715856598768217, 0.5867],
-            [-0.7361215932167728, 0.575],
-            [-0.8660254037844386, 0.35],
-            [-0.8660254037844386, 0.3266],
-        ],
-    },
-    Piece {
-        proto: 2,
-        slot: 5,
-        pts: &[
-            [0.715856598768217, -0.5867],
-            [0.7361215932167728, -0.575],
-            [0.8660254037844386, -0.35],
-            [0.8660254037844386, -0.3266],
+            [0.8660254037844386, -0.38452994616207486],
+            [0.05, 0.08660254037844387],
+            [-0.05, -0.08660254037844387],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [0.18766770500008784, 0.89165],
-            [0.12990381056766578, 0.925],
-            [-0.12990381056766578, 0.925],
-            [-0.5658609988327522, 0.6733],
-            [-0.8660254037844386, 0.1534],
-            [-0.8660254037844386, -0.35],
-            [-0.7361215932167728, -0.575],
-            [-0.6783576987843507, -0.60835],
+            [-0.7794228634059948, -0.55],
+            [0.0, -1.0],
+            [0.7660254037844386, -0.5577350269189626],
+            [-0.39641016151377545, 0.11339745962155615],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [0.7361215932167728, 0.575],
-            [0.26266550496782026, 0.84835],
-            [-0.6033598988166183, -0.65165],
-            [-0.12990381056766578, -0.925],
-            [0.12990381056766578, -0.925],
-            [0.5658609988327522, -0.6733],
-            [0.8660254037844386, -0.1534],
-            [0.8660254037844386, 0.35],
+            [0.8660254037844386, -0.38452994616207486],
+            [0.8660254037844386, 0.5],
+            [0.08660254037844387, 0.95],
+            [-0.29641016151377547, 0.2866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.8660254037844386, 0.38452994616207486],
+            [-0.8660254037844386, -0.3],
+            [-0.5696152422706632, 0.21339745962155612],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.17320508075688773, 0.9],
+            [-0.7660254037844386, 0.5577350269189626],
+            [-0.46961524227066315, 0.3866025403784439],
         ],
     },
 ];
 
-const P21: [Piece; 13] = [
+const T21: [Piece; 8] = [
     Piece {
         proto: 1,
-        slot: 255,
         pts: &[
-            [0.6783576987843507, 0.60835],
-            [0.6033598988166183, 0.65165],
-            [-0.26266550496782026, -0.84835],
-            [-0.18766770500008784, -0.89165],
-        ],
-    },
-    Piece {
-        proto: 4,
-        slot: 2,
-        pts: &[
-            [-0.5658609988327522, 0.6733],
-            [-0.715856598768217, 0.5867],
-            [-0.8660254037844386, 0.3266],
-            [-0.8660254037844386, 0.1534],
-        ],
-    },
-    Piece {
-        proto: 5,
-        slot: 5,
-        pts: &[
-            [0.5658609988327522, -0.6733],
-            [0.715856598768217, -0.5867],
-            [0.8660254037844386, -0.3266],
-            [0.8660254037844386, -0.1534],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 0,
-        pts: &[
-            [0.8660254037844386, 0.5],
-            [0.7361215932167728, 0.575],
-            [0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 1,
-        pts: &[
-            [0.12990381056766578, 0.925],
-            [0.0, 1.0],
-            [-0.12990381056766578, 0.925],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 2,
-        pts: &[
-            [-0.7361215932167728, 0.575],
-            [-0.8660254037844386, 0.5],
-            [-0.8660254037844386, 0.35],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 3,
-        pts: &[
-            [-0.8660254037844386, -0.35],
+            [-0.39641016151377545, 0.11339745962155615],
+            [-0.5696152422706632, 0.21339745962155612],
+            [-0.8660254037844386, -0.3],
             [-0.8660254037844386, -0.5],
-            [-0.7361215932167728, -0.575],
+            [-0.7794228634059948, -0.55],
+        ],
+    },
+    Piece {
+        proto: 1,
+        pts: &[
+            [-0.29641016151377547, 0.2866025403784439],
+            [0.08660254037844387, 0.95],
+            [0.0, 1.0],
+            [-0.17320508075688773, 0.9],
+            [-0.46961524227066315, 0.3866025403784439],
+        ],
+    },
+    Piece {
+        proto: 2,
+        pts: &[
+            [0.05, 0.08660254037844387],
+            [-0.7660254037844386, 0.5577350269189626],
+            [-0.8660254037844386, 0.5],
+            [-0.8660254037844386, 0.38452994616207486],
+            [-0.05, -0.08660254037844387],
         ],
     },
     Piece {
         proto: 3,
-        slot: 4,
         pts: &[
-            [-0.12990381056766578, -0.925],
-            [0.0, -1.0],
-            [0.12990381056766578, -0.925],
-        ],
-    },
-    Piece {
-        proto: 3,
-        slot: 5,
-        pts: &[
-            [0.7361215932167728, -0.575],
+            [0.7660254037844386, -0.5577350269189626],
             [0.8660254037844386, -0.5],
-            [0.8660254037844386, -0.35],
-        ],
-    },
-    Piece {
-        proto: 2,
-        slot: 2,
-        pts: &[
-            [-0.715856598768217, 0.5867],
-            [-0.7361215932167728, 0.575],
-            [-0.8660254037844386, 0.35],
-            [-0.8660254037844386, 0.3266],
-        ],
-    },
-    Piece {
-        proto: 2,
-        slot: 5,
-        pts: &[
-            [0.715856598768217, -0.5867],
-            [0.7361215932167728, -0.575],
-            [0.8660254037844386, -0.35],
-            [0.8660254037844386, -0.3266],
+            [0.8660254037844386, -0.38452994616207486],
+            [0.05, 0.08660254037844387],
+            [-0.05, -0.08660254037844387],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [0.6033598988166183, 0.65165],
-            [0.12990381056766578, 0.925],
-            [-0.12990381056766578, 0.925],
-            [-0.5658609988327522, 0.6733],
-            [-0.8660254037844386, 0.1534],
-            [-0.8660254037844386, -0.35],
-            [-0.7361215932167728, -0.575],
-            [-0.26266550496782026, -0.84835],
+            [-0.7794228634059948, -0.55],
+            [0.0, -1.0],
+            [0.7660254037844386, -0.5577350269189626],
+            [-0.39641016151377545, 0.11339745962155615],
         ],
     },
     Piece {
         proto: 0,
-        slot: 255,
         pts: &[
-            [0.7361215932167728, 0.575],
-            [0.6783576987843507, 0.60835],
-            [-0.18766770500008784, -0.89165],
-            [-0.12990381056766578, -0.925],
-            [0.12990381056766578, -0.925],
-            [0.5658609988327522, -0.6733],
-            [0.8660254037844386, -0.1534],
-            [0.8660254037844386, 0.35],
+            [0.8660254037844386, -0.38452994616207486],
+            [0.8660254037844386, 0.5],
+            [0.08660254037844387, 0.95],
+            [-0.29641016151377547, 0.2866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.8660254037844386, 0.38452994616207486],
+            [-0.8660254037844386, -0.3],
+            [-0.5696152422706632, 0.21339745962155612],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.17320508075688773, 0.9],
+            [-0.7660254037844386, 0.5577350269189626],
+            [-0.46961524227066315, 0.3866025403784439],
         ],
     },
 ];
 
-/// Partition templates, indexed by `a * 2 + sdt`.
-const TEMPLATES: [&[Piece; 13]; 6] = [&P00, &P01, &P10, &P11, &P20, &P21];
+const T30: [Piece; 8] = [
+    Piece {
+        proto: 1,
+        pts: &[
+            [-0.29641016151377547, -0.2866025403784439],
+            [-0.46961524227066315, -0.3866025403784439],
+            [-0.17320508075688773, -0.9],
+            [0.0, -1.0],
+            [0.08660254037844387, -0.95],
+        ],
+    },
+    Piece {
+        proto: 1,
+        pts: &[
+            [-0.39641016151377545, -0.11339745962155615],
+            [-0.7794228634059948, 0.55],
+            [-0.8660254037844386, 0.5],
+            [-0.8660254037844386, 0.3],
+            [-0.5696152422706632, -0.21339745962155612],
+        ],
+    },
+    Piece {
+        proto: 3,
+        pts: &[
+            [-0.05, 0.08660254037844387],
+            [-0.8660254037844386, -0.38452994616207486],
+            [-0.8660254037844386, -0.5],
+            [-0.7660254037844386, -0.5577350269189626],
+            [0.05, -0.08660254037844387],
+        ],
+    },
+    Piece {
+        proto: 2,
+        pts: &[
+            [0.8660254037844386, 0.38452994616207486],
+            [0.8660254037844386, 0.5],
+            [0.7660254037844386, 0.5577350269189626],
+            [-0.05, 0.08660254037844387],
+            [0.05, -0.08660254037844387],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.08660254037844387, -0.95],
+            [0.8660254037844386, -0.5],
+            [0.8660254037844386, 0.38452994616207486],
+            [-0.29641016151377547, -0.2866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.7660254037844386, 0.5577350269189626],
+            [0.0, 1.0],
+            [-0.7794228634059948, 0.55],
+            [-0.39641016151377545, -0.11339745962155615],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.7660254037844386, -0.5577350269189626],
+            [-0.17320508075688773, -0.9],
+            [-0.46961524227066315, -0.3866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.8660254037844386, 0.3],
+            [-0.8660254037844386, -0.38452994616207486],
+            [-0.5696152422706632, -0.21339745962155612],
+        ],
+    },
+];
+
+const T31: [Piece; 8] = [
+    Piece {
+        proto: 1,
+        pts: &[
+            [-0.29641016151377547, -0.2866025403784439],
+            [-0.46961524227066315, -0.3866025403784439],
+            [-0.17320508075688773, -0.9],
+            [0.0, -1.0],
+            [0.08660254037844387, -0.95],
+        ],
+    },
+    Piece {
+        proto: 1,
+        pts: &[
+            [-0.39641016151377545, -0.11339745962155615],
+            [-0.7794228634059948, 0.55],
+            [-0.8660254037844386, 0.5],
+            [-0.8660254037844386, 0.3],
+            [-0.5696152422706632, -0.21339745962155612],
+        ],
+    },
+    Piece {
+        proto: 2,
+        pts: &[
+            [-0.05, 0.08660254037844387],
+            [-0.8660254037844386, -0.38452994616207486],
+            [-0.8660254037844386, -0.5],
+            [-0.7660254037844386, -0.5577350269189626],
+            [0.05, -0.08660254037844387],
+        ],
+    },
+    Piece {
+        proto: 3,
+        pts: &[
+            [0.8660254037844386, 0.38452994616207486],
+            [0.8660254037844386, 0.5],
+            [0.7660254037844386, 0.5577350269189626],
+            [-0.05, 0.08660254037844387],
+            [0.05, -0.08660254037844387],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.08660254037844387, -0.95],
+            [0.8660254037844386, -0.5],
+            [0.8660254037844386, 0.38452994616207486],
+            [-0.29641016151377547, -0.2866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.7660254037844386, 0.5577350269189626],
+            [0.0, 1.0],
+            [-0.7794228634059948, 0.55],
+            [-0.39641016151377545, -0.11339745962155615],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.7660254037844386, -0.5577350269189626],
+            [-0.17320508075688773, -0.9],
+            [-0.46961524227066315, -0.3866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.8660254037844386, 0.3],
+            [-0.8660254037844386, -0.38452994616207486],
+            [-0.5696152422706632, -0.21339745962155612],
+        ],
+    },
+];
+
+const T40: [Piece; 8] = [
+    Piece {
+        proto: 1,
+        pts: &[
+            [0.1, -0.4],
+            [0.1, -0.6],
+            [0.6928203230275509, -0.6],
+            [0.8660254037844386, -0.5],
+            [0.8660254037844386, -0.4],
+        ],
+    },
+    Piece {
+        proto: 1,
+        pts: &[
+            [-0.1, -0.4],
+            [-0.8660254037844386, -0.4],
+            [-0.8660254037844386, -0.5],
+            [-0.6928203230275509, -0.6],
+            [-0.1, -0.6],
+        ],
+    },
+    Piece {
+        proto: 3,
+        pts: &[
+            [-0.1, 0.0],
+            [-0.1, -0.9422649730810374],
+            [0.0, -1.0],
+            [0.1, -0.9422649730810374],
+            [0.1, 0.0],
+        ],
+    },
+    Piece {
+        proto: 2,
+        pts: &[
+            [0.1, 0.9422649730810374],
+            [0.0, 1.0],
+            [-0.1, 0.9422649730810374],
+            [-0.1, 0.0],
+            [0.1, 0.0],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.8660254037844386, -0.4],
+            [0.8660254037844386, 0.5],
+            [0.1, 0.9422649730810374],
+            [0.1, -0.4],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.1, 0.9422649730810374],
+            [-0.8660254037844386, 0.5],
+            [-0.8660254037844386, -0.4],
+            [-0.1, -0.4],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.1, -0.9422649730810374],
+            [0.6928203230275509, -0.6],
+            [0.1, -0.6],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.6928203230275509, -0.6],
+            [-0.1, -0.9422649730810374],
+            [-0.1, -0.6],
+        ],
+    },
+];
+
+const T41: [Piece; 8] = [
+    Piece {
+        proto: 1,
+        pts: &[
+            [0.1, -0.4],
+            [0.1, -0.6],
+            [0.6928203230275509, -0.6],
+            [0.8660254037844386, -0.5],
+            [0.8660254037844386, -0.4],
+        ],
+    },
+    Piece {
+        proto: 1,
+        pts: &[
+            [-0.1, -0.4],
+            [-0.8660254037844386, -0.4],
+            [-0.8660254037844386, -0.5],
+            [-0.6928203230275509, -0.6],
+            [-0.1, -0.6],
+        ],
+    },
+    Piece {
+        proto: 2,
+        pts: &[
+            [-0.1, 0.0],
+            [-0.1, -0.9422649730810374],
+            [0.0, -1.0],
+            [0.1, -0.9422649730810374],
+            [0.1, 0.0],
+        ],
+    },
+    Piece {
+        proto: 3,
+        pts: &[
+            [0.1, 0.9422649730810374],
+            [0.0, 1.0],
+            [-0.1, 0.9422649730810374],
+            [-0.1, 0.0],
+            [0.1, 0.0],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.8660254037844386, -0.4],
+            [0.8660254037844386, 0.5],
+            [0.1, 0.9422649730810374],
+            [0.1, -0.4],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.1, 0.9422649730810374],
+            [-0.8660254037844386, 0.5],
+            [-0.8660254037844386, -0.4],
+            [-0.1, -0.4],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.1, -0.9422649730810374],
+            [0.6928203230275509, -0.6],
+            [0.1, -0.6],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.6928203230275509, -0.6],
+            [-0.1, -0.9422649730810374],
+            [-0.1, -0.6],
+        ],
+    },
+];
+
+const T50: [Piece; 8] = [
+    Piece {
+        proto: 1,
+        pts: &[
+            [0.39641016151377545, -0.11339745962155615],
+            [0.5696152422706632, -0.21339745962155612],
+            [0.8660254037844386, 0.3],
+            [0.8660254037844386, 0.5],
+            [0.7794228634059948, 0.55],
+        ],
+    },
+    Piece {
+        proto: 1,
+        pts: &[
+            [0.29641016151377547, -0.2866025403784439],
+            [-0.08660254037844387, -0.95],
+            [0.0, -1.0],
+            [0.17320508075688773, -0.9],
+            [0.46961524227066315, -0.3866025403784439],
+        ],
+    },
+    Piece {
+        proto: 3,
+        pts: &[
+            [-0.05, -0.08660254037844387],
+            [0.7660254037844386, -0.5577350269189626],
+            [0.8660254037844386, -0.5],
+            [0.8660254037844386, -0.38452994616207486],
+            [0.05, 0.08660254037844387],
+        ],
+    },
+    Piece {
+        proto: 2,
+        pts: &[
+            [-0.7660254037844386, 0.5577350269189626],
+            [-0.8660254037844386, 0.5],
+            [-0.8660254037844386, 0.38452994616207486],
+            [-0.05, -0.08660254037844387],
+            [0.05, 0.08660254037844387],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.7794228634059948, 0.55],
+            [0.0, 1.0],
+            [-0.7660254037844386, 0.5577350269189626],
+            [0.39641016151377545, -0.11339745962155615],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.8660254037844386, 0.38452994616207486],
+            [-0.8660254037844386, -0.5],
+            [-0.08660254037844387, -0.95],
+            [0.29641016151377547, -0.2866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.8660254037844386, -0.38452994616207486],
+            [0.8660254037844386, 0.3],
+            [0.5696152422706632, -0.21339745962155612],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.17320508075688773, -0.9],
+            [0.7660254037844386, -0.5577350269189626],
+            [0.46961524227066315, -0.3866025403784439],
+        ],
+    },
+];
+
+const T51: [Piece; 8] = [
+    Piece {
+        proto: 1,
+        pts: &[
+            [0.39641016151377545, -0.11339745962155615],
+            [0.5696152422706632, -0.21339745962155612],
+            [0.8660254037844386, 0.3],
+            [0.8660254037844386, 0.5],
+            [0.7794228634059948, 0.55],
+        ],
+    },
+    Piece {
+        proto: 1,
+        pts: &[
+            [0.29641016151377547, -0.2866025403784439],
+            [-0.08660254037844387, -0.95],
+            [0.0, -1.0],
+            [0.17320508075688773, -0.9],
+            [0.46961524227066315, -0.3866025403784439],
+        ],
+    },
+    Piece {
+        proto: 2,
+        pts: &[
+            [-0.05, -0.08660254037844387],
+            [0.7660254037844386, -0.5577350269189626],
+            [0.8660254037844386, -0.5],
+            [0.8660254037844386, -0.38452994616207486],
+            [0.05, 0.08660254037844387],
+        ],
+    },
+    Piece {
+        proto: 3,
+        pts: &[
+            [-0.7660254037844386, 0.5577350269189626],
+            [-0.8660254037844386, 0.5],
+            [-0.8660254037844386, 0.38452994616207486],
+            [-0.05, -0.08660254037844387],
+            [0.05, 0.08660254037844387],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.7794228634059948, 0.55],
+            [0.0, 1.0],
+            [-0.7660254037844386, 0.5577350269189626],
+            [0.39641016151377545, -0.11339745962155615],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [-0.8660254037844386, 0.38452994616207486],
+            [-0.8660254037844386, -0.5],
+            [-0.08660254037844387, -0.95],
+            [0.29641016151377547, -0.2866025403784439],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.8660254037844386, -0.38452994616207486],
+            [0.8660254037844386, 0.3],
+            [0.5696152422706632, -0.21339745962155612],
+        ],
+    },
+    Piece {
+        proto: 0,
+        pts: &[
+            [0.17320508075688773, -0.9],
+            [0.7660254037844386, -0.5577350269189626],
+            [0.46961524227066315, -0.3866025403784439],
+        ],
+    },
+];
 
 /// Site centre in patch coordinates (before the scale/rotation map).
 fn centre(u: i8, v: i8) -> Vec2 {
@@ -1490,7 +1618,9 @@ fn centre(u: i8, v: i8) -> Vec2 {
     Vec2::new(SQ3 * (uu + 0.5 * vv), 1.5 * vv)
 }
 
-/// The paper's corner colour rule: true = red.
+/// The paper's corner-colour rule: true = red. Kept as the state-level
+/// rule behind the R2/R3 battery; the shipped paint derives from `proto`.
+#[cfg(test)]
 fn color_red(a: usize, rbt: usize, k: usize) -> bool {
     if k % 3 == a {
         k == a + 3 * rbt
@@ -1499,17 +1629,19 @@ fn color_red(a: usize, rbt: usize, k: usize) -> bool {
     }
 }
 
-/// Pattern seed (palette index): 0 base, 1 blue, 2 red.
-fn seed_of(a: usize, rbt: usize, proto: u8, slot: u8) -> u32 {
+/// Pattern seed (palette index): 0 base, 1 blue, 2 red. The chord band and
+/// the red axis half are red, the blue axis half blue, the body base.
+fn seed_of(proto: u8) -> u32 {
     match proto {
-        0 => 0,
-        1 => 2,
-        _ => u32::from(color_red(a, rbt, usize::from(slot))),
+        1 | 2 => 2,
+        3 => 1,
+        _ => 0,
     }
 }
 
 /// Taylor–Socolar striped hexagons — the paper's forced 529-hexagon patch,
-/// every hexagon partitioned into 13 decorated sub-polygons.
+/// every hexagon partitioned into 8 decorated sub-polygons (chord band +
+/// split axis + body), the canonical chord network closing Taylor triangles.
 pub struct TaylorSocolarTiling;
 
 impl Tiling for TaylorSocolarTiling {
@@ -1522,7 +1654,7 @@ impl Tiling for TaylorSocolarTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Taylor-Socolar aperiodic striped hexagon (arXiv:1008.3103): the paper's forced 529-hexagon patch, each hexagon partitioned into 13 decorated sub-polygons whose stripe bands reproduce the edge-midpoint handoff rules exactly (R1 0/2992, R2 0/2816, R3 0/2904)."
+        "Taylor-Socolar aperiodic striped hexagon (arXiv:1008.3103): the paper's forced 529-hexagon patch, each hexagon partitioned into 8 decorated sub-polygons carrying the canonical chord + split-axis decoration whose chords close into nested Taylor triangles (R1 0/2992, R2 0/2816, R3 0/2904)."
     }
 
     fn category(&self) -> TilingCategory {
@@ -1563,7 +1695,7 @@ impl Tiling for TaylorSocolarTiling {
         }
 
         // Finite patch: the patch IS the covered domain, so exactly the
-        // hexagons whose box meets the region contribute their 13 pieces,
+        // hexagons whose box meets the region contribute their 8 pieces,
         // and each emitted piece is kept only if it reaches the region.
         let mut tiles = Vec::new();
         for &(u, v, st) in SITES.iter() {
@@ -1578,7 +1710,8 @@ impl Tiling for TaylorSocolarTiling {
             let a = (st % 3) as usize;
             let rbt = ((st / 3) % 2) as usize;
             let sdt = (st / 6) as usize;
-            for piece in TEMPLATES[a * 2 + sdt].iter() {
+            let kap = (a + 3 * sdt) % 6;
+            for piece in TEMPLATES[kap * 2 + usize::from(rbt != sdt)].iter() {
                 let pts: Vec<Vec2> = piece
                     .pts
                     .iter()
@@ -1588,7 +1721,7 @@ impl Tiling for TaylorSocolarTiling {
                 if poly.aabb().intersects(query.region) {
                     tiles.push(Tile {
                         proto: piece.proto,
-                        seed: seed_of(a, rbt, piece.proto, piece.slot),
+                        seed: seed_of(piece.proto),
                         poly,
                     });
                 }
@@ -1612,9 +1745,6 @@ mod tests {
 
     // Rule data used only by the state-level checks: the runtime geometry is
     // baked into the tables, so these helpers live with their tests.
-
-    /// Stripe offset `t0/R` (paper Figure 2).
-    const T0: f64 = 0.24;
 
     /// Neighbour across hexagon edge `m` (the study's DELTA table).
     const DELTA: [(i8, i8); 6] = [(1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)];
@@ -1646,570 +1776,333 @@ mod tests {
         T[k % 12]
     }
 
-    /// Tile-local stripe point on edge `m` for side `s` (+1/-1): the point
-    /// the stripe crosses that edge at, per the decoration rule.
-    fn stripe_pt(s: i32, m: usize) -> (f64, f64) {
-        let (nx, ny) = dir30(2 * m);
-        let (tx, ty) = dir30(2 * m + 3);
-        let off = f64::from(s) * T0;
-        (HX * nx + off * tx, HX * ny + off * ty)
-    }
-
-    /// Emitted placement of site (-3,-10), state (a=0, rbt=0, sdt=0).
-    /// Centre [-5.196152422706632, 0.0].
-    const REF0: [Piece; 13] = [
+    /// Site (-3,-2) state (a=0, rbt=0, sdt=0): kappa=0, flag=0.
+    /// Centre [1.7320508075688772, 12.0].
+    const REF0: [Piece; 8] = [
         Piece {
             proto: 1,
-            slot: 255,
             pts: &[
-                [-5.38382012770672, 0.89165],
-                [-5.458817927674453, 0.84835],
-                [-4.592792523890013, -0.65165],
-                [-4.5177947239222815, -0.60835],
+                [2.0284609690826527, 12.286602540378444],
+                [2.2016660498395404, 12.386602540378444],
+                [1.9052558883257649, 12.9],
+                [1.7320508075688772, 13.0],
+                [1.6454482671904334, 12.95],
             ],
         },
         Piece {
-            proto: 4,
-            slot: 0,
+            proto: 1,
             pts: &[
-                [-4.480295823938415, 0.5867],
-                [-4.63029142387388, 0.6733],
-                [-4.330127018922194, 0.1534],
-                [-4.330127018922194, 0.3266],
-            ],
-        },
-        Piece {
-            proto: 5,
-            slot: 3,
-            pts: &[
-                [-6.06217782649107, -0.1534],
-                [-6.06217782649107, -0.3266],
-                [-5.912009021474849, -0.5867],
-                [-5.762013421539384, -0.6733],
+                [2.128460969082653, 12.113397459621556],
+                [2.5114736709748717, 11.45],
+                [2.598076211353316, 11.5],
+                [2.598076211353316, 11.7],
+                [2.3016660498395405, 12.213397459621556],
             ],
         },
         Piece {
             proto: 3,
-            slot: 0,
             pts: &[
-                [-4.330127018922194, 0.5],
-                [-4.46003082948986, 0.575],
-                [-4.330127018922194, 0.35],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 1,
-            pts: &[
-                [-5.066248612138966, 0.925],
-                [-5.196152422706632, 1.0],
-                [-5.326056233274298, 0.925],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 2,
-            pts: &[
-                [-5.932274015923404, 0.575],
-                [-6.06217782649107, 0.5],
-                [-6.06217782649107, 0.35],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 3,
-            pts: &[
-                [-6.06217782649107, -0.35],
-                [-6.06217782649107, -0.5],
-                [-5.932274015923404, -0.575],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 4,
-            pts: &[
-                [-5.326056233274298, -0.925],
-                [-5.196152422706632, -1.0],
-                [-5.066248612138966, -0.925],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 5,
-            pts: &[
-                [-4.46003082948986, -0.575],
-                [-4.330127018922194, -0.5],
-                [-4.330127018922194, -0.35],
+                [1.7820508075688772, 11.913397459621557],
+                [2.598076211353316, 12.384529946162075],
+                [2.598076211353316, 12.5],
+                [2.498076211353316, 12.557735026918962],
+                [1.6820508075688771, 12.086602540378443],
             ],
         },
         Piece {
             proto: 2,
-            slot: 0,
             pts: &[
-                [-4.46003082948986, 0.575],
-                [-4.480295823938415, 0.5867],
-                [-4.330127018922194, 0.3266],
-                [-4.330127018922194, 0.35],
-            ],
-        },
-        Piece {
-            proto: 2,
-            slot: 3,
-            pts: &[
-                [-6.06217782649107, -0.3266],
-                [-6.06217782649107, -0.35],
-                [-5.932274015923404, -0.575],
-                [-5.912009021474849, -0.5867],
+                [0.8660254037844386, 11.615470053837925],
+                [0.8660254037844386, 11.5],
+                [0.9660254037844386, 11.442264973081038],
+                [1.7820508075688772, 11.913397459621557],
+                [1.6820508075688771, 12.086602540378443],
             ],
         },
         Piece {
             proto: 0,
-            slot: 255,
             pts: &[
-                [-4.63029142387388, 0.6733],
-                [-5.066248612138966, 0.925],
-                [-5.326056233274298, 0.925],
-                [-5.38382012770672, 0.89165],
-                [-4.5177947239222815, -0.60835],
-                [-4.46003082948986, -0.575],
-                [-4.330127018922194, -0.35],
-                [-4.330127018922194, 0.1534],
+                [1.6454482671904334, 12.95],
+                [0.8660254037844386, 12.5],
+                [0.8660254037844386, 11.615470053837925],
+                [2.0284609690826527, 12.286602540378444],
             ],
         },
         Piece {
             proto: 0,
-            slot: 255,
             pts: &[
-                [-5.458817927674453, 0.84835],
-                [-5.932274015923404, 0.575],
-                [-6.06217782649107, 0.35],
-                [-6.06217782649107, -0.1534],
-                [-5.762013421539384, -0.6733],
-                [-5.326056233274298, -0.925],
-                [-5.066248612138966, -0.925],
-                [-4.592792523890013, -0.65165],
+                [0.9660254037844386, 11.442264973081038],
+                [1.7320508075688772, 11.0],
+                [2.5114736709748717, 11.45],
+                [2.128460969082653, 12.113397459621556],
+            ],
+        },
+        Piece {
+            proto: 0,
+            pts: &[
+                [2.498076211353316, 12.557735026918962],
+                [1.9052558883257649, 12.9],
+                [2.2016660498395404, 12.386602540378444],
+            ],
+        },
+        Piece {
+            proto: 0,
+            pts: &[
+                [2.598076211353316, 11.7],
+                [2.598076211353316, 12.384529946162075],
+                [2.3016660498395405, 12.213397459621556],
             ],
         },
     ];
-    const REF0_TPL: &[Piece; 13] = &P00;
-    const REF0_CEN: [f64; 2] = [-5.196152422706632, 0.0];
+    const REF0_TPL: &[Piece; 8] = &T00;
+    const REF0_CEN: [f64; 2] = [1.7320508075688772, 12.0];
+    const REF0_SITE: (i8, i8) = (-3, -2);
 
-    /// Emitted placement of site (-3,-7), state (a=1, rbt=1, sdt=0).
-    /// Centre [-2.598076211353316, 4.5].
-    const REF1: [Piece; 13] = [
+    /// Site (-3,-3) state (a=1, rbt=1, sdt=0): kappa=1, flag=1.
+    /// Centre [0.8660254037844386, 10.5].
+    const REF1: [Piece; 8] = [
         Piece {
             proto: 1,
-            slot: 255,
             pts: &[
-                [-3.4641016151377544, 4.7833],
-                [-3.4641016151377544, 4.6967],
-                [-1.7320508075688774, 4.6967],
-                [-1.7320508075688774, 4.7833],
+                [0.7660254037844386, 10.9],
+                [0.7660254037844386, 11.1],
+                [0.17320508075688767, 11.1],
+                [0.0, 11.0],
+                [0.0, 10.9],
             ],
         },
         Piece {
-            proto: 4,
-            slot: 1,
+            proto: 1,
             pts: &[
-                [-2.2979118064016295, 5.3267],
-                [-2.4479074063370945, 5.4133],
-                [-2.7482450163695376, 5.4133],
-                [-2.8982406163050025, 5.3267],
-            ],
-        },
-        Piece {
-            proto: 5,
-            slot: 4,
-            pts: &[
-                [-2.8982406163050025, 3.6733000000000002],
-                [-2.7482450163695376, 3.5867],
-                [-2.4479074063370945, 3.5867],
-                [-2.2979118064016295, 3.6733000000000002],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 0,
-            pts: &[
-                [-1.7320508075688774, 5.0],
-                [-1.8619546181365432, 5.075],
-                [-1.7320508075688774, 4.85],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 1,
-            pts: &[
-                [-2.46817240078565, 5.425],
-                [-2.598076211353316, 5.5],
-                [-2.727980021920982, 5.425],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 2,
-            pts: &[
-                [-3.334197804570089, 5.075],
-                [-3.4641016151377544, 5.0],
-                [-3.4641016151377544, 4.85],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 3,
-            pts: &[
-                [-3.4641016151377544, 4.15],
-                [-3.4641016151377544, 4.0],
-                [-3.334197804570089, 3.925],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 4,
-            pts: &[
-                [-2.727980021920982, 3.575],
-                [-2.598076211353316, 3.5],
-                [-2.46817240078565, 3.575],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 5,
-            pts: &[
-                [-1.8619546181365432, 3.925],
-                [-1.7320508075688774, 4.0],
-                [-1.7320508075688774, 4.15],
+                [0.9660254037844386, 10.9],
+                [1.7320508075688772, 10.9],
+                [1.7320508075688772, 11.0],
+                [1.5588457268119895, 11.1],
+                [0.9660254037844386, 11.1],
             ],
         },
         Piece {
             proto: 2,
-            slot: 1,
             pts: &[
-                [-2.4479074063370945, 5.4133],
-                [-2.46817240078565, 5.425],
-                [-2.727980021920982, 5.425],
-                [-2.7482450163695376, 5.4133],
+                [0.9660254037844386, 10.5],
+                [0.9660254037844386, 11.442264973081038],
+                [0.8660254037844386, 11.5],
+                [0.7660254037844386, 11.442264973081038],
+                [0.7660254037844386, 10.5],
             ],
         },
         Piece {
-            proto: 2,
-            slot: 4,
+            proto: 3,
             pts: &[
-                [-2.7482450163695376, 3.5867],
-                [-2.727980021920982, 3.575],
-                [-2.46817240078565, 3.575],
-                [-2.4479074063370945, 3.5867],
-            ],
-        },
-        Piece {
-            proto: 0,
-            slot: 255,
-            pts: &[
-                [-1.8619546181365432, 5.075],
-                [-2.2979118064016295, 5.3267],
-                [-2.8982406163050025, 5.3267],
-                [-3.334197804570089, 5.075],
-                [-3.4641016151377544, 4.85],
-                [-3.4641016151377544, 4.7833],
-                [-1.7320508075688774, 4.7833],
-                [-1.7320508075688774, 4.85],
+                [0.7660254037844386, 9.557735026918962],
+                [0.8660254037844386, 9.5],
+                [0.9660254037844386, 9.557735026918962],
+                [0.9660254037844386, 10.5],
+                [0.7660254037844386, 10.5],
             ],
         },
         Piece {
             proto: 0,
-            slot: 255,
             pts: &[
-                [-3.4641016151377544, 4.6967],
-                [-3.4641016151377544, 4.15],
-                [-3.334197804570089, 3.925],
-                [-2.8982406163050025, 3.6733000000000002],
-                [-2.2979118064016295, 3.6733000000000002],
-                [-1.8619546181365432, 3.925],
-                [-1.7320508075688774, 4.15],
-                [-1.7320508075688774, 4.6967],
+                [0.0, 10.9],
+                [0.0, 10.0],
+                [0.7660254037844386, 9.557735026918962],
+                [0.7660254037844386, 10.9],
+            ],
+        },
+        Piece {
+            proto: 0,
+            pts: &[
+                [0.9660254037844386, 9.557735026918962],
+                [1.7320508075688772, 10.0],
+                [1.7320508075688772, 10.9],
+                [0.9660254037844386, 10.9],
+            ],
+        },
+        Piece {
+            proto: 0,
+            pts: &[
+                [0.7660254037844386, 11.442264973081038],
+                [0.17320508075688767, 11.1],
+                [0.7660254037844386, 11.1],
+            ],
+        },
+        Piece {
+            proto: 0,
+            pts: &[
+                [1.5588457268119895, 11.1],
+                [0.9660254037844386, 11.442264973081038],
+                [0.9660254037844386, 11.1],
             ],
         },
     ];
-    const REF1_TPL: &[Piece; 13] = &P10;
-    const REF1_CEN: [f64; 2] = [-2.598076211353316, 4.5];
+    const REF1_TPL: &[Piece; 8] = &T11;
+    const REF1_CEN: [f64; 2] = [0.8660254037844386, 10.5];
+    const REF1_SITE: (i8, i8) = (-3, -3);
 
-    /// Emitted placement of site (-2,-8), state (a=2, rbt=0, sdt=1).
-    /// Centre [-1.7320508075688772, 3.0].
-    const REF2: [Piece; 13] = [
+    /// Site (1,0) state (a=0, rbt=1, sdt=1): kappa=3, flag=0.
+    /// Centre [10.392304845413264, 15.0].
+    const REF2: [Piece; 8] = [
         Piece {
             proto: 1,
-            slot: 255,
             pts: &[
-                [-1.0536931087845265, 3.6083499999999997],
-                [-1.128690908752259, 3.65165],
-                [-1.9947163125366973, 2.15165],
-                [-1.919718512568965, 2.1083499999999997],
+                [10.09589468389949, 14.713397459621556],
+                [9.9226896031426, 14.613397459621556],
+                [10.219099764656375, 14.1],
+                [10.392304845413264, 14.0],
+                [10.478907385791707, 14.05],
             ],
         },
         Piece {
-            proto: 4,
-            slot: 2,
+            proto: 1,
             pts: &[
-                [-2.2979118064016295, 3.6733000000000002],
-                [-2.447907406337094, 3.5867],
-                [-2.598076211353316, 3.3266],
-                [-2.598076211353316, 3.1534],
-            ],
-        },
-        Piece {
-            proto: 5,
-            slot: 5,
-            pts: &[
-                [-1.1661898087361249, 2.3266999999999998],
-                [-1.0161942088006604, 2.4133],
-                [-0.8660254037844386, 2.6734],
-                [-0.8660254037844386, 2.8466],
+                [9.995894683899488, 14.886602540378444],
+                [9.61288198200727, 15.55],
+                [9.526279441628825, 15.5],
+                [9.526279441628825, 15.3],
+                [9.822689603142601, 14.786602540378444],
             ],
         },
         Piece {
             proto: 3,
-            slot: 0,
             pts: &[
-                [-0.8660254037844386, 3.5],
-                [-0.9959292143521044, 3.575],
-                [-0.8660254037844386, 3.35],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 1,
-            pts: &[
-                [-1.6021469970012114, 3.925],
-                [-1.7320508075688772, 4.0],
-                [-1.861954618136543, 3.925],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 2,
-            pts: &[
-                [-2.46817240078565, 3.575],
-                [-2.598076211353316, 3.5],
-                [-2.598076211353316, 3.35],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 3,
-            pts: &[
-                [-2.598076211353316, 2.65],
-                [-2.598076211353316, 2.5],
-                [-2.46817240078565, 2.425],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 4,
-            pts: &[
-                [-1.861954618136543, 2.075],
-                [-1.7320508075688772, 2.0],
-                [-1.6021469970012114, 2.075],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 5,
-            pts: &[
-                [-0.9959292143521044, 2.425],
-                [-0.8660254037844386, 2.5],
-                [-0.8660254037844386, 2.65],
+                [10.342304845413263, 15.086602540378443],
+                [9.526279441628825, 14.615470053837925],
+                [9.526279441628825, 14.5],
+                [9.626279441628826, 14.442264973081038],
+                [10.442304845413265, 14.913397459621557],
             ],
         },
         Piece {
             proto: 2,
-            slot: 2,
             pts: &[
-                [-2.447907406337094, 3.5867],
-                [-2.46817240078565, 3.575],
-                [-2.598076211353316, 3.35],
-                [-2.598076211353316, 3.3266],
-            ],
-        },
-        Piece {
-            proto: 2,
-            slot: 5,
-            pts: &[
-                [-1.0161942088006604, 2.4133],
-                [-0.9959292143521044, 2.425],
-                [-0.8660254037844386, 2.65],
-                [-0.8660254037844386, 2.6734],
+                [11.258330249197703, 15.384529946162075],
+                [11.258330249197703, 15.5],
+                [11.158330249197702, 15.557735026918962],
+                [10.342304845413263, 15.086602540378443],
+                [10.442304845413265, 14.913397459621557],
             ],
         },
         Piece {
             proto: 0,
-            slot: 255,
             pts: &[
-                [-1.128690908752259, 3.65165],
-                [-1.6021469970012114, 3.925],
-                [-1.861954618136543, 3.925],
-                [-2.2979118064016295, 3.6733000000000002],
-                [-2.598076211353316, 3.1534],
-                [-2.598076211353316, 2.65],
-                [-2.46817240078565, 2.425],
-                [-1.9947163125366973, 2.15165],
+                [10.478907385791707, 14.05],
+                [11.258330249197703, 14.5],
+                [11.258330249197703, 15.384529946162075],
+                [10.09589468389949, 14.713397459621556],
             ],
         },
         Piece {
             proto: 0,
-            slot: 255,
             pts: &[
-                [-0.9959292143521044, 3.575],
-                [-1.0536931087845265, 3.6083499999999997],
-                [-1.919718512568965, 2.1083499999999997],
-                [-1.861954618136543, 2.075],
-                [-1.6021469970012114, 2.075],
-                [-1.1661898087361249, 2.3266999999999998],
-                [-0.8660254037844386, 2.8466],
-                [-0.8660254037844386, 3.35],
+                [11.158330249197702, 15.557735026918962],
+                [10.392304845413264, 16.0],
+                [9.61288198200727, 15.55],
+                [9.995894683899488, 14.886602540378444],
+            ],
+        },
+        Piece {
+            proto: 0,
+            pts: &[
+                [9.626279441628826, 14.442264973081038],
+                [10.219099764656375, 14.1],
+                [9.9226896031426, 14.613397459621556],
+            ],
+        },
+        Piece {
+            proto: 0,
+            pts: &[
+                [9.526279441628825, 15.3],
+                [9.526279441628825, 14.615470053837925],
+                [9.822689603142601, 14.786602540378444],
             ],
         },
     ];
-    const REF2_TPL: &[Piece; 13] = &P21;
-    const REF2_CEN: [f64; 2] = [-1.7320508075688772, 3.0];
+    const REF2_TPL: &[Piece; 8] = &T30;
+    const REF2_CEN: [f64; 2] = [10.392304845413264, 15.0];
+    const REF2_SITE: (i8, i8) = (1, 0);
 
-    /// Emitted placement of site (-3,-8), state (a=0, rbt=1, sdt=1).
-    /// Centre [-3.4641016151377544, 3.0].
-    const REF3: [Piece; 13] = [
+    /// Site (-2,0) state (a=2, rbt=0, sdt=1): kappa=5, flag=1.
+    /// Centre [5.196152422706632, 15.0].
+    const REF3: [Piece; 8] = [
         Piece {
             proto: 1,
-            slot: 255,
             pts: &[
-                [-4.067461513954373, 3.65165],
-                [-4.142459313922105, 3.6083499999999997],
-                [-3.2764339101376665, 2.1083499999999997],
-                [-3.2014361101699342, 2.15165],
+                [5.592562584220407, 14.886602540378444],
+                [5.765767664977295, 14.786602540378444],
+                [6.06217782649107, 15.3],
+                [6.06217782649107, 15.5],
+                [5.975575286112627, 15.55],
             ],
         },
         Piece {
-            proto: 4,
-            slot: 0,
+            proto: 1,
             pts: &[
-                [-2.7482450163695376, 3.5867],
-                [-2.898240616305002, 3.6733000000000002],
-                [-2.598076211353316, 3.1534],
-                [-2.598076211353316, 3.3266],
-            ],
-        },
-        Piece {
-            proto: 5,
-            slot: 3,
-            pts: &[
-                [-4.330127018922193, 2.8466],
-                [-4.330127018922193, 2.6734],
-                [-4.179958213905971, 2.4133],
-                [-4.029962613970507, 2.3266999999999998],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 0,
-            pts: &[
-                [-2.598076211353316, 3.5],
-                [-2.7279800219209815, 3.575],
-                [-2.598076211353316, 3.35],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 1,
-            pts: &[
-                [-3.3341978045700884, 3.925],
-                [-3.4641016151377544, 4.0],
-                [-3.5940054257054204, 3.925],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 2,
-            pts: &[
-                [-4.200223208354528, 3.575],
-                [-4.330127018922193, 3.5],
-                [-4.330127018922193, 3.35],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 3,
-            pts: &[
-                [-4.330127018922193, 2.65],
-                [-4.330127018922193, 2.5],
-                [-4.200223208354528, 2.425],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 4,
-            pts: &[
-                [-3.5940054257054204, 2.075],
-                [-3.4641016151377544, 2.0],
-                [-3.3341978045700884, 2.075],
-            ],
-        },
-        Piece {
-            proto: 3,
-            slot: 5,
-            pts: &[
-                [-2.7279800219209815, 2.425],
-                [-2.598076211353316, 2.5],
-                [-2.598076211353316, 2.65],
+                [5.4925625842204076, 14.713397459621556],
+                [5.109549882328188, 14.05],
+                [5.196152422706632, 14.0],
+                [5.36935750346352, 14.1],
+                [5.665767664977295, 14.613397459621556],
             ],
         },
         Piece {
             proto: 2,
-            slot: 0,
             pts: &[
-                [-2.7279800219209815, 3.575],
-                [-2.7482450163695376, 3.5867],
-                [-2.598076211353316, 3.3266],
-                [-2.598076211353316, 3.35],
+                [5.146152422706632, 14.913397459621557],
+                [5.962177826491071, 14.442264973081038],
+                [6.06217782649107, 14.5],
+                [6.06217782649107, 14.615470053837925],
+                [5.246152422706632, 15.086602540378443],
             ],
         },
         Piece {
-            proto: 2,
-            slot: 3,
+            proto: 3,
             pts: &[
-                [-4.330127018922193, 2.6734],
-                [-4.330127018922193, 2.65],
-                [-4.200223208354528, 2.425],
-                [-4.179958213905971, 2.4133],
-            ],
-        },
-        Piece {
-            proto: 0,
-            slot: 255,
-            pts: &[
-                [-2.898240616305002, 3.6733000000000002],
-                [-3.3341978045700884, 3.925],
-                [-3.5940054257054204, 3.925],
-                [-4.067461513954373, 3.65165],
-                [-3.2014361101699342, 2.15165],
-                [-2.7279800219209815, 2.425],
-                [-2.598076211353316, 2.65],
-                [-2.598076211353316, 3.1534],
+                [4.430127018922193, 15.557735026918962],
+                [4.330127018922194, 15.5],
+                [4.330127018922194, 15.384529946162075],
+                [5.146152422706632, 14.913397459621557],
+                [5.246152422706632, 15.086602540378443],
             ],
         },
         Piece {
             proto: 0,
-            slot: 255,
             pts: &[
-                [-4.142459313922105, 3.6083499999999997],
-                [-4.200223208354528, 3.575],
-                [-4.330127018922193, 3.35],
-                [-4.330127018922193, 2.8466],
-                [-4.029962613970507, 2.3266999999999998],
-                [-3.5940054257054204, 2.075],
-                [-3.3341978045700884, 2.075],
-                [-3.2764339101376665, 2.1083499999999997],
+                [5.975575286112627, 15.55],
+                [5.196152422706632, 16.0],
+                [4.430127018922193, 15.557735026918962],
+                [5.592562584220407, 14.886602540378444],
+            ],
+        },
+        Piece {
+            proto: 0,
+            pts: &[
+                [4.330127018922194, 15.384529946162075],
+                [4.330127018922194, 14.5],
+                [5.109549882328188, 14.05],
+                [5.4925625842204076, 14.713397459621556],
+            ],
+        },
+        Piece {
+            proto: 0,
+            pts: &[
+                [6.06217782649107, 14.615470053837925],
+                [6.06217782649107, 15.3],
+                [5.765767664977295, 14.786602540378444],
+            ],
+        },
+        Piece {
+            proto: 0,
+            pts: &[
+                [5.36935750346352, 14.1],
+                [5.962177826491071, 14.442264973081038],
+                [5.665767664977295, 14.613397459621556],
             ],
         },
     ];
-    const REF3_TPL: &[Piece; 13] = &P01;
-    const REF3_CEN: [f64; 2] = [-3.4641016151377544, 3.0];
+    const REF3_TPL: &[Piece; 8] = &T51;
+    const REF3_CEN: [f64; 2] = [5.196152422706632, 15.0];
+    const REF3_SITE: (i8, i8) = (-2, 0);
 
     /// Coverage window verified exactly-once upstream (no gaps; clipped
     /// piece areas sum to the window area).
@@ -2329,33 +2222,210 @@ mod tests {
         assert_eq!((r3b, r3t), (0, 2904), "R3 triple colour rule");
     }
 
-    /// Stripe continuity: on every shared edge the two tiles' stripe points
-    /// are the same world point — the paper's line-continuation data.
+    /// Chord network closure: the chord of a site is the vertex-to-vertex
+    /// segment `V_{kappa+1} — V_{kappa-1}`, `kappa = (a + 3*sdt) mod 6`.
+    /// Chord ends pair up exactly on shared hexagon vertices: 505 interior
+    /// junctions (degree 2, every one straight-through or a 60-degree
+    /// corner) and 48 unpaired ends on the patch boundary.
     #[test]
-    fn taylor_socolar_stripe_points_continue() {
-        let s = site_map();
-        let mut checked = 0usize;
-        for &(u, v, st) in SITES.iter() {
-            let a = (st % 3) as usize;
-            let sdt = (st / 6) as usize;
-            let c = centre(u, v);
-            for (m, &d) in DELTA.iter().enumerate() {
-                let (nu, nv) = (u.wrapping_add(d.0), v.wrapping_add(d.1));
-                let Some(nb) = s.get(&(nu, nv)) else {
-                    continue;
-                };
-                let cn = centre(nu, nv);
-                let pa = stripe_pt(sigma(a, sdt, m), m);
-                let pb = stripe_pt(sigma(nb.0, nb.2, (m + 3) % 6), (m + 3) % 6);
-                let dd = ((c.x + pa.0) - (cn.x + pb.0)).hypot((c.y + pa.1) - (cn.y + pb.1));
-                assert!(
-                    dd < 1e-12,
-                    "edge {m} of site ({u},{v}): stripe points differ by {dd:e}"
+    fn taylor_socolar_chord_network_closes() {
+        const JX: [i32; 6] = [1, 0, -1, -1, 0, 1];
+        const JY: [i32; 6] = [1, 2, 1, -1, -2, -1];
+        let kappa = |st: u8| ((st % 3) as usize + 3 * (st / 6) as usize) % 6;
+        let mut ends: HashMap<(i32, i32), Vec<usize>> = HashMap::new();
+        for (i, &(u, v, st)) in SITES.iter().enumerate() {
+            let kap = kappa(st);
+            for k in [(kap + 1) % 6, (kap + 5) % 6] {
+                let key = (
+                    2 * i32::from(u) + i32::from(v) + JX[k],
+                    3 * i32::from(v) + JY[k],
                 );
-                checked += 1;
+                ends.entry(key).or_default().push(i);
             }
         }
-        assert_eq!(checked, 2992, "shared-edge stripe incidences");
+        let mut boundary = 0usize;
+        let mut junctions = 0usize;
+        let mut straight = 0usize;
+        let mut corner = 0usize;
+        for (key, vs) in ends.iter() {
+            assert!(vs.len() <= 2, "vertex {key:?} carries {} chord ends", vs.len());
+            if vs.len() == 1 {
+                boundary += 1;
+                continue;
+            }
+            junctions += 1;
+            let b1 = (120 + 60 * kappa(SITES[vs[0]].2)) % 180;
+            let b2 = (120 + 60 * kappa(SITES[vs[1]].2)) % 180;
+            let d = (b1 + 180 - b2) % 180;
+            let d = d.min(180 - d);
+            match d {
+                0 => straight += 1,
+                60 => corner += 1,
+                _ => panic!("junction {key:?}: chord bearing delta {d}"),
+            }
+        }
+        assert_eq!(
+            (junctions, boundary),
+            (505, 48),
+            "chord junctions / open ends"
+        );
+        assert_eq!(
+            (straight, corner),
+            (264, 241),
+            "straight-through vs 60-degree corners"
+        );
+    }
+
+    /// The chord network closes the Taylor-triangle hierarchy: half-edge
+    /// face enumeration over the chord segments gives 172 cycles — 74
+    /// closed rings seen from both sides (148), plus 24 open boundary
+    /// chains traversed out-and-back (the 12 isolated chords are the
+    /// 2-cycles; every chain cycle has exactly zero area). EVERY closed
+    /// ring is a geometric equilateral triangle: it has exactly three
+    /// corners with 120-degree exterior angle (the larger ones simply
+    /// carry chord vertices along their sides), and their areas are
+    /// squares of the unit area — 60 of side sqrt(3), 12 of side
+    /// 3*sqrt(3), 2 of side 7*sqrt(3). Three nested scales, as in the
+    /// reference figure.
+    #[test]
+    fn taylor_socolar_triangle_census() {
+        const JX: [i32; 6] = [1, 0, -1, -1, 0, 1];
+        const JY: [i32; 6] = [1, 2, 1, -1, -2, -1];
+        let kappa = |st: u8| ((st % 3) as usize + 3 * (st / 6) as usize) % 6;
+        let key = |u: i8, v: i8, k: usize| {
+            (
+                2 * i32::from(u) + i32::from(v) + JX[k],
+                3 * i32::from(v) + JY[k],
+            )
+        };
+        let mut pos: HashMap<(i32, i32), (f64, f64)> = HashMap::new();
+        let mut inc: HashMap<(i32, i32), Vec<(i32, i32)>> = HashMap::new();
+        for &(u, v, st) in SITES.iter() {
+            let kap = kappa(st);
+            let (p, q) = (key(u, v, (kap + 1) % 6), key(u, v, (kap + 5) % 6));
+            let c = centre(u, v);
+            for (w, k) in [(p, (kap + 1) % 6), (q, (kap + 5) % 6)] {
+                let (dx, dy) = dir30(2 * k + 1);
+                pos.entry(w).or_insert((c.x + dx, c.y + dy));
+            }
+            inc.entry(p).or_default().push(q);
+            inc.entry(q).or_default().push(p);
+        }
+        let mut out: HashMap<(i32, i32), Vec<(i32, i32)>> = HashMap::new();
+        for (w, mut ns) in inc {
+            ns.sort_unstable();
+            ns.dedup();
+            let (x0, y0) = pos[&w];
+            ns.sort_by(|a, b| {
+                let (x1, y1) = pos[a];
+                let (x2, y2) = pos[b];
+                f64::atan2(y1 - y0, x1 - x0)
+                    .partial_cmp(&f64::atan2(y2 - y0, x2 - x0))
+                    .unwrap()
+            });
+            out.insert(w, ns);
+        }
+        let next = |u: (i32, i32), v: (i32, i32)| -> (i32, i32) {
+            let ns = &out[&v];
+            let i = ns.iter().position(|w| *w == u).unwrap();
+            ns[(i + ns.len() - 1) % ns.len()]
+        };
+        let mut seen: std::collections::HashSet<((i32, i32), (i32, i32))> =
+            std::collections::HashSet::new();
+        let mut lens: std::collections::BTreeMap<usize, usize> = Default::default();
+        let mut scales: std::collections::BTreeMap<usize, usize> = Default::default();
+        let mut tri = 0usize;
+        let mut zero = 0usize;
+        let mut neg = 0usize;
+        for (&w, ns) in out.iter() {
+            for &z in ns.iter() {
+                if seen.contains(&(w, z)) {
+                    continue;
+                }
+                let mut cyc: Vec<(i32, i32)> = Vec::new();
+                let mut e = (w, z);
+                while seen.insert(e) {
+                    cyc.push(e.0);
+                    e = (e.1, next(e.0, e.1));
+                }
+                let mut ar = 0.0;
+                for i in 0..cyc.len() {
+                    let (x1, y1) = pos[&cyc[i]];
+                    let (x2, y2) = pos[&cyc[(i + 1) % cyc.len()]];
+                    ar += x1 * y2 - x2 * y1;
+                }
+                ar /= 2.0;
+                *lens.entry(cyc.len()).or_default() += 1;
+                if ar.abs() < 0.5 {
+                    // open chains are traversed out-and-back: exactly zero
+                    // area in exact arithmetic, float noise stays << 0.5
+                    zero += 1;
+                } else if ar < 0.0 {
+                    neg += 1;
+                } else {
+                    // Closed ring (interior side). A geometric triangle:
+                    // exactly three corners, all with 120-degree exterior
+                    // angle (a bigger triangle just carries chord vertices
+                    // along its sides), and an area that is a SQUARE
+                    // multiple of the unit triangle's.
+                    let mut corners = 0usize;
+                    let n = cyc.len();
+                    for i in 0..n {
+                        let (x0, y0) = pos[&cyc[(i + n - 1) % n]];
+                        let (x1, y1) = pos[&cyc[i]];
+                        let (x2, y2) = pos[&cyc[(i + 1) % n]];
+                        let mut d = (f64::atan2(y2 - y1, x2 - x1)
+                            - f64::atan2(y1 - y0, x1 - x0))
+                            .to_degrees()
+                            % 360.0;
+                        if d <= -180.0 {
+                            d += 360.0;
+                        }
+                        if d > 180.0 {
+                            d -= 360.0;
+                        }
+                        if d.abs() > 1e-6 {
+                            assert!(
+                                (d - 120.0).abs() < 1e-6,
+                                "closed ring corner exterior angle {d}"
+                            );
+                            corners += 1;
+                        }
+                    }
+                    assert_eq!(corners, 3, "closed ring is not a triangle");
+                    let k = (ar / (3.0 * SQ3 / 4.0)).sqrt();
+                    assert!(
+                        (k - k.round()).abs() < 1e-6,
+                        "triangle area {ar} is not a square multiple of the unit"
+                    );
+                    *scales.entry(k.round() as usize).or_default() += 1;
+                    tri += 1;
+                }
+            }
+        }
+        let want: std::collections::BTreeMap<usize, usize> = [
+            (2, 12),
+            (3, 120),
+            (9, 24),
+            (14, 6),
+            (21, 4),
+            (24, 2),
+            (46, 1),
+            (54, 2),
+            (88, 1),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(lens, want, "face cycle length census");
+        let want_scales: std::collections::BTreeMap<usize, usize> =
+            [(1, 60), (3, 12), (7, 2)].into_iter().collect();
+        assert_eq!(scales, want_scales, "triangle side scales 1/3/7 x sqrt(3)");
+        assert_eq!(tri, 74, "closed rings, all triangles");
+        assert_eq!(
+            (neg, zero),
+            (74, 24),
+            "mirror traversals of closed rings / zero-area open chains"
+        );
     }
 
     /// No period within hex-radius 30 of the patch: of the 2790 nonzero
@@ -2399,12 +2469,57 @@ mod tests {
         assert_eq!(tested, 2790, "translations probed");
     }
 
-    /// Partition mandate, measured on emitted tiles: a query over the whole
-    /// patch returns exactly `529 * 13` pieces, every recomputed placement
-    /// is found in the emission by exact signature, and each hexagon's 13
-    /// piece areas sum to the hexagon area `3*sqrt(3)/2`.
+    /// Partition mandate, measured on the emitted tables: every template is
+    /// 8 convex CCW pieces with exact area sum `3*sqrt(3)/2`, no pairwise
+    /// overlap (Sutherland-Hodgman clipped-intersection area < 1e-12) and
+    /// containment in the hexagon; a query over the whole patch returns
+    /// exactly `529 * 8` pieces and every recomputed placement, with its
+    /// predicted seed, is found in the emission by exact signature.
     #[test]
-    fn taylor_socolar_partition_areas_sum_to_hexagon() {
+    fn taylor_socolar_partition_exact() {
+        fn cross2(u: Vec2, v: Vec2) -> f64 {
+            u.x * v.y - u.y * v.x
+        }
+        fn sarea(pts: &[Vec2]) -> f64 {
+            let n = pts.len();
+            let mut s = 0.0;
+            for i in 0..n {
+                s += cross2(pts[i], pts[(i + 1) % n]);
+            }
+            s / 2.0
+        }
+        fn clip(poly: &[Vec2], a: Vec2, b: Vec2) -> Vec<Vec2> {
+            let d = b - a;
+            let mut out = Vec::new();
+            let n = poly.len();
+            for i in 0..n {
+                let (p, q) = (poly[i], poly[(i + 1) % n]);
+                let sp = cross2(d, p - a);
+                let sq = cross2(d, q - a);
+                if sp >= 0.0 {
+                    out.push(p);
+                }
+                if sp * sq < 0.0 {
+                    let t = sp / (sp - sq);
+                    out.push(p + (q - p) * t);
+                }
+            }
+            out
+        }
+        fn inter_area(a: &[Vec2], b: &[Vec2]) -> f64 {
+            let mut r = a.to_vec();
+            for i in 0..b.len() {
+                if r.is_empty() {
+                    return 0.0;
+                }
+                r = clip(&r, b[i], b[(i + 1) % b.len()]);
+            }
+            if r.len() < 3 {
+                0.0
+            } else {
+                sarea(&r).abs()
+            }
+        }
         fn signature(proto: u8, seed: u32, pts: &[Vec2]) -> String {
             let mut key = format!("{proto}:{seed}");
             for q in pts {
@@ -2412,6 +2527,45 @@ mod tests {
                 key.push_str(&format!(",{:.6}", q.y));
             }
             key
+        }
+        let hex: Vec<Vec2> = (0..6)
+            .map(|k| {
+                let (x, y) = dir30(2 * k + 1);
+                Vec2::new(x, y)
+            })
+            .collect();
+        let hex_area = 3.0 * SQ3 / 2.0;
+        for tpl in TEMPLATES.iter() {
+            let pieces: Vec<Vec<Vec2>> = tpl
+                .iter()
+                .map(|p| p.pts.iter().map(|q| Vec2::new(q[0], q[1])).collect())
+                .collect();
+            let mut sum = 0.0;
+            for pts in pieces.iter() {
+                assert!(sarea(pts) > 0.0, "piece not CCW");
+                let n = pts.len();
+                for i in 0..n {
+                    assert!(
+                        cross2(
+                            pts[(i + 1) % n] - pts[i],
+                            pts[(i + 2) % n] - pts[(i + 1) % n]
+                        ) > 1e-12,
+                        "piece not strictly convex"
+                    );
+                }
+                assert!(
+                    (inter_area(pts, &hex) - sarea(pts)).abs() < 1e-12,
+                    "piece not contained in the hexagon"
+                );
+                sum += sarea(pts);
+            }
+            assert!((sum - hex_area).abs() < 1e-12, "area sum {sum}, want {hex_area}");
+            for i in 0..8 {
+                for j in i + 1..8 {
+                    let ov = inter_area(&pieces[i], &pieces[j]);
+                    assert!(ov < 1e-12, "pieces {i} and {j} overlap by {ov}");
+                }
+            }
         }
         let p = ParamSet::default_for(TaylorSocolarTiling.params());
         let r = TaylorSocolarTiling.generate(
@@ -2421,43 +2575,33 @@ mod tests {
             },
         );
         assert!(r.message.is_none(), "{:?}", r.message);
-        assert_eq!(r.tiles.len(), SITES.len() * 13, "whole-patch piece count");
+        assert_eq!(r.tiles.len(), SITES.len() * 8, "whole-patch piece count");
         let mut pool: HashMap<String, usize> = HashMap::new();
         for t in &r.tiles {
             *pool
                 .entry(signature(t.proto, t.seed, &t.poly.pts))
                 .or_insert(0) += 1;
         }
-        let hex_area = 3.0 * SQ3 / 2.0;
         for &(u, v, st) in SITES.iter() {
             let a = (st % 3) as usize;
             let rbt = ((st / 3) % 2) as usize;
             let sdt = (st / 6) as usize;
+            let kap = (a + 3 * sdt) % 6;
             let c = centre(u, v);
-            let mut sum = 0.0;
-            for piece in TEMPLATES[a * 2 + sdt].iter() {
+            for piece in TEMPLATES[kap * 2 + usize::from(rbt != sdt)].iter() {
                 let pts: Vec<Vec2> = piece
                     .pts
                     .iter()
                     .map(|q| Vec2::new(c.x + q[0], c.y + q[1]))
                     .collect();
-                let hit = pool.get_mut(&signature(
-                    piece.proto,
-                    seed_of(a, rbt, piece.proto, piece.slot),
-                    &pts,
-                ));
+                let hit =
+                    pool.get_mut(&signature(piece.proto, seed_of(piece.proto), &pts));
                 assert!(
                     hit.is_some_and(|n| { *n -= 1; *n < usize::MAX }),
-                    "site ({u},{v}) piece proto {} slot {} missing from the emission",
-                    piece.proto,
-                    piece.slot
+                    "site ({u},{v}) piece proto {} missing from the emission",
+                    piece.proto
                 );
-                sum += Polygon::from_slice(&pts).area();
             }
-            assert!(
-                (sum - hex_area).abs() < 1e-9,
-                "site ({u},{v}): 13 piece areas sum to {sum}, want {hex_area}"
-            );
         }
         assert!(
             pool.values().all(|n| *n == 0),
@@ -2467,10 +2611,9 @@ mod tests {
 
     /// Compare a template placed at `cen` against a generator-emitted
     /// reference placement, vertex by vertex.
-    fn check_ref(tpl: &[Piece; 13], cen: [f64; 2], want: &[Piece; 13], label: &str) {
+    fn check_ref(tpl: &[Piece; 8], cen: [f64; 2], want: &[Piece; 8], label: &str) {
         for (i, (p, w)) in tpl.iter().zip(want.iter()).enumerate() {
             assert_eq!(p.proto, w.proto, "{label} piece {i}: proto");
-            assert_eq!(p.slot, w.slot, "{label} piece {i}: slot");
             assert_eq!(p.pts.len(), w.pts.len(), "{label} piece {i}: vertex count");
             for (j, q) in p.pts.iter().enumerate() {
                 let gx = cen[0] + q[0];
@@ -2485,20 +2628,51 @@ mod tests {
         }
     }
 
-    /// The runtime reproduces the generator's reference placements exactly
-    /// (float-eval check of the emitted tables against the exact model), and
-    /// the seeds the generator predicts for those pieces.
+    /// Reference entry: expected pieces, template, centre, site, index, label.
+    type Ref = (
+        &'static [Piece; 8],
+        &'static [Piece; 8],
+        [f64; 2],
+        (i8, i8),
+        usize,
+        &'static str,
+    );
+
+    /// The runtime tables reproduce the emitter's reference placements
+    /// exactly (float-eval check against the exact Q(sqrt3) model), each
+    /// reference site carries the (kappa, flag) state its template encodes,
+    /// and the frame formula reproduces the reference centres.
     #[test]
     fn taylor_socolar_matches_generated_reference() {
-        let mut nchecked = 0usize;
-        check_ref(REF0_TPL, REF0_CEN, &REF0, "REF0");
-        nchecked += 1;
-        check_ref(REF1_TPL, REF1_CEN, &REF1, "REF1");
-        nchecked += 1;
-        check_ref(REF2_TPL, REF2_CEN, &REF2, "REF2");
-        nchecked += 1;
-        check_ref(REF3_TPL, REF3_CEN, &REF3, "REF3");
-        nchecked += 1;
-        assert!(nchecked >= 4, "no reference placements checked");
+        let refs: [Ref; 4] = [
+            (&REF0, REF0_TPL, REF0_CEN, REF0_SITE, 0, "REF0"),
+            (&REF1, REF1_TPL, REF1_CEN, REF1_SITE, 3, "REF1"),
+            (&REF2, REF2_TPL, REF2_CEN, REF2_SITE, 6, "REF2"),
+            (&REF3, REF3_TPL, REF3_CEN, REF3_SITE, 11, "REF3"),
+        ];
+        let s = site_map();
+        for (want, tpl, cen, (u, v), tidx, label) in refs {
+            let (a, rbt, sdt) = s[&(u, v)];
+            let kap = (a + 3 * sdt) % 6;
+            assert_eq!(
+                kap * 2 + usize::from(rbt != sdt),
+                tidx,
+                "{label}: template index"
+            );
+            assert!(
+                std::ptr::eq(tpl, TEMPLATES[tidx]),
+                "{label}: not the TEMPLATES entry"
+            );
+            let c = centre(u, v);
+            assert!(
+                (c.x - cen[0]).abs() < 1e-12 && (c.y - cen[1]).abs() < 1e-12,
+                "{label}: centre ({}, {}) != ({}, {})",
+                c.x,
+                c.y,
+                cen[0],
+                cen[1]
+            );
+            check_ref(tpl, cen, want, label);
+        }
     }
 }
