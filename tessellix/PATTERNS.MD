@@ -3230,6 +3230,53 @@ the "mixed floret/cairo/prismatic" patterns.
   (M41): cmm as expected — mirrors at the integer x-axes and
   half-integer y-axes, centered 2-folds, glides in both directions.*
 
+### Islamic star-pattern extensions (Kaplan dissertation Ch. 3, PROPOSED.md §22)
+
+- 🔭 **22a Design-element motif library** — parameterized
+  d_n-symmetric motifs for regular polygons in any substrate:
+  stars (n, r, s, θ) with {n/d}s ↔ θ = πd/n (s = 2 when n > 6 and
+  θ > 2π/n), rosettes (n, r, s, θ, h, φ) with Lee's ideal at
+  (π/n, 1, 0), and the extension operator
+  (θ′ = θ/2, r′ = r[1/cos(π/n) − sinθ·tan(π/n)·cos(π/n − θ)]).
+  Generalizes the M94 fixed configs to per-tile motif assignment.
+- 🔭 **22b Najm template-tiling generator** — the
+  ([p,q]; m_A o_A, m_B o_B, m_C o_C; inflation) notation: regular
+  polygons on a [p,q] group's rotational axes, inflated by the four
+  absolute-trig case equations (monotone binary search), bowtie
+  hole-fillers. A parameterized substrate family replacing
+  hand-coded templates (Euclidean [4,4]/[6,3] first).
+- 🔭 **22c Rosette transform** — Najm tiling → Hankin tiling
+  (inner n-gon radius r′ = r(cos(π/n) − sin(π/n)tan(π(n−2)/4n))
+  rotated π/n, spokes to edge midpoints; irregular tiles via
+  perpendicular-bisector inference + cluster averaging). The bridge
+  behind Bonner's same-design-two-tilings observation, and the only
+  route to angle-mismatch designs like 11/13-pointed stars.
+- 🔭 **22d Islamic parquet deformations** — θ as a smooth function
+  of position (θ(x) strips); spatial-animation star patterns on the
+  M94 engine (an export/render feature, not a registry entry).
+- 🔭 **22e Quasiperiodic substrates + (n,c)-monster motifs** —
+  regular 2n-gons on lattice-projection rhomb patches (5-D ⇒ Penrose
+  P3), overlapping polygons fused into (n,c)-monsters
+  (n > 6, 2 ≤ c ≤ ⌈n/2⌉−2) with a motif menagerie for n ≤ 12 at
+  contact angles kπ/n; plus Kepler's Aa (36°-rhomb construction,
+  pentacle-ring modification).
+- 🔭 **22f Absolute-geometry star patterns** — spherical
+  ([3,3], [3,4], [3,5]) and hyperbolic (Poincaré disk) instances of
+  the same construction; absolute trig Θ(x), E(x), T(x); absolute
+  star θ = π/2 − φ, tan φ = 1/(E(r)tan(πd/n)); symmetrohedra by
+  convex hull. Merges with and de-risks the hyperbolic arc (#16).
+- 🔭 **22g Decoration suite completion** — §3.7 styles audited
+  against the M53–M57 engine: bipartite 2-colour fill, equidistant-
+  curve outlines with mitered joins (Θ(l) = Θ(w)/sin(θ/2)),
+  interlacing fixed on the [p,q]⁺ double fundamental map,
+  outline-interlace composition; Castéra's "correct" band widths as
+  an open derivation.
+- ❓ **22h Moroccan finite designs; optimization-based motif
+  correction; strange stars** — Castéra star+saft skeletons (up to
+  96-point stars), search over an aesthetic objective to replace
+  ad-hoc contact corrections, and the star-order-set question
+  (nearly-regular polygons; the Altair near-miss tiling).
+
 ### Aperiodic substitution (each needs rule derivation first)
 
 - ✅ **Socolar 12-fold shield tiling (M51).** *Shield hexagons +
@@ -3337,6 +3384,15 @@ the "mixed floret/cairo/prismatic" patterns.
 
 ## Changelog of this file
 
+- 2026-11-19 — new proposed-queue group "Islamic star-pattern
+  extensions (Kaplan dissertation Ch. 3)": eight sub-items 22a–22h
+  extracted from reference/kaplan_diss_full_print.pdf §3.4–3.11
+  (design elements, Najm template-tiling generator, rosette
+  transform, parquet deformations, quasiperiodic substrates +
+  (n,c)-monsters + Kepler Aa, absolute-geometry patterns,
+  decoration styles, Moroccan/optimization/strange stars), each with
+  the chapter's formulas transcribed and the existing M53–M57/M94
+  coverage audited. Dossier: PROPOSED.md §22.
 - 2026-11-07 — created; arc "complete the classics" queued
   (M19–M27: 7 Laves duals, Pythagorean, Ammann–Beenker).
 - 2026-11-07 — arc complete: M19–M25 Laves duals, M26 Pythagorean,
