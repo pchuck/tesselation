@@ -191,8 +191,12 @@ confirm the diffraction claim during the spike before declaring.
   `dual()` in `tess-tilings/src/dual.rs`, oracle-validated exactly
   against all 7 hand-built Laves tables — and the four p6m duals
   `kuniform-dual-p6m/n18/n9/n8` are registered (Laves primaries).
-  The other 16 duals of this list (square-family rows included)
-  still queue behind the same helper.
+  **Second dual batch landed (M102):** `kuniform-dual-n5/n1/n13/n20`
+  registered — n20 chiral p6, the rest p6m (n5/n1/n13 with 6-fold
+  centers off the origin). The 12 remaining duals of this list still
+  queue behind the same helper: `kuniform-pmm`, `kuniform-n12`, and
+  `kuniform-n19` duals are the next available; the square-family rows
+  stay blocked on their unimplemented primals.
 - **Verify:** the standard ±3×±3 battery per table (the vertex-figure
   check must verify *both* orbit figures, and the two-orbit structure
   itself — assert exactly 2 vertex classes over a large patch), plus

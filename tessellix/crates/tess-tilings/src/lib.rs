@@ -372,6 +372,10 @@ r = r.register(kuniform::kuniform_n12());
         r = r.register(dual::kuniform_dual_n18());
         r = r.register(dual::kuniform_dual_n9());
         r = r.register(dual::kuniform_dual_n8());
+        r = r.register(dual::kuniform_dual_n5());
+        r = r.register(dual::kuniform_dual_n1());
+        r = r.register(dual::kuniform_dual_n13());
+        r = r.register(dual::kuniform_dual_n20());
     }
     #[cfg(feature = "laves")]
     {
@@ -578,17 +582,17 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M100). 96 built-ins — 63 before
+// Census of today's taxonomy (M102). 100 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
-        //   TwoUniform 11, Laves 15 (12 primary: 8 incl. cairo-pentagonal
-        //   + 4 machine-dualized k-uniform duals (M98) +
+        //   TwoUniform 11, Laves 19 (16 primary: 8 incl. cairo-pentagonal
+        //   + 8 machine-dualized k-uniform duals (M98, M102) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
 //   PentagonTypes 12, Islamic 19, Arrangements 5,
 //   Quasiperiodic 8, Aperiodic 6, Nonperiodic 4.
-// Membership census 108 = 96 primaries + 12 secondaries (3 Laves
+// Membership census 112 = 100 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -636,14 +640,18 @@ mod tests {
         // -> M100 Islamic 18 -> 19 (hankin-3-4-6-4, the hankin
         // inference entry on the rhombitrihexagonal 3.4.6.4
         // substrate; θK = 60°, PATTERNS.MD §58).
+        // -> M102 Laves 15 -> 19 (the dual() helper dualizes
+        // kuniform-n5 / -n1 / -n13 / -n20, k-uniform batch 2;
+        // Laves-primary only; provisional numbering, renumbered at
+        // integration).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 11, 15, 17, 12, 19, 5, 8, 6, 4],
+            vec![11, 11, 19, 17, 12, 19, 5, 8, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 96, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 108, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 100, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 112, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -7638,6 +7646,10 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
             ("kuniform-dual-n18", dual::kuniform_dual_n18()),
             ("kuniform-dual-n9", dual::kuniform_dual_n9()),
             ("kuniform-dual-n8", dual::kuniform_dual_n8()),
+            ("kuniform-dual-n5", dual::kuniform_dual_n5()),
+            ("kuniform-dual-n1", dual::kuniform_dual_n1()),
+            ("kuniform-dual-n13", dual::kuniform_dual_n13()),
+            ("kuniform-dual-n20", dual::kuniform_dual_n20()),
             ("windmill", windmill::spec()),
             ("basketweave", basketweave::basketweave()),
             ("herringbone", herringbone::herringbone()),

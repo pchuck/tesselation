@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (11)   Laves (15)   Wallpaper (17)   Pentagon
+counts (`Uniform (11)   Two-Uniform (11)   Laves (19)   Wallpaper (17)   Pentagon
 Types (12)   Islamic (14)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (6)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -127,14 +127,14 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-96 built-in tilings (108 tab memberships), all discoverable in both UIs
+100 built-in tilings (112 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 ten tabs:
-**Uniform** (11), **Two-Uniform** (11), **Laves / Catalan duals** (15,
-12 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
+**Uniform** (11), **Two-Uniform** (11), **Laves / Catalan duals** (19,
+16 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (12), **Islamic** (19), **Arrangements** (5),
 **Quasiperiodic** (8: Penrose family, Ammann–Beenker, Stampfli, shield,
@@ -213,6 +213,10 @@ grouping is honest about what the mathematics distinguishes; see
 | `kuniform-dual-n18` | Dual of 2-uniform (3⁶; 3².4.3.4) | face-centroid dual of `kuniform-n18` (p6m, det 3+2√3): 1 regular hexagon (side 1/√3) + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6; angles 90°/90°/120°/120°/120°; area (2+√3)/4) per cell, sum 3+2√3 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
 | `kuniform-dual-n9` | Dual of 2-uniform (3.4.6.4; 3².4.3.4) | face-centroid dual of `kuniform-n9` (p6m, det 6+7√3/2): 6 congruent quadrilaterals (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/120°; area (3+2√3)/6) + 6 congruent pentagons (congruent to the `kuniform-dual-n18` pentagons; area (2+√3)/4) per cell, sum 6+7√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
 | `kuniform-dual-n8` | Dual of 2-uniform (3.4.6.4; 3³.4²) | face-centroid dual of `kuniform-n8` (p6m, det 6+7√3/2): 6 congruent quadrilaterals (same shape as the `kuniform-dual-n9` quadrilaterals) + 6 congruent pentagons (two sides 1/√3, two sides (3+√3)/6, one side 1; angles 90°/90°/120°/120°/120°; area (2+√3)/4 — equal area to the n18/n9 dual pentagons, different shape) per cell, sum 6+7√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
+| `kuniform-dual-n5` | Dual of 2-uniform (3.4.6.4; 3.4².6) | face-centroid dual of `kuniform-n5` (p6m, det 9+6√3): 6 congruent quadrilaterals (sides (3+√3)/6, (1+√3)/2, (1+√3)/2, (3+√3)/6 in cyclic order; angles 120°/90°/60°/90°; area (3+2√3)/6) + 12 congruent quadrilaterals (sides 2/√3, (1+√3)/2, 1, (3+√3)/6; angles 120°/60°/90°/90°; same area, different shape) per cell, sum 9+6√3 = \|det\|, edge-to-edge, 6-fold center at (3+√3, 2+2√3) (M102) | p6m | hexagonal |
+| `kuniform-dual-n1` | Dual of 2-uniform (4.6.12; 3.4.6.4) | face-centroid dual of `kuniform-n1` (p6m, det 12+8√3): 12 congruent 30°/60°/90° triangles (sides 1+√3, (3+√3)/2, (1+√3)/2 in cyclic order; area (3+2√3)/4) + 6 congruent quadrilaterals (sides (1+√3)/2, (3+√3)/6, (3+√3)/6, (1+√3)/2; angles 60°/90°/120°/90°; area (3+2√3)/6) per cell, sum 12+8√3 = \|det\|, edge-to-edge, 6-fold center at (3(1+√3)/2, (3+√3)/2) (M102) | p6m | hexagonal |
+| `kuniform-dual-n13` | Dual of 2-uniform (3⁶; 3².4.12) | face-centroid dual of `kuniform-n13` (p6m, det 9+6√3): 2 regular hexagons (side 1/√3, area √3/2) + 12 congruent quadrilaterals (sides 1/√3, (3+√3)/6, (3+√3)/2, 1+2/√3 in cyclic order; angles 120°/120°/90°/30°; area (9+5√3)/12) per cell, sum 9+6√3 = \|det\|, edge-to-edge, 6-fold center at (5(1+√3)/2, 5(3+√3)/2) (M102) | p6m | hexagonal |
+| `kuniform-dual-n20` | Dual of 2-uniform (3⁶; 3⁴.6) | face-centroid dual of `kuniform-n20` (p6, det 13√3/2): 6 regular hexagons (side 1/√3, area √3/2) + 6 congruent pentagons (sides 1/√3 ×3, 2/√3 ×2; angles 60°/120°/120°/120°/120°; area 7√3/12) per cell, sum 13√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin, chiral — the mirrors of p6m all fail (M102) | p6 | hexagonal |
 | `pentagon-9` | Pentagon type 9 (Rice) | pentagonal (Rice 1977): A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; 2-isohedral, 8 tiles per rectangular cell, two perpendicular glide families squaring to the primitive translations | pgg | rectangular |
 | `pentagon-10` | Pentagon type 10 (James) | pentagonal (James 1975): A = 90°, B + E = 180°, a = b = c + e, d² = c² + e² (reference instance B = 90°, c = 1: A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2); 3-isohedral, 6 tiles per cell, non-edge-to-edge (each length-2 side split at its exact midpoint), mirrors y = x and y = −x, half-turn at the origin, genuine glide (axis x + y = 3/2), centered rectangular lattice | cmm | centered |
 | `pentagon-11` | Pentagon type 11 (Rice) | pentagonal (Rice 1977): A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, 2a + c = d = e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side carries one c-side and two a-sides), two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
@@ -582,7 +586,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 674 tests, all green, zero
+`cargo test --workspace` (currently 686 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
