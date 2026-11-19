@@ -280,15 +280,35 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   → Mann–McLoud–Von Derau 2015; completeness proved by Rao 2017). The
   repo already owns several members unknowingly; this arc makes the
   census explicit and complete, mirroring the Laves/Archimedean arcs.
-- **Current coverage (verify type assignments at design time):**
-  `cairo-pentagonal` = type 4 family (M76: `cairo-collinear` was the
-  same V3.3.4.3.4 pattern with a different pentagon and was merged
-  into it as a documented collinear-vertex variant — one card,
-  61 tilings); likely type 1 (`prismatic-pentagonal`, cmm topology)
-  and type 5
-  (`floret-pentagonal`, p6 six-tile rosette); `hirschhorn` almost
-  certainly type 8 (angle multiset {60,80,100,140,160} matches
-  2B+C = D+2E = 360°, b=c=d=e).
+- **M101 audit — the three pending existing-tiling assignments are
+  verified and pinned by condition tests** (lettering convention:
+  repo letters shift the Wikipedia letters by one, W-angle X =
+  our-(X + 1 mod 5), side a joins A–B; 4 new tests, 0 new tilings):
+  `cairo-pentagonal` = type 4 family (M76: `cairo-collinear` was
+  the same V3.3.4.3.4 pattern with a different pentagon and was
+  merged into it as a documented collinear-vertex variant — one
+  card, 61 tilings; shift k=4: C = E = 90°, b = c, d = e);
+  `prismatic-pentagonal` = type 1 (cmm; shifts k=1/k=3:
+  C + D = 180°, A + B + E = 360°); `floret-pentagonal` = type 5
+  (p6 six-tile rosette; shift k=3: B = 60°, E = 120°, a = b,
+  d = e). Hirschhorn falsification: the "type 8" attribution holds
+  for 0/10 letterings (5 cyclic shifts × 2 chiralities — despite
+  b = c = d = e, the (2C + D, E + 2A) angle-sum pairs come out
+  260/260 and 280/280, never 360/360; types 7 and 9 also fail) —
+  the shape is actually type 1 (shift k=1: C + D = 180°,
+  A + B + E = 360°; the identity lettering satisfies the C11-T1A
+  subfamily A + B + C = 360°, C = 2D = 160°), and an independent
+  disqualifier: type-8 tilings are periodic pgg, while hirschhorn
+  is nonperiodic. Type-8 census coverage is unaffected: the
+  dedicated `pentagon-8` module (M77) is registered
+  unconditionally in `lib.rs` (the `pentagon-8` feature does not
+  exist, so any cfg on it is inert).
+- **Headline: the 15-type census is now COMPLETE in coverage** —
+  every type 1–15 has a registered realizer: types 1, 4, 5 on the
+  existing laves/cairo registry entries above; types 2, 3, 7, 9,
+  10–15 on feature-gated dedicated `pentagon-N` modules; types 6,
+  8 on the unconditional `pentagon6`/`pentagon8` modules (M55–M77
+  arc).
 - **The type conditions (Wikipedia, sides a..e vs angles A..E):**
 
   | type | conditions | group | unit | isohedral | e2e |
@@ -352,17 +372,22 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   0/1), group **pgg confirmed** (gauge-invariant quotient-table
   automorphism audit plus exact generator verification — half-turn
   c0 = (13, 4√3), perpendicular glides g1² = w2 and g2² = −w1, no
-  mirrors). Remaining (M75+), in the arc's priority
-  order: 1 and 5 covered by existing registry entries —
-  prismatic-pentagonal / floret-pentagonal — coverage audit
-  documentation pending (type 6 now implemented in M74, 7 in
-  M72, 8 in M77; 2, 3, 9, 10, 11, 12, 13, 14 and 15
-  implemented). Existing tilings
-  likely cover 4
-  (cairo), 1 (prismatic-pentagonal), 5 (floret), 8 (hirschhorn) —
-  verify the assignments at design time; implement only uncovered
-  types. One type per task, delegated; all `pentagon1..15` features
-  pre-created (types 4/8 map to cairo/hirschhorn pending verification).
+  mirrors). M101 completed the coverage audit: types 1, 4 and 5
+  are verified on the existing registry entries —
+  prismatic-pentagonal (type 1, repo lettering shifts k=1/k=3:
+  C + D = 180°, A + B + E = 360°), cairo-pentagonal (type 4,
+  shift k=4: C = E = 90°, b = c, d = e), floret-pentagonal
+  (type 5, shift k=3: B = 60°, E = 120°, a = b, d = e) — pinned
+  by four condition tests (M101: docs + 4 tests, 0 new tilings,
+  686 → 690). The "hirschhorn = type 8" attribution is
+  falsified (0/10 letterings; the shape is type 1, shift k=1 —
+  type-8 coverage stays with the dedicated `pentagon-8` module,
+  M77). Type 6 implemented in M74, 7 in M72, 8 in M77; 2, 3, 9,
+  10, 11, 12, 13, 14 and 15 implemented. The 15-type census is
+  now complete in coverage — every type 1–15 has a registered
+  realizer. One type per task, delegated; all `pentagon1..15`
+  features pre-created (type 4 maps to cairo-pentagonal, type 8
+  to the dedicated pentagon-8 module).
   **Type 7: DONE (M72)** — the M58 bounded negative is superseded:
   it was an artifact of grid-restricted pinning (the family's
   published members sit off the 15°/30° and 22.5° grids the bounded

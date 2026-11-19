@@ -415,13 +415,18 @@ pub fn kisrhombille() -> LatticeTiling {
 /// squares meet — becomes a pentagon joining the five face centers. Same
 /// lattice as the primal, a1 = (1, 0), a2 = (1/2, 1 + √3/2); each cell
 /// holds 2 congruent pentagons (three 120° angles at the triangle
-/// centers, two 90° at the square centers; sides √3/3, √3/3, and
-/// √(1/2 + √3/6) twice plus a unit edge), area 2 · (1/2 + √3/4)
+/// centers, two 90° at the square centers; sides √3/3 twice,
+/// 1/2 + √3/6 = (3+√3)/6 twice — no radical needed, its square is
+/// (2+√3)/6 — plus a unit edge), area 2 · (1/2 + √3/4)
 /// = 1 + √3/2 = |det|.
 ///
 /// Two pattern colors are needed and `SeedPattern::Checker` provides
 /// them: the two pentagon entries each take base parity (i + j) plus
 /// seeds 0 and 2, a proper 4-coloring of the adjacency graph.
+///
+/// Pentagon census: realizes type 1 (repo lettering shifts k=1 up /
+/// k=3 down: C + D = 180°, A + B + E = 360°), verified by test
+/// `prismatic_pentagonal_is_pentagon_type_1` (M101).
 pub fn prismatic_pentagonal() -> LatticeTiling {
     let p_up = Polygon::from_slice(&[
         Vec2::new(0.0, 2.0 / 3.0 * H),
@@ -470,6 +475,10 @@ pub fn prismatic_pentagonal() -> LatticeTiling {
 /// close at 60° around every hexagon center, three at 120° around every
 /// triangle center — the "floret" petal rosettes. The tiling is chiral
 /// (p6 has no mirrors), like its snub primal.
+///
+/// Pentagon census: realizes type 5 (repo lettering shift k=3:
+/// B = 60°, E = 120°, a = b, d = e), verified by test
+/// `floret_pentagonal_is_pentagon_type_5` (M101).
 pub fn floret_pentagonal() -> LatticeTiling {
     let f0 = Polygon::from_slice(&[
         Vec2::new(1.0, -2.0 / 3.0 * H),

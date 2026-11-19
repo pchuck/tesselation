@@ -4,7 +4,9 @@
 //! A = 140°, B = 60°, C = 160°, D = 80°, E = 100° (unit edges) — the
 //! n = 6 member of the C11-T1A pentagon family (Sugimoto,
 //! arXiv:2005.08470), originally constructed by Hirschhorn and Hunt
-//! (JCTA 39, 1985).
+//! (JCTA 39, 1985). Pentagon census (M101): the template is a type-1
+//! pentagon (T1, repo lettering ccw k=1); the §5 type-8 attribution
+//! is falsified by the M101 audit.
 //!
 //! The tiling is not locally forced, so the generator builds one valid
 //! realization by constrained 6-fold-symmetric growth:
@@ -1086,6 +1088,41 @@ mod tests {
         }
         let area = Polygon::from_slice(&v).area();
         assert!((area - 1.4178).abs() < 1e-4, "area {area}");
+    }
+
+    /// M101 census audit: the template is a type-1 pentagon in the
+    /// repo lettering, ccw shift k=1 (A = v1, B = v2, C = v3,
+    /// D = v4, E = v0; repo letters shift the Wikipedia letters by
+    /// one — W-angle X = our-(X + 1 mod 5), side a joins A–B):
+    /// C + D = 180° and A + B + E = 360° on the template angle
+    /// constants [140, 60, 160, 80, 100]. Pins the audit finding
+    /// that the shape is type 1 — the old "type 8" attribution in
+    /// PROPOSED.md §5 is falsified (0/10 letterings satisfy
+    /// 2C + D = E + 2A = 360°; the sides are all equal, but the
+    /// angle-sum pairs come out 260/260 and 280/280, never
+    /// 360/360 — and type-8 tilings are periodic pgg, while this
+    /// tiling is nonperiodic).
+    #[test]
+    fn template_is_pentagon_type_1() {
+        let v = pent();
+        let want: [f64; 5] = [140.0, 60.0, 160.0, 80.0, 100.0];
+        let mut ang = [0.0; 5];
+        for i in 0..5 {
+            let a = v[(i + 4) % 5] - v[i];
+            let b = v[(i + 1) % 5] - v[i];
+            let cos_a = a.dot(b) / (a.length() * b.length());
+            ang[i] = cos_a.clamp(-1.0, 1.0).acos().to_degrees();
+        }
+        for i in 0..5 {
+            assert!((ang[i] - want[i]).abs() < 1e-9, "angle at V{i}: {} != {}", ang[i], want[i]);
+        }
+        // ccw k=1: A = v1, B = v2, C = v3, D = v4, E = v0.
+        let (a, b, c, d, e) = (ang[1], ang[2], ang[3], ang[4], ang[0]);
+        assert!((c + d - 180.0).abs() < 1e-12, "C + D = {c} + {d} != 180");
+        assert!(
+            (a + b + e - 360.0).abs() < 1e-12,
+            "A + B + E = {a} + {b} + {e} != 360"
+        );
     }
 
     /// The seed flower: 6 petals, 12 shared + 18 boundary edges, a single

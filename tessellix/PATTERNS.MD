@@ -5367,3 +5367,6 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   sets) zero warnings, cargo test --workspace --all-features 686/686.
   Details in §59 (renumbered from the fork's provisional §60 by
   landing order).
+- 2026-11-19 — M101 pentagon census coverage audit ✅: docs + 4
+  condition tests, 0 new tilings, 686 → 690 tests
+  (fork-local on 339e57f)

@@ -2379,7 +2379,7 @@ mod hexagram_tests {
 mod cairo_tests {
     use super::tests::{check_covers, check_det, check_rotated};
     use crate::cairo;
-    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::geometry::{BBox, Polygon, Vec2};
 
     fn v2(x: f64, y: f64) -> Vec2 {
         Vec2::new(x, y)
@@ -2411,6 +2411,93 @@ mod cairo_tests {
             &cairo::cairo_pentagonal(),
             "cairo-pentagonal",
             BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// Interior angles (degrees) at the five vertices of a cell pentagon.
+    fn interior_angles(poly: &Polygon) -> [f64; 5] {
+        let v = &poly.pts;
+        let mut a = [0.0; 5];
+        for i in 0..5 {
+            let u = v[(i + 4) % 5] - v[i];
+            let w = v[(i + 1) % 5] - v[i];
+            a[i] = (u.dot(w) / (u.length() * w.length()))
+                .clamp(-1.0, 1.0)
+                .acos()
+                .to_degrees();
+        }
+        a
+    }
+
+    /// Squared lengths of the five edges of a cell pentagon.
+    fn squared_sides(poly: &Polygon) -> [f64; 5] {
+        let v = &poly.pts;
+        let mut s = [0.0; 5];
+        for i in 0..5 {
+            let e = v[(i + 1) % 5] - v[i];
+            s[i] = e.dot(e);
+        }
+        s
+    }
+
+    /// M101 pentagon-census audit (PROPOSED.md §5): the cairo cell
+    /// pentagons are type 4 in the repo lettering — all eight
+    /// congruent (angles {90° ×2, 120° ×3}; squared sides
+    /// {(2+√3)/6 ×4, 1/3}; per-pentagon area (2 + √3)/4, exact in
+    /// Q(√3)) — and the first cell satisfies the type-4 conditions at
+    /// ccw shift k=4 (A = v4, B = v0, C = v1, D = v2, E = v3):
+    /// C = E = 90°, b = c, d = e (repo letters shift the Wikipedia
+    /// letters by one: W-angle X = our-(X + 1 mod 5), side a joins
+    /// A–B).
+    #[test]
+    fn cairo_pentagonal_is_pentagon_type_4() {
+        let t = cairo::cairo_pentagonal();
+        let long2 = (2.0 + 3.0f64.sqrt()) / 6.0; // (2 + √3)/6
+        let area = (2.0 + 3.0f64.sqrt()) / 4.0; // (2 + √3)/4
+        for cell in &t.cells {
+            let mut ang: Vec<f64> = interior_angles(&cell.poly).to_vec();
+            ang.sort_by(f64::total_cmp);
+            let want = [90.0, 90.0, 120.0, 120.0, 120.0];
+            assert!(
+                ang.iter().zip(&want).all(|(x, y)| (x - y).abs() < 1e-9),
+                "angles {ang:?}"
+            );
+            let mut s2: Vec<f64> = squared_sides(&cell.poly).to_vec();
+            s2.sort_by(f64::total_cmp);
+            let want: Vec<f64> =
+                vec![1.0 / 3.0, long2, long2, long2, long2];
+            assert!(
+                s2.iter().zip(&want).all(|(x, y)| (x - y).abs() < 1e-12),
+                "squared sides {s2:?}"
+            );
+            assert!(
+                (cell.poly.area() - area).abs() < 1e-12,
+                "area {} != (2 + √3)/4",
+                cell.poly.area()
+            );
+        }
+        // Type-4 lettering on the first cell, ccw shift k=4.
+        let poly = &t.cells[0].poly;
+        let ang = interior_angles(poly);
+        assert!((ang[1] - 90.0).abs() < 1e-9, "C = v1: {}", ang[1]);
+        assert!((ang[3] - 90.0).abs() < 1e-9, "E = v3: {}", ang[3]);
+        let v = &poly.pts;
+        let vtx = |i: usize| v[(i + 4) % 5]; // letter i (0 = A .. 4 = E)
+        let side2 = |i: usize, j: usize| {
+            let d = vtx(i) - vtx(j);
+            d.dot(d)
+        };
+        assert!(
+            (side2(1, 2) - side2(2, 3)).abs() < 1e-12,
+            "b = c: {} vs {}",
+            side2(1, 2),
+            side2(2, 3)
+        );
+        assert!(
+            (side2(3, 4) - side2(4, 0)).abs() < 1e-12,
+            "d = e: {} vs {}",
+            side2(3, 4),
+            side2(4, 0)
         );
     }
 
@@ -2545,7 +2632,7 @@ mod laves_tests {
     use super::tests::{check_covers, check_det, check_rotated};
     use crate::lattice::LatticeTiling;
     use crate::laves;
-    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::geometry::{BBox, Polygon, Vec2};
     use tess_core::params::ParamSet;
     use tess_core::tiling::{Query, Tiling};
 
@@ -2753,6 +2840,145 @@ mod laves_tests {
             &laves::floret_pentagonal(),
             "floret-pentagonal",
             BBox::new(v2(-5.0, -5.0), v2(11.0, 11.0)),
+        );
+    }
+
+    /// Interior angles (degrees) at the five vertices of a cell pentagon.
+    fn interior_angles(poly: &Polygon) -> [f64; 5] {
+        let v = &poly.pts;
+        let mut a = [0.0; 5];
+        for i in 0..5 {
+            let u = v[(i + 4) % 5] - v[i];
+            let w = v[(i + 1) % 5] - v[i];
+            a[i] = (u.dot(w) / (u.length() * w.length()))
+                .clamp(-1.0, 1.0)
+                .acos()
+                .to_degrees();
+        }
+        a
+    }
+
+    /// Squared lengths of the five edges of a cell pentagon.
+    fn squared_sides(poly: &Polygon) -> [f64; 5] {
+        let v = &poly.pts;
+        let mut s = [0.0; 5];
+        for i in 0..5 {
+            let e = v[(i + 1) % 5] - v[i];
+            s[i] = e.dot(e);
+        }
+        s
+    }
+
+    /// M101 pentagon-census audit (PROPOSED.md §5): both prismatic
+    /// cell pentagons are type 1 in the repo lettering — C + D = 180°
+    /// and A + B + E = 360° (repo letters shift the Wikipedia letters
+    /// by one: W-angle X = our-(X + 1 mod 5), side a joins A–B) —
+    /// checked at their cyclic shifts: the up pentagon at ccw k=1
+    /// (A = v1, B = v2, C = v3, D = v4, E = v0), the down pentagon at
+    /// k=3 (A = v3, B = v4, C = v0, D = v1, E = v2). Angles are
+    /// exactly 90°/120°; squared sides {1/3 ×2, (2+√3)/6 ×2, 1} and
+    /// the per-pentagon area (1 + √3/2)/2 = 1/2 + √3/4 are exact in
+    /// Q(√3).
+    #[test]
+    fn prismatic_pentagonal_is_pentagon_type_1() {
+        let t = laves::prismatic_pentagonal();
+        let long2 = (2.0 + 3.0f64.sqrt()) / 6.0; // (2 + √3)/6
+        let area = (1.0 + 3.0f64.sqrt() / 2.0) / 2.0; // 1/2 + √3/4
+        let cases: [(usize, &Polygon); 2] =
+            [(1, &t.cells[0].poly), (3, &t.cells[1].poly)];
+        for (k, poly) in cases {
+            let ang = interior_angles(poly);
+            let at = |i: usize| ang[(i + k) % 5]; // letter i (0 = A .. 4 = E)
+            let c = at(2);
+            let d = at(3);
+            assert!(
+                (c + d - 180.0).abs() < 1e-9,
+                "k={k}: C + D = {c} + {d} != 180"
+            );
+            assert!(
+                (at(0) + at(1) + at(4) - 360.0).abs() < 1e-9,
+                "k={k}: A + B + E = {} + {} + {} != 360",
+                at(0),
+                at(1),
+                at(4)
+            );
+            for x in &ang {
+                assert!(
+                    (x - 90.0).abs() < 1e-9 || (x - 120.0).abs() < 1e-9,
+                    "k={k}: angle {x} is not exactly 90°/120°"
+                );
+            }
+            let mut s2: Vec<f64> = squared_sides(poly).to_vec();
+            s2.sort_by(f64::total_cmp);
+            let want: Vec<f64> = vec![1.0 / 3.0, 1.0 / 3.0, long2, long2, 1.0];
+            assert!(
+                s2.iter().zip(&want).all(|(x, y)| (x - y).abs() < 1e-12),
+                "k={k}: squared sides {s2:?}"
+            );
+            assert!(
+                (poly.area() - area).abs() < 1e-12,
+                "k={k}: area {} != 1/2 + √3/4",
+                poly.area()
+            );
+        }
+    }
+
+    /// M101 pentagon-census audit (PROPOSED.md §5): the floret cell
+    /// pentagons are type 5 in the repo lettering — all six share the
+    /// shape (angles {60°, 120° ×4}; squared sides {1/3 ×3, 4/3 ×2};
+    /// per-pentagon area 7√3/12, exact in Q(√3)), and the first cell
+    /// satisfies the type-5 conditions at ccw shift k=3 (A = v3,
+    /// B = v4, C = v0, D = v1, E = v2): B = 60°, E = 120°, a = b,
+    /// d = e (repo letters shift the Wikipedia letters by one; side
+    /// a joins A–B).
+    #[test]
+    fn floret_pentagonal_is_pentagon_type_5() {
+        let t = laves::floret_pentagonal();
+        let area = 7.0 * 3.0f64.sqrt() / 12.0; // 7√3/12
+        for cell in &t.cells {
+            let mut ang: Vec<f64> = interior_angles(&cell.poly).to_vec();
+            ang.sort_by(f64::total_cmp);
+            let want = [60.0, 120.0, 120.0, 120.0, 120.0];
+            assert!(
+                ang.iter().zip(&want).all(|(x, y)| (x - y).abs() < 1e-9),
+                "angles {ang:?}"
+            );
+            let mut s2: Vec<f64> = squared_sides(&cell.poly).to_vec();
+            s2.sort_by(f64::total_cmp);
+            let want: Vec<f64> =
+                vec![1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0, 4.0 / 3.0, 4.0 / 3.0];
+            assert!(
+                s2.iter().zip(&want).all(|(x, y)| (x - y).abs() < 1e-12),
+                "squared sides {s2:?}"
+            );
+            assert!(
+                (cell.poly.area() - area).abs() < 1e-12,
+                "area {} != 7√3/12",
+                cell.poly.area()
+            );
+        }
+        // Type-5 lettering on the first cell, ccw shift k=3.
+        let poly = &t.cells[0].poly;
+        let ang = interior_angles(poly);
+        assert!((ang[4] - 60.0).abs() < 1e-9, "B = v4: {}", ang[4]);
+        assert!((ang[2] - 120.0).abs() < 1e-9, "E = v2: {}", ang[2]);
+        let v = &poly.pts;
+        let vtx = |i: usize| v[(i + 3) % 5]; // letter i (0 = A .. 4 = E)
+        let side2 = |i: usize, j: usize| {
+            let d = vtx(i) - vtx(j);
+            d.dot(d)
+        };
+        assert!(
+            (side2(0, 1) - side2(1, 2)).abs() < 1e-12,
+            "a = b: {} vs {}",
+            side2(0, 1),
+            side2(1, 2)
+        );
+        assert!(
+            (side2(3, 4) - side2(4, 0)).abs() < 1e-12,
+            "d = e: {} vs {}",
+            side2(3, 4),
+            side2(4, 0)
         );
     }
 

@@ -30,6 +30,10 @@ const L: f64 = 1.0 + 2.0 * H; // = 1 + √3, lattice period
 /// figures: 3.3.3 at the former snub-square triangle centers and 4.4.4.4 at
 /// the former square centers. The pentagons are tangential (each has an
 /// incircle), and the tiling is the minimum-perimeter pentagonal tiling.
+///
+/// Pentagon census: realizes type 4 (repo lettering shift k=4:
+/// C = E = 90°, b = c, d = e), verified by test
+/// `cairo_pentagonal_is_pentagon_type_4` (M101).
 pub fn cairo_pentagonal() -> LatticeTiling {
     // Eight congruent pentagons, CCW. Coordinates are a + b·(√3/2); the
     // set tiles the plane exactly with period L in both axes. Seeds are a
