@@ -4,7 +4,7 @@
 - If a worker fails twice, summarize the failure and call `strong-worker`.
 - If `strong-worker` doesn't resolve it after a few tries, call `frontier` with the failing output and what was tried.
 - Use `frontier` for the most challenging tasks, or when other workers aren't converging on a solution.
-- **One job at a time — strictly.** The coordinator never has more than ONE job in flight across all tiers (`worker`, `strong-worker`, `fast-worker`, `frontier`). Dispatch a job, wait for it to complete (or be stood down), then dispatch the next. No parallel dispatch, no batched launches, no running queue. Every other task waits in the queue until the in-flight count is zero. Tier choice and the escalation ladder still apply per job.
+- **One job per agent at a time.** Each agent of every tier (`worker`, `strong-worker`, `fast-worker`, `frontier`) is dispatched exactly one job at a time — never give a busy agent a second job, never multiplex tasks within one session. Agents may run concurrently, one job each. Launch one job at a time, confirm it is established and the box is healthy, then decide on the next dispatch; never batch multiple launches. When a heavy derivation is in flight, prefer queueing over adding a second generating session.
 - Briefs must be self-contained: goal, files, constraints, how to verify.
 
 ## Harness discipline
