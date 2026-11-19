@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (89 tilings)
+## Implemented (90 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -130,15 +130,15 @@ figures at the split midpoints, `2.4.4`).
 ## Gallery taxonomy (M76)
 
 M76 restructured the browse gallery into ten tabs
-(`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (8) ·
+(`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (11) ·
 **Laves (Catalan duals)** (15) · **Wallpaper** (17) · **Pentagon
-Types** (12) · **Islamic** (9) · **Arrangements** (5) ·
+Types** (12) · **Islamic** (13) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (6) · **Nonperiodic** (4) —
-98 memberships over the 86 implemented tilings; the 12 extra are
+102 memberships over the 90 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
 M74/M77/M78/M79, was re-synced in M81, in M84, in M85, with the
 M87/M88/M89 two-uniform batch, in M90–M92, in M93, with the M94
-Hankin batch, and in M98.)
+Hankin batch, in M98, and in M99.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
@@ -2911,14 +2911,31 @@ documentation pending).
   Fig 3.6 row 1: (c) two-point weave (programmatic cross-correlation,
   F1 plateau 0.38–0.39 over θK ∈ [45°, 47.5°], δ ∈ [0.5, 0.58]; the
   δ = 0 weave of the same substrate matches column (b)).
+- **D. `hankin-3-12-12` (p6m, hexagonal):** 3.12.12 substrate
+  (dodecagon + 2 triangle orbits), θK = 45° (θe = 45°), δ = 0 — the
+  shining twelve-pointed khatam: a 24-gon star core plus 12 petals
+  (13 faces) in each dodecagon, a 4-pointed star with a hexagon tip
+  (4 faces) in each triangle orbit; 21 cells, 4 seed orbits, per cell
+  ⟨(3/2+√3, 1+√3/2), (0, 2+√3)⟩, det = 6+7√3/2 exact in Q(√3).
+  θK = 45° chosen over 30°/60°: all three pair completely, but 30°
+  is the flat limit (24-gon core closes at 120° tips, no points) and
+  60° is spiky (60° tips) — 45° gives the classical star (90° tips,
+  150° notches) at the mid-"shine" range of the §22a star heuristic
+  (s = 2 for n > 6 with θ > 2π/n, i.e. θK > 30°). No 40-dps Python
+  prototype for this substrate: the expected-face constants were
+  machine-emitted from the Rust engine itself (self-consistency pin),
+  and p6m was verified on a ±4-lattice window face multiset (1701
+  faces, all 12 D6 elements, 0 mismatches at 1e-6 quantization).
+  Details in §53. (M99)
 - **Tests:** 19 new (4 engine tests — output equivalence against the
   machine-transcribed prototype expectations at 1e-9 per vertex for
   all three configurations, θe/θK conjugacy, engine reports; 15
   registry tests — covers/rotated-scaled/deterministic/structure
   (seed layout, Σ face areas = |det| at 1e-9)/symmetry-metadata per
-  configuration). Census: 75 → 78 tilings, 87 → 90 memberships,
-  550 → 569 tests.
-- **Status:** landed (M94).
+  configuration) + 6 for D (1 engine self-consistency test, 5
+  registry tests). Census at D: 89 → 90 tilings, 101 → 102
+  memberships, 626 → 632 tests.
+- **Status:** landed (M94; D landed M99).
 
 ### 46. 2-uniform (3⁶; 3⁴.6) ✅ (M96)
 
@@ -3204,6 +3221,59 @@ documentation pending).
   at this step on the worker fork (landed on main at 89 tilings,
   101 memberships, 626 tests, after M97). Full bar green. 11 of
   the 20 closed-list entries landed, 9 remain.
+
+### 53. Hankin twelvefold khatam (3.12.12) ✅ (M99)
+
+- **Motif:** the fourth configuration of the M94 inference engine
+  (`hankin::build_cells`, feature `hankin_ext`) — the first on the
+  truncated-hexagonal 3.12.12 substrate and the first hankin entry
+  carrying the twelvefold khatam on a substrate that also has a PIC
+  strapwork twin (`pic-3-12-12`, M56). Contact angle θK = 45°
+  (θe = 45°, symmetric like the two-point entry), δ = 0 single-point
+  contacts: from every substrate-edge midpoint two rays lean into
+  the tile at 45° to the edge, greedy min-cost pairing (Kaplan §3.4),
+  planar arrangement against the tile boundary, bounded faces = the
+  khatam partition.
+- **Angle choice (θK ∈ {30°, 45°, 60°} probed):** all three pair
+  completely on every tile class ((24 rays, 12 pairs) on the
+  dodecagon, (6, 3) on each triangle orbit). θK = 30° is the flat
+  limiting case — the seed-1 star core (a 24-gon) closes at 120° tips
+  and the dodecagon shows no points; θK = 60° is spiky — 60° tips
+  with chaotic triangle petals. θK = 45° gives the classical shining
+  twelve-pointed star: 90° tips and 150° notches on the 24-gon core
+  (minimum interior angle 90.0° measured on the emitted cells), the
+  mid-"shine" range of the §22a star heuristic (s = 2 for n > 6 with
+  θ > 2π/n, i.e. θK > 30°; θK = 45° sits mid-way between the 30°
+  threshold and the spiky 60° end).
+- **Cell structure:** per cell ⟨(3/2+√3, 1+√3/2), (0, 2+√3)⟩
+  (dodecagon edge 1, both vectors of length 2+√3, 60° apart; the
+  substrate's own lattice, `archimedean.rs::truncated_hexagonal`)
+  with per-cell area 3(2+√3) + √3/2 = 6 + 7√3/2 = |det|: 13 dodecagon
+  faces (12 quads + the 24-gon core), 4 + 4 triangle faces (three
+  quads + one hexagon tip each orbit) — 21 cells, 4 seed orbits
+  {0: 12 dodecagon petals, 1: one 24-gon core, 2: 6 triangle petals,
+  3: two triangle tips}.
+- **Rust:** `hankin_3_12_12()` in `hankin_3_12_12.rs`, registered
+  after `hankin_hex_two_point`. Honest deviation from the M94 trio:
+  no 40-dps Python prototype existed for this substrate, so the
+  template tiles and EXPECTED_* constants were machine-emitted from
+  the Rust engine itself — the engine battery is a self-consistency
+  pin, not an independent cross-check (documented in the module
+  header). 6 new tests (1 engine: face equivalence against the
+  emitted arrays at 1e-9 + per-class ray/pair censuses + the θe/θK
+  conjugacy pin; 5 registry: covers_region / rotated_scaled /
+  deterministic / unit_structure (21 cells, seed layout, det =
+  6+7√3/2, Σ areas = det at 1e-9) / symmetry_metadata).
+- **Symmetry:** p6m verified position-aware on a ±4-lattice window —
+  the 1701-face multiset (403 interior faces of the radius-8 disk)
+  is invariant under all 12 D6 elements (rot k·60° + M_0 mirrors),
+  0 key mismatches at 1e-6 quantization (keys orientation-normalized
+  to survive mirror reversal and f64 noise). The sixfold centers are
+  the dodecagon centers; the triangle edges sit on alternating
+  dodecagon edges, mirrors at the 30°·k axes.
+- **Census:** 89 → 90 tilings, 101 → 102 memberships (Islamic 12 →
+  13), 626 → 632 tests.
+- **Status:** landed (M99). Full bar green.
 
 ## Proposed — vetted candidates
 
@@ -4724,3 +4794,23 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   cargo check + clippy (both target sets) zero warnings, cargo test
   --workspace --all-features 626/626. 11 of the 20 closed-list
   entries landed, 9 remain. Details in §50.
+- 2026-11-19 — M99 Hankin twelvefold khatam (3.12.12) ✅ (§53): the
+  fourth configuration of the M94 inference engine — `hankin-3-12-12`
+  (θK = 45°, δ = 0) on the truncated hexagonal 3.12.12 substrate:
+  shining twelve-pointed star in each dodecagon (24-gon core + 12
+  petals, 13 faces) plus a 4-pointed star with a hexagon tip in each
+  triangle orbit (4 faces each); 21 cells, 4 seed orbits, per cell
+  ⟨(3/2+√3, 1+√3/2),(0, 2+√3)⟩, det 6+7√3/2 exact in Q(√3). All
+  three of θK ∈ {30°, 45°, 60°} pair completely on every tile
+  class; 45° chosen as the mid-"shine" choice (90° tips / 150°
+  notches; seed-1 core minimum interior angle 90.0° vs 120.0° /
+  60.0° at 30° / 60°). No 40-dps Python prototype for this
+  substrate: expected-face constants machine-emitted from the Rust
+  engine itself (self-consistency pin, documented as a deviation in
+  the module header). p6m verified on a ±4-lattice window face
+  multiset (1701 faces, all 12 D6 elements, 0 key mismatches at
+  1e-6 quantization). 6 new tests (1 engine self-consistency + 5
+  registry). Census: 89 → 90 tilings, 101 → 102 memberships,
+  Islamic 12 → 13, 626 → 632 tests (landed on main). Full bar
+  green: cargo check + clippy (both target sets) zero warnings,
+  cargo test --workspace --all-features 632/632. Details in §53.

@@ -968,6 +968,14 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   θK = 45°, δ = 0.5 two-point) — see PATTERNS.MD §44. The layer-mode
   generalization (one engine × every substrate × 3 openings) remains
   open for further substrates/angles.
+- **Status update (M99):** a fourth configuration landed —
+  `hankin-3-12-12` on the truncated hexagonal 3.12.12 substrate
+  (θK = 45°, δ = 0), the first hankin entry on that substrate and
+  the first beside its PIC strapwork twin `pic-3-12-12` (M56):
+  the shining twelve-pointed khatam (24-gon star core + 12 petals
+  per dodecagon). θK = 45° chosen over 30°/60° (flat / spiky
+  limits) for the mid-"shine" twelve-pointed star; p6m verified
+  on a ±4-lattice window, D6-exact. See PATTERNS.MD §53.
 
 ### 15. Random/statistical tilings (blocked on a determinism policy)
 
@@ -1474,6 +1482,11 @@ that already exists twice.
 
 ## Changelog of this file
 
+- 2026-11-19 — M99: candidate #14 gained a fourth landed inference
+  configuration — `hankin-3-12-12` (3.12.12 substrate, θK = 45°,
+  δ = 0, p6m; the shining twelve-pointed khatam, first hankin entry
+  on the truncated hexagonal substrate). Landed-note added to
+  candidate #14.
 - 2026-11-19 — §22: Islamic star-pattern extensions extracted from
   Kaplan's dissertation (reference/kaplan_diss_full_print.pdf,
   Ch. 3, pp. 45–115; full text in scratch kaplan_full.txt). Eight
