@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (78 tilings)
+## Implemented (79 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -116,20 +116,21 @@ figures at the split midpoints, `2.4.4`).
 | `turtle` | Turtle ("hats in turtles", einstein family) | turtle (14 sides, area 10√3) + hat prototiles on Kaplan's exact hex lattice; 9-label 8+1 key-point substitution with per-level chirality flip; homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge; turtle:hat ratio → 4+√15 |
 | `spectre` | Spectre (chiral einstein Tile(1,1)) | single equal-edge prototile, aperiodic *without* reflections; 9-label D12 substitution (spectre.js-identical), exact Q(√3) surd geometry; edge-to-edge |
 | `taylor-socolar` | Taylor-Socolar striped hexagon (decorated-hexagon monotile) | the paper's forced 529-hexagon patch (Fig. 18 of arXiv:1008.3103) as a verbatim state table, each hexagon partitioned into 13 non-overlapping convex sub-polygons (3 stripe bands + 2 corner tips + 6 vertex wedges + 2 body halves); stripe bands realize the edge-midpoint handoff rules exactly (R1 0/2992, R2 0/2816, R3 0/2904 re-derived in tests); finite covered patch (girih precedent), no period within hex-radius 30 |
+| `jeandel-rao` | Jeandel-Rao 11-tile Wang tiles (smallest aperiodic Wang set) | the author's canonical 100x100 patch (arXiv:1506.06492, cited not re-proven) as an emitted table, each unit cell partitioned into 5 non-overlapping convex sub-polygons (4 edge bands of width 0.08 + interior, areas exact in Q) whose band colors make the Wang edge matching visible (H 0/9900, V 0/9900 on exact 9-color ids re-derived in tests); tile frequencies pinned; no grid translation period |t| ≤ 30 (2820 probes); finite covered patch (Taylor-Socolar precedent); no generator port — the study's DFS growth is a proven dead end (M93) |
 | `hirschhorn` | Hirschhorn–Hunt pentagon (140°/60°/160°/80°/100°) | not locally forced; C6-symmetric constrained-growth realization |
 | `girih-quasiperiodic` | girih star-and-cross {10/3} (quasiperiodic) | quasiperiodic; Darb-i Imam 3-prototile substitution (Lu & Steinhardt 2007, IF = 2φ³); exact 10-fold seed rosette, edge-to-edge at every generation |
 
 ## Gallery taxonomy (M76)
 
 M76 restructured the browse gallery into ten tabs
-(`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (5) ·
+(`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (8) ·
 **Laves (Catalan duals)** (11) · **Wallpaper** (17) · **Pentagon
 Types** (12) · **Islamic** (9) · **Arrangements** (5) ·
-**Quasiperiodic** (8) · **Aperiodic** (5) · **Nonperiodic** (4) —
-87 memberships over the 75 implemented tilings; the 12 extra are
+**Quasiperiodic** (8) · **Aperiodic** (6) · **Nonperiodic** (4) —
+91 memberships over the 79 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
 M74/M77/M78/M79, was re-synced in M81, in M84, in M85, and again
-with the M87/M88/M89 two-uniform batch.)
+with the M87/M88/M89 two-uniform batch, in M90–M92, and again in M93.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
@@ -2715,6 +2716,84 @@ documentation pending).
 - **Status:** landed (M92).
   78 tilings, 90 memberships, 562 tests at this step.
 
+### 43. Jeandel–Rao 11-tile aperiodic Wang tiling ✅ (M93)
+
+- **Motif:** the Jeandel–Rao Wang tile set (arXiv:1506.06492) — the
+  smallest known aperiodic set of Wang tiles: 11 edge-coloured unit
+  squares (A..K), no rotations or reflections. The 9 distinct edge
+  colours are 5 on N/S edges (cyan, magenta, pink, white, yellow) and
+  4 on E/W edges (blue, green, orange, red), all names distinct. The
+  shipped object is the **author's canonical 100×100 patch**
+  (`100.txt` from Jeandel's research page, cited by the handoff),
+  transcribed with the handoff's symbol map (0–9 → A..J, a → K).
+  Covered domain = the finite patch (Taylor–Socolar / girih precedent:
+  `generate` returns exactly the pieces intersecting the query region,
+  background beyond the patch boundary).
+- **Provenance (AP-STUDY handoff):** the 100×100 tile table, the 11
+  (N,E,S,W) quadruples, the frequency table and the battery numbers
+  are machine-transcribed from the study's `ap_jr_patch.json` by
+  `m93_emit.py` (zero hand-copied numbers; the emitter re-checks both
+  batteries, the frequencies, the no-period probe and the partition
+  geometry against the JSON before emitting). Two reference
+  placements (cells (0,0) and (99,99)) are float-evaluated by the
+  emitter and pinned by `jr_matches_generated_reference` to 1e−9.
+- **Frame:** grid (x, y) with x = column right, y = row down (handoff
+  convention); cell centre = `(x − 49.5, 49.5 − y)` (y flipped to the
+  math y-up frame), so the 100×100 patch spans **[−50, 50]²**.
+- **Edge-colour encoding (geometric edge bands):** each unit-square
+  prototile is partitioned into **5 non-overlapping convex pieces** —
+  protos 1–4 the N/E/S/W edge bands of width `W = 0.08` (the single
+  documented scale), proto 0 the interior remainder. Each `W×W` corner
+  square is split by its 45° miter diagonal between the two adjacent
+  bands (each band owns the triangle of that corner). Band area
+  `W − W² = 46/625`, interior area `(1 − 2W)² = 441/625`, so the five
+  piece areas sum to `4·(46/625) + 441/625 = 1` **exactly in Q** for
+  `W = 8/100` (re-derived per cell by `jr_partition_areas_sum_to_cell`
+  on the emitted pieces). Each band is painted with its edge's
+  palette colour, so the Wang matching is visible: touching bands
+  carry the same palette colour exactly where the handoff colours
+  agree.
+- **Palette mapping:** the 9 distinct edge colours map onto the fixed
+  8-colour tess-core palette by nearest colour — white→0 (light gray),
+  blue→1, red→2, green→3, yellow→4, magenta→5, cyan→6, orange→7.
+  **Magenta and pink both map to purple (5)** (one documented merge),
+  and white maps to the light-gray base (0), which the interior also
+  uses (border strokes keep the two visually distinct in Pattern
+  mode). `TILE_COLORS` keeps the exact 9-colour ids, so the edge
+  batteries are checked *before* the merge — a palette-id check alone
+  would mask a magenta/pink swap.
+- **Verification (all re-derived in Rust tests):** handoff battery on
+  the shipped patch — **H 0/9900 and V 0/9900** edge mismatches on the
+  exact 9-colour ids; tile frequencies match the handoff table (sum
+  10000); no grid translation period |t| ≤ 30 — 2820 nonzero
+  translations with dx²+dy² ≤ 900 probed, none invariant over an
+  overlap of ≥ 3 cells (mirrors the study's
+  `translation_periods_100x100_le30 = []`); partition exactness (5
+  pieces/cell, areas sum to 1, full emission accounted for —
+  clipped-area accounting catches overlap as well as gaps); the
+  standard coverage trio (axis-aligned window, 0.6-scaled / 25°-
+  rotated window — both verified exactly-once by the emitter on 4400
+  samples — and determinism); empty output beyond the patch.
+- **Rust:** `JeandelRaoTiling` in `jr_aperiodic.rs` (no feature gate
+  exists in Cargo.toml, which the task leaves untouched — module and
+  registration are unconditional, M86-style comment). id
+  `jeandel-rao`, name "Jeandel-Rao 11-tile Wang tiles", category
+  Aperiodic, similarity params (scale + rotation) only.
+- **Scope honesty:** aperiodicity of the tile set and minimality of
+  its subshift are **cited** (Jeandel–Rao, arXiv:1506.06492,
+  machine-verified by the authors), not re-proved here — the radius-30
+  no-period probe is evidence, not proof. **No generator is ported:**
+  the study's independent DFS growth is a *proven dead end* — its
+  grown 24×24 has 0 edge mismatches but no 25×25 extension (exhaustive
+  DFS, 27 nodes), while the author's 24×24 does extend (226 nodes);
+  locally-valid windows are therefore a strict superset of the JR
+  tiling language, and the author's 100×100 patch is the only
+  renderable artifact. The band width `W = 0.08` is a porting choice
+  for the edge encoding, not a claim of the paper.
+- **Status:** landed (M93).
+  79 tilings, 91 memberships, 571 tests at this step (landed on the
+  post-M90-M92 base).
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -3968,3 +4047,44 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   clippy (both target sets) with zero warnings, cargo test
   --workspace 562/562 — the six-entry p6m block of the closed list
   is complete (8 of the 20 entries landed, 12 remain).
+
+- 2026-11-19 — M93 Jeandel–Rao 11-tile aperiodic Wang tiling ✅:
+  the smallest known aperiodic set of Wang tiles (11 edge-coloured
+  unit squares, no rotations/reflections; Jeandel & Rao, arXiv:
+  1506.06492) as a **finite-patch data-table port** — the author's
+  canonical 100×100 patch (`patch_author_100x100` in the AP-STUDY
+  handoff `ap_jr_patch.json`), machine-transcribed by `m93_emit.py`
+  (zero hand-copied numbers; the emitter re-checks both batteries,
+  the frequency table, the no-period probe and the partition
+  geometry against the JSON before emitting). Frame: grid (x, y)
+  x-col-right / y-row-down, cell centre `(x − 49.5, 49.5 − y)`, so
+  the patch spans [−50, 50]² (10 000 tiles, 50 000 pieces). Edge
+  colours are encoded geometrically: each unit cell is partitioned
+  into 5 non-overlapping convex pieces — 4 edge bands of width
+  W = 0.08 (one documented scale) + the interior — with each W×W
+  corner square split by its 45° miter between the adjacent bands;
+  band area 46/625, interior 441/625, summing to 1 exactly in Q.
+  The 9 distinct edge colours map onto the fixed 8-colour
+  tess-core palette by nearest colour (white→0, blue→1, red→2,
+  green→3, yellow→4, magenta→5, cyan→6, orange→7; magenta and pink
+  merge to 5, and white shares 0 with the interior base — the
+  exact 9-colour ids in `TILE_COLORS` keep the batteries merge-
+  immune). Batteries re-derived in tests: H 0/9900 and V 0/9900
+  edge-color mismatches on the exact ids; tile frequencies match
+  the handoff table (sum 10000); no grid translation period
+  |t| ≤ 30 (2820 probes, none invariant over an overlap of ≥ 3
+  cells); partition areas sum to 1 per cell; coverage trio incl. a
+  0.6-scale / 25°-rotated window (both exact-once, 4400 samples);
+  empty output beyond the patch. 9 tess-tilings tests. Census:
+  78 → 79 tilings, 90 → 91 memberships, Aperiodic 5 → 6, 562 → 571
+  tests (landed on the post-M90-M92 base). Full bar green:
+  cargo check + clippy (both target sets) with zero warnings,
+  cargo test --workspace 559/559 on its fork base. **Scope honesty:** aperiodicity
+  and minimality are **cited** (arXiv:1506.06492, machine-verified
+  by the authors), not re-proved here; **no generator is ported** —
+  the study's independent DFS-grown 24×24 has 0 edge mismatches but
+  no 25×25 extension (exhaustive DFS, 27 nodes) while the author's
+  24×24 does (226 nodes), so the study's `patch` is a proven dead
+  end and the author's 100×100 is the only renderable artifact;
+  the band width W = 0.08 is a porting choice for the edge
+  encoding, not a claim of the paper. Details in §43.

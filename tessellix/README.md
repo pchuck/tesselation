@@ -49,7 +49,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 **Browse mode** — the tab bar lists the ten display categories with card
 counts (`Uniform (11)   Two-Uniform (8)   Laves (11)   Wallpaper (17)   Pentagon
-Types (12)   Islamic (9)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (5)
+Types (12)   Islamic (9)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (6)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
@@ -127,7 +127,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-78 built-in tilings (90 tab memberships), all discoverable in both UIs
+79 built-in tilings (91 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -138,8 +138,8 @@ ten tabs:
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (12), **Islamic** (9), **Arrangements** (5),
 **Quasiperiodic** (8: Penrose family, Ammann–Beenker, Stampfli, shield,
-girih Darb-i Imam), **Aperiodic** (5: einstein family, pinwheel,
-Taylor-Socolar), and
+girih Darb-i Imam), **Aperiodic** (6: einstein family, pinwheel, Taylor-Socolar,
+Jeandel-Rao 11-tile Wang tiles), and
 **Nonperiodic** (4: limit-periodic rep-tiles, Hirschhorn). Categories
 are declared on the tiling (never derived from its symmetry), so the
 grouping is honest about what the mathematics distinguishes; see
@@ -220,6 +220,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `turtle` | Turtle (hats in turtles) | aperiodic einstein family (SMKG 2023); chiral hats-in-turtles: turtle + hat prototiles, 9-label substitution, homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge hex-lattice geometry | — | — |
 | `spectre` | Spectre (chiral einstein, Tile(1,1)) | aperiodic chiral einstein family (SMKG 2023); single equal-edge prototile, aperiodic without reflections, 9-label substitution, exact Q(√3) geometry | — | — |
 | `taylor-socolar` | Taylor-Socolar striped hexagon | aperiodic decorated-hexagon monotile (Taylor & Socolar, arXiv:1008.3103); the paper's forced 529-hexagon patch (its Fig. 18), each hexagon partitioned into 13 decorated sub-polygons whose stripe bands realize the edge-midpoint handoff rules exactly (R1 0/2992, R2 0/2816, R3 0/2904, re-derived in tests); finite covered patch, no period within hex-radius 30 | — | — |
+| `jeandel-rao` | Jeandel-Rao 11-tile Wang tiles | aperiodic 11-tile edge-colored Wang set (Jeandel-Rao, arXiv:1506.06492); the author's canonical 100x100 patch, each unit cell partitioned into 5 sub-polygons whose edge bands carry the Wang edge colors (H 0/9900, V 0/9900, exact 9-color ids, re-derived in tests); finite covered patch, no period |t|<=30 | — | — |
 | `hirschhorn` | Hirschhorn pentagon | nonperiodic monohedral (Hirschhorn–Hunt 1985) | — | — |
 | `chair` | Chair (L-tromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge | — | — |
 | `sphinx` | Sphinx (pentagonal hexiamond) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 12 orientations; non-edge-to-edge | — | — |
@@ -473,6 +474,19 @@ cross-check plus a ratio-sweep coverage test.
   edge-midpoint decoration rule, so the handoff / line-continuation
   graph is preserved (R1 0/2992, R2 0/2816, R3 0/2904). The covered
   domain is the finite patch (girih precedent), not the plane.
+- **Jeandel-Rao 11-tile Wang tiles** (`jr_aperiodic.rs`) — the smallest
+  known aperiodic set of Wang tiles (edge-colored unit squares, no
+  rotations or reflections; Jeandel-Rao, arXiv:1506.06492), ported as a
+  data table from the audited upstream study (M93): the author's
+  canonical 100x100 patch, every unit cell partitioned into 5
+  non-overlapping convex sub-polygons — four edge bands of width 0.08
+  plus the interior remainder — whose band colors make the Wang edge
+  matching visible exactly where the handoff colors agree (H 0/9900,
+  V 0/9900 on exact 9-color ids, re-derived in tests); tile frequencies
+  and a radius-30 no-period probe are pinned against the study.
+  Aperiodicity is cited (machine-verified upstream), not re-proved here;
+  the covered domain is the finite patch (Taylor-Socolar precedent), not
+  the plane.
 - **Hirschhorn** (`hirschhorn.rs`) — the 140°/60°/160°/80°/100° convex
   pentagon (n=6 of the C11-T1A Sugimoto family). Since the tiling is not
   locally forced, the generator constructs one valid realization by
@@ -532,7 +546,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 562 tests, all green, zero
+`cargo test --workspace` (currently 571 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
@@ -569,6 +583,13 @@ warnings):
   529 × 13 pieces matched signature-by-signature with each hexagon's
   piece areas summing to 3√3/2; a no-period probe over the 2790
   hex-radius-≤30 translations finds none),
+  Jeandel-Rao invariants (the handoff battery re-derived from the
+  shipped 100×100 patch reproduces the study's JSON numbers H
+  0/9900 and V 0/9900 edge mismatches on the exact 9 edge-color ids;
+  tile frequencies match the handoff table (sum 10000); the
+  per-cell 5-piece partition has areas summing to 1 exactly; a
+  no-period probe over the 2820 translations with |t| ≤ 30 finds
+  none),
   Hirschhorn
   patch invariants (Euler χ = 1, exact C6 symmetry,
   edge ownership ≤ 2, 20° frame quantization), and a full edge/vertex

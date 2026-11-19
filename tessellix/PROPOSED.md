@@ -36,7 +36,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 8 | shield tiling ✅ DONE (M51); Socolar-12 blocked-on-source, wheel tiling = MLD-dual follow-up | Quasiperiodic | substitution | L | P1 |
 | 9 | Lançon–Billard binary tiling | Quasiperiodic | substitution | M | P1 |
 | 10 | Rep-tile siblings: T-tetromino, P-pentomino | Aperiodic | integer substitution | S–M each | P1 |
-| 11 | Jeandel–Rao 11 Wang tiles | Aperiodic | Sturmian/substitution | L | P1 |
+| 11 | Jeandel–Rao 11 Wang tiles ✅ DONE (M93, canonical 100x100 patch as a data table with geometric edge bands; aperiodicity cited, not re-proven; no generator) | Aperiodic | edge-colored Wang | L | P1 |
 | 12 | Trilobite and crab (2-tile aperiodic set) | Aperiodic | L-substitution | L | P1 |
 | 13 | Isohedral (IH) parameterized generator | Wallpaper | new generator class | XL | P2 |
 | 14 | Hankin polygons-in-contact strapwork engine | Wallpaper | rendering/generator | XL | P2 |
@@ -718,6 +718,17 @@ confirm the diffraction claim during the spike before declaring.
 - **Flags:** 11 prototiles > 8-color palette → extend the palette or
   color by edge-color multiset; TUI/GUI need no changes (tiles are
   polygons; seeds carry the classes).
+- **Status:** landed (M93) — as a **finite-patch data-table port**
+  with **geometric edge-band encoding**, not a generator:
+  `jeandel-rao` (`jr_aperiodic.rs`) ships the author's canonical
+  100x100 patch (arXiv:1506.06492), each unit cell partitioned into
+  5 non-overlapping convex sub-polygons (4 edge bands of width 0.08
+  + interior) whose palette colors make the Wang edge matching
+  visible (H 0/9900, V 0/9900 on exact 9-color ids, re-derived in
+  tests). The Sturmian/substitution generation policy was not
+  ported (the study's independent DFS growth is a proven dead end);
+  set aperiodicity and subshift minimality stay cited, not proven.
+  Details in PATTERNS §43.
 
 ### 12. Trilobite and crab (Goodman-Strauss's 2-tile aperiodic set)
 
