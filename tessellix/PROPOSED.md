@@ -165,7 +165,7 @@ confirm the diffraction claim during the spike before declaring.
   | p6m | 3⁶ ; 3².6² ✅ `kuniform-p6m` (M44) | 2,3 |
   | p6  | 3⁶ ; 3.4.6 (variant 1) | 3,3 |
   | p6  | 3⁶ ; 3.4.6 (variant 2) ✅ `kuniform-n20` (M96) | 5,7 → e = 6 exact (M96 torus enumeration, see PATTERNS.MD §46) |
-  | cmm | 3².6² ; 3.4.6 | 2,4 |
+  | cmm | 3².6² ; 3.4.6 ✅ `kuniform-n12` (M97) | 2,4 (both confirmed exact, M97 orbit enumeration — t = 2, e = 4) |
   | pmm | 3.6.3.6 ; 3².6² ✅ `kuniform-pmm` (M48) | 2,3 |
   | cmm | 3.4².6 ; 3.6.3.6 (variant 2) | 3,4 |
   | pmm | 3.4².6 ; 3.6.3.6 (variant 1) | 4,4 |
@@ -197,7 +197,7 @@ confirm the diffraction claim during the spike before declaring.
   itself — assert exactly 2 vertex classes over a large patch), plus
   the culling list.
 - **Status:** implemented (M44 + M48 + M87 + M88 + M89 + M90 + M91
-  + M92 + M96) — 9 of 20 entries landed, 11 of 20 remain. The p6m entry 3⁶ ; 3².6² as
+  + M92 + M96 + M97) — 10 of 20 entries landed, 10 of 20 remain. The p6m entry 3⁶ ; 3².6² as
   `kuniform-p6m` (M44; index-3 honeycomb dissection, exact Q(√3)
   table, both vertex orbits + p6m generators verified by an
   exact-surd Python spike and Rust cell-set probes), the pmm entry
@@ -239,7 +239,19 @@ confirm the diffraction claim during the spike before declaring.
   a full translation scan finding exactly L13; exact torus orbit
   count t = 5 with triangle orbits {6,6,6,2}, edge orbits
   {6,6,6,6,6,3} → e = 6, correcting the 5,7 parenthetical in the
-  table above).
+  table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
+  3⁴.6 — rows of edge-sharing hexagons with unit-triangle bands
+  between the rows; 5 tiles/cell on the PRIMITIVE cell of the
+  centered rectangular lattice ⟨(√3,0), (√3/2,5/2)⟩ (the centering
+  vector as basis, |det| = 5√3/2; the M97 spike's 2-hex + 8-tri
+  centered cell recovered tile-by-tile as S ⊎ (S + c) mod ℤb1 + ℤb2);
+  cmm pinned on the emitted table — 8 translation probes + six
+  2-fold probes (two translation classes of centers) + both mirror
+  families PASS, valley 2-folds FAIL, R60/R90/R120 FAIL at every
+  mirror intersection; all triangles one orbit (the origin 2-fold
+  swaps the visual A/B pairs mod Λ) → t = 2, and edge orbits by
+  adjacency + corner classes → e = 4, matching the 2,4 parenthetical
+  in the table above exactly).
 
 ---
 

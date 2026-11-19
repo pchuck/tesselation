@@ -1,10 +1,10 @@
 //! 2-uniform (k-uniform) tilings, expressed as [`LatticeTiling`] data
 //! tables.
 //!
-//! Nine entries are from the closed list of 20 two-vertex-orbit
+//! Ten entries are from the closed list of 20 two-vertex-orbit
 //! tilings by regular polygons (Krotenheerdt; see the Wikipedia
 //! "k-uniform tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`,
-//! `n8`, `n5`, `n1`, `n13`, `n20`). The
+//! `n8`, `n5`, `n1`, `n13`, `n20`, `n12`). The
 //! list's entries have no individual proper names, so these are named by
 //! their vertex configurations, following that convention:
 //!
@@ -43,6 +43,11 @@
 //!   disagrees; see the function docs). Unit triangular lattice
 //!   with hexagon flowers on an index-13 sublattice; the origin is
 //!   a hexagon center and the 6-fold point.
+//! * `kuniform-n12` — vertex figures 3².6² ; 3⁴.6, group cmm (the
+//!   module's first cmm entry), t = 2, e = 4. Rows of edge-sharing
+//!   hexagons with unit-triangle bands between the rows; the origin
+//!   is a hexagon center and a 2-fold point, and the centered
+//!   lattice's centering vector c = (√3/2, 5/2) is a basis vector.
 //!
 //! All coordinates lie in Z + (√3/2)·Q, stored through [`H`].
 
@@ -1412,6 +1417,95 @@ pub fn kuniform_n20() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6,
         lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3².6²; 3⁴.6), wallpaper group cmm.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n12`
+/// (Krotenheerdt's closed list of 20 two-uniform tilings by regular
+/// polygons): rows of edge-sharing regular hexagons — consecutive
+/// hexagons in a row share a full edge (center distance √3 = twice
+/// the apothem) — and the bands between adjacent rows filled with
+/// unit triangles. Every hexagon is congruent and all triangles lie
+/// in one symmetry orbit (the 2-fold rotation at the origin swaps
+/// the two visual triangle pairs modulo lattice), so t = 2; the
+/// edges fall into e = 4 orbits, split by adjacency and corner
+/// classes: hexagon–hexagon [3².6²|3².6²], hexagon–triangle
+/// [3⁴.6|3².6²], triangle–triangle [3⁴.6|3⁴.6] and
+/// triangle–triangle [3².6²|3⁴.6] (m97_rust_expect.py).
+///
+/// In the half-unit frame x = X·√3/2, y = Y/2 (hexagon side 1,
+/// H = √3/2, S3 = √3) the hexagon centers are the even rows
+/// (2m, 10k) and odd rows (2m+1, 10k+5), so the translation lattice
+/// is the centered rectangular lattice Λ = ⟨b1 = (√3, 0), c =
+/// (√3/2, 5/2)⟩ — the centering vector of the rectangular cell
+/// ⟨b1, b2 = (0, 5)⟩ sits in Λ as c (b2 = −b1 + 2c), which is what
+/// makes the group cmm rather than pmm. |det(b1, c)| = 5√3/2 = one
+/// hexagon + four triangles: the table is the PRIMITIVE cell of the
+/// centered lattice (the running-bond / stepped-hexominoes cmm
+/// convention; the battery's 2-hexagon + 8-triangle centered cell is
+/// S ⊎ (S + c) mod ℤb1 + ℤb2, with S the five tiles below). Torus
+/// census V = 4, E = 9, F = 5, V − E + F = 0; the two vertex orbits
+/// are 3².6² (the hex–hex·tri–tri junctions along the shared
+/// hexagon edges, reps (√3/2, 1/2), (0, 2)) and 3⁴.6 (four triangles
+/// plus one hexagon corner, reps (0, 1), (√3/2, 3/2)), two
+/// translation classes each per primitive cell — A:B = 1:1.
+///
+/// Symmetry: cmm, pinned on a 49-cell patch (m97_rust_expect.py):
+/// 8 translation probes (±b1, ±c and the centering-rectangle sides)
+/// PASS; all 2-fold probes PASS (origin, b1/2 and their c/b2
+/// translates — the two translation classes of 2-fold centers, each
+/// hit at three named points), while 2-folds at the valley points
+/// (√3/2, 1/2) and (0, 1/2) FAIL (245/245 tiles off); mirrors of both
+/// families x = √3·k/2 and y = 5·k/2 PASS (6 probes); R60/R90/R120
+/// about every mirror intersection FAIL (no 3-, 4- or 6-fold
+/// anywhere). Battery on the emitted table (49 cells): area exact
+/// (49·12 + 196·2 = 980 half-unit units = 49·|det|), 406 edge pairs,
+/// 0 interior unpaired edges, 0 triple edges, 0 T-junctions,
+/// fine-grid coverage exactly-once 1.0000.
+pub fn kuniform_n12() -> LatticeTiling {
+    // Pointy-top unit hexagon centered at the origin, CCW
+    // (corners at 30°, 90°, ..., 330°).
+    let hex = Polygon::from_slice(&[
+        Vec2::new(-H, 0.5),
+        Vec2::new(-H, -0.5),
+        Vec2::new(0.0, -1.0),
+        Vec2::new(H, -0.5),
+        Vec2::new(H, 0.5),
+        Vec2::new(0.0, 1.0),
+    ]);
+    // The four triangles of the primitive cell (seed 1 — they form a
+    // single orbit under the group). A-pair: apex up between the
+    // hexagon top vertex and the odd-row hexagon; B-pair: apex right
+    // between the hexagon side vertex and the next hexagon in the
+    // row. The +c translate supplies the odd-band copies, completing
+    // the 8-triangle centered cell together with (hex, hex + c).
+    let a2 = Polygon::from_slice(&[Vec2::new(0.0, 1.0), Vec2::new(H, 1.5), Vec2::new(0.0, 2.0)]);
+    let a1 = Polygon::from_slice(&[Vec2::new(S3, 2.0), Vec2::new(H, 1.5), Vec2::new(S3, 1.0)]);
+    let b1t = Polygon::from_slice(&[Vec2::new(H, 1.5), Vec2::new(0.0, 1.0), Vec2::new(H, 0.5)]);
+    let b2t = Polygon::from_slice(&[Vec2::new(H, 0.5), Vec2::new(S3, 1.0), Vec2::new(H, 1.5)]);
+    LatticeTiling {
+        id: "kuniform-n12",
+        name: "2-uniform (3².6²; 3⁴.6)",
+        description: "2-uniform tiling (3².6²; 3⁴.6) — rows of edge-sharing hexagons with unit-triangle bands between the rows, the cmm two-uniform 3².6²/3⁴.6 form (cmm).",
+        lattice: [Vec2::new(S3, 0.0), Vec2::new(H, 2.5)],
+        cells: vec![
+            Cell { poly: hex, seed: 0 },
+            Cell { poly: a2, seed: 1 },
+            Cell { poly: a1, seed: 1 },
+            Cell { poly: b1t, seed: 1 },
+            Cell { poly: b2t, seed: 1 },
+        ],
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::Cmm,
+        lattice_kind: LatticeKind::CenteredRectangular,
         category: TilingCategory::TwoUniform,
         secondary: &[],
         seed_pattern: SeedPattern::Uniform,

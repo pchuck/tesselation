@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (87 tilings)
+## Implemented (88 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -87,6 +87,7 @@ figures at the split midpoints, `2.4.4`).
 | `kuniform-n1` | 2-uniform (4.6.12; 3.4.6.4) | p6m | the 3-4-6-12 tiling: dodecagons alternating with hexagons, squares and triangles; 60° hexagonal basis, \|b1\| = \|b2\| = 2+2√3, det 12+8√3 (right-handed); origin a hexagon center, 6-fold center c the cell's dodecagon center (not O); 12 tiles/cell; Wikipedia `2-uniform n1`, t = 4, e = 4 (M91) |
 | `kuniform-n13` | 2-uniform (3⁶; 3².4.12) | p6m | dodecagons ringed by squares and two triangle orbits around 3⁶ vertices; 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); origin a 3⁶ vertex, 6-fold center c the cell's dodecagon center (off-ring, not O); 16 tiles/cell; Wikipedia `2-uniform n13`, t = 4, e = 4 (M92) |
 | `kuniform-n20` | 2-uniform (3⁶; 3⁴.6) | p6 | flower form: unit triangular lattice, hexagons dissected at the points of the index-13 sublattice ⟨(1,3),(−3,4)⟩; 60° hexagonal basis, \|b1\| = \|b2\| = √13, det 13√3/2 (right-handed); origin a hexagon center = 6-fold point; 21 tiles/cell; the two-uniform family's first p6 entry — R60 PASS + six mirror probes FAIL + full translation scan pin p6; Wikipedia `2-uniform n20`, t = 5 (e = 6 exact; the wiki parenthetical's e = 7 disagrees, see §46) (M96) |
+| `kuniform-n12` | 2-uniform (3².6²; 3⁴.6) | cmm | rows of edge-sharing hexagons with unit-triangle bands between the rows; centered rectangular primitive basis ⟨(√3,0),(√3/2,5/2)⟩, det 5√3/2 (right-handed) — the centering vector is a basis vector; origin a hexagon center = 2-fold point; 5 tiles/cell (1 hex + 4 tri; the 10-tile centered cell is S ⊎ (S + c)); the two-uniform family's first cmm entry — six 2-fold probes + both mirror families PASS, valley 2-folds FAIL, no 3/4/6-fold; Wikipedia `2-uniform n12`, t = 2, e = 4 (both confirmed exactly) (M97) |
 | `kuniform-dual-p6m` | dual of 2-uniform (3⁶; 3².6²) | p6m | face-centroid dual of `kuniform-p6m`, constructed by the `dual()` helper (M98); 7 faces/cell — 1 regular hexagon (side 1/√3, area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3, 2√3/3, √3; angles 60°/60°/120°/120°; area 2√3/3); Σ = 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) |
 | `kuniform-dual-n18` | dual of 2-uniform (3⁶; 3².4.3.4) | p6m | face-centroid dual of `kuniform-n18`, constructed by the `dual()` helper; 7 faces/cell — 1 regular hexagon (side 1/√3) + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6; angles 90°/90°/120°/120°/120°; area (2+√3)/4); Σ = 3+2√3 = \|det\|, edge-to-edge, origin a 3⁶ vertex = 6-fold center (M98) |
 | `kuniform-dual-n9` | dual of 2-uniform (3.4.6.4; 3².4.3.4) | p6m | face-centroid dual of `kuniform-n9`, constructed by the `dual()` helper; 12 faces/cell — 6 congruent quadrilaterals (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/120°; area (3+2√3)/6) + 6 pentagons congruent to the n18-dual pentagons (area (2+√3)/4); Σ = 6+7√3/2 = \|det\|, edge-to-edge, origin a hexagon center = 6-fold center (M98) |
@@ -3071,6 +3072,66 @@ documentation pending).
 <!-- §43–§45 are reserved for the concurrent M93–M95 two-uniform
      entries; §46 below is the pre-assigned M96 slot. -->
 
+### 49. 2-uniform (3².6²; 3⁴.6) ✅ (M97)
+
+- **Motif:** first cmm entry of the two-uniform module —
+  Wikipedia `2-uniform n12`, t = 2: rows of edge-sharing regular
+  hexagons (consecutive centers √3 apart — a full shared edge) with
+  the bands between adjacent rows filled by unit triangles; odd
+  rows offset by half a period (the 2-hexagon + 8-triangle centered
+  cell of the M97 spike). Origin: a hexagon center = a 2-fold point.
+- **Group:** **cmm**, pinned by tile-set probes on the EMITTED Rust
+  table (m97_rust_expect.py): 8 translation probes PASS (±b1, ±c —
+  the centering vector c = (√3/2, 5/2) IS a basis vector, and the
+  centering rectangle's b2 = −b1 + 2c); the 2-fold probes PASS at
+  origin, b1/2, c, c+b1/2, c+b2/2, c+(b1+b2)/2 (the two translation
+  classes of 2-fold centers, each hit at three named points), while
+  2-folds at the valley points (√3/2, 1/2) and (0, 1/2) FAIL
+  (245/245 tiles off); mirrors of BOTH families x = √3·k/2 and
+  y = 5·k/2 PASS (6 probes); R60/R90/R120 about every mirror
+  intersection FAIL → no 3-, 4- or 6-fold anywhere.
+- **Lattice & cell:** centered-rectangular lattice
+  Λ = ⟨b1 = (√3, 0), c = (√3/2, 5/2)⟩ declared on the PRIMITIVE cell
+  (the running-bond / stepped-hexominoes cmm convention; the
+  rectangular cell ⟨b1, (0,5)⟩ of the spike is the centered one,
+  and the measurement's witness orthogonal pair (√3,0), (0,5) has
+  cross 5√3 = 2·|det| with cell center c ∈ Λ). det = 5√3/2
+  (right-handed). Cell: 1 hexagon + 4 triangles — areas 3√3/2 +
+  4·√3/4 = 5√3/2 = |det| exactly; the spike's 10-tile centered cell
+  is S ⊎ (S + c) mod ℤb1 + ℤb2 tile-by-tile (verified). Torus
+  census V = 4, E = 9, F = 5, V−E+F = 0.
+- **2-uniformity:** exactly two vertex orbits — 3².6² (the hex–hex
+  junctions along shared hexagon edges: 2 hexagons + 2 triangles)
+  and 3⁴.6 (four triangles + one hexagon corner) — two translation
+  classes each per primitive cell (4 + 4 reps per centered cell,
+  matching the spike's pinned (0,2),(0,8),(1,3),(1,7) and (0,4),
+  (0,6),(1,1),(1,9) in the half-unit frame), A:B = 1:1.
+- **Orbits:** hexagons one orbit; ALL triangles one orbit — the
+  2-fold rotation at the origin swaps the two visual triangle pairs
+  modulo Λ and the mirrors pair them within a band — so **t = 2**;
+  edge orbits **e = 4**, split by adjacency and corner classes:
+  hex–hex [3².6²|3².6²], hex–tri [3⁴.6|3².6²], tri–tri
+  [3⁴.6|3⁴.6], tri–tri [3².6²|3⁴.6] (patch orbit sizes
+  {365,196,182,84}). Both match the wiki parenthetical (2,4).
+- **Edge structure & coverage (m97_rust_expect.py, emitted
+  table):** ±3×±3 patch of Λ: area exact (49·12 + 196·2 = 980
+  half-unit units = 49·|det|); 406 interior edge pairs, 70 boundary
+  single edges (0 interior unpaired), 0 triple edges, 0 T-junctions;
+  fine grid of 8000 irrational-offset points in the safe interior
+  box: exactly-once 1.0000, zero 0, two 0. The original centered-
+  cell battery (m95_n12_battery.py, cells [-3,3]², 490 tiles) gives
+  the cross-check: 937 unique edges, 110 unpaired (0 interior),
+  0 triple, 0 T-junctions, coverage exactly-once 1.0000.
+- **Rust:** `kuniform_n12()` in `kuniform.rs` (feature `kuniform`)
+  — standard trio + vertex-figure test pinning 3366 (78 interior,
+  reps (866,500), (1732,2000)) and 33336 (84, reps (866,1500),
+  (1732,1000)), expected values reproduced bit-exact by the Python
+  replica m97_rust_expect.py. All five cell polygons CCW (the
+  spike's dump had mixed triangle orientations; each polygon
+  normalized by signed area so the figure walk closes).
+- **Status:** landed (M97). 88 tilings, 100 memberships, 622 tests
+  at this step.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -4478,3 +4539,29 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   Full bar green: cargo check + clippy (both target sets) zero
   warnings, cargo test --workspace 566/566. 9 of the 20 closed-list
   entries landed, 11 remain.
+- 2026-11-19 — M97 2-uniform (3².6²; 3⁴.6, cmm) ✅: the two-uniform
+  family's first cmm entry (`kuniform-n12`) — rows of edge-sharing
+  regular hexagons (consecutive centers √3 apart) with unit-triangle
+  bands between the rows; 5 tiles/cell (1 hex + 4 tri), the M97
+  spike's 2-hex + 8-tri centered cell recovered exactly as
+  S ⊎ (S + c) mod ℤb1 + ℤb2; centered-rectangular lattice declared
+  on the primitive basis ⟨(√3,0), (√3/2,5/2)⟩ (the centering vector
+  is a basis vector; witness pair (√3,0), (0,5) cross 5√3 = 2|det|
+  with center c ∈ Λ), |det| = 5√3/2 (right-handed); origin a hexagon
+  center = 2-fold point. Probes on the emitted table: 8 translation
+  probes PASS + six 2-fold probes PASS (two translation classes of
+  2-fold centers) while the valley 2-folds FAIL (245/245 off) +
+  both mirror families PASS (6) + R60/R90/R120 FAIL at every mirror
+  intersection → cmm, no 3/4/6-fold; torus census V−E+F = 4−9+5 = 0;
+  all triangles ONE orbit (origin 2-fold swaps the visual A/B pairs
+  mod Λ) → **t = 2**, edge orbits by adjacency + corner classes
+  {hh, ht, tt|346-346, tt|3366-346} → **e = 4** — both match the
+  wiki parenthetical (2,4). Vertex-figure test 3366 (78, 2 reps) +
+  33336 (84, 2 reps), Python replica m97_rust_expect.py matches
+  bit-exact first try; battery 406 edge pairs / 0 interior unpaired
+  / 0 T-junctions, fine grid 8000/8000 exactly-once. 4 tess-tilings
+  tests. Census: 87 → 88 tilings, 99 → 100 memberships, 618 → 622
+  tests (commit pending the coordinator). Full bar green: cargo
+  check + clippy (both target sets) zero warnings, cargo test
+  --workspace 622/622. 10 of the 20 closed-list entries landed,
+  10 remain.
