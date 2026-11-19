@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (95 tilings)
+## Implemented (96 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -140,16 +140,16 @@ figures at the split midpoints, `2.4.4`).
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (11) ·
 **Laves (Catalan duals)** (15) · **Wallpaper** (17) · **Pentagon
-Types** (12) · **Islamic** (15) · **Arrangements** (5) ·
+Types** (12) · **Islamic** (16) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (6) · **Nonperiodic** (4) —
-104 memberships over the 92 implemented tilings; the 12 extra are
+105 memberships over the 93 implemented tilings; the 12 extra are
 secondary memberships. (Counts at this commit; the block pre-dated
 M74/M77/M78/M79, was re-synced in M81, in M84, in M85, with the
 M87/M88/M89 two-uniform batch, in M90–M92, in M93, with the M94
 Hankin batch, in M98, in M99 (hankin-3-12-12), in M99 again
-(hankin-square-two-point), and in M100 (hankin-3-6-3-6) — live
-totals 95 tilings / 107 memberships, Islamic 18 — without
-re-syncing the counts in this block.)
+(hankin-square-two-point), in M100 (hankin-3-6-3-6), and in M100
+again (hankin-3-4-6-4) — live totals 96 tilings / 108 memberships,
+Islamic 19 — without re-syncing the counts in this block.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
@@ -3524,6 +3524,83 @@ documentation pending).
   15), 638 → 644 tests.
 - **Status:** landed (M100). Full bar green.
 
+### 56. Hankin sixfold rhombitrihex motif (3.4.6.4) ✅ (M100)
+
+- **Motif:** the seventh configuration of the M94 inference engine
+  (`hankin::build_cells`, feature `hankin_ext`) — the first on the
+  rhombitrihexagonal 3.4.6.4 substrate (unit pointy-top hexagons
+  plus 3 unit squares and 2 equilateral triangles per lattice cell
+  ⟨(1.5+√3/2, √3/2+1/2),(0,1+√3)⟩, det 4√3/2+3 exact in Q(√3)).
+  Single-point contacts (δ = 0), contact angle θK = 60° (θe =
+  30°): rays from each edge midpoint lean in at 60° to the edge,
+  greedy min-cost pairing (Kaplan §3.4), planar arrangement against
+  the tile boundary.
+- **Angle choice (θK ∈ {30°, 45°, 60°, 67.5°, 90°} probed):** the
+  hexagon tile pairs completely at every probed angle (12 rays, 6
+  pairs); the three square tiles pair with nothing for θK ∈
+  {30°, 45°, 60°, 67.5°} (8 rays, 0 pairs — at 45° the
+  adjacent-edge rays are exactly parallel or meet exactly at an
+  edge midpoint, and the engine rejects zero-length crossings; at
+  90° they pair head-on into 2 pairs / 2 faces), so their motif
+  stays the original square. The two equilateral triangle tiles:
+  at θK = 30°/45°/67.5° they carry a proper three-pointed star
+  (6 rays, 3 pairs, 4 quadrilateral faces) — but the two
+  instances break congruence (the greedy tie-break gives the two
+  orientations different motifs, one a 6-gon, the other 4-gons,
+  which is not D6-compatible); at θK = 60° all three pairs sit
+  exactly on the edge midpoints: the star collapses into the
+  classical 4-subdivision (four side-1/2 equilateral triangles
+  each — orientation-invariant, both instances congruent); at
+  θK = 90° the triangle pairs head-on into 2 pairs / 2 faces and
+  the hexagon's star core collapses (6 faces instead of 7).
+  Measured minimum interior angle over all 18 cell faces: 30.0°
+  at θK = 30° (the hexagon splits into six thin sliver triangles),
+  45.0° at 45°, **60.0° at 60° (no slivers — the regular
+  hexagram tips and the side-1/2 equilateral triangles)**, 45.0°
+  at 67.5° (sharper hexagram, 45° tips), degenerate at 90° (no
+  hexagon star; 13 faces). 60° is chosen: the most classical
+  sixfold star on this substrate — a regular {6/2} hexagram per
+  hexagon (12-gon core with 60° tips and 240° notches, vertices
+  alternating on circles of radius 1/2 and √3/2, numerically
+  verified) — and the largest minimum interior angle among the
+  star candidates (60° at 60° vs 45° at 67.5°). It is also the
+  only probed angle whose all-motif configuration is
+  orientation-invariant (D6-compatible).
+- **Cell structure:** 18 faces per lattice cell — 6 lozenge
+  rhombi plus the 12-gon hexagram core from the hexagon (7 faces,
+  seed 0 / seed 1), the three unpaired squares (seed 2), and 8
+  side-1/2 equilateral triangles from the two triangle tiles (4
+  each, seed 3). Per-instance face / ray / pair censuses
+  [7,1,1,1,4,4] / [12,8,8,8,6,6] / [6,0,0,0,3,3]; per-instance
+  completeness [true,false,false,false,true,true] — the whole-cell
+  report is therefore not "complete" and the engine test asserts
+  per-instance completeness instead.
+- **Rust:** `hankin_3_4_6_4()` in `hankin_3_4_6_4.rs`, registered
+  after `hankin_3_6_3_6`. Honest deviation: no 40-dps Python
+  prototype for this substrate — the template tiles and the
+  EXPECTED_* constants were machine-emitted from the Rust engine
+  itself (the angle choice was likewise made on the Rust engine's
+  own emitted cells), so the engine battery is a self-consistency
+  pin, not an independent cross-check (documented in the module
+  header). Distinct from `rhombitrihexagonal`: same 3.4.6.4
+  substrate, different construction (greedy inference vs. the
+  Archimedean tiling) and a different partition. 6 new tests (1
+  engine self-consistency: face equivalence against the emitted
+  arrays at 1e-9 + per-instance ray/pair censuses + the θe/θK
+  conjugacy pin; 5 registry: covers_region / rotated_scaled /
+  deterministic / unit_structure (18 cells, seed layout {0×6, 1,
+  2×3, 3×8}, det = 4√3/2+3, Σ areas = det at 1e-9) /
+  symmetry_metadata).
+- **Symmetry:** p6m verified position-aware — the ±5-lattice
+  window (2178 faces) with the radius-8 interior disk (553 faces,
+  319 at R = 6) about a hexagon center is invariant under all 12
+  D6 elements (rot k·60° + M_0 mirrors — the 90° + 60k mirror
+  families of this tiling, since the squares sit on the 30°/150°/
+  270° hexagon edges), 0 key mismatches at 1e-6 quantization.
+- **Census:** 92 → 93 tilings, 104 → 105 memberships (Islamic 15 →
+  16), 644 → 650 tests.
+- **Status:** landed (M100). Full bar green.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -5159,3 +5236,31 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   numbers were on its own base). Full bar green: cargo check +
   clippy (both target sets) zero warnings, cargo test
   --workspace --all-features 668/668. Details in §57.
+- 2026-11-19 — M100 Hankin sixfold rhombitrihex motif (3.4.6.4) ✅
+  (§58): a seventh configuration of the M94 inference engine —
+  `hankin-3-4-6-4` (θK = 60°, δ = 0) on the rhombitrihexagonal
+  3.4.6.4 substrate: a regular {6/2} hexagram per hexagon (12-gon
+  core with 60° tips / 240° notches plus six 60°-lozenge rhombi —
+  7 faces); the three unit squares pair with nothing (0 pairs, 1
+  face each); each equilateral triangle tile sits in the side-1/2
+  4-subdivision limit (its star tips reach the edge midpoints
+  exactly — 4 faces each) — 18 faces per lattice cell
+  ⟨(1.5+√3/2, √3/2+1/2),(0,1+√3)⟩, det 4√3/2+3 exact in Q(√3).
+  θK = 60° chosen over 30° (30° slivers — the hexagon splits into
+  six thin triangles), 45° (no hexagon star: a truncated 12-gon
+  with 90° tips; the two triangle instances break congruence under
+  the greedy tie-break), 67.5° (sharper star, 45° tips), and 90°
+  (star collapse): largest minimum interior angle (60°) among the
+  star candidates and the only probed angle whose all-motif
+  configuration is orientation-invariant (D6-compatible). No 40-dps
+  Python prototype: expected-face constants machine-emitted from
+  the Rust engine (self-consistency pin — documented in the module
+  header). p6m verified on a ±5-lattice window (2178 faces;
+  radius-8 interior disk = 553 faces, 319 at R = 6; all 12 D6
+  elements, 0 key mismatches at 1e-6 quantization). 6 new tests
+  (1 engine self-consistency + 5 registry). Census: 95 → 96
+  tilings, 107 → 108 memberships, Islamic 18 → 19, 668 → 674
+  tests (landed on main after the hexagram landing; the fork's
+  step numbers were on its own base). Full bar green: cargo
+  check + clippy (both target sets) zero warnings, cargo test
+  --workspace --all-features 674/674. Details in §58.

@@ -998,7 +998,19 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   construction — greedy inference vs. reflection chords).
   Deviations (no 40-dps Python prototype; machine-emitted
   expectations) documented in the module header. See PATTERNS.MD
-  §57.
+  §57. A seventh configuration landed in M100 — `hankin-3-4-6-4`
+  on the rhombitrihexagonal 3.4.6.4 substrate (θK = 60°, δ = 0):
+  a regular {6/2} hexagram per hexagon (12-gon core plus six
+  60°-lozenge rhombi, 7 faces); the three unit squares unpaired
+  (0 pairs, single-face); each equilateral triangle tile in the
+  side-1/2 4-subdivision limit (star tips reach the edge
+  midpoints exactly — 4 faces each) — 18 faces per lattice cell
+  ⟨(1.5+√3/2, √3/2+1/2),(0,1+√3)⟩; p6m verified on a ±5-lattice
+  window (553-face interior disk, all 12 D6 elements, 0
+  mismatches at 1e-6). θK = 60° chosen over 30° (slivers), 45°
+  (no hexagon star; asymmetric triangle motifs), 67.5° (sharper),
+  90° (star collapse). Deviations documented in the module
+  header. See PATTERNS.MD §58.
 
 ### 15. Random/statistical tilings (blocked on a determinism policy)
 
@@ -1526,6 +1538,20 @@ that already exists twice.
 
 ## Changelog of this file
 
+- 2026-11-19 — M100 (second commit): candidate #14 gained a seventh
+  landed inference configuration — `hankin-3-4-6-4` on the
+  rhombitrihexagonal 3.4.6.4 substrate (θK = 60°, δ = 0, p6m):
+  regular {6/2} hexagram per hexagon (12-gon core with 60° tips /
+  240° notches plus six 60°-lozenge rhombi — 7 faces); the three
+  unit squares unpaired (0 pairs, single-face); each equilateral
+  triangle tile in the side-1/2 4-subdivision limit (star tips
+  reach the edge midpoints exactly — 4 faces each); 18 faces per
+  lattice cell ⟨(1.5+√3/2, √3/2+1/2),(0,1+√3)⟩, det 4√3/2+3;
+  p6m verified on a ±5-lattice window (553-face interior disk, 12
+  D6 elements, 0 key mismatches at 1e-6). 6 new tests (1 engine
+  self-consistency + 5 registry). Census: 92 → 93 tilings,
+  104 → 105 memberships, Islamic 15 → 16, 644 → 650 tests
+  (landed on main). Landed-note added to candidate #14.
 - 2026-11-19 — M100: candidate #14 gained a sixth landed inference
   configuration — `hankin-3-6-3-6` on the trihexagonal 3.6.3.6
   substrate (θK = 60°, δ = 0, p6m): the classical regular {6/2}
