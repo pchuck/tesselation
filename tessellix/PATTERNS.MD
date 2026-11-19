@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (102 tilings)
+## Implemented (105 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -105,6 +105,9 @@ figures at the split midpoints, `2.4.4`).
 | `kuniform-dual-n1` | dual of 2-uniform (4.6.12; 3.4.6.4) | p6m | face-centroid dual of `kuniform-n1`, constructed by the `dual()` helper; 18 faces/cell — 12 congruent 30°/60°/90° triangles (sides 1+√3, (3+√3)/2, (1+√3)/2; area (3+2√3)/4) + 6 congruent quadrilaterals (sides (1+√3)/2, (3+√3)/6, (3+√3)/6, (1+√3)/2; angles 60°/90°/120°/90°; area (3+2√3)/6); Σ = 12+8√3 = \|det\|, edge-to-edge, 6-fold center at (3(1+√3)/2, (3+√3)/2) (M102) |
 | `kuniform-dual-n13` | dual of 2-uniform (3⁶; 3².4.12) | p6m | face-centroid dual of `kuniform-n13`, constructed by the `dual()` helper; 14 faces/cell — 2 regular hexagons (side 1/√3, area √3/2) + 12 congruent quadrilaterals (sides 1/√3, (3+√3)/6, (3+√3)/2, 1+2/√3; angles 120°/120°/90°/30°; area (9+5√3)/12); Σ = 9+6√3 = \|det\|, edge-to-edge, 6-fold center at (5(1+√3)/2, 5(3+√3)/2) (M102) |
 | `kuniform-dual-n20` | dual of 2-uniform (3⁶; 3⁴.6) | p6 | face-centroid dual of `kuniform-n20`, constructed by the `dual()` helper; 12 faces/cell — 6 regular hexagons (side 1/√3, area √3/2) + 6 congruent pentagons (sides 1/√3 ×3, 2/√3 ×2; angles 60°/120°/120°/120°/120°; area 7√3/12); Σ = 13√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin; chiral p6 — all six mirrors fail (matches the primal) (M102) |
+| `kuniform-dual-pmm` | dual of 2-uniform (3.6.3.6; 3².6²) | pmm | face-centroid dual of `kuniform-pmm`, constructed by the `dual()` helper; 3 faces/cell — 1 rhombus (side 2/√3, angles 60°/120°, area 2√3/3) + 2 congruent quadrilaterals (sides 1/√3, 2/√3, 2/√3, √3; angles 60°/60°/120°/120°; area 2√3/3); Σ = 2√3 = \|det\|, edge-to-edge, four 2-fold centers per cell (0,0), (1,0), (0,√3/2), (1,√3/2) all on mirror intersections, mirrors horizontal/vertical through all of them (M106) |
+| `kuniform-dual-n12` | dual of 2-uniform (3².6²; 3⁴.6) | cmm | face-centroid dual of `kuniform-n12`, constructed by the `dual()` helper; 4 faces/cell — 2 congruent quadrilaterals (sides 1/√3, 2/√3, 2/√3, √3; angles 60°/60°/120°/120°; area 2√3/3) + 2 congruent pentagons (sides 1/√3 ×3, 2/√3 ×2; angles 60°/120°/120°/120°/120°; area 7√3/12 — the n20-dual pentagon); Σ = 5√3/2 = \|det\|, edge-to-edge, 2-folds at (0,0) and (√3/2,0) on the mirror intersections plus the glide-only (off-mirror) centers (√3/4,5/4) and (3√3/4,5/4) (M106) |
+| `kuniform-dual-n19` | dual of 2-uniform (3⁶; 3⁴.6) | p6m | face-centroid dual of `kuniform-n19`, constructed by the `dual()` helper; 8 faces/cell — 6 congruent pentagons (the 3⁴.6 orbit; sides 1/√3 ×3, 2/√3 ×2; area 7√3/12) + 2 regular hexagons (the 3⁶ orbit; side 1/√3, area √3/2); Σ = 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (the primal's flower center, where the six pentagons meet), 2-folds additionally at (3/2,0), (3/4,3√3/4), (9/4,3√3/4) (M106) |
 | `pentagon-13` | Rice pentagon, type 13 (1977, A = 120°) | p2 | 2-isohedral chiral pair (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3); long side split into two collinear a-edges (M49) |
 | `pentagon-14` | Stein pentagon, type 14 (completely determined) | p2 | 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, exact Q(√57, β) with β = √((11√57−25)/8); long sides split into two collinear unit fine edges — 7/5/6-vertex cells (M50) |
 | `pentagon-15` | Mann pentagon, type 15 (MMVD 2015) | pgg | 3-isohedral (seeds 0/1/2), 12 tiles per rectangular cell = 4 congruent 3-tile blocks, exact Q(√3) (a = 2, b = d = e = 1, c = √(2+√3), all vertices on the (p+q√3)/2 grid); non-edge-to-edge — 4 T-split edges per cell (M55) |
@@ -3754,6 +3757,90 @@ documentation pending).
   wiki parenthetical); full combinatorial derivation + construction
   stays open.
 
+### 61. K-uniform duals batch 3 (pmm/n12/n19) ✅ (M106)
+
+- **Motif:** the face-centroid duals of the remaining non-square
+  2-uniform primals — `kuniform-pmm` (pmm, rectangular),
+  `kuniform-n12` (cmm, centered rectangular), `kuniform-n19` (p6m,
+  hexagonal L9 flower lattice) — constructed at runtime by the same
+  `dual()` helper that produced the M98/M102 batches; no
+  hand-transcribed dual geometry. Batch 3 is the first to leave the
+  hexagonal 60° basis: it lands the family's first pmm- and cmm-duals,
+  and the first dual of a non-flower hexagonal tiling (the n19 dual's
+  lattice is the primal's L9 itself). *Provisional number — this
+  fork's numbering is already out of sequence (duplicate §56), and the
+  M-number will be renumbered at integration.*
+- **The three duals (per cell):**
+  - `kuniform-dual-pmm` (rectangular a1 = (2,0), a2 = (0,√3),
+    det 2√3): 3 faces — 1 rhombus (the 3.6.3.6 orbit — the shared
+    vertex of a hexagon pair; sides 2/√3 ×4, angles 60°/120° in
+    cyclic order, area 2√3/3, Voronoi vertex (1,0)) + 2 congruent
+    quadrilaterals (the 3².6² orbit — the hexagon side corners, two
+    translation classes under the rectangular lattice; sides 1/√3,
+    2/√3, 2/√3, √3 in cyclic order; angles 60°/60°/120°/120°; area
+    2√3/3). Σ = 2√3.
+  - `kuniform-dual-n12` (centered rectangular a1 = (√3,0),
+    a2 = (√3/2,5/2), det 5√3/2): 4 faces — 2 congruent quadrilaterals
+    (the 3².6² orbit; sides 1/√3, 2/√3, 2/√3, √3; angles
+    60°/60°/120°/120°; area 2√3/3) + 2 congruent pentagons (the 3⁴.6
+    orbit; sides 1/√3 ×3 and 2/√3 ×2; angles 60°/120°/120°/120°/120°;
+    area 7√3/12 — the same 3⁴.6 dual pentagon as
+    `kuniform-dual-n20`). Σ = 5√3/2.
+  - `kuniform-dual-n19` (hexagonal L9, det 9√3/2): 8 faces — 6
+    congruent pentagons (the 3⁴.6 orbit — one per corner of the
+    origin flower, each a distinct translation class; sides 1/√3 ×3
+    and 2/√3 ×2; area 7√3/12) + 2 regular hexagons (the 3⁶ orbit —
+    the petal tips; side 1/√3, area √3/2, at (3/2, √3/2) and
+    (0, √3)). Σ = 9√3/2.
+  Each primal's vertex orbits split into more translation classes than
+  its full-group orbits (pmm: 3, n12: 4, n19: 8 per cell), so the
+  dual cell carries 3, 4, and 8 faces respectively — the census test
+  keys classes by (vertex count, count in cell), as since M102.
+- **Group:** measured, not assumed. The centroid dual is equivariant
+  and involutive, so every dual keeps its primal's group: pmm stays
+  pmm, cmm stays cmm, p6m stays p6m — but the center structure of the
+  rectangular/centered-rectangular cases is new, so the symmetry test
+  was generalized: `Case` gained `lattice_kind` (per-case lattice
+  assertion replacing the blanket Hexagonal check) and `mirror_dirs`,
+  and `duals_match_measured_groups` now branches on group — P6m/P6
+  cases keep the C6 + six-mirrors-through-6-fold-center probes with
+  R30 negative; Pmm/Cmm cases probe R180 about the measured
+  mirror-intersection 2-fold center (positive), R30/R60/R90/R120
+  about it (all negative), the two measured axis-parallel mirrors
+  through the center (positive), the 45° bisector mirror (negative),
+  and R180 about an off-center point (negative). Measured: the pmm
+  dual's 2-folds are (0,0), (1,0), (0,√3/2), (1,√3/2) — one per
+  mirror intersection — with horizontal/vertical mirrors through all
+  of them; the n12 dual's 2-folds are (0,0) and (√3/2,0) on the
+  mirror intersections plus (√3/4,5/4) and (3√3/4,5/4) off the
+  mirrors (glide-only — no mirror lines pass through them); the n19
+  dual's 6-fold center is the origin (the primal's flower center,
+  where its six pentagons meet) with 2-folds additionally at (3/2,0),
+  (3/4,3√3/4), (9/4,3√3/4).
+- **Verification (9 new tests):** the per-dual
+  covers_region/rotated_scaled/deterministic trio (house pattern);
+  the shared battery now covers all 11 duals — convex + CCW per face
+  with per-class per-face areas vs. exact Q(√3) values to 1e-9 (class
+  lookup by vertex count AND count in cell), edge-to-edge over a
+  ±4-tile window (0 unpaired, 0 T-junctions), exactly-once fine-grid
+  coverage, proper coloring, orbit correspondence, and the
+  measured-group symmetry probes above.
+- **Category placement:** Laves primary only, `secondary: &[]`, as in
+  the M98/M102 batches (2-uniform duals, not Two-Uniform arc
+  entries).
+- **Rust:** `dual.rs` +3 constructors (`kuniform_dual_pmm/n12/n19()`,
+  feature `kuniform`), registry +3 (second `#[cfg(feature =
+  "kuniform")]` block, after `kuniform-dual-n20`), culling list +3,
+  census 100 → 103 tilings / 112 → 115 memberships (Laves 19 → 22 =
+  19 primary + 3 self-dual secondaries; 11 machine-dualized k-uniform
+  duals across M98 + M102 + M106), tess-tui tab pins updated to the
+  same counts.
+- **Status:** landed (M106, fork-local numbering — renumbered at
+  integration). 103 tilings, 115 memberships, 695 tests. Full bar
+  green: cargo check + clippy (both target sets) zero warnings, cargo
+  test --workspace --all-features 695/695. Remaining k-uniform duals:
+  the 9 square-family rows stay blocked on unimplemented primals.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -5470,3 +5557,35 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   landings; the fork's step numbers were on its own base). Full bar
   green: cargo check + clippy (both target sets) zero warnings,
   cargo test --workspace --all-features 698/698. Details in §60.
+- 2026-11-19 — M106 k-uniform duals batch 3 (pmm/n12/n19) ✅
+  (§61 — renumbered from the fork's provisional §64 by landing
+  order): the M98
+  `dual()` helper dualizes the remaining non-square 2-uniform
+  primals — `kuniform-pmm` (pmm), `kuniform-n12` (cmm),
+  `kuniform-n19` (p6m) — the first pmm- and cmm-duals of the family
+  and the first to leave the hexagonal 60° basis. Per cell: pmm 3
+  faces (1 rhombus + 2 congruent quadrilaterals, all area 2√3/3);
+  n12 4 (2 quadrilaterals, area 2√3/3, + 2 pentagons, area 7√3/12);
+  n19 8 (6 pentagons, area 7√3/12, + 2 regular hexagons, area √3/2)
+  — per-class per-face areas exact in Q(√3), per-cell Σ = |det| in
+  every case. The primals' vertex orbits split into more translation
+  classes than full-group orbits (3/4/8 per cell), so each dual cell
+  carries 3/4/8 faces. Symmetry measured, not assumed: pmm keeps pmm
+  (four 2-fold centers, all mirror intersections, mirrors
+  horizontal/vertical); cmm keeps cmm (two on-mirror 2-folds, two
+  off-mirror glide-only 2-folds at (√3/4,5/4) and (3√3/4,5/4)); p6m
+  keeps p6m with the 6-fold center at the origin (the primal's flower
+  center). The symmetry test was generalized to non-hexagonal
+  lattices: `Case` gained `lattice_kind` and `mirror_dirs`;
+  `duals_match_measured_groups` now branches on group — P6m/P6 keep
+  the C6 + six-mirror probes; Pmm/Cmm probe R180 about the measured
+  2-fold center, negative R30/R60/R90/R120, the two axis-parallel
+  mirrors positive, the 45° bisector negative, off-center R180
+  negative. 9 new tests (the per-dual trio); the shared battery now
+  covers all 11 duals. Census: 102 → 105 tilings, 114 → 117
+  memberships, Laves 19 → 22 (19 primary + 3 self-dual secondaries;
+  11 machine-dualized k-uniform duals across M98 + M102 + M106),
+  698 → 707 tests (landed on main after the M103 landing; the fork's
+  step numbers were on its own base). Full bar green: cargo check +
+  clippy (both target sets) zero warnings, cargo test --workspace
+  --all-features 707/707. Details in §61.

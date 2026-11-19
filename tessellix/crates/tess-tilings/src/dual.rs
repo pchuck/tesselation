@@ -24,14 +24,16 @@
 //! This module is the machine replacement for the hand-transcribed Laves
 //! tables in `laves.rs`: [`dual`] on each Archimedean primal reproduces
 //! its Laves twin exactly (oracle tests in `dual_tests` below), and the
-//! eight constructors dualize the two k-uniform batches — the p6m
-//! 2-uniform family `kuniform-p6m`, `kuniform-n18`, `kuniform-n9`,
-//! `kuniform-n8` and `kuniform-n5`, `kuniform-n1`, `kuniform-n13`,
-//! `kuniform-n20` (batch 2; `kuniform-n20` is the chiral p6 form).
+//! eleven constructors dualize the three k-uniform batches — batch 1's
+//! p6m 2-uniform family `kuniform-p6m`, `kuniform-n18`, `kuniform-n9`,
+//! `kuniform-n8`, batch 2's `kuniform-n5`, `kuniform-n1`,
+//! `kuniform-n13` and `kuniform-n20` (the chiral p6 form), and batch 3's
+//! `kuniform-dual-pmm`, `kuniform-dual-n12` and `kuniform-dual-n19`
+//! (rectangular, centered-rectangular and hexagonal primals).
 //!
 //! Every `LatticeTiling` here is built at call time (the orbit scan is
 //! O(cells × vertices) — trivial), so the registry re-constructs the
-//! eight duals on each `registry()` call. All id/name/description/seed
+//! eleven duals on each `registry()` call. All id/name/description/seed
 //! fields are `'static` literals; only `cells` is computed, so the
 //! returned tables need no lazy globals and register like any other.
 //!
@@ -471,6 +473,83 @@ pub fn kuniform_dual_n20() -> LatticeTiling {
     .expect("kuniform-n20 dual: non-degenerate lattice")
 }
 
+/// Face-centroid dual of `kuniform-pmm` (2-uniform 3.6.3.6; 3².6², pmm).
+///
+/// Same lattice as the primal, a1 = (2, 0), a2 = (0, √3), |det| = 2√3
+/// (rectangular). The cell holds the 3 dual faces of the 3 vertex
+/// orbits: one rhombus (the 3.6.3.6 orbit — the shared vertex of a
+/// hexagon pair; sides 2/√3 ×4, angles 60°/120°/120°/60° in cyclic
+/// order, area 2√3/3, center (1, 0)) and two congruent quadrilaterals
+/// (the 3².6² orbit — the hexagon-row vertices (±1/2, √3/2), two
+/// translation classes under the rectangular lattice; sides 1/√3,
+/// 2/√3, 2/√3, √3 in cyclic order; angles 60°/60°/120°/120°; area
+/// 2√3/3). The three areas sum to 2√3 = |det|. Measured symmetry pmm
+/// (the dual keeps the primal's group): 2-fold centers at (0, 0),
+/// (1, 0), (0, √3/2), (1, √3/2) — one per mirror intersection — and
+/// mirror lines horizontal and vertical through all of them; R60, R90
+/// and every off-axis mirror fail.
+pub fn kuniform_dual_pmm() -> LatticeTiling {
+    build(
+        &kuniform::kuniform_pmm(),
+        "kuniform-dual-pmm",
+        "Dual of 2-uniform (3.6.3.6; 3².6²)",
+        "Face-centroid dual of the 2-uniform (3.6.3.6; 3².6²) tiling (pmm) — one rhombus plus two congruent quadrilaterals per cell.",
+    )
+    .expect("kuniform-pmm dual: non-degenerate lattice")
+}
+
+/// Face-centroid dual of `kuniform-n12` (2-uniform 3².6²; 3⁴.6, cmm).
+///
+/// Same lattice as the primal, a1 = (√3, 0), a2 = (√3/2, 5/2),
+/// |det| = 5√3/2 (centered rectangular). The cell holds the 4 dual
+/// faces of the 4 vertex orbits: two congruent quadrilaterals (the
+/// 3².6² orbit — the hexagon side corners (±√3/2, ±1/2), two
+/// translation classes under the primitive cell, class
+/// representatives (−√3/2, ±1/2); sides 1/√3, 2/√3, 2/√3, √3 in
+/// cyclic order; angles 60°/60°/120°/120°; area 2√3/3) and two
+/// congruent pentagons (the 3⁴.6 orbit — the hexagon top/bottom
+/// vertices (0, ±1); sides 1/√3 ×3 and 2/√3 ×2; angles
+/// 60°/120°/120°/120°/120°; area 7√3/12 — the same 3⁴.6 dual
+/// pentagon as `kuniform-dual-n20`). The four areas sum to 5√3/2 = |det|.
+/// Measured symmetry cmm (the dual keeps the primal's group): 2-fold
+/// centers at (0, 0) and (√3/2, 0) on the mirror intersections, plus
+/// the two off-mirror (glide-only) centers (√3/4, 5/4) and (3√3/4,
+/// 5/4); mirror lines horizontal and vertical through the on-mirror
+/// centers only; R60, R90 and every off-axis mirror fail.
+pub fn kuniform_dual_n12() -> LatticeTiling {
+    build(
+        &kuniform::kuniform_n12(),
+        "kuniform-dual-n12",
+        "Dual of 2-uniform (3².6²; 3⁴.6)",
+        "Face-centroid dual of the 2-uniform (3².6²; 3⁴.6) tiling (cmm) — two quadrilaterals and two congruent pentagons per cell.",
+    )
+    .expect("kuniform-n12 dual: non-degenerate lattice")
+}
+
+/// Face-centroid dual of `kuniform-n19` (2-uniform 3⁶; 3⁴.6, p6m).
+///
+/// Same lattice as the primal, a1 = (3, 0), a2 = (3/2, 3√3/2),
+/// |det| = 9√3/2 (hexagonal — the flower lattice L9). The cell holds
+/// the 8 dual faces of the 8 vertex orbits: six congruent pentagons
+/// (the 3⁴.6 orbit — the six corners of the origin flower, one per
+/// translation class; sides 1/√3 ×3 and 2/√3 ×2; angles
+/// 60°/120°/120°/120°/120°; area 7√3/12) and two regular hexagons
+/// (the 3⁶ orbit — the petal tips, at (3/2, √3/2) and (0, √3); side
+/// 1/√3, area √3/2). The eight areas sum to 9√3/2 = |det|. Measured
+/// symmetry p6m, with the 6-fold center at the origin (the primal's
+/// flower center — in the dual, the point where the six 3⁴.6 pentagons
+/// meet); 2-fold centers additionally at (3/2, 0), (3/4, 3√3/4) and
+/// (9/4, 3√3/4).
+pub fn kuniform_dual_n19() -> LatticeTiling {
+    build(
+        &kuniform::kuniform_n19(),
+        "kuniform-dual-n19",
+        "Dual of 2-uniform (3⁶; 3⁴.6)",
+        "Face-centroid dual of the 2-uniform (3⁶; 3⁴.6) tiling (p6m) — six congruent pentagons plus two regular hexagons per cell.",
+    )
+    .expect("kuniform-n19 dual: non-degenerate lattice")
+}
+
 #[cfg(test)]
 mod dual_tests {
     use super::*;
@@ -482,6 +561,7 @@ mod dual_tests {
 
     use crate::kuniform;
     use crate::tests::{check_covers, check_det, check_rotated};
+    use tess_core::symmetry::LatticeKind;
 
     fn v2(x: f64, y: f64) -> Vec2 {
         Vec2::new(x, y)
@@ -489,12 +569,21 @@ mod dual_tests {
 
     /// One dual under test, with the machine-derived face-class census.
     /// `classes` lists (vertex count, count in cell, exact per-face area)
-    /// for each congruence class, machine-derived during M98/M102.
+    /// for each congruence class, machine-derived during M98/M102/M106.
     /// `group` is the wallpaper group measured by the symmetry probes
-    /// below (p6m duals keep the primal's group; the p6 dual stays chiral);
-    /// `center` is that group's 6-fold center in cell coordinates (the
-    /// origin for the M98 batch and `kuniform-dual-n20`; off-origin for
-    /// the M102 duals `n5`/`n1`/`n13`).
+    /// below (the centroid dual is equivariant and involutive, so every
+    /// dual keeps its primal's group: p6m duals stay p6m, the p6 dual
+    /// stays chiral, the pmm/cmm duals stay pmm/cmm). `center` is the
+    /// group's special center in cell coordinates: the 6-fold center
+    /// for the P6m/P6 cases (the origin for the M98 batch and
+    /// `kuniform-dual-n20`/`kuniform-dual-n19`; off-origin for the M102
+    /// duals `n5`/`n1`/`n13`) and a mirror-intersection 2-fold center
+    /// for the Pmm/Cmm cases (M106). `lattice_kind` is the shared
+    /// lattice's kind (the dual keeps the primal's lattice).
+    /// `mirror_dirs` are the measured mirror-line directions (unit
+    /// vectors) through `center` for the Pmm/Cmm cases — horizontal and
+    /// vertical for both; the P6m/P6 cases probe the six k·30° axes
+    /// through their 6-fold center instead, so the field is unused there.
     struct Case {
         id: &'static str,
         make: fn() -> LatticeTiling,
@@ -502,12 +591,19 @@ mod dual_tests {
         classes: [(usize, usize, f64); 2],
         group: WallpaperGroup,
         center: Vec2,
+        lattice_kind: LatticeKind,
+        mirror_dirs: [Vec2; 2],
     }
 
     const S3: f64 = 1.7320508075688773; // √3
     const H: f64 = 0.8660254037844386; // √3/2
 
     fn cases() -> Vec<Case> {
+        // The P6m/P6 cases leave `mirror_dirs` unset for the probes
+        // (they use the six k·30° axes about the 6-fold center); the
+        // value below is what the Pmm/Cmm cases measure, and is shared
+        // for readability.
+        let axis_mirrors = [v2(1.0, 0.0), v2(0.0, 1.0)];
         vec![
             Case {
                 id: "kuniform-dual-p6m",
@@ -519,6 +615,8 @@ mod dual_tests {
                 ],
                 group: WallpaperGroup::P6m,
                 center: Vec2::ZERO,
+                lattice_kind: LatticeKind::Hexagonal,
+                mirror_dirs: axis_mirrors,
             },
             Case {
                 id: "kuniform-dual-n18",
@@ -530,6 +628,8 @@ mod dual_tests {
                 ],
                 group: WallpaperGroup::P6m,
                 center: Vec2::ZERO,
+                lattice_kind: LatticeKind::Hexagonal,
+                mirror_dirs: axis_mirrors,
             },
             Case {
                 id: "kuniform-dual-n9",
@@ -541,6 +641,8 @@ mod dual_tests {
                 ],
                 group: WallpaperGroup::P6m,
                 center: Vec2::ZERO,
+                lattice_kind: LatticeKind::Hexagonal,
+                mirror_dirs: axis_mirrors,
             },
             Case {
                 id: "kuniform-dual-n8",
@@ -552,6 +654,8 @@ mod dual_tests {
                 ],
                 group: WallpaperGroup::P6m,
                 center: Vec2::ZERO,
+                lattice_kind: LatticeKind::Hexagonal,
+                mirror_dirs: axis_mirrors,
             },
             Case {
                 id: "kuniform-dual-n5",
@@ -563,6 +667,8 @@ mod dual_tests {
                 ],
                 group: WallpaperGroup::P6m,
                 center: v2(3.0 + S3, 2.0 + 2.0 * S3),
+                lattice_kind: LatticeKind::Hexagonal,
+                mirror_dirs: axis_mirrors,
             },
             Case {
                 id: "kuniform-dual-n1",
@@ -574,6 +680,8 @@ mod dual_tests {
                 ],
                 group: WallpaperGroup::P6m,
                 center: v2(3.0 * (1.0 + S3) / 2.0, (3.0 + S3) / 2.0),
+                lattice_kind: LatticeKind::Hexagonal,
+                mirror_dirs: axis_mirrors,
             },
             Case {
                 id: "kuniform-dual-n13",
@@ -585,6 +693,8 @@ mod dual_tests {
                 ],
                 group: WallpaperGroup::P6m,
                 center: v2(5.0 * (1.0 + S3) / 2.0, 5.0 * (3.0 + S3) / 2.0),
+                lattice_kind: LatticeKind::Hexagonal,
+                mirror_dirs: axis_mirrors,
             },
             Case {
                 id: "kuniform-dual-n20",
@@ -596,6 +706,47 @@ mod dual_tests {
                 ],
                 group: WallpaperGroup::P6,
                 center: Vec2::ZERO,
+                lattice_kind: LatticeKind::Hexagonal,
+                mirror_dirs: axis_mirrors,
+            },
+            Case {
+                id: "kuniform-dual-pmm",
+                make: kuniform_dual_pmm,
+                primal: kuniform::kuniform_pmm,
+                classes: [
+                    (4, 2, 2.0 * S3 / 3.0), // 3².6²-ordered kite: 1/√3, 2/√3, 2/√3, √3
+                    (4, 1, 2.0 * S3 / 3.0), // 3.6.3.6-ordered rhombus, side 2/√3
+                ],
+                group: WallpaperGroup::Pmm,
+                center: v2(1.0, 0.0), // rhombus center (a 2-fold center)
+                lattice_kind: LatticeKind::Rectangular,
+                mirror_dirs: axis_mirrors,
+            },
+            Case {
+                id: "kuniform-dual-n12",
+                make: kuniform_dual_n12,
+                primal: kuniform::kuniform_n12,
+                classes: [
+                    (4, 2, 2.0 * S3 / 3.0),   // 3².6²-ordered kite: 1/√3, 2/√3, 2/√3, √3
+                    (5, 2, 7.0 * S3 / 12.0),  // 3⁴.6-ordered pentagon
+                ],
+                group: WallpaperGroup::Cmm,
+                center: Vec2::ZERO, // dual vertex (a 2-fold center on the mirrors)
+                lattice_kind: LatticeKind::CenteredRectangular,
+                mirror_dirs: axis_mirrors,
+            },
+            Case {
+                id: "kuniform-dual-n19",
+                make: kuniform_dual_n19,
+                primal: kuniform::kuniform_n19,
+                classes: [
+                    (5, 6, 7.0 * S3 / 12.0), // 3⁴.6-ordered pentagon
+                    (6, 2, H),               // regular hexagon, side 1/√3
+                ],
+                group: WallpaperGroup::P6m,
+                center: Vec2::ZERO, // 6-fold center (the primal's flower center)
+                lattice_kind: LatticeKind::Hexagonal,
+                mirror_dirs: axis_mirrors,
             },
         ]
     }
@@ -926,6 +1077,93 @@ mod dual_tests {
         );
     }
 
+    #[test]
+    fn kuniform_dual_pmm_covers_region() {
+        check_covers(
+            &kuniform_dual_pmm(),
+            "kuniform-dual-pmm",
+            BBox::new(v2(-5.0, -4.0), v2(9.0, 8.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_pmm_rotated_scaled() {
+        check_rotated(
+            &kuniform_dual_pmm(),
+            "kuniform-dual-pmm(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_pmm_deterministic() {
+        check_det(
+            &kuniform_dual_pmm(),
+            "kuniform-dual-pmm",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n12_covers_region() {
+        check_covers(
+            &kuniform_dual_n12(),
+            "kuniform-dual-n12",
+            BBox::new(v2(-5.0, -4.0), v2(9.0, 8.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n12_rotated_scaled() {
+        check_rotated(
+            &kuniform_dual_n12(),
+            "kuniform-dual-n12(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n12_deterministic() {
+        check_det(
+            &kuniform_dual_n12(),
+            "kuniform-dual-n12",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n19_covers_region() {
+        check_covers(
+            &kuniform_dual_n19(),
+            "kuniform-dual-n19",
+            BBox::new(v2(-5.0, -4.0), v2(9.0, 8.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n19_rotated_scaled() {
+        check_rotated(
+            &kuniform_dual_n19(),
+            "kuniform-dual-n19(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n19_deterministic() {
+        check_det(
+            &kuniform_dual_n19(),
+            "kuniform-dual-n19",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
     // ------------------------------------------------------------------
     // Geometry census: convexity, orientation, exact areas, face classes.
     // ------------------------------------------------------------------
@@ -1199,12 +1437,18 @@ mod dual_tests {
 
     // ------------------------------------------------------------------
     // Symmetry: each dual matches its measured wallpaper group about
-    // its 6-fold center. The M98 batch and kuniform-dual-n20 are
-    // centered at the origin; the M102 duals n5/n1/n13 have their
-    // 6-fold centers off the origin (the origin is only a 3-fold /
-    // 2-fold center of those tables). p6m cases: C6 + six mirrors
-    // positive. The p6 case: C6 positive, every mirror negative
-    // (chiral). R30 is never a symmetry.
+    // its special center. The M98 batch, kuniform-dual-n20 and
+    // kuniform-dual-n19 carry their 6-fold center at the origin; the
+    // M102 duals n5/n1/n13 have their 6-fold centers off the origin
+    // (the origin is only a 3-fold / 2-fold center of those tables).
+    // P6m cases: C6 + six mirrors through the 6-fold center positive.
+    // The P6 case: C6 positive, every mirror negative (chiral).
+    // R30 is never a 6-fold-center symmetry. Pmm/Cmm cases (M106,
+    // rectangular / centered-rectangular lattices): R180 about the
+    // measured mirror-intersection 2-fold center positive, no higher
+    // rotation (R30/R60/R90/R120 negative), the two measured
+    // axis-parallel mirrors through the center positive, the 45°
+    // bisector mirror negative, R180 about a non-center negative.
     // ------------------------------------------------------------------
 
     /// Cell-set symmetry probe (same method as `kuniform_tests::
@@ -1297,46 +1541,99 @@ mod dual_tests {
             let dual = (c.make)();
             assert_eq!(dual.group, c.group, "{}: declared group", c.id);
             assert_eq!(
-                dual.lattice_kind,
-                tess_core::symmetry::LatticeKind::Hexagonal,
-                "{}: lattice kind",
-                c.id
+                dual.lattice_kind, c.lattice_kind, "{}: lattice kind", c.id
             );
             let deg = std::f64::consts::PI / 180.0;
             let ctr = c.center;
-            // C6 about the measured 6-fold center: positive for every
-            // case (both the p6m and the chiral p6 duals).
-            for k in 1..=5 {
-                let ang = (k as f64) * 60.0 * deg;
-                probe_dual_symmetry(
-                    &dual,
-                    |p| ctr + (p - ctr).rotated(ang),
-                    true,
-                    &format!("{} R{}", c.id, k * 60),
-                );
+            match c.group {
+                WallpaperGroup::P6m | WallpaperGroup::P6 => {
+                    // C6 about the measured 6-fold center: positive for
+                    // every case (both the p6m and the chiral p6 duals).
+                    for k in 1..=5 {
+                        let ang = (k as f64) * 60.0 * deg;
+                        probe_dual_symmetry(
+                            &dual,
+                            |p| ctr + (p - ctr).rotated(ang),
+                            true,
+                            &format!("{} R{}", c.id, k * 60),
+                        );
+                    }
+                    // Mirrors through the 6-fold center: positive exactly
+                    // for the p6m cases; every one of them a negative
+                    // probe for the p6 case (chirality is part of the
+                    // measured group).
+                    for k in 0..6 {
+                        let phi = (k as f64) * 30.0 * deg;
+                        let d = v2(phi.cos(), phi.sin());
+                        let is_p6m = c.group == WallpaperGroup::P6m;
+                        probe_dual_symmetry(
+                            &dual,
+                            move |p| ctr + d * (2.0 * (p - ctr).dot(d)) - (p - ctr),
+                            is_p6m,
+                            &format!("{} M{}", c.id, k * 30),
+                        );
+                    }
+                    // R30 about the 6-fold center: never a symmetry (the
+                    // rotation subgroup is C6, not C12).
+                    probe_dual_symmetry(
+                        &dual,
+                        |p| ctr + (p - ctr).rotated(30.0 * deg),
+                        false,
+                        &format!("{} R30 (negative probe)", c.id),
+                    );
+                }
+                WallpaperGroup::Pmm | WallpaperGroup::Cmm => {
+                    // R180 about the measured 2-fold center (a mirror
+                    // intersection): positive.
+                    probe_dual_symmetry(
+                        &dual,
+                        |p| ctr + (ctr - p),
+                        true,
+                        &format!("{} R180 (2-fold center)", c.id),
+                    );
+                    // No higher-order rotation about that center: the
+                    // rotation subgroup is C2 (R30/R60/R90/R120 all
+                    // fail; on the rectangular lattices they also fail
+                    // the lattice-automorphism check).
+                    for k in [30.0, 60.0, 90.0, 120.0] {
+                        probe_dual_symmetry(
+                            &dual,
+                            |p| ctr + (p - ctr).rotated(k * deg),
+                            false,
+                            &format!("{} R{} (negative probe)", c.id, k as i32),
+                        );
+                    }
+                    // The two measured mirror directions through the
+                    // center (horizontal + vertical for both duals):
+                    // positive.
+                    for (mi, d) in c.mirror_dirs.iter().enumerate() {
+                        let d = *d;
+                        probe_dual_symmetry(
+                            &dual,
+                            move |p| ctr + d * (2.0 * (p - ctr).dot(d)) - (p - ctr),
+                            true,
+                            &format!("{} mirror {} (through 2-fold center)", c.id, mi),
+                        );
+                    }
+                    // The 45° bisector is not a mirror (the point group
+                    // is 2mm with axis-parallel mirrors only).
+                    let d = v2((45.0 * deg).cos(), (45.0 * deg).sin());
+                    probe_dual_symmetry(
+                        &dual,
+                        move |p| ctr + d * (2.0 * (p - ctr).dot(d)) - (p - ctr),
+                        false,
+                        &format!("{} mirror 45 (negative probe)", c.id),
+                    );
+                    // R180 about a generic (non-center) point fails.
+                    probe_dual_symmetry(
+                        &dual,
+                        |p| ctr + v2(0.13, 0.17) + (ctr + v2(0.13, 0.17) - p),
+                        false,
+                        &format!("{} R180 off-center (negative probe)", c.id),
+                    );
+                }
+                other => panic!("{}: unhandled group {:?} in symmetry probes", c.id, other),
             }
-            // Mirrors through the 6-fold center: positive exactly for the
-            // p6m cases; every one of them a negative probe for the p6
-            // case (chirality is part of the measured group).
-            for k in 0..6 {
-                let phi = (k as f64) * 30.0 * deg;
-                let d = v2(phi.cos(), phi.sin());
-                let is_p6m = c.group == WallpaperGroup::P6m;
-                probe_dual_symmetry(
-                    &dual,
-                    move |p| ctr + d * (2.0 * (p - ctr).dot(d)) - (p - ctr),
-                    is_p6m,
-                    &format!("{} M{}", c.id, k * 30),
-                );
-            }
-            // R30 about the 6-fold center: never a symmetry (the rotation
-            // subgroup is C6, not C12).
-            probe_dual_symmetry(
-                &dual,
-                |p| ctr + (p - ctr).rotated(30.0 * deg),
-                false,
-                &format!("{} R30 (negative probe)", c.id),
-            );
         }
     }
 
