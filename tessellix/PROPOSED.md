@@ -164,7 +164,7 @@ confirm the diffraction claim during the spike before declaring.
   | p4m | 3.12.12 ; 3.4.3.12 | 3,3 |
   | p6m | 3⁶ ; 3².6² ✅ `kuniform-p6m` (M44) | 2,3 |
   | p6  | 3⁶ ; 3.4.6 (variant 1) | 3,3 |
-  | p6  | 3⁶ ; 3.4.6 (variant 2) | 5,7 |
+  | p6  | 3⁶ ; 3.4.6 (variant 2) ✅ `kuniform-n20` (M96) | 5,7 → e = 6 exact (M96 torus enumeration, see PATTERNS.MD §46) |
   | cmm | 3².6² ; 3.4.6 | 2,4 |
   | pmm | 3.6.3.6 ; 3².6² ✅ `kuniform-pmm` (M48) | 2,3 |
   | cmm | 3.4².6 ; 3.6.3.6 (variant 2) | 3,4 |
@@ -197,7 +197,7 @@ confirm the diffraction claim during the spike before declaring.
   itself — assert exactly 2 vertex classes over a large patch), plus
   the culling list.
 - **Status:** implemented (M44 + M48 + M87 + M88 + M89 + M90 + M91
-  + M92) — 8 of 20 entries landed, 12 of 20 remain. The p6m entry 3⁶ ; 3².6² as
+  + M92 + M96) — 9 of 20 entries landed, 11 of 20 remain. The p6m entry 3⁶ ; 3².6² as
   `kuniform-p6m` (M44; index-3 honeycomb dissection, exact Q(√3)
   table, both vertex orbits + p6m generators verified by an
   exact-surd Python spike and Rust cell-set probes), the pmm entry
@@ -228,7 +228,18 @@ confirm the diffraction claim during the spike before declaring.
   the maximal fully-covered rectangle containing the block centre
   (the jagged 49-cell union bites past the 1-unit inset by up to
   0.675 units, e.g. at n13), 4 tess-tilings tests each, completing
-  the six-entry p6m block of the closed list).
+  the six-entry p6m block of the closed list). The first p6 entry
+  (M96 `kuniform-n20` 3⁶ ; 3⁴.6 — the flower construction: hexagon
+  flowers on the index-13 sublattice ⟨(1,3),(−3,4)⟩ of the unit
+  triangular lattice, 21 tiles/cell, 60° hexagonal basis
+  |b1| = |b2| = √13, |det| = 13√3/2 RIGHT-handed; 2-uniformity and
+  A:B = 1:1 pinned exactly by the class map k = 4X+3Y mod 13 (kernel
+  = L13, R60 = ×4 with the corner and non-corner class sets each one
+  orbit); p6 pinned by R60..R300 PASS + six negative mirror probes +
+  a full translation scan finding exactly L13; exact torus orbit
+  count t = 5 with triangle orbits {6,6,6,2}, edge orbits
+  {6,6,6,6,6,3} → e = 6, correcting the 5,7 parenthetical in the
+  table above).
 
 ---
 

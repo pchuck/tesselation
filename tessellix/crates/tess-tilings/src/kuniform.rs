@@ -1,10 +1,10 @@
 //! 2-uniform (k-uniform) tilings, expressed as [`LatticeTiling`] data
 //! tables.
 //!
-//! Eight entries are from the closed list of 20 two-vertex-orbit
+//! Nine entries are from the closed list of 20 two-vertex-orbit
 //! tilings by regular polygons (Krotenheerdt; see the Wikipedia
 //! "k-uniform tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`,
-//! `n8`, `n5`, `n1`, `n13`). The
+//! `n8`, `n5`, `n1`, `n13`, `n20`). The
 //! list's entries have no individual proper names, so these are named by
 //! their vertex configurations, following that convention:
 //!
@@ -37,6 +37,12 @@
 //!   t = 4, e = 4. A dodecagon ringed by squares and two triangle
 //!   orbits around 3⁶ vertices; the origin is a 3⁶ vertex, and the
 //!   6-fold center c is the center of the cell's dodecagon.
+//! * `kuniform-n20` — vertex figures 3⁶ ; 3⁴.6, group p6 (the
+//!   module's first chiral entry), t = 5, e = 6 (e = 7 in the
+//!   Wikipedia parenthetical — the exact torus enumeration
+//!   disagrees; see the function docs). Unit triangular lattice
+//!   with hexagon flowers on an index-13 sublattice; the origin is
+//!   a hexagon center and the 6-fold point.
 //!
 //! All coordinates lie in Z + (√3/2)·Q, stored through [`H`].
 
@@ -1308,6 +1314,103 @@ pub fn kuniform_n13() -> LatticeTiling {
         cells,
         offset: Vec2::ZERO,
         group: WallpaperGroup::P6m,
+        lattice_kind: LatticeKind::Hexagonal,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3⁶; 3⁴.6), wallpaper group p6.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n20` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons): t = 5 tile
+/// orbits. The flower construction: take the unit triangular lattice Λ
+/// and dissect, at each point of an index-13 sublattice
+/// L13 = ⟨B1 = (1,3), B2 = (−3,4)⟩ (lattice coordinates, 60° basis), the
+/// 6-face flower around that point into a regular unit hexagon. All
+/// remaining unit triangles stay intact. Center-center distances are
+/// √13, so flowers never touch (hard-core bound: norm² ≥ 7).
+///
+/// The translation lattice is ⟨B1, B2⟩ in real coordinates
+/// b1 = (5/2, 3H), b2 = (−1, 4H); |b1| = |b2| = √13 at 60°,
+/// |det| = 13√3/2 (right-handed). The origin is a hexagon center and the
+/// 6-fold point. Cell content: 1 hexagon + 20 triangles (26 lattice
+/// faces minus the 6-flower), vertices V = 12, edges E = 33,
+/// V − E + F = 0 on the torus.
+///
+/// Two vertex orbits, 6 points each per cell, pinned by exact modular
+/// arithmetic (class k(v) = 4X + 3Y mod 13, kernel = L13): the 3⁶ orbit
+/// is classes {2,5,6,7,8,11}, the 3⁴.6 orbit is the hexagon-corner class
+/// set {1,3,4,9,10,12}, and R60 acts as k → 4k with each set a single
+/// orbit — so the tiling is 2-uniform and A:B = 1:1 (m96b_torus.py).
+/// Under G = L13 ⋊ C6 the orbits are: 4 triangle orbits of sizes
+/// {6,6,6,2} (seeds 1–4: hexagon-edge triangles; two corner-triangle
+/// orbits; far triangles) plus the hexagon = t = 5; 6 edge orbits of
+/// sizes {6,6,6,6,6,3}. The Wikipedia parenthetical says e = 7, but the
+/// exact torus enumeration gives 6 (that annotation is unreliable — it
+/// also lists e = 1 for the snub hexagonal (3.6)², which is impossible
+/// since triangle–triangle and triangle–hexagon edges cannot share an
+/// orbit); the wiki figure's own four triangle colors reproduce
+/// {6,6,6,2}.
+///
+/// Symmetry: R60–R300 about the origin verified on a 46-radius window;
+/// all 6 mirror probes through the hexagon center and every mirror probe
+/// through A/B-class points fail (73.8% match through the hexagon
+/// center), and the full translation scan finds exactly the six
+/// norm-√13 vectors of L13 — the group is p6 (m96b_c13.py).
+pub fn kuniform_n20() -> LatticeTiling {
+    // Unit-triangle-lattice coordinates: real(v) = (X + Y/2, √3/2 · Y).
+    // Hexagon at the origin (seed 0), corners at the 6 unit neighbors.
+    let hex_c = [
+        Vec2::new(1.0, 0.0),
+        Vec2::new(0.5, H),
+        Vec2::new(-0.5, H),
+        Vec2::new(-1.0, 0.0),
+        Vec2::new(-0.5, -H),
+        Vec2::new(0.5, -H),
+    ];
+    let mut cells: Vec<Cell> = vec![Cell {
+        poly: Polygon::from_slice(&hex_c),
+        seed: 0,
+    }];
+
+    // 20 triangles: one per translation class, grouped by orbit into the
+    // four seeds (first appearance order): seed 1 = hexagon-edge
+    // triangles (6), seed 2 and 4 = the two corner-triangle orbits (6
+    // each), seed 3 = far triangles (2, the size-2 orbit centered on
+    // the 3-fold points).
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.0, 0.0), Vec2::new(1.5, H), Vec2::new(0.5, H)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(-0.5, 3.0 * H), Vec2::new(0.5, 3.0 * H), Vec2::new(0.0, 4.0 * H)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.5, 3.0 * H), Vec2::new(1.0, 4.0 * H), Vec2::new(0.0, 4.0 * H)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.0, 2.0 * H), Vec2::new(1.0, 2.0 * H), Vec2::new(0.5, 3.0 * H)]), seed: 3 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.0, 2.0 * H), Vec2::new(1.5, 3.0 * H), Vec2::new(0.5, 3.0 * H)]), seed: 4 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.5, H), Vec2::new(1.5, H), Vec2::new(1.0, 2.0 * H)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.5, H), Vec2::new(2.0, 2.0 * H), Vec2::new(1.0, 2.0 * H)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.0, 4.0 * H), Vec2::new(1.0, 4.0 * H), Vec2::new(0.5, 5.0 * H)]), seed: 4 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.0, 4.0 * H), Vec2::new(1.5, 5.0 * H), Vec2::new(0.5, 5.0 * H)]), seed: 3 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.5, 3.0 * H), Vec2::new(1.5, 3.0 * H), Vec2::new(1.0, 4.0 * H)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.5, 3.0 * H), Vec2::new(2.0, 4.0 * H), Vec2::new(1.0, 4.0 * H)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.0, 2.0 * H), Vec2::new(2.0, 2.0 * H), Vec2::new(1.5, 3.0 * H)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.5, 5.0 * H), Vec2::new(1.5, 5.0 * H), Vec2::new(1.0, 6.0 * H)]), seed: 4 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.5, 5.0 * H), Vec2::new(2.0, 6.0 * H), Vec2::new(1.0, 6.0 * H)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.0, 4.0 * H), Vec2::new(2.0, 4.0 * H), Vec2::new(1.5, 5.0 * H)]), seed: 4 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(2.0, 4.0 * H), Vec2::new(2.5, 5.0 * H), Vec2::new(1.5, 5.0 * H)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(1.5, 5.0 * H), Vec2::new(2.5, 5.0 * H), Vec2::new(2.0, 6.0 * H)]), seed: 2 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(2.5, 5.0 * H), Vec2::new(3.0, 6.0 * H), Vec2::new(2.0, 6.0 * H)]), seed: 4 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(2.0, 4.0 * H), Vec2::new(3.0, 4.0 * H), Vec2::new(2.5, 5.0 * H)]), seed: 1 });
+    cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(3.0, 4.0 * H), Vec2::new(3.5, 5.0 * H), Vec2::new(2.5, 5.0 * H)]), seed: 4 });
+    LatticeTiling {
+        id: "kuniform-n20",
+        name: "2-uniform (3⁶; 3⁴.6)",
+        description: "2-uniform tiling (3⁶; 3⁴.6) — unit triangular lattice with index-13 sublattice hexagon flowers, the chiral p6 form of the two-uniform 3⁴.6 family (p6).",
+        lattice: [Vec2::new(5.0 / 2.0, 3.0 * H), Vec2::new(-1.0, 4.0 * H)],
+        cells,
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::P6,
         lattice_kind: LatticeKind::Hexagonal,
         category: TilingCategory::TwoUniform,
         secondary: &[],

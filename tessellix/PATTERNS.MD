@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (86 tilings)
+## Implemented (87 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -86,6 +86,7 @@ figures at the split midpoints, `2.4.4`).
 | `kuniform-n5` | 2-uniform (3.4.6.4; 3.4².6) | p6m | hexagons ringed by squares and triangles; 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); origin a hexagon center, 6-fold center c the cell's minority-hexagon center (not O); 18 tiles/cell; the 3.4².6 vertex orbit is chiral (three figure strings, M90 report); Wikipedia `2-uniform n5`, t = 5, e = 5 (M90) |
 | `kuniform-n1` | 2-uniform (4.6.12; 3.4.6.4) | p6m | the 3-4-6-12 tiling: dodecagons alternating with hexagons, squares and triangles; 60° hexagonal basis, \|b1\| = \|b2\| = 2+2√3, det 12+8√3 (right-handed); origin a hexagon center, 6-fold center c the cell's dodecagon center (not O); 12 tiles/cell; Wikipedia `2-uniform n1`, t = 4, e = 4 (M91) |
 | `kuniform-n13` | 2-uniform (3⁶; 3².4.12) | p6m | dodecagons ringed by squares and two triangle orbits around 3⁶ vertices; 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); origin a 3⁶ vertex, 6-fold center c the cell's dodecagon center (off-ring, not O); 16 tiles/cell; Wikipedia `2-uniform n13`, t = 4, e = 4 (M92) |
+| `kuniform-n20` | 2-uniform (3⁶; 3⁴.6) | p6 | flower form: unit triangular lattice, hexagons dissected at the points of the index-13 sublattice ⟨(1,3),(−3,4)⟩; 60° hexagonal basis, \|b1\| = \|b2\| = √13, det 13√3/2 (right-handed); origin a hexagon center = 6-fold point; 21 tiles/cell; the two-uniform family's first p6 entry — R60 PASS + six mirror probes FAIL + full translation scan pin p6; Wikipedia `2-uniform n20`, t = 5 (e = 6 exact; the wiki parenthetical's e = 7 disagrees, see §46) (M96) |
 | `kuniform-dual-p6m` | dual of 2-uniform (3⁶; 3².6²) | p6m | face-centroid dual of `kuniform-p6m`, constructed by the `dual()` helper (M98); 7 faces/cell — 1 regular hexagon (side 1/√3, area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3, 2√3/3, √3; angles 60°/60°/120°/120°; area 2√3/3); Σ = 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) |
 | `kuniform-dual-n18` | dual of 2-uniform (3⁶; 3².4.3.4) | p6m | face-centroid dual of `kuniform-n18`, constructed by the `dual()` helper; 7 faces/cell — 1 regular hexagon (side 1/√3) + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6; angles 90°/90°/120°/120°/120°; area (2+√3)/4); Σ = 3+2√3 = \|det\|, edge-to-edge, origin a 3⁶ vertex = 6-fold center (M98) |
 | `kuniform-dual-n9` | dual of 2-uniform (3.4.6.4; 3².4.3.4) | p6m | face-centroid dual of `kuniform-n9`, constructed by the `dual()` helper; 12 faces/cell — 6 congruent quadrilaterals (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/120°; area (3+2√3)/6) + 6 pentagons congruent to the n18-dual pentagons (area (2+√3)/4); Σ = 6+7√3/2 = \|det\|, edge-to-edge, origin a hexagon center = 6-fold center (M98) |
@@ -2917,6 +2918,69 @@ documentation pending).
   550 → 569 tests.
 - **Status:** landed (M94).
 
+### 46. 2-uniform (3⁶; 3⁴.6) ✅ (M96)
+
+- **Motif:** first chiral (p6) entry of the two-uniform module —
+  Wikipedia `2-uniform n20`, t = 5: the flower construction — the
+  unit triangular lattice with the 6-face flower at each point of
+  an index-13 sublattice L13 = ⟨B1 = (1,3), B2 = (−3,4)⟩ dissected
+  into a regular unit hexagon, every other triangle intact. Origin:
+  a hexagon center = the 6-fold point.
+- **Group:** **p6** (632), pinned by exact + numeric probes
+  (m96b_c13.py): R60..R300 about the hexagon center PASS 5791/5791
+  tiles on the radius-46 window; ALL six mirror probes through the
+  hexagon center FAIL (4273/5791 = 73.8% — no mirror exists), and
+  mirror/rotation probes through every A- and B-class point fail
+  too; the translation scan finds exactly the six shortest vectors
+  of L13 (norm² 13) and their multiples — the translation group is
+  exactly L13.
+- **Lattice & cell:** 60° hexagonal basis with |b1| = |b2| = √13:
+  b1 = (5/2, 3H), b2 = (−1, 4H) — right-handed, |det| = 13√3/2 =
+  13H = 26·(√3/4) exactly. Cell: 1 hexagon + 20 triangles (the 26
+  lattice faces per cell minus the 6-flower); torus census V = 12,
+  E = 33, F = 21, V−E+F = 0 (m96b_torus.py, exact integers).
+  Hard-core: min center-center norm² = 13 ≥ 7, flowers are vertex-
+  disjoint. Area 6·(√3/4)·… exact: hexagon 6 + triangles 20 units
+  of √3/4 = 13H = |det|.
+- **2-uniformity (exact modular arithmetic):** the class map
+  k(v) = 4X+3Y mod 13 has kernel exactly L13; R60 acts as k → 4k;
+  the hexagon-corner classes {1,3,4,9,10,12} form ONE orbit (the
+  3⁴.6 vertices, B) and the remaining classes {2,5,6,7,8,11} form
+  ONE orbit (the 3⁶ vertices, A) — exactly two vertex orbits with
+  A:B = 6:6 = 1:1 per cell.
+- **Orbits:** triangles in 4 orbits of sizes {6,6,6,2} (seeds 1–4:
+  the six hexagon-edge triangles; two corner-triangle orbits; the
+  two far triangles centered on 3-fold points) plus the hexagon =
+  t = 5 (matches the wiki); edge orbits {6,6,6,6,6,3} → **e = 6**,
+  not the wiki parenthetical's 7 (that annotation is unreliable —
+  it also lists e = 1 for the snub hexagonal, impossible since
+  triangle–triangle and triangle–hexagon edges cannot share an
+  orbit). The wiki figure itself confirms this tiling: its four
+  triangle colors reproduce {6,6,6,2} (261/259/86 colored =
+  3:3:1), and 31/38 hexagons carry the complete 6-edge+12-corner
+  triangle ring (the 7 partials are exactly the outermost rim).
+- **Uniqueness:** an edge-to-edge {3⁶, 3⁴.6} tiling is exactly a
+  flower construction (a unit hexagon with lattice-aligned edges
+  must center on a lattice point; lattice transport around flowers
+  has no holonomy), 2-uniform with A:B = 1:1 forces hexagon density
+  1/13, and the extracted figure's hexagon-center differences are
+  all ≡ 0 mod 13 — so C is a single L13 coset: this tiling. Among
+  flower p6 candidates the 6 corner classes forming one R60 orbit
+  requires ord_d(4) = 6, first possible at d = 13.
+- **Edge structure & coverage (m96b_battery.py, on the emitted table):**
+  edge-to-edge over the ±3×±3 patch: 1534 interior edge pairs, 0
+  unpaired, 0 T-junctions; the 166 boundary single edges close into
+  loops (0 odd-degree vertices). Fine grid of 1600 irrational-offset
+  points over the safe dual rectangle [−2.4,3.4]² (the 49-cell union's
+  jagged boundary bites ≤ ~0.35 dual units past the parallelogram, so
+  the inset rectangle is fully inside): 1600 exactly-once, max count 1.
+- **Rust:** `kuniform_n20()` in `kuniform.rs` (feature `kuniform`)
+  — standard trio + vertex-figure test pinning 333333 (266 interior,
+  6 orbit reps) and 33336 (240, 6 orbit reps), expected values
+  reproduced bit-exact by the Python replica m96b_rust_expect.py.
+- **Status:** landed (M96).
+  79 tilings, 91 memberships, 566 tests at this step.
+
 ### 48. p6m 2-uniform duals — first batch: p6m, n18, n9, n8 ✅ (M98)
 
 - **Motif:** the face-centroid duals of the first four p6m 2-uniform
@@ -3004,6 +3068,8 @@ documentation pending).
   --workspace 590/590. First batch of the k-uniform dual family —
   the remaining p6m duals (n5, n1, n13) and the pmm duals queue
   behind the same helper.
+<!-- §43–§45 are reserved for the concurrent M93–M95 two-uniform
+     entries; §46 below is the pre-assigned M96 slot. -->
 
 ## Proposed — vetted candidates
 
@@ -4390,3 +4456,25 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   pending the coordinator). Full bar green: cargo check + clippy
   (both target sets) with zero warnings, cargo test --workspace
   590/590. Details in §48.
+- 2026-11-19 — M96 2-uniform (3⁶; 3⁴.6, p6) ✅: the two-uniform
+  family's first chiral (p6) entry (`kuniform-n20`) — flower form:
+  the unit triangular lattice with the 6-face flower at each point
+  of an index-13 sublattice L13 = ⟨(1,3),(−3,4)⟩ dissected into a
+  regular unit hexagon; 21 tiles/cell (1 hex + 20 tri), 26 lattice
+  faces minus the 6-flower; 60° hexagonal basis |b1| = |b2| = √13,
+  |det| = 13√3/2 (right-handed); origin a hexagon center = 6-fold
+  point. Exact modular arithmetic (kernel k = 4X+3Y mod 13) pins
+  A:B = 6:6 = 1:1, two vertex orbits, t = 5. Battery: R60..R300
+  about center PASS 5791/5791, all six mirror probes FAIL (73.8%,
+  no mirror) + A/B-point mirror probes FAIL → p6; torus census
+  V−E+F = 12−33+21 = 0; triangle orbits {6,6,6,2}, edge orbits
+  {6,6,6,6,6,3} → **e = 6**, correcting the wiki parenthetical's
+  e = 7 (unreliable: also lists e = 1 for the snub hexagonal);
+  wiki figure's 4 triangle colors reproduce {6,6,6,2}, 31/38 full
+  rings. Vertex-figure test 333333 (266, 6 reps) + 33336 (240, 6
+  reps), Python replica m96b_rust_expect.py matches bit-exact. 4
+  tess-tilings tests. Census: 78 → 79 tilings, 90 → 91
+  memberships, 562 → 566 tests (commit pending the coordinator).
+  Full bar green: cargo check + clippy (both target sets) zero
+  warnings, cargo test --workspace 566/566. 9 of the 20 closed-list
+  entries landed, 11 remain.

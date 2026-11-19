@@ -338,6 +338,7 @@ pub fn registry() -> tess_core::Registry {
         r = r.register(kuniform::kuniform_n5());
         r = r.register(kuniform::kuniform_n1());
         r = r.register(kuniform::kuniform_n13());
+        r = r.register(kuniform::kuniform_n20());
     }
     #[cfg(feature = "kuniform")]
     {
@@ -551,17 +552,17 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M98). 86 built-ins — 63 before
+// Census of today's taxonomy (M96). 87 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
-        //   TwoUniform 8, Laves 15 (12 primary: 8 incl. cairo-pentagonal
+        //   TwoUniform 9, Laves 15 (12 primary: 8 incl. cairo-pentagonal
         //   + 4 machine-dualized k-uniform duals (M98) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
 //   PentagonTypes 12, Islamic 12, Arrangements 5,
 //   Quasiperiodic 8, Aperiodic 6, Nonperiodic 4.
-// Membership census 98 = 86 primaries + 12 secondaries (3 Laves
+// Membership census 99 = 87 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -582,19 +583,21 @@ mod tests {
         // (taylor-socolar) -> M87 TwoUniform 2 -> 3 (kuniform-n18)
 // -> M88 (kuniform-n9) -> M89 (kuniform-n8)
         // -> M90 TwoUniform 5 -> 6 (kuniform-n5) -> M91 (kuniform-n1)
-        // -> M92 (kuniform-n13) -> M93 Aperiodic 5 -> 6 (jeandel-rao)
+// -> M92 (kuniform-n13) -> M93 Aperiodic 5 -> 6 (jeandel-rao)
 // -> M94 Islamic 9 -> 12 (hankin-4-8-8-rosette,
         // hankin-4-6-12, hankin-hex-two-point)
+        // -> M96 TwoUniform 8 -> 9 (kuniform-n20, the module's
+        // first p6 entry)
         // -> M98 Laves 11 -> 15 (the dual() helper dualizes
         // kuniform-p6m / -n18 / -n9 / -n8; Laves-primary only).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 8, 15, 17, 12, 12, 5, 8, 6, 4],
+            vec![11, 9, 15, 17, 12, 12, 5, 8, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 86, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 98, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 87, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 99, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -7241,6 +7244,74 @@ mod kuniform_tests {
                         (1366, 1366),
                         (2232, 2866),
                         (3232, 1866),
+                    ],
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn kuniform_n20_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n20(),
+            "kuniform-n20",
+            BBox::new(v2(-4.0, -4.0), v2(12.0, 12.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n20_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n20(),
+            "kuniform-n20(rot30,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n20_deterministic() {
+        check_det(
+            &kuniform::kuniform_n20(),
+            "kuniform-n20",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch: the achiral 3⁶
+    /// orbit (6 translation classes per cell, 266 interior points) and
+    /// the achiral 3⁴.6 orbit (6 classes, 240 interior points — the
+    /// counts differ only through patch boundary truncation). Both
+    /// counts and all 12 orbit reps match the Python torus battery
+    /// (m96b_rust_expect.py).
+    #[test]
+    fn kuniform_n20_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n20(),
+            &[
+                Figure {
+                    figure: "333333",
+                    count: 266,
+                    orbits: &[
+                        (0, 1732),
+                        (500, 2598),
+                        (500, 4330),
+                        (1000, 1732),
+                        (1000, 3464),
+                        (1500, 4330),
+                    ],
+                },
+                Figure {
+                    figure: "33336",
+                    count: 240,
+                    orbits: &[
+                        (-500, 2598),
+                        (0, 3464),
+                        (500, 866),
+                        (1000, 5196),
+                        (1500, 2598),
+                        (2000, 3464),
                     ],
                 },
             ],

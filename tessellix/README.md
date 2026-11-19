@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (8)   Laves (15)   Wallpaper (17)   Pentagon
+counts (`Uniform (11)   Two-Uniform (9)   Laves (15)   Wallpaper (17)   Pentagon
 Types (12)   Islamic (12)   Arrangements (5)   Quasiperiodic (8)   Aperiodic (6)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -127,13 +127,13 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-86 built-in tilings (98 tab memberships), all discoverable in both UIs
+87 built-in tilings (99 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 ten tabs:
-**Uniform** (11), **Two-Uniform** (8), **Laves / Catalan duals** (15,
+**Uniform** (11), **Two-Uniform** (9), **Laves / Catalan duals** (15,
 12 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (12), **Islamic** (12), **Arrangements** (5),
@@ -199,6 +199,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `kuniform-n5` | 2-uniform (3.4.6.4; 3.4².6) | 2-uniform k-uniform: hexagons ringed by squares with triangle fills, two hexagon orbits + two square orbits + one triangle orbit (Wikipedia `2-uniform n5`, t = 5, e = 5); 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); 18 tiles/cell; the 3.4².6 vertex orbit is chiral (M90) | p6m | hexagonal |
 | `kuniform-n1` | 2-uniform (4.6.12; 3.4.6.4) | 2-uniform k-uniform: the 3-4-6-12 tiling — dodecagons alternating with hexagons, squares and triangles; first 12-gon in the module (Wikipedia `2-uniform n1`, t = 4, e = 4); 60° hexagonal basis, \|b1\| = \|b2\| = 2+2√3, det 12+8√3 (right-handed); 12 tiles/cell (M91) | p6m | hexagonal |
 | `kuniform-n13` | 2-uniform (3⁶; 3².4.12) | 2-uniform k-uniform: dodecagons ringed by squares and two triangle orbits around 3⁶ vertices (Wikipedia `2-uniform n13`, t = 4, e = 4); 60° hexagonal basis, \|b1\| = \|b2\| = 3+√3, det 9+6√3 (right-handed); 16 tiles/cell; 6-fold center off-ring (M92) | p6m | hexagonal |
+| `kuniform-n20` | 2-uniform (3⁶; 3⁴.6) | 2-uniform k-uniform: flower form — unit triangular lattice with hexagons dissected at the points of an index-13 sublattice, the two-uniform family's first p6 entry (Wikipedia `2-uniform n20`, t = 5; e = 6 exact vs. the wiki's parenthetical 7); 60° hexagonal basis, \|b1\| = \|b2\| = √13, det 13√3/2 (right-handed); 21 tiles/cell; A:B = 1:1 vertex orbits pinned by k = 4X+3Y mod 13 (M96) | p6 | hexagonal |
 | `kuniform-dual-p6m` | Dual of 2-uniform (3⁶; 3².6²) | face-centroid dual of `kuniform-p6m` (p6m, det 9√3/2): 1 regular hexagon (side 1/√3, area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3, 2√3/3, √3 in cyclic order; angles 60°/60°/120°/120°; area 2√3/3) per cell, sum 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
 | `kuniform-dual-n18` | Dual of 2-uniform (3⁶; 3².4.3.4) | face-centroid dual of `kuniform-n18` (p6m, det 3+2√3): 1 regular hexagon (side 1/√3) + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6; angles 90°/90°/120°/120°/120°; area (2+√3)/4) per cell, sum 3+2√3 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
 | `kuniform-dual-n9` | Dual of 2-uniform (3.4.6.4; 3².4.3.4) | face-centroid dual of `kuniform-n9` (p6m, det 6+7√3/2): 6 congruent quadrilaterals (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/120°; area (3+2√3)/6) + 6 congruent pentagons (congruent to the `kuniform-dual-n18` pentagons; area (2+√3)/4) per cell, sum 6+7√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
@@ -563,7 +564,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 590 tests, all green, zero
+`cargo test --workspace` (currently 618 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
