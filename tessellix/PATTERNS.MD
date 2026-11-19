@@ -2980,7 +2980,9 @@ documentation pending).
   6 orbit reps) and 33336 (240, 6 orbit reps), expected values
   reproduced bit-exact by the Python replica m96b_rust_expect.py.
 - **Status:** landed (M96).
-  79 tilings, 91 memberships, 566 tests at this step.
+  79 tilings, 91 memberships, 566 tests at this step (fork state;
+  landed on main at 87 tilings, 99 memberships, 618 tests, after
+  M94 + M98).
 
 ### 48. p6m 2-uniform duals — first batch: p6m, n18, n9, n8 ✅ (M98)
 
@@ -3064,7 +3066,8 @@ documentation pending).
   3 self-dual secondaries; Two-Uniform unchanged at 8), tess-tui tab
   pins updated to the same counts.
 - **Status:** landed (M98). 83 tilings, 95 memberships, 590 tests at
-  this step (commit pending the coordinator). Full bar green: cargo
+  this step (fork state; landed on main at 86 tilings, 98 memberships,
+  614 tests, after M94). Full bar green: cargo
   check + clippy (both target sets) with zero warnings, cargo test
   --workspace 590/590. First batch of the k-uniform dual family —
   the remaining p6m duals (n5, n1, n13) and the pmm duals queue
