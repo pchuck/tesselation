@@ -4081,14 +4081,28 @@ documentation pending).
 - **Integration fix (default view):** the shared `SIMILARITY_PARAMS`
   scale default 1.0 rendered the ~1.3-cell-unit patch as a tiny
   centered chair at depth 0 (pattern index 0, light gray) — reported
-  as a broken-looking preview/render pane. The module now declares its
-  own params with a patch-fitted scale default **7.0**: the standard
-  ~20/scale-unit pane then shows the depth-1 two-child dissection
-  (classes {1, 2}, palette blue/red) covering ≈ 85% of the pane (the
-  reflex notch always leaves a background wedge — the patch is
-  chair-shaped at every depth). Mechanics tests stay pinned at
-  explicit scale 1.0; the default presentation is pinned by
-  `default_view_fills_pane` (classes {1,2} + ≥ 70% grid coverage).
+  as a broken-looking preview/render pane. First fix (scale default
+  7.0) addressed only the CLI's fixed `20/scale` pane; the owner
+  reported the lone chair persisting in the UI, and the root cause
+  turned out to be the depth rule itself: the UI preview window is
+  derived from the generated tiles (`tess_core::app::preview_region`:
+  ±10 probe → 9× mean tile side), an anchor-self-canceling loop that
+  pins an absolute "E ≥ 1 → d = 0" rule at depth 0 for EVERY scale —
+  and for a bounded patch, d = 0 IS the whole tiling (one gray
+  chair). Rule re-anchored on the patch: zoom octaves measured
+  relative to the patch bbox diagonal (exactly φ = √(1 + s²)),
+  floored at a presentation depth `D_PRESENT = 5` for whole-patch
+  views (the fork's pinwheel-convention `E ≥ 1` transplant is the
+  zoom term, re-based; zoomed-in views refine past the floor by
+  φ-octaves unchanged). The scale default is now **3.5** (frames the
+  whole patch in the CLI's `20/scale` pane at ≈ 78% height). Verified
+  on both conventions at the default params: the App-derived preview
+  frames all 2^5 = 32 chairs at ≈ 73% of the pane height, six size
+  classes with the exact binomial counts (1, 5, 10, 10, 5, 1) =
+  C(5,k); the CLI pane at 77.9%; zero non-finite, fill/outline
+  geometry identical. Pinned by `default_view_fills_pane` (both
+  conventions, incl. the probe fixed-point round). Mechanics tests
+  stay pinned at explicit scale 1.0.
 - **Status:** landed (M104). Full bar green: cargo check + clippy
   (both target sets) zero warnings, cargo test --workspace
   --all-features 729/729.

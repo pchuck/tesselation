@@ -46,13 +46,24 @@
 //! world origin: a fixed float offset RECENTRE = (−1/2, −s/2) is
 //! added at emission (1/2 ∉ Z[√φ], so the centering is a fixed float,
 //! not a lattice-exact element — documented, and view-independent
-//! because constant). Depth is view-anchored (pinwheel convention):
-//! with E the cell-space view diagonal, d = 0 for E ≥ 1 else
-//! ceil(−ln E / ln φ), capped at MAX_DEPTH = 17 (2^17 ≤ 250 000 <
-//! 2^18). The largest tile at depth d has width s^−d ≈ √E, so views
-//! within one φ-octave refine the same patch — nested views emit
-//! bit-identical tiles on their intersection
-//! (`patch_nested_view_bit_identical`).
+//! because constant). Depth is view-anchored with the anchor at the
+//! PATCH, not at an absolute cell size: with E the cell-space view
+//! diagonal and the patch bbox diagonal exactly φ (= √(1 + s²)),
+//! d = max(D_PRESENT, zoom) where zoom = 0 for E ≥ φ else
+//! ceil(−ln(E/φ) / ln φ), capped at MAX_DEPTH = 17 (2^17 ≤ 250 000 <
+//! 2^18). The zoom term is the pinwheel convention re-based on the
+//! patch: each φ-shrink of the view adds one refinement level, so
+//! nested views within one octave emit bit-identical tiles on their
+//! intersection (`patch_nested_view_bit_identical`). The floor exists
+//! because this is a BOUNDED patch — d = 0 renders the entire tiling
+//! as one tile (the lone seed chair reported as a broken preview), and
+//! the UI preview window is derived from the generated tiles
+//! themselves (`tess_core::app::preview_region`: probe → 9× mean tile
+//! side), an anchor-self-canceling feedback loop that pins an absolute
+//! rule at d = 0 for every scale. D_PRESENT = 5 makes the probe-derived
+//! default view frame the whole patch (≈ 74% of the pane height, all
+//! 2^5 = 32 chairs, six size classes) self-consistently at any scale
+//! and aspect.
 //!
 //! **T-junction structure (non-edge-to-edge, intrinsic).** A child's
 //! reflex (notch) corner lands in the relative interior of its
@@ -84,8 +95,21 @@ use crate::lattice::{similarity_map, ROTATION_ID, SCALE_ID};
 /// s = √φ, the field generator as f64 (real embedding at emission and
 /// in tests only — the exact field element is `S` below).
 const S_FLT: f64 = 1.272019649514069;
-/// ln φ = ln s², for the pinwheel-convention depth anchor.
+/// ln φ = ln s², for the depth anchor.
 const LN_PHI: f64 = 0.48121182505960347;
+/// The patch bbox diagonal in cell space: bbox [−0.5, 0.5] ×
+/// [−s/2, s/2] has diagonal √(1 + s²) = √(1 + φ) = φ exactly.
+const PATCH_DIAG: f64 = 1.618033988749895;
+/// Presentation depth floor: the depth rendered whenever the whole
+/// patch fits the view (E ≥ φ). A bounded patch at d = 0 IS one tile —
+/// the lone seed chair — so whole-patch views must show the
+/// substitution structure instead. 5 is fitted to the UI preview
+/// window (probe → 9× mean tile side, `tess_core::app`): mean AABB
+/// side at depth 5 is ≈ 0.19 cell, so the derived window spans
+/// ≈ 1.72 cell and frames the 1.27-cell patch at ≈ 74% of the pane
+/// height, all 32 chairs visible, at any scale and aspect. Zoomed-in
+/// views (E < φ) refine past the floor by φ-octaves as before.
+const D_PRESENT: u32 = 5;
 /// Max refinement depth: 2^17 = 131 072 ≤ MAX_TILES < 2^18.
 const MAX_DEPTH: u32 = 17;
 
@@ -268,15 +292,15 @@ fn refine(tiles: &[Chair]) -> Vec<Chair> {
 /// Generator parameters: the shared similarity map, but with the scale
 /// default fitted to the finite patch. The patch spans only ~1.3 cell
 /// units (bbox [−0.5, 0.5] × [−s/2, s/2]); under the shared 1.0 default
-/// it rendered as a tiny centered chair — the E ≥ 1 depth rule then
-/// shows the unrefined seed chair alone, painted pattern index 0
-/// (light gray) — reported as a broken-looking preview/render pane.
-/// Scale 7.0 fills the standard 40/3 × 10 pane (patch height 8.9 of 10)
-/// and the depth rule picks d = 1: the defining two-child L:S
-/// dissection, size classes {1, 2} (palette blue/red). The scale slider
-/// (0.1–50) still zooms; depth follows the view as pinned below.
+/// every UI view derived it as a tiny centered chair (and the
+/// probe-derived preview window pins the depth at 0 regardless of
+/// scale — see D_PRESENT). Scale 3.5 frames the whole patch in the
+/// standard 20/scale-tall pane at ~78% height (patch 4.45 of 5.71
+/// world units); the depth floor D_PRESENT = 5 then shows the 32-chair
+/// substitution structure at every scale. The scale slider (0.1–50)
+/// still zooms; zoomed-in views refine past the floor by φ-octaves.
 const PARAMS: [ParamSpec; 2] = [
-ParamSpec::float(SCALE_ID, "scale", 0.1, 50.0, 0.05, 7.0),
+ParamSpec::float(SCALE_ID, "scale", 0.1, 50.0, 0.05, 3.5),
 ParamSpec::angle(ROTATION_ID, "rotation (deg)", 0.0, 360.0, 5.0, 0.0),
 ];
 
@@ -359,14 +383,20 @@ impl Tiling for GoldenBeeTiling {
             };
         }
 
-        // View-anchored depth (pinwheel convention): the largest tile
-        // (width s^−d) is ≈ √E, E the cell-space view diagonal.
+        // View-anchored depth, anchored at the PATCH: zoom octaves are
+        // measured relative to the patch diagonal φ (each φ-shrink of
+        // the cell-space view diagonal adds one level), and whole-patch
+        // views floor at D_PRESENT — d = 0 would render the entire
+        // bounded tiling as the single seed chair, and the UI preview
+        // window (probe → 9× mean tile side) is anchor-self-canceling,
+        // so an absolute E ≥ 1 rule pins every UI view at d = 0.
         let ext = (region.max - region.min).length();
-        let d = if ext < 1.0 {
-            ((-ext.ln() / LN_PHI).ceil() as u32).min(MAX_DEPTH)
+        let zoom = if ext < PATCH_DIAG {
+            ((-(ext / PATCH_DIAG).ln()) / LN_PHI).ceil() as u32
         } else {
             0
         };
+        let d = zoom.clamp(D_PRESENT, MAX_DEPTH);
 
         let mut chairs: Vec<Chair> = vec![Chair {
             cls: 0,
@@ -861,7 +891,7 @@ mod tests {
     fn gen_keys(region: BBox) -> Vec<(u8, u32, Vec<u64>)> {
         let t = GoldenBeeTiling;
         // Mechanics pinned at scale 1.0, where the window geometry below
-        // was derived; the DEFAULT scale is 7.0 (patch-fitted — see
+        // was derived; the DEFAULT scale is 3.5 (patch-fitted — see
         // default_view_fills_pane).
         let mut p = ParamSet::default_for(t.params());
         p.set(SCALE_ID, tess_core::params::ParamValue::Float(1.0));
@@ -873,12 +903,12 @@ mod tests {
 
     #[test]
     fn patch_nested_view_bit_identical() {
-        // All five windows sit in the φ-octave [φ⁻³, φ⁻²) of view
-        // diagonals (E ≈ 0.30 / 0.315 / 0.30 / 0.264 / 0.255), so all
-        // pick the same depth (d = 3, pinned by the size classes
-        // e ∈ 3..=6 below) and refine the same patch: every tile of a
-        // smaller view must reappear bit-identically in each larger
-        // one containing it.
+        // All five windows sit in the φ-octave [φ⁻⁴, φ⁻³) of
+        // patch-relative view diagonals (E/φ ≈ 0.19 / 0.19 / 0.19 /
+        // 0.16 / 0.16), so all pick the same depth (d = 5 = D_PRESENT,
+        // pinned by the size classes e ∈ 5..=10 below) and refine the
+        // same patch: every tile of a smaller view must reappear
+        // bit-identically in each larger one containing it.
         let base = gen_keys(BBox::new(Vec2::new(-0.09, -0.12), Vec2::new(0.09, 0.12)));
         let grown =
             gen_keys(BBox::new(Vec2::new(-0.0945, -0.126), Vec2::new(0.0945, 0.126)));
@@ -896,8 +926,8 @@ mod tests {
             .chain(zoomed.iter())
         {
             assert!(
-                (3..=6).contains(&k.1),
-                "view picked depth != 3: size class {}",
+                (5..=10).contains(&k.1),
+                "view picked depth != 5: size class {}",
                 k.1
             );
         }
@@ -917,7 +947,7 @@ mod tests {
 
     // --- standard trio (explicit scale-1.0-style windows; check_covers /
     // check_det build default params, whose scale default is now the
-    // patch-fitted 7.0 — the windows below still land inside the chair
+    // patch-fitted 3.5 — the windows below still land inside the chair
     // domain at that scale, just deeper (the depth rule follows the
     // view). The default presentation itself is pinned by
     // default_view_fills_pane.)
@@ -956,76 +986,79 @@ mod tests {
         );
     }
 
-    /// Ray-casting point-in-polygon (test helper; boundary handled by
-    /// the ≥ 0.7 fraction, so edge-exactness is not needed).
-    fn point_in_poly(p: Vec2, pts: &[Vec2]) -> bool {
-        let mut inside = false;
-        let n = pts.len();
-        let mut j = n - 1;
-        for i in 0..n {
-            let (a, b) = (pts[i], pts[j]);
-            if (a.y > p.y) != (b.y > p.y) {
-                let x = b.x + (p.y - b.y) * (a.x - b.x) / (a.y - b.y);
-                if p.x < x {
-                    inside = !inside;
-                }
-            }
-            j = i;
-        }
-        inside
-    }
-
     #[test]
     fn default_view_fills_pane() {
-        // The default presentation (UI pane, thumbnails, CLI export):
-        // the patch-fitted scale default (7.0) must show the depth-1
-        // two-child dissection covering the pane — not the tiny
-        // unrefined seed chair the shared 1.0 default produced
-        // (integration fix, M104 landing). The view convention (shared
-        // with the CLI export) is a ~20/scale-unit-tall origin-centered
-        // window, so the default pane is 26.67/7 × 20/7 world units and
-        // the depth rule picks d = 1 (the fork's own S=7 export census).
+        // Pins BOTH default presentations against the lone-seed-chair
+        // bug (the patch at d = 0 IS the whole tiling — one gray chair):
+        //
+        // (a) The UI/preview convention (TUI render pane, GUI canvas,
+        //     card thumbnails): tess_core::app derives the window from
+        //     the tiling itself — a bounded ±10 probe, then
+        //     preview_window(9 × mean tile side) — an anchor-self-
+        //     canceling loop that must land on the D_PRESENT floor and
+        //     frame the whole patch (~74% of the pane height, 32
+        //     chairs) self-consistently at the default scale.
+        // (b) The CLI convention: a ~20/scale-unit-tall origin-centered
+        //     pane; the patch-fitted scale default (3.5) frames the
+        //     whole patch at ~78% height.
         let t = GoldenBeeTiling;
         let p = ParamSet::default_for(t.params());
         assert!(
-            (p.float(SCALE_ID, 1.0) - 7.0).abs() < 1e-12,
-            "scale default must stay patch-fitted (7.0)"
+            (p.float(SCALE_ID, 1.0) - 3.5).abs() < 1e-12,
+            "scale default must stay patch-fitted (3.5)"
         );
-        let region = BBox::new(
-            Vec2::new(-20.0 / 7.0 * 2.0 / 3.0, -10.0 / 7.0),
-            Vec2::new(20.0 / 7.0 * 2.0 / 3.0, 10.0 / 7.0),
-        );
-        let r = t.generate(&p, &Query { region });
-        assert!(r.message.is_none(), "unexpected message");
-        // Depth 1: exactly the two children, one per size class — the
-        // A2 two-piece dissection, L:S counts 1:1.
-        let mut classes: Vec<u32> = r.tiles.iter().map(|tl| tl.seed).collect();
-        classes.sort_unstable();
-        assert_eq!(classes, vec![1, 2], "default view must be the depth-1 dissection");
-        // The pane is substantially covered — the patch is chair-shaped (the
-        // reflex notch always leaves a background wedge at the pane
-        // corner), so pin a coverage fraction, not full coverage: ≥ 70%
-        // of a grid over the pane must land in some tile. (The 1.0
-        // default produced ~5% fill — the tiny lone chair this fixes.)
-        let nx = 60usize;
-        let ny = 45usize;
-        let mut hit = 0usize;
-        for ix in 0..nx {
-            for iy in 0..ny {
-                let px = region.min.x
-                    + (ix as f64 + 0.5) * (region.max.x - region.min.x) / nx as f64;
-                let py = region.min.y
-                    + (iy as f64 + 0.5) * (region.max.y - region.min.y) / ny as f64;
-                let pt = Vec2::new(px, py);
-                if r.tiles.iter().any(|tl| point_in_poly(pt, &tl.poly.pts)) {
-                    hit += 1;
-                }
-            }
-        }
-        let frac = hit as f64 / (nx * ny) as f64;
+        let s = S_FLT;
+        let patch_h = s * p.float(SCALE_ID, 1.0); // patch bbox height, world
+        let patch_w = p.float(SCALE_ID, 1.0);
+
+        // --- (a) App/preview convention --------------------------------
+        let probe = t.generate(&p, &Query {
+            region: BBox::new(Vec2::new(-10.0, -10.0), Vec2::new(10.0, 10.0)),
+        });
+        assert!(probe.message.is_none());
+        let mw = tess_core::app::mean_tile_side(&probe.tiles);
+        assert!(mw > 0.0, "probe must return tiles");
+        let win = tess_core::app::preview_window(probe.periodic, mw, 4.0 / 3.0);
+        let r = t.generate(&p, &Query { region: win });
+        assert!(r.message.is_none());
+        // The floor renders the whole patch: exactly 2^5 chairs (the
+        // view ⊇ patch at every aspect for the derived window).
+        assert_eq!(r.tiles.len(), 32, "preview must show the depth-5 patch");
+        let classes: std::collections::BTreeSet<u32> =
+            r.tiles.iter().map(|tl| tl.seed).collect();
         assert!(
-            frac >= 0.7,
-            "default view covers only {frac:.0}% of the pane"
+            classes.len() >= 5,
+            "preview must show the size hierarchy, got classes {classes:?}"
+        );
+        let span_h = win.max.y - win.min.y;
+        let fill = patch_h / span_h;
+        assert!(
+            (0.55..=0.95).contains(&fill),
+            "preview frames the patch at {fill:.0}% of the pane height"
+        );
+        assert!(
+            win.max.x - win.min.x >= patch_w && span_h >= patch_h,
+            "derived window must contain the whole patch"
+        );
+        // Self-consistency: regenerating over a window re-derived from
+        // THIS result lands on the same depth (no d = 0 regression).
+        let mw2 = tess_core::app::mean_tile_side(&r.tiles);
+        let win2 = tess_core::app::preview_window(r.periodic, mw2, 4.0 / 3.0);
+        let r2 = t.generate(&p, &Query { region: win2 });
+        assert_eq!(r2.tiles.len(), 32, "second probe round must be a fixed point");
+
+        // --- (b) CLI convention ----------------------------------------
+        let region = BBox::new(
+            Vec2::new(-20.0 / 3.5 * 2.0 / 3.0, -10.0 / 3.5),
+            Vec2::new(20.0 / 3.5 * 2.0 / 3.0, 10.0 / 3.5),
+        );
+        let rc = t.generate(&p, &Query { region });
+        assert!(rc.message.is_none());
+        assert_eq!(rc.tiles.len(), 32, "CLI default pane must show the whole patch");
+        let fill_c = patch_h / (region.max.y - region.min.y);
+        assert!(
+            (0.7..=0.85).contains(&fill_c),
+            "CLI default pane frames the patch at {fill_c:.0}% of its height"
         );
     }
 }
