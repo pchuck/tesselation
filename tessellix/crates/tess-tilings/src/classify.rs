@@ -482,6 +482,15 @@ pub fn classification(id: &str) -> TilingClass {
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
+        "golden-triangle" => TilingClass {
+            families: &["Quasiperiodic"],
+            method: Some("substitution"),
+            inflation: Some("√(−τ)"),
+            source: Some("Danzer–van Ophuysen"),
+            year: Some("2000"),
+            translational: Some("quasiperiodic"),
+            ..TilingClass::EMPTY
+        },
         "fractalizing-3-12-12" => TilingClass {
             families: &["Quasiperiodic"],
             method: Some("fractalizing substitution"),

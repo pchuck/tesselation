@@ -7,7 +7,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [features]
-default = ["square", "hexagon", "triangle", "archimedean", "pythagorean", "penrose", "penrose_p1", "penrose_p2", "penrose_pentagon", "hirschhorn", "zellige", "cairo", "girih", "girih_qc", "girih_sc", "girih_ext", "hankin_ext", "khatam_girih", "laves", "ammann_beenker", "ammann_beenker_tri", "armchair", "chair", "sphinx", "hat", "turtle", "spectre", "pavers", "hexagram", "windmill", "kuniform", "reptiles", "pentagon13", "pentagon14", "pentagon15", "pentagon1", "pentagon2", "pentagon3", "pentagon5", "pentagon7", "pentagon9", "pentagon10", "pentagon11", "pentagon12", "stampfli", "fractalizing", "shield", "wheel", "najm", "golden_bee"]
+default = ["square", "hexagon", "triangle", "archimedean", "pythagorean", "penrose", "penrose_p1", "penrose_p2", "penrose_pentagon", "hirschhorn", "zellige", "cairo", "girih", "girih_qc", "girih_sc", "girih_ext", "hankin_ext", "khatam_girih", "laves", "ammann_beenker", "ammann_beenker_tri", "armchair", "chair", "sphinx", "hat", "turtle", "spectre", "pavers", "hexagram", "windmill", "kuniform", "reptiles", "pentagon13", "pentagon14", "pentagon15", "pentagon1", "pentagon2", "pentagon3", "pentagon5", "pentagon7", "pentagon9", "pentagon10", "pentagon11", "pentagon12", "stampfli", "fractalizing", "shield", "wheel", "najm", "golden_bee", "golden_triangle"]
 square = []
 hexagon = []
 triangle = []
@@ -60,6 +60,7 @@ wheel = []
 ammann_a1 = []
 ammann_a2 = []
 golden_bee = []
+golden_triangle = []
 ammann_a3 = []
 ammann_a4 = []
 girih_ext = []
