@@ -5,7 +5,7 @@
 - If `strong-worker` doesn't resolve it after a few tries, call `frontier` with the failing output and what was tried.
 - Use `frontier` for the most challenging tasks, or when other workers aren't converging on a solution.
 - **One job per agent at a time.** Each agent session is dispatched exactly one job at a time — never give a busy agent a second job, never multiplex tasks within one session. Launch one job at a time and confirm it is established, then decide on the next dispatch; never batch multiple launches.
-- **Tier parallelism:** all worker tiers run on separate hardware and can handle tasks in parallel. `worker` can handle up to two jobs in parallel; `fast-worker` handles **one job at a time**; `strong-worker` and `frontier` are sized to each handle one large/complex task at a time.
+- **Tier parallelism:** all worker tiers run on separate hardware and can handle tasks in parallel. `worker` and `fast-worker` can each handle up to two jobs in parallel; `strong-worker` and `frontier` are sized to each handle one large/complex task at a time.
 - **Keep idle tiers fed.** When workers are idle and dependency-free work is in the queue, feed open tasks of appropriate difficulty to the idle worker(s) — match the task's difficulty to the tier (fast-worker: discrete/mechanical; worker: standard; strong-worker: hard geometry/correctness; frontier: novel derivation). Work whose inputs depend on an in-flight job stays queued until that job lands.
 - Briefs must be self-contained: goal, files, constraints, how to verify.
 
