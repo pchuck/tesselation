@@ -1877,3 +1877,19 @@ that already exists twice.
   pinwheel family, einstein siblings, cubic/quartic field tiers) plus
   23k audit-discovered additions (missing duals of the subscripted
   2-uniform pairs; this sprint's M114–M121 recorded).
+- 2026-11-20 — M122: classification schema + UI audit fixes —
+  `TilingClass` (optional per-family fields in tess-core, declared in a
+  new `tess-tilings/src/classify.rs` table covering all 111 tilings;
+  UIs render only the fields that are present — nothing renders as
+  "N/A"); card line 2 is now schema-composed (skips segments the name
+  already states; description fallback when it adds nothing) and the
+  nonperiodic "— · —" symmetry line is replaced by the declared
+  translational character + point order ("quasiperiodic · 5-fold");
+  tab orders are now declared-sort-driven (Pentagon types sequential
+  2–15 with cairo=4/floret=5 joining as typed secondary members,
+  Two-Uniform by vertex configuration with the ₁/₂ pairs adjacent,
+  Laves by rank regulars→proper→duals, Wallpaper by the group's
+  conventional lattice — p1/p2 oblique … p3*/p6* hexagonal, fixing
+  the M76 measured-lattice sections); Ctrl+wheel resizes browse cards
+  (width 22–44, height at half, thumbnail cache follows the size key);
+  census 111/123 → 111/125 (PentagonTypes 12 → 14).

@@ -116,7 +116,7 @@ pub fn cairo_pentagonal() -> LatticeTiling {
         group: WallpaperGroup::P4g,
         lattice_kind: LatticeKind::Square,
         category: TilingCategory::Laves,
-        secondary: &[],
+        secondary: &[TilingCategory::PentagonTypes],
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

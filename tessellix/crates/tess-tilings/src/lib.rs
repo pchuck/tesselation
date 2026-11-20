@@ -12,6 +12,12 @@
 
 pub mod lattice;
 
+/// The per-tiling classification table (always compiled — it is data,
+/// not a family).
+pub mod classify;
+
+pub use classify::classification;
+
 #[cfg(feature = "ammann_beenker")]
 pub mod ammann_beenker;
 #[cfg(feature = "archimedean")]
@@ -615,10 +621,12 @@ mod tests {
         //   + 11 machine-dualized k-uniform duals (M98, M102, M106) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
-//   PentagonTypes 12, Islamic 21, Arrangements 5,
+//   PentagonTypes 14, Islamic 21, Arrangements 5,
 //   Quasiperiodic 10, Aperiodic 6, Nonperiodic 4.
-// Membership census 123 = 111 primaries + 12 secondaries (3 Laves
-        // + 9 Wallpaper).
+// Membership census 125 = 111 primaries + 14 secondaries (3 Laves
+        // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
+        // and floret-pentagonal (type 5) join the Pentagon tab as
+        // typed secondary members, M122).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
         // -> M62 22 (pentagon-12) -> M63 23 (pentagon-10) -> M64 24
@@ -709,11 +717,11 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 15, 22, 17, 12, 21, 5, 10, 6, 4],
+            vec![11, 15, 22, 17, 14, 21, 5, 10, 6, 4],
             "per-tab census (update when adding tilings)"
         );
         assert_eq!(r.len(), 111, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 123, "membership census (update when adding tilings)");
+        assert_eq!(memberships, 125, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely

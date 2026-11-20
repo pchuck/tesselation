@@ -539,7 +539,7 @@ pub fn floret_pentagonal() -> LatticeTiling {
         group: WallpaperGroup::P6,
         lattice_kind: LatticeKind::Hexagonal,
         category: TilingCategory::Laves,
-        secondary: &[],
+        secondary: &[TilingCategory::PentagonTypes],
         seed_pattern: SeedPattern::Uniform,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,

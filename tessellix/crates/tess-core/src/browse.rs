@@ -36,6 +36,7 @@ const PROBE_REGION: (Vec2, Vec2) = (Vec2::new(-10.0, -10.0), Vec2::new(10.0, 10.
 /// `P1` / `None` as a "not a wallpaper tiling" placeholder, not as a
 /// claim of p1 symmetry, so the model leaves them unset. `notes` carries
 /// the generator's free-text symmetry note for every category.
+#[derive(Debug, Clone, Copy)]
 pub struct CardMeta {
     pub id: &'static str,
     pub name: &'static str,
@@ -164,6 +165,128 @@ pub fn wallpaper_gap_note() -> String {
         let names: Vec<String> = WALLPAPER_GROUP_GAPS.iter().map(ToString::to_string).collect();
         format!("no realizer registered for: {} (roadmap queue)", names.join(" · "))
     }
+}
+
+/// The two attribute lines shown under a card thumbnail (shared by
+/// the TUI and GUI card renderers):
+///
+/// * **line 1 — symmetry** — `group · lattice` for the periodic
+///   categories; for the nonperiodic world (no declared group) the
+///   declared translational character and point order instead
+///   ("quasiperiodic · 5-fold", "aperiodic", "limit-periodic") — a
+///   nonperiodic card never renders the meaningless "— · —".
+/// * **line 2 — summary** — the declared classification facts,
+///   composed from [`TilingClass`] in a fixed order (vertex/face
+///   configuration, Schläfli, uniformity, pentagon type, isohedral
+///   class, method, substrate, contact angle, star, inflation,
+///   cut-and-project, prototile count, attribution, dual, aperiodic
+///   status, chirality, reflections, cell content, tile set). A
+///   segment is **skipped when the card name already says it** (the
+///   "Truncated Square (4.8.8)" card does not repeat "4.8.8") so the
+///   line adds information instead of echoing the title. When the
+///   schema adds nothing (or the card is unclassified) the line falls
+///   back to the description fragment. Chirality shows only when it
+///   is the notable fact (homochiral / mixed) — "achiral" is the
+///   default expectation and stays off the card.
+pub fn attr_lines(c: &CardMeta) -> (String, String) {
+    (symmetry_line(c), summary_line(c))
+}
+
+/// Line 1: the symmetry footer (see [`attr_lines`]).
+fn symmetry_line(c: &CardMeta) -> String {
+    match c.group {
+        Some(_) => format!("{} · {}", c.group_str(), c.lattice_str()),
+        None => {
+            let mut segs: Vec<String> = Vec::new();
+            if let Some(t) = c.class.translational {
+                segs.push(t.to_string());
+            }
+            if let Some(n) = c.class.point_order {
+                segs.push(format!("{n}-fold"));
+            }
+            segs.join(" · ")
+        }
+    }
+}
+
+/// Line 2: the schema summary (see [`attr_lines`]).
+fn summary_line(c: &CardMeta) -> String {
+    let class = &c.class;
+    if class.is_empty() {
+        let frag: String = c.description.chars().take(40).collect();
+        return if frag.is_empty() {
+            c.notes.unwrap_or("").to_string()
+        } else {
+            frag
+        };
+    }
+    let name_lc = c.name.to_lowercase();
+    let mut segs: Vec<String> = Vec::new();
+    let mut push = |seg: Option<String>| {
+        if let Some(s) = seg {
+            let s = s.trim().to_string();
+            if !s.is_empty() && !name_lc.contains(&s.to_lowercase()) {
+                segs.push(s);
+            }
+        }
+    };
+    push(class.vertex_config.map(str::to_string));
+    push(class.schlafli.map(str::to_string));
+    push(class.face_config.map(str::to_string));
+    push(class.uniformity.map(str::to_string));
+    push(class.pentagon_type.map(|n| format!("type {n}")));
+    push(class.isohedral.map(|n| format!("{n}-isohedral")));
+    push(class.method.map(str::to_string));
+    push(class.base_tiling.map(str::to_string));
+    push(class.contact_angle.map(str::to_string));
+    push(class.star_type.map(str::to_string));
+    push(class.inflation.map(str::to_string));
+    push(class.cut_project.map(str::to_string));
+    push(class.prototiles.map(|n| {
+        if n == 1 {
+            "monotile".to_string()
+        } else {
+            format!("{n} prototiles")
+        }
+    }));
+    push(match (class.source, class.year) {
+        (Some(s), Some(y)) => Some(format!("{s} {y}")),
+        (Some(s), None) => Some(s.to_string()),
+        (None, Some(y)) => Some(y.to_string()),
+        (None, None) => None,
+    });
+    push(class.dual_of.map(|d| {
+        if d == "self-dual" {
+            "self-dual".to_string()
+        } else {
+            format!("dual: {d}")
+        }
+    }));
+    push(class.aperiodic_status.map(str::to_string));
+    push(class.chirality.filter(|s| *s != "achiral").map(|s| {
+        if s == "mixed" {
+            "mixed chirality".to_string()
+        } else {
+            s.to_string()
+        }
+    }));
+    push(class
+        .reflections
+        .filter(|b| *b)
+        .map(|_| "reflected copies".to_string()));
+    push(class.cell_content.map(str::to_string));
+    push(class.tile_set.map(str::to_string));
+    if segs.is_empty() {
+        // The schema added nothing (every declared field is already
+        // echoed by the name): fall back to the description fragment.
+        let frag: String = c.description.chars().take(40).collect();
+        return if frag.is_empty() {
+            c.notes.unwrap_or("").to_string()
+        } else {
+            frag
+        };
+    }
+    segs.join(" · ")
 }
 
 /// Capture a tiling's declared metadata as card data. Symmetry facts are

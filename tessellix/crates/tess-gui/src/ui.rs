@@ -419,7 +419,11 @@ fn title_lines(name: &str, per_line: usize) -> [String; 2] {
 impl GuiApp {
     pub fn new() -> Self {
         let app = tess_core::App::new(tess_tilings::registry(), 60.0);
-        let tabs = tess_core::browse_tabs(app.registry());
+        // The classification table drives the declared tab sort orders
+        // (pentagon types, 2-uniform configurations, Laves ranks,
+        // wallpaper crystal systems) and supplies each card's schema.
+        let tabs =
+            tess_core::browse_tabs_with(app.registry(), tess_tilings::classification);
         let selected = app.selected_id().to_string();
         let active_tab = tabs
             .iter()
@@ -731,6 +735,7 @@ impl GuiApp {
                 lattice: c.lattice,
                 notes: c.notes,
                 params: c.params,
+                class: c.class,
             })
             .collect();
         if cards.is_empty() {
@@ -909,30 +914,28 @@ impl GuiApp {
                 .truncate(),
         );
         content.add_space(CARD_ROW_SPX);
-        // The description sits directly under the name. An empty
-        // label still reserves the row's height, so a card
-        // without a description keeps the uniform card size.
-        let desc = if card.description.is_empty() {
-            card.notes.unwrap_or("").to_string()
-        } else {
+        // The schema summary sits directly under the name (the declared
+        // classification facts, composed by tess-core; falls back to the
+        // description fragment when the schema adds nothing). An empty
+        // label still reserves the row's height, so a card without a
+        // summary keeps the uniform card size.
+        let (sym, summary) = tess_core::browse::attr_lines(card);
+        let desc = if summary.is_empty() {
             truncate_text(card.description, DESC_CHARS)
+        } else {
+            summary
         };
         content.add(
             egui::Label::new(egui::RichText::new(desc).size(13.0).color(DESC_COLOR))
                 .truncate(),
         );
         content.add_space(CARD_ROW_SPX);
+        // Symmetry line: "group · lattice" for periodic cards; the
+        // declared translational character for the nonperiodic world
+        // (never a bare "— · —").
         content.add(
-            egui::Label::new(
-                egui::RichText::new(format!(
-                    "{} · {}",
-                    card.group_str(),
-                    card.lattice_str()
-                ))
-                .size(12.0)
-                .color(SYM_COLOR),
-            )
-            .truncate(),
+            egui::Label::new(egui::RichText::new(sym).size(12.0).color(SYM_COLOR))
+                .truncate(),
         );
         drop(content);
         // Click/hover on the exact cell rect, with a stable explicit id
@@ -1430,6 +1433,7 @@ mod tests {
             lattice,
             notes: None,
             params: 0,
+            class: tess_core::TilingClass::EMPTY,
         }
     }
 
@@ -1437,7 +1441,8 @@ mod tests {
     /// an empty (whitespace) query matches everything.
     #[test]
     fn search_matches_fields_and_empty_query() {
-        let tabs = tess_core::browse_tabs(&tess_tilings::registry());
+        let tabs =
+            tess_core::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
         let real = tabs
             .iter()
             .find_map(|t| t.cards.iter().find(|c| c.id == "penrose"))
@@ -1520,11 +1525,11 @@ mod tests {
         let cmm = tess_core::WallpaperGroup::Cmm;
         let cards = vec![
             card_fix("o1", wp, Some(p1), Some(tess_core::LatticeKind::Oblique)),
-            card_fix("r1", wp, Some(p1), Some(tess_core::LatticeKind::Rectangular)),
+            card_fix("r1", wp, Some(tess_core::WallpaperGroup::Pm), Some(tess_core::LatticeKind::Rectangular)),
             card_fix("c1", wp, Some(cmm), Some(tess_core::LatticeKind::CenteredRectangular)),
-            card_fix("r2", wp, Some(p1), Some(tess_core::LatticeKind::Rectangular)),
-            card_fix("s1", wp, Some(p1), Some(tess_core::LatticeKind::Square)),
-            card_fix("h1", wp, Some(p1), Some(tess_core::LatticeKind::Hexagonal)),
+            card_fix("r2", wp, Some(tess_core::WallpaperGroup::Pg), Some(tess_core::LatticeKind::Rectangular)),
+            card_fix("s1", wp, Some(tess_core::WallpaperGroup::P4m), Some(tess_core::LatticeKind::Square)),
+            card_fix("h1", wp, Some(tess_core::WallpaperGroup::P6m), Some(tess_core::LatticeKind::Hexagonal)),
             card_fix(
                 "n1",
                 tess_core::TilingCategory::Uniform,
@@ -1552,7 +1557,8 @@ mod tests {
     /// the header, and every card is covered exactly once.
     #[test]
     fn sectionize_real_wallpaper_tab() {
-        let tabs = tess_core::browse_tabs(&tess_tilings::registry());
+        let tabs =
+            tess_core::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
         let wp = tabs
             .iter()
             .find(|t| t.category == tess_core::TilingCategory::Wallpaper)

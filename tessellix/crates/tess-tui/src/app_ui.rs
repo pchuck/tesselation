@@ -37,7 +37,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Position, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
 use ratatui::{Frame, Terminal};
 
 use tess_core::app::App;
@@ -53,7 +53,10 @@ use crate::thumb;
 /// needs one extra row); the grid fits as many full-size cards as the
 /// viewport allows (≥ 1 column, ≥ 1 row) and stretches them to fill.
 const TARGET_CARD_W: u16 = 28;
-const TARGET_CARD_H: u16 = 14;
+/// Ctrl+wheel card-size bounds (the height follows at half the width;
+/// the default card is 28×14, so the height target is `TARGET_CARD_W/2`).
+const MIN_CARD_W: u16 = 22;
+const MAX_CARD_W: u16 = 44;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum Mode {
@@ -103,12 +106,21 @@ struct Tui {
     /// Hit-test geometry from the last Browse render.
     tab_rects: Vec<Rect>,
     card_rects: Vec<(Rect, usize)>,
+    /// Target card width for the browse grid (the height follows at
+    /// half the width, keeping the 28×14 default aspect). Adjusted by
+    /// Ctrl+wheel in steps of 2 within [22, 44]; plain wheel keeps
+    /// scrolling.
+    card_w: u16,
 }
 
 impl Tui {
     fn new() -> Self {
         let registry = tess_tilings::registry();
-        let tabs = browse::browse_tabs(&registry);
+        // The classification table (tess-tilings::classification)
+        // supplies each card's declared schema and drives the declared
+        // tab sort orders (pentagon types, 2-uniform configurations,
+        // Laves ranks, wallpaper crystal systems).
+        let tabs = browse::browse_tabs_with(&registry, tess_tilings::classification);
         let palette256: Vec<u8> = paint::PALETTE
             .iter()
             .map(|&c| paint::rgb_to_256(c))
@@ -132,6 +144,7 @@ impl Tui {
             dirty: true,
             tab_rects: Vec::new(),
             card_rects: Vec::new(),
+            card_w: TARGET_CARD_W,
             last_highlighted: (0, None),
         }
     }
@@ -174,6 +187,19 @@ impl Tui {
         let ci = self.cat_idx(self.active_tab().category);
         self.scroll[ci] = (self.scroll[ci] as i32 + step).max(0) as usize;
         self.dirty = true;
+    }
+
+    /// Ctrl+wheel card-size step: the target card width moves by
+    /// `delta` (positive = larger cards), clamped to
+    /// `[MIN_CARD_W, MAX_CARD_W]`; the height follows at half the
+    /// width so the default 28×14 aspect is preserved. Resizing
+    /// invalidates the thumbnail cache through its size-keyed entries.
+    fn resize_cards(&mut self, delta: i32) {
+        let w = (self.card_w as i32 + delta).clamp(MIN_CARD_W as i32, MAX_CARD_W as i32);
+        if w != self.card_w as i32 {
+            self.card_w = w as u16;
+            self.dirty = true;
+        }
     }
 
     /// Cards of the active tab passing the search filter, in tab order.
@@ -406,6 +432,12 @@ impl Tui {
                         self.open_render(i);
                     }
                 }
+                MouseEventKind::ScrollUp if me.modifiers.contains(KeyModifiers::CONTROL) => {
+                    self.resize_cards(2);
+                }
+                MouseEventKind::ScrollDown if me.modifiers.contains(KeyModifiers::CONTROL) => {
+                    self.resize_cards(-2);
+                }
                 MouseEventKind::ScrollUp => self.scroll_by(-1),
                 MouseEventKind::ScrollDown => self.scroll_by(1),
                 _ => {}
@@ -493,13 +525,15 @@ fn title_lines(name: &str, per_line: usize) -> Vec<String> {
 }
 
 /// Card grid geometry for a viewport: as many target-size cards as fit
-/// (≥ 1 column, ≥ 1 row), stretched to fill.
-fn grid_cols_rows(area: Rect) -> (u16, u16, u16, u16) {
-    let cols = (area.width / TARGET_CARD_W).max(1);
-    let rows = (area.height / TARGET_CARD_H).max(1);
-    let card_w = (area.width / cols).max(1);
-    let card_h = (area.height / rows).max(1);
-    (cols, card_w, rows, card_h)
+/// (≥ 1 column, ≥ 1 row), stretched to fill. The card height target is
+/// half the width target (the default 28×14 aspect).
+fn grid_cols_rows(area: Rect, card_w: u16) -> (u16, u16, u16, u16) {
+    let card_h = (card_w / 2).max(6);
+    let cols = (area.width / card_w).max(1);
+    let rows = (area.height / card_h).max(1);
+    let cw = (area.width / cols).max(1);
+    let ch = (area.height / rows).max(1);
+    (cols, cw, rows, ch)
 }
 
 /// Plan the grid rows for the visible card indices of a tab: runs of
@@ -664,7 +698,7 @@ fn max_offset_for_row(plan: &[GridRow], r: usize, card_h: u16, height: u16) -> u
 }
 
 fn render_card_grid(frame: &mut Frame, tui: &mut Tui, rect: Rect) {
-    let (cols, card_w, _rows, card_h) = grid_cols_rows(rect);
+    let (cols, card_w, _rows, card_h) = grid_cols_rows(rect, tui.card_w);
     tui.grid_cols = cols;
     let ci = tui.cat_idx(tui.active_tab().category);
     let visible = tui.visible_cards();
@@ -746,18 +780,9 @@ fn render_card(
 ) {
     // Extract the card data first: the thumb cache lookup below takes
     // `&mut tui` and must not overlap a borrow of `tui.tabs`.
-    let (id, name, group_s, lattice_s, desc, notes, nparams) = {
-        let card = &tui.active_tab().cards[card_idx];
-        (
-            card.id,
-            card.name,
-            card.group_str(),
-            card.lattice_str(),
-            card.description,
-            card.notes,
-            card.params,
-        )
-    };
+    // CardMeta is Copy, so the whole card copies out.
+    let card: CardMeta = tui.active_tab().cards[card_idx];
+    let (id, nparams) = (card.id, card.params);
     let border_style = if selected {
         Style::default()
             .fg(Color::Cyan)
@@ -770,7 +795,7 @@ fn render_card(
     // width). The first line is the block title on the top border
     // (centered, as before); a wrapped second line is painted as the
     // first inner row, so the content starts under it.
-    let tlines = title_lines(name, iw);
+    let tlines = title_lines(card.name, iw);
     let title_extra = tlines.len().saturating_sub(1);
     let block = Block::default()
         .borders(Borders::ALL)
@@ -789,7 +814,11 @@ fn render_card(
         return;
     }
     let has_params = nparams > 0;
-    let attr_rows = 2 + usize::from(has_params);
+    // Attribute rows: the symmetry line (group · lattice for periodic
+    // cards; the declared translational character for the nonperiodic
+    // world — never a bare "— · —"), then the schema summary line
+    // wrapped over up to two rows, then "params: n" when parameterized.
+    let attr_rows = 3 + usize::from(has_params);
     let content = ih.saturating_sub(title_extra);
     let thumb_rows = content.saturating_sub(attr_rows).max(1);
 
@@ -829,19 +858,12 @@ fn render_card(
         }
     }
 
-    // Attribute lines below the thumbnail: "group · lattice" and a
-    // description fragment (or the symmetry notes when the
-    // description is empty); "params: n" only for parameterized
-    // tilings.
+    // Attribute lines below the thumbnail: the symmetry line, the
+    // schema summary (or the description fragment for unclassified
+    // cards), and "params: n" only for parameterized tilings.
     let y0 = rect.y + 1 + title_extra as u16 + thumb_rows as u16;
     if y0 + attr_rows as u16 <= rect.y + rect.height {
-        let line1 = format!("{} · {}", group_s, lattice_s);
-        let frag: String = desc.chars().take(40).collect();
-        let line2 = if frag.is_empty() {
-            notes.unwrap_or("").to_string()
-        } else {
-            frag
-        };
+        let (line1, line2) = browse::attr_lines(&card);
         let dim = Style::default().fg(Color::Gray);
         let dimmer = Style::default().fg(Color::DarkGray);
         frame.render_widget(
@@ -849,13 +871,15 @@ fn render_card(
             Rect::new(rect.x + 1, y0, iw as u16, 1),
         );
         frame.render_widget(
-            Paragraph::new(truncate(&line2, iw)).style(dimmer),
-            Rect::new(rect.x + 1, y0 + 1, iw as u16, 1),
+            Paragraph::new(line2)
+                .style(dimmer)
+                .wrap(Wrap { trim: false }),
+            Rect::new(rect.x + 1, y0 + 1, iw as u16, 2),
         );
         if has_params {
             frame.render_widget(
                 Paragraph::new(truncate(&format!("params: {}", nparams), iw)).style(dim),
-                Rect::new(rect.x + 1, y0 + 2, iw as u16, 1),
+                Rect::new(rect.x + 1, y0 + 3, iw as u16, 1),
             );
         }
     }
@@ -1044,11 +1068,11 @@ mod tests {
         assert_eq!(tui.tabs.len(), 10, "one tab per TilingCategory::ALL entry");
         // Multi-tab membership (M76): a tiling appears in its primary
         // tab plus every secondary tab, so the tab sizes sum to the
-// 123 memberships of the 111 registered tilings, not to 111.
+// 125 memberships of the 111 registered tilings, not to 111.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 123, "111 tilings carry 123 tab memberships");
+        assert_eq!(total, 125, "111 tilings carry 125 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-assert_eq!(counts, vec![11, 15, 22, 17, 12, 21, 5, 10, 6, 4]);
+assert_eq!(counts, vec![11, 15, 22, 17, 14, 21, 5, 10, 6, 4]);
     }
 
     #[test]
@@ -1061,18 +1085,21 @@ assert_eq!(counts, vec![11, 15, 22, 17, 12, 21, 5, 10, 6, 4]);
             .iter()
             .map(|c| browse::section_key(TilingCategory::Wallpaper, c))
             .collect();
-        // Lattice rank is non-decreasing along the tab (crystal-system
-        // grouping).
+        // Section (conventional crystal-system) rank is non-decreasing
+        // along the tab — the sort key is the wallpaper group's
+        // conventional lattice, not the representative's measured
+        // lattice (a p1 card on a centered-rectangular cell still
+        // displays under oblique).
         let ranks: Vec<u8> = wall
             .cards
             .iter()
             .map(|c| {
-                browse::lattice_rank(c.lattice.unwrap_or(tess_core::LatticeKind::None))
+                section_rank(browse::section_key(TilingCategory::Wallpaper, c))
             })
             .collect();
         assert!(
             ranks.windows(2).all(|w| w[0] <= w[1]),
-            "lattice rank must be non-decreasing: {ranks:?}"
+            "section rank must be non-decreasing: {ranks:?}"
         );
         // Sections appear in first-appearance order: oblique,
         // rectangular, centered, square, hexagonal.
@@ -1089,6 +1116,19 @@ assert_eq!(counts, vec![11, 15, 22, 17, 12, 21, 5, 10, 6, 4]);
         );
     }
 
+    /// The crystal-system rank of a Wallpaper section key (mirrors the
+    /// conventional-lattice display order).
+    fn section_rank(key: &'static str) -> u8 {
+        match key {
+            "oblique" => 0,
+            "rectangular" => 1,
+            "centered" => 2,
+            "square" => 3,
+            "hexagonal" => 4,
+            _ => 9,
+        }
+    }
+
     // ---- tab bar ----------------------------------------------------
 
     #[test]
@@ -1103,7 +1143,7 @@ assert_eq!(counts, vec![11, 15, 22, 17, 12, 21, 5, 10, 6, 4]);
 ("Two-Uniform", 15),
             ("Laves (Catalan duals)", 22),
             ("Wallpaper", 17),
-            ("Pentagon Types", 12),
+            ("Pentagon Types", 14),
 ("Islamic", 21),
             ("Arrangements", 5),
             ("Quasiperiodic", 10),
@@ -1538,6 +1578,201 @@ assert_eq!(counts, vec![11, 15, 22, 17, 12, 21, 5, 10, 6, 4]);
             modifiers: KeyModifiers::NONE,
         });
         assert_eq!(tui.scroll[0], s0 + 1);
+        // Ctrl+wheel in Browse resizes the cards (plain wheel above
+        // scrolled); the size clamps to the [22, 44] width window and
+        // plain scroll still works after resizing.
+        tui.handle_mouse(MouseEvent {
+            kind: MouseEventKind::ScrollUp,
+            column: 5,
+            row: 5,
+            modifiers: KeyModifiers::CONTROL,
+        });
+        assert_eq!(tui.card_w, TARGET_CARD_W + 2);
+        for _ in 0..20 {
+            tui.resize_cards(2);
+        }
+        assert_eq!(tui.card_w, MAX_CARD_W, "size clamps at the maximum");
+        for _ in 0..40 {
+            tui.resize_cards(-2);
+        }
+        assert_eq!(tui.card_w, MIN_CARD_W, "size clamps at the minimum");
+        let s1 = tui.scroll[0];
+        tui.handle_mouse(MouseEvent {
+            kind: MouseEventKind::ScrollDown,
+            column: 5,
+            row: 5,
+            modifiers: KeyModifiers::NONE,
+        });
+        assert_eq!(tui.scroll[0], s1 + 1, "plain wheel still scrolls");
+        // Larger cards → fewer columns fit the same viewport.
+        tui.card_w = TARGET_CARD_W;
+        let (c28, _, r28, _) = grid_cols_rows(Rect::new(0, 0, 280, 140), 28);
+        let (c44, _, r44, _) = grid_cols_rows(Rect::new(0, 0, 280, 140), 44);
+        assert_eq!((c28, r28), (10, 10));
+        assert_eq!((c44, r44), (6, 6));
+    }
+
+    // ---- classification schema rendering ----------------------------------
+
+    /// The schema summary adds information instead of echoing the
+    /// card name: pinned lines for representative families.
+    #[test]
+    fn attr_lines_compose_schema_summaries() {
+        let tabs = browse::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        let line2 = |id: &str| -> String {
+            for tab in &tabs {
+                if let Some(c) = tab.cards.iter().find(|c| c.id == id) {
+                    return browse::attr_lines(c).1;
+                }
+            }
+            panic!("{id} not found in any tab");
+        };
+        let line1 = |id: &str| -> String {
+            for tab in &tabs {
+                if let Some(c) = tab.cards.iter().find(|c| c.id == id) {
+                    return browse::attr_lines(c).0;
+                }
+            }
+            panic!("{id} not found in any tab");
+        };
+        // Uniform: vertex config that is NOT in the name, Schläfli,
+        // uniformity, dual.
+        assert_eq!(
+            line2("square"),
+            "4.4.4.4 · {4,4} · regular · self-dual"
+        );
+        // "(4.8.8)" is already in the card name — the summary skips it.
+        assert_eq!(
+            line2("truncated-square"),
+            "t{4,4} · semiregular · dual: tetrakis square"
+        );
+        // Pentagon: "type 6" is in the name, so the summary leads with
+        // the isohedral class and attribution.
+        assert_eq!(line2("pentagon-6"), "2-isohedral · Kershner 1968");
+        // Cairo joins the Pentagon tab as the typed type-4 member.
+        assert_eq!(
+            line2("cairo-pentagonal"),
+            "type 4 · 1-isohedral · dual: snub square"
+        );
+        assert_eq!(line1("cairo-pentagonal"), "p4g · square");
+        // Quasiperiodic: the symmetry line replaces "— · —" with the
+        // declared translational character + point order.
+        assert_eq!(line1("penrose"), "quasiperiodic · 5-fold");
+        assert_eq!(line2("penrose"), "substitution · φ · Penrose 1974");
+        // Aperiodic monotile ("monotile" is echoed by the name and skipped;
+        // chirality and the reflection fact follow).
+        assert_eq!(line1("hat"), "aperiodic");
+        assert_eq!(
+            line2("hat"),
+            "metatile substitution · φ² · Smith et al. 2023 · einstein · mixed chirality · reflected copies"
+        );
+        // Islamic construction data.
+        assert_eq!(
+            line2("pic-4-8-8"),
+            "Hankin polygons-in-contact · 4.8.8 · θK 45°"
+        );
+        // Cut-and-project data.
+        assert_eq!(
+            line2("ammann-beenker"),
+            "substitution · 1+√2 · R⁴ → R², octagonal window · Ammann & Beenker 1982"
+        );
+        // Limit-periodic rep-tile.
+        assert_eq!(line1("chair"), "limit-periodic");
+    }
+
+    /// The "hide absent fields" rule, over every card in the registry:
+    /// no attribute line is ever empty, no line ever renders a
+    /// placeholder like "— · —" or "N/A", and nonperiodic cards
+    /// (no declared group) state their translational character
+    /// instead.
+    #[test]
+    fn attr_lines_never_render_placeholders() {
+        let tabs = browse::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        for tab in &tabs {
+            for c in &tab.cards {
+                let (l1, l2) = browse::attr_lines(c);
+                assert!(!l1.is_empty(), "{}: empty symmetry line", c.id);
+                assert!(!l2.is_empty(), "{}: empty summary line", c.id);
+                assert!(!l1.contains("—"), "{}: em-dash in {l1:?}", c.id);
+                assert!(!l2.contains("N/A"), "{}: N/A in summary", c.id);
+                if c.group.is_none() {
+                    assert!(
+                        l1.contains("quasiperiodic")
+                            || l1.contains("aperiodic")
+                            || l1.contains("limit-periodic")
+                            || l1.contains("non-periodic"),
+                        "{}: nonperiodic symmetry line states the translational character: {l1:?}",
+                        c.id
+                    );
+                }
+            }
+        }
+    }
+
+    /// The Pentagon tab sorts by the declared type number: the
+    /// sequential type order 2, 3, 4 (cairo), 5 (floret), …, 15 (the
+    /// Hirschhorn pentagon is a Nonperiodic primary, not a type).
+    #[test]
+    fn pentagon_tab_orders_types_sequentially() {
+        let tabs = browse::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        let pent = &tabs[tabs
+            .iter()
+            .position(|t| t.category == TilingCategory::PentagonTypes)
+            .unwrap()];
+        let types: Vec<Option<u8>> = pent.cards.iter().map(|c| c.class.pentagon_type).collect();
+        let expected: Vec<Option<u8>> = (2u8..=15).map(Some).collect();
+        assert_eq!(types, expected, "types 2..=15 in sequence");
+    }
+
+    /// The Two-Uniform tab sorts by vertex configuration: shared
+    /// configurations (the ₁/₂ pairs) sort together, ahead of the
+    /// config-less remainder (none today).
+    #[test]
+    fn two_uniform_tab_groups_configurations() {
+        let tabs = browse::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        let tu = &tabs[tabs
+            .iter()
+            .position(|t| t.category == TilingCategory::TwoUniform)
+            .unwrap()];
+        assert_eq!(tu.cards.len(), 15);
+        let configs: Vec<Option<&'static str>> =
+            tu.cards.iter().map(|c| c.class.vertex_config).collect();
+        assert!(
+            configs.iter().all(|c| c.is_some()),
+            "every 2-uniform card declares a configuration: {configs:?}"
+        );
+        // The three configuration pairs are adjacent (n4/n3, n14/n15,
+        // n20/n19 — the ₁/₂ subscript sorts beside its sibling).
+        let find = |prefix: &str| {
+            configs
+                .iter()
+                .position(|c| c.unwrap_or("").starts_with(prefix))
+                .unwrap()
+        };
+        for (a, b) in [
+            ("(4⁴; 3³.4²)₁", "(4⁴; 3³.4²)₂"),
+            ("(3⁶; 3³.4²)₁", "(3⁶; 3³.4²)₂"),
+            ("(3⁶; 3⁴.6)₁", "(3⁶; 3⁴.6)₂"),
+        ] {
+            assert_eq!(find(a) + 1, find(b), "{a} and {b} must be adjacent");
+        }
+    }
+
+    /// The Laves tab sorts by declared rank: the three self-dual
+    /// regulars, then the Laves proper, then the 2-uniform duals.
+    #[test]
+    fn laves_tab_sorts_by_declared_rank() {
+        let tabs = browse::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        let lv = &tabs[tabs
+            .iter()
+            .position(|t| t.category == TilingCategory::Laves)
+            .unwrap()];
+        assert_eq!(lv.cards.len(), 22);
+        let ranks: Vec<Option<u8>> = lv.cards.iter().map(|c| c.class.laves_rank).collect();
+        let sorted = ranks.windows(2).all(|w| w[0] <= w[1]);
+        assert!(sorted, "laves_rank must be non-decreasing: {ranks:?}");
+        assert_eq!(ranks[0], Some(0), "self-dual regulars first");
+        assert_eq!(*ranks.last().unwrap(), Some(2), "2-uniform duals last");
     }
 
     // ---- misc --------------------------------------------------------------

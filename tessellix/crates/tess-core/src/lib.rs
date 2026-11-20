@@ -34,7 +34,10 @@ pub use category::TilingCategory;
 pub use classify::TilingClass;
 pub use geometry::{Affine, BBox, Point, Polygon, Vec2};
 pub use params::{ParamId, ParamKind, ParamSet, ParamSpec, ParamValue};
-pub use browse::{browse_tabs, card_meta, section_key, wallpaper_gap_note, CardMeta, Tab};
+pub use browse::{
+    attr_lines, browse_tabs, browse_tabs_with, card_meta, card_meta_with, section_key,
+    wallpaper_gap_note, CardMeta, Tab,
+};
 pub use registry::Registry;
 pub use symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
 pub use tiling::{Query, Tile, Tiling, TilingResult};
