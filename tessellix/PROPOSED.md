@@ -1877,6 +1877,23 @@ that already exists twice.
   pinwheel family, einstein siblings, cubic/quartic field tiers) plus
   23k audit-discovered additions (missing duals of the subscripted
   2-uniform pairs; this sprint's M114–M121 recorded).
+- 2026-11-20 — M114–M121: arrangements trio, pentagon type 1,
+  2-uniform batch 5 — Arrangements 5 → 8 (M114 stack-bond pmm,
+  M115 herringbone-45 pgg — the M40 bond in its 45°-laid canonical
+  frame, M116 basketweave-3 pmm on a documented index-3 superlattice);
+  PentagonTypes 14 → 15 (M117 pentagon-1, the Reinhardt type-1
+  prototype — measured **cmm**, not the folklore p2: the prototile is
+  achiral, with two perpendicular mirror families and off-mirror
+  half-turns; declared on the a²=3b² special centered-rectangular
+  lattice with the legality-test allowance documented); TwoUniform
+  15 → 17 and Laves 22 → 24 (M118 kuniform-n2 = the 3-4-3-12 tiling
+  (3.12.12; 3.4.3.12) p4m + M120 its kite/triangle dual; M119
+  kuniform-n16 = 33344-33434 variant 1 (3³.4²; 3².4.3.4) p4g —
+  axis mirrors pure, diagonal cosets true ½-period glides — + M121
+  its "key-lock" pentagon dual; both duals face-censused in exact
+  ℚ(√3), areas summing to |det|). Census 111/125 → 119/133. Still
+  missing from the closed 20-list: n6, n7 (the two [3.4².6; 3.6.3.6]
+  forms) and n17 (the pgg sibling of n16).
 - 2026-11-20 — M122: classification schema + UI audit fixes —
   `TilingClass` (optional per-family fields in tess-core, declared in a
   new `tess-tilings/src/classify.rs` table covering all 111 tilings;

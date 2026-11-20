@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (111 tilings)
+## Implemented (119 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
