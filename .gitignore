@@ -3,4 +3,5 @@ python/
 # ignore reference texts and images, for now
 reference/
 # other..
-logs
+logs/
+scratch/
