@@ -389,6 +389,13 @@ pub fn classification(id: &str) -> TilingClass {
             chirality: Some("homochiral"),
             ..TilingClass::EMPTY
         },
+        "basketweave-3" => TilingClass {
+            families: &["Arrangement"],
+            method: Some("paver bond"),
+            tile_set: Some("2:1 dominoes"),
+            cell_content: Some("15 dominoes per cell"),
+            ..TilingClass::EMPTY
+        },
         "basketweave" => TilingClass {
             families: &["Arrangement"],
             method: Some("paver bond"),

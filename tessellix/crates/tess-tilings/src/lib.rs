@@ -144,6 +144,8 @@ pub mod alcove_cut_grid;
 pub mod stack_bond;
 #[cfg(feature = "pavers")]
 pub mod herringbone_45;
+#[cfg(feature = "pavers")]
+pub mod basketweave_3;
 #[cfg(feature = "pentagon2")]
 pub mod pentagon2;
 #[cfg(feature = "pentagon3")]
@@ -441,6 +443,7 @@ r = r.register(kuniform::kuniform_n12());
         r = r.register(alcove_cut_grid::alcove_cut_grid());
         r = r.register(stack_bond::stack_bond());
         r = r.register(herringbone_45::herringbone_45());
+        r = r.register(basketweave_3::basketweave_3());
     }
     {
         // Unconditional: the socolar feature exists in Cargo.toml
@@ -619,7 +622,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M115). 113 built-ins — 63 before
+// Census of today's taxonomy (M116). 114 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -627,9 +630,9 @@ mod tests {
         //   + 11 machine-dualized k-uniform duals (M98, M102, M106) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
-//   PentagonTypes 14, Islamic 21, Arrangements 7,
+//   PentagonTypes 14, Islamic 21, Arrangements 8,
 //   Quasiperiodic 10, Aperiodic 6, Nonperiodic 4.
-// Membership census 127 = 113 primaries + 14 secondaries (3 Laves
+// Membership census 128 = 114 primaries + 14 secondaries (3 Laves
         // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5) join the Pentagon tab as
         // typed secondary members, M122).
@@ -726,14 +729,19 @@ mod tests {
         // -> M115 Arrangements 6 -> 7 (herringbone-45, the M40 bond in
         // its 45-degree-laid canonical frame, pgg on the rectangular
         // lattice <(0,2*sqrt(2)),(sqrt(2),0)>).
+        // -> M116 Arrangements 7 -> 8 (basketweave-3, the triple
+        // basketweave paver bond: three horizontal courses plus one
+        // vertical course, period 5; pmm on the rectangular lattice
+        // <(6,0),(0,5)> — an index-3 superlattice of the true
+        // <(2,0),(0,5)>; 15 split dominoes per cell).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 15, 22, 17, 14, 21, 7, 10, 6, 4],
+vec![11, 15, 22, 17, 14, 21, 8, 10, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 113, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 127, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 114, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 128, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -3926,6 +3934,7 @@ mod pavers_tests {
     use crate::split_triangle_grid;
     use crate::stack_bond;
     use crate::herringbone_45;
+    use crate::basketweave_3;
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::ParamSet;
     use tess_core::tiling::{Query, Tiling};
@@ -4676,6 +4685,162 @@ mod pavers_tests {
             assert!(
                 !sym(m, v),
                 "{label} must NOT be a symmetry of the 45° herringbone"
+            );
+        }
+    }
+
+    /// Basketweave-three (M116) standard trio.
+    #[test]
+    fn basketweave_3_covers_region() {
+        check_covers(
+            &basketweave_3::basketweave_3(),
+            "basketweave-3",
+            BBox::new(v2(-4.0, -4.0), v2(10.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn basketweave_3_rotated_scaled() {
+        check_rotated(
+            &basketweave_3::basketweave_3(),
+            "basketweave-3(rot30,scale0.7)",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn basketweave_3_deterministic() {
+        check_det(
+            &basketweave_3::basketweave_3(),
+            "basketweave-3",
+            BBox::new(v2(-2.0, -2.0), v2(12.0, 8.0)),
+        );
+    }
+
+    /// Lattice-membership / origin-set predicates for the basketweave-3
+    /// table, in doubled coordinates. The declared cell is
+    /// ⟨(12,0),(0,10)⟩; H-domino origins sit at x ≡ 0 (mod 4), y ≡
+    /// 0/2/4 (mod 10), V-domino origins at x even, y ≡ 6 (mod 10).
+    fn bw3_in_lattice(x: i64, y: i64) -> bool {
+        x.rem_euclid(12) == 0 && y.rem_euclid(10) == 0
+    }
+
+    fn bw3_in_origin(kind: u8, x: i64, y: i64) -> bool {
+        match kind {
+            0 => x.rem_euclid(4) == 0 && matches!(y.rem_euclid(10), 0 | 2 | 4),
+            1 => x.rem_euclid(2) == 0 && y.rem_euclid(10) == 6,
+            _ => false,
+        }
+    }
+
+    #[test]
+    fn basketweave_3_wallpaper_group_is_pmm() {
+        const M_I: [i64; 4] = [1, 0, 0, 1];
+        const M_ROT4_270: [i64; 4] = [0, 1, -1, 0]; // R270
+        // The 15 split dominoes of one 6×5 cell in doubled coordinates:
+        // 9 H dominoes (4×2, kind 0) at x ∈ {0,4,8}, y ∈ {0,2,4}, and 6
+        // V dominoes (2×4, kind 1) at y = 6, x even.
+        let basis = [(12, 0), (0, 10)];
+        let mut cells: Vec<(i64, i64, i64, i64, u8)> = Vec::with_capacity(15);
+        for oy in [0i64, 2, 4] {
+            for ox in [0i64, 4, 8] {
+                cells.push((ox, oy, 4, 2, 0));
+            }
+        }
+        for ox in (0..12).step_by(2) {
+            cells.push((ox, 6, 2, 4, 1));
+        }
+        let sym = |m: [i64; 4], v: [i64; 2]| {
+            pavers_exact_is_sym(m, v, &basis, &cells, bw3_in_lattice, bw3_in_origin)
+        };
+
+        // pmm: translations on the true lattice <(2,0),(0,5)> (doubled:
+        // v_x ≡ 0 mod 4, v_y ≡ 0 mod 10 — finer than the declared cell,
+        // which is an index-3 superlattice); mirrors at every vertical
+        // axis x = k; mirrors at the horizontal axes y = 2.5k + 1.5
+        // (doubled: v_y ≡ 6 mod 10); 2-folds at every mirror
+        // intersection (k, 2.5k' + 1.5).
+        let expected = [
+            (M_I, [0, 0], "T(0,0)"),
+            (M_I, [4, 0], "T(2,0)"),
+            (M_I, [8, 0], "T(4,0)"),
+            (M_I, [12, 0], "T(6,0) — declared cell"),
+            (M_I, [0, 10], "T(0,5) — declared cell"),
+            (M_I, [4, 10], "T(2,5)"),
+            (M_I, [-4, 0], "T(-2,0)"),
+            (M_I, [-12, 10], "T(-6,5)"),
+            (M_MIRX, [0, 0], "mir_x(0)"),
+            (M_MIRX, [4, 0], "mir_x(1)"),
+            (M_MIRX, [8, 0], "mir_x(2)"),
+            (M_MIRX, [-4, 0], "mir_x(-1)"),
+            (M_MIRX, [0, 10], "mir_x(0) + T(0,5)"),
+            (M_MIRX, [4, 10], "mir_x(1) + T(0,5)"),
+            (M_MIRY, [0, 6], "mir_y(3/2)"),
+            (M_MIRY, [4, 6], "mir_y(3/2) + T(2,0)"),
+            (M_MIRY, [8, 6], "mir_y(3/2) + T(4,0)"),
+            (M_MIRY, [0, 16], "mir_y(4)"),
+            (M_MIRY, [4, 16], "mir_y(4) + T(2,0)"),
+            (M_MIRY, [12, 16], "mir_y(4) + T(6,0)"),
+            (M_MIRY, [0, -4], "mir_y(-1)"),
+            (M_ROT2, [0, 6], "rot2(0,3/2)"),
+            (M_ROT2, [4, 6], "rot2(1,3/2)"),
+            (M_ROT2, [8, 16], "rot2(2,4)"),
+            (M_ROT2, [12, 16], "rot2(3,4)"),
+            (M_ROT2, [0, -4], "rot2(0,-1)"),
+            (M_ROT2, [-4, 6], "rot2(-1,3/2)"),
+        ];
+        for (m, v, label) in expected {
+            assert!(
+                sym(m, v),
+                "{label} must be a symmetry of the basketweave-3"
+            );
+        }
+
+        // No half-integer x-mirrors, no y-mirrors off the 2.5k+1.5
+        // family, no essential glides (a half-period shift along a
+        // mirror carries the even-x horizontal courses to odd x, and
+        // shifts the vertical walls off the integer x-axes), no
+        // 2-folds off the mirror intersections, no 4-folds, no
+        // diagonal mirrors.
+        let forbidden = [
+            // half-integer x-axes are not mirrors
+            (M_MIRX, [2, 0], "mir_xhalf(1/2)"),
+            (M_MIRX, [6, 0], "mir_xhalf(3/2)"),
+            // y-mirrors only at y = 2.5k + 1.5
+            (M_MIRY, [0, 0], "mir_y(0)"),
+            (M_MIRY, [4, 0], "mir_y(0) + T(2,0)"),
+            (M_MIRY, [0, 10], "mir_y(5/2)"),
+            (M_MIRY, [4, 10], "mir_y(5/2) + T(2,0)"),
+            // glides along the mirrors (half-period shifts)
+            (M_MIRX, [0, 5], "glide x=0, shift 5/2"),
+            (M_MIRX, [4, 5], "glide x=1, shift 5/2"),
+            (M_MIRY, [2, 6], "glide y=3/2, shift 1"),
+            (M_MIRY, [2, 16], "glide y=4, shift 1"),
+            // mirrors shifted by a non-lattice amount
+            (M_MIRX, [0, 6], "mir_x(0) + T(0,3)"),
+            (M_MIRX, [4, 6], "mir_x(1) + T(0,3)"),
+            // 2-folds only at the mirror intersections
+            (M_ROT2, [0, 0], "rot2(0,0)"),
+            (M_ROT2, [4, 0], "rot2(1,0)"),
+            (M_ROT2, [0, 10], "rot2(0,5/2)"),
+            (M_ROT2, [2, 6], "rot2(1/2,3/2)"),
+            // no 4-folds
+            (M_ROT4, [0, 0], "rot4(0,0)"),
+            (M_ROT4, [4, 0], "rot4(1,0)"),
+            (M_ROT4_270, [0, 0], "rot4_270(0,0)"),
+            (M_ROT4_270, [12, 10], "rot4_270(3,5/2)"),
+            // no diagonal mirrors or glides
+            (M_DIAG, [0, 0], "mir_d(0)"),
+            (M_DIAG, [4, 6], "mir_d(3/2)"),
+            (M_ANTI, [0, 0], "mir_a(0)"),
+            (M_ANTI, [0, 16], "mir_a(4)"),
+        ];
+        for (m, v, label) in forbidden {
+            assert!(
+                !sym(m, v),
+                "{label} must NOT be a symmetry of the basketweave-3"
             );
         }
     }
@@ -8504,6 +8669,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
         pic_3_6_3_6, pic_4_8_8, running_bond, shifted_trapezoid_courses,
         split_triangle_grid, square, stack_bond,
         herringbone_45,
+        basketweave_3,
         stepped_hexominoes, triangle, trapezoid_courses, wavy_courses, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
@@ -8656,6 +8822,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
             ),
             ("stack-bond", stack_bond::stack_bond()),
             ("herringbone-45", herringbone_45::herringbone_45()),
+            ("basketweave-3", basketweave_3::basketweave_3()),
             ("pentagon-2", pentagon2::spec()),
             ("pentagon-3", pentagon3::spec()),
             ("pentagon-6", pentagon6::spec()),
