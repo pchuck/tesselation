@@ -1,10 +1,11 @@
 //! 2-uniform (k-uniform) tilings, expressed as [`LatticeTiling`] data
 //! tables.
 //!
-//! Thirteen entries are from the closed list of 20 two-vertex-orbit
+//! Fifteen entries are from the closed list of 20 two-vertex-orbit
 //! tilings by regular polygons (Krotenheerdt; see the Wikipedia
 //! "k-uniform tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`,
-//! `n8`, `n5`, `n1`, `n13`, `n20`, `n12`, `n19`, `n4`, `n14`). The
+//! `n8`, `n5`, `n1`, `n13`, `n20`, `n12`, `n19`, `n4`, `n14`, `n3`,
+//! `n15`). The
 //! list's entries have no individual proper names, so these are named by
 //! their vertex configurations, following that convention:
 //!
@@ -62,6 +63,14 @@
 //!   e = 4. Single square rows alternating with double triangle strips
 //!   (two counterposed triangle rows); the origin is a 3³.4² vertex,
 //!   the 3⁶ vertices sit at the strip-strip junction line.
+//! * `kuniform-n3` — vertex figures 4⁴ ; 3³.4², group cmm, t = 3,
+//!   e = 5. The n4 sibling: three-square-tall bands alternating with
+//!   alternating-triangle bands; the interior 4⁴ crossings sit inside
+//!   the three-row bands, two classes per cell.
+//! * `kuniform-n15` — vertex figures 3⁶ ; 3³.4², group cmm, t = 4,
+//!   e = 5. The n14 sibling: single square rows alternating with
+//!   triple triangle strips (three rows, every horizontal edge shared
+//!   back-to-back); the square row is flanked by one triangle orbit.
 //!
 //! All coordinates lie in Z + (√3/2)·Q, stored through [`H`].
 
@@ -1776,6 +1785,212 @@ pub fn kuniform_n14() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::Pmm,
         lattice_kind: LatticeKind::Rectangular,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (4⁴; 3³.4²), wallpaper group cmm.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n3` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons):
+/// `[4⁴; 3³.4²]₂ (t = 3, e = 5)`, the sibling of `kuniform-n4`.
+///
+/// The file-index ↔ caption mapping was re-verified anchor-first against
+/// the saved wiki page before porting (caption follows the image inside the
+/// same table cell): the SVG named n3.svg carries the (3, 5) parenthetical
+/// and the three-row band figure; the landed `kuniform-n4` entry is the
+/// (2, 4) sibling. Construction: three-square-tall bands (three unit
+/// squares stacked edge-to-edge) alternating with one alternating-triangle
+/// band one triangle (height H) tall; consecutive bands are staggered by
+/// half a unit — forced by the triangle band sharing full edges with both
+/// square rows. The primitive cell holds 3 squares + 2 triangles
+/// (area 3 + √3/2 = 3.866025404). Seeds mirror the wiki figure's three
+/// colors: seed 0 = the two outer rows of a band (one orbit — the band is
+/// symmetric under the horizontal mirror through its middle row), seed 1 =
+/// the middle row, seed 2 = both triangle rows.
+///
+/// The translation lattice is b1 = (1, 0), b2 = (1/2, 3 + √3/2),
+/// |det| = 3 + √3/2 (right-handed); the translation scan's only periods
+/// with |t| ≤ 3.2 are multiples of (1, 0), and b2 closes the cell — the
+/// battery's exact coverage is 1.0 (no gaps, no overlaps) over a 6×6-cell
+/// patch. As with `kuniform-n4` the lattice is centered-rectangular: the
+/// orthogonal index-2 pair (1, 0), (0, 6 + √3) generates a sublattice
+/// whose centering vector b2 it lacks. Orbit enumeration over the exact
+/// affine action on lattice-orbit classes (exact surd arithmetic, tku4
+/// battery — fundamental-domain reduction, immune to the parity artifacts
+/// a 2×2-cell torus quotient exhibits for staggered cells): F = 5, V = 4
+/// per cell; tile orbits t = 3 (class sizes 1 + 2 + 2 — the middle row
+/// 1/cell, outer rows and triangles 2/cell each); edge orbits e = 5
+/// (sizes 1 + 2 + 2 + 2 + 2 = 9/cell); vertex orbits 4444 (2/cell — the
+/// interior crossings of a band) and 33344 (2/cell — the square-band /
+/// triangle-band junctions), so the tiling is 2-uniform. t and e match
+/// the Wikipedia parenthetical exactly.
+///
+/// Symmetry: the full scan finds R180 (72 centers), horizontal mirrors
+/// (36 axes) and vertical mirrors (208 axes), and no rotations of other
+/// order — the cmm signature.
+pub fn kuniform_n3() -> LatticeTiling {
+    // Three-square-tall band y = 0..3: outer rows seed 0 (one orbit under
+    // the horizontal mirror through the middle row), middle row seed 1.
+    // Alternating-triangle band y = 3..3+H, seed 2.
+    let r1 = Polygon::from_slice(&[
+        Vec2::new(0.0, 0.0),
+        Vec2::new(1.0, 0.0),
+        Vec2::new(1.0, 1.0),
+        Vec2::new(0.0, 1.0),
+    ]);
+    let r2 = Polygon::from_slice(&[
+        Vec2::new(0.0, 1.0),
+        Vec2::new(1.0, 1.0),
+        Vec2::new(1.0, 2.0),
+        Vec2::new(0.0, 2.0),
+    ]);
+    let r3 = Polygon::from_slice(&[
+        Vec2::new(0.0, 2.0),
+        Vec2::new(1.0, 2.0),
+        Vec2::new(1.0, 3.0),
+        Vec2::new(0.0, 3.0),
+    ]);
+    let t_up = Polygon::from_slice(&[
+        Vec2::new(0.0, 3.0),
+        Vec2::new(1.0, 3.0),
+        Vec2::new(0.5, 3.0 + H),
+    ]);
+    let t_dn = Polygon::from_slice(&[
+        Vec2::new(0.0, 3.0),
+        Vec2::new(0.5, 3.0 + H),
+        Vec2::new(-0.5, 3.0 + H),
+    ]);
+    LatticeTiling {
+        id: "kuniform-n3",
+        name: "2-uniform (4⁴; 3³.4²)₂",
+        description: "2-uniform tiling (4⁴; 3³.4²) — staggered three-square bands alternating with alternating-triangle bands, the cmm two-uniform 4⁴/3³.4² sibling form (cmm).",
+        lattice: [Vec2::new(1.0, 0.0), Vec2::new(0.5, 3.0 + H)],
+        cells: vec![
+            Cell { poly: r1, seed: 0 },
+            Cell { poly: r2, seed: 1 },
+            Cell { poly: r3, seed: 0 },
+            Cell { poly: t_up, seed: 2 },
+            Cell { poly: t_dn, seed: 2 },
+        ],
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::Cmm,
+        lattice_kind: LatticeKind::CenteredRectangular,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3⁶; 3³.4²), wallpaper group cmm.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n15` (Krotenheerdt's
+/// closed list of 20 two-uniform tilings by regular polygons):
+/// `[3⁶; 3³.4²]₂ (t = 4, e = 5)`, the sibling of `kuniform-n14` (the
+/// saved wiki page's n15.svg carries the (4, 5) parenthetical and the
+/// triple-strip figure; the landed `kuniform-n14` is the (3, 4) form).
+///
+/// Construction: single rows of edge-sharing unit squares alternating with
+/// TRIPLE triangle strips — three rows of height H in which every
+/// horizontal line carries triangles above AND below sharing the unit edge
+/// (back-to-back pairs), unlike `kuniform-n14`'s double strips. The two
+/// lines bounding a square row carry a single triangle-orbit of flankers:
+/// a down triangle on the square row's bottom edge and an up triangle on
+/// its top edge, both on the squares' own x grid. The two inner lines of
+/// the strip are offset by half a unit each step. Consecutive square rows
+/// are staggered by half a unit. The primitive cell holds 1 square +
+/// 6 triangles (area 1 + 3√3/2 = 3.598076211). Seeds mirror the wiki
+/// figure's four colors (= the four tile orbits): seed 0 = square,
+/// seed 1 = the two flanker triangles, seed 2 = the yellow pair
+/// {down on line 1+H, up on line 1+2H}, seed 3 = the cyan pair.
+///
+/// The translation lattice is b1 = (1, 0), b2 = (1/2, 1 + 3√3/2),
+/// |det| = 1 + 3√3/2 (right-handed); the translation scan's periods with
+/// |t| ≤ 3.0 are exactly the multiples of (1, 0), and b2 closes the cell —
+/// battery coverage 1.0 over a 6×6-cell patch. The lattice is
+/// centered-rectangular: the orthogonal index-2 pair (1, 0), (0, 2 + 3√3)
+/// generates a sublattice whose centering vector b2 it lacks. Orbit
+/// enumeration over the exact affine action on lattice-orbit classes
+/// (exact surd arithmetic, tku4 battery): F = 7, V = 4, E = 11 per cell
+/// (V − E + F = 0); tile orbits t = 4 (sizes 1 + 2 + 2 + 2, matching the
+/// wiki figure's four colors); edge orbits e = 5 (sizes 1 + 2 + 2 + 2 + 4
+/// = 11/cell); vertex orbits 3⁶ (2/cell, inside the strips) and 33344
+/// (2/cell, the square-row corners), so the tiling is 2-uniform. t and e
+/// match the Wikipedia parenthetical exactly.
+///
+/// Symmetry: the full scan finds R180 (9 centers in the probe window),
+/// horizontal mirrors (9 axes) and vertical mirrors (203 axes), and
+/// nothing else — with the centered lattice, the cmm signature. The
+/// horizontal mirror through a square row's center fuses the flanker pair;
+/// the strip's two colored pairs are fused by the same mirror followed by
+/// the half-period lattice shift (the wiki figure colors each fused pair
+/// identically — verified as exact orbit classes, not assumed from color).
+pub fn kuniform_n15() -> LatticeTiling {
+    // Square [−1/2, 1/2] × [0, 1] seed 0; flanker triangles seed 1
+    // (down on the bottom edge, up on the top edge, squares' own x grid);
+    // triple strip y = 1..1+3H with the yellow pair seed 2 and the cyan
+    // pair seed 3; the strip's top line 1+3H is the next square's bottom.
+    let sq = Polygon::from_slice(&[
+        Vec2::new(-0.5, 0.0),
+        Vec2::new(0.5, 0.0),
+        Vec2::new(0.5, 1.0),
+        Vec2::new(-0.5, 1.0),
+    ]);
+    let f_dn = Polygon::from_slice(&[
+        Vec2::new(0.5, 0.0),
+        Vec2::new(-0.5, 0.0),
+        Vec2::new(0.0, -H),
+    ]);
+    let f_up = Polygon::from_slice(&[
+        Vec2::new(-0.5, 1.0),
+        Vec2::new(0.5, 1.0),
+        Vec2::new(0.0, 1.0 + H),
+    ]);
+    let y_dn = Polygon::from_slice(&[
+        Vec2::new(1.0, 1.0 + H),
+        Vec2::new(0.0, 1.0 + H),
+        Vec2::new(0.5, 1.0),
+    ]);
+    let c_up = Polygon::from_slice(&[
+        Vec2::new(0.0, 1.0 + H),
+        Vec2::new(1.0, 1.0 + H),
+        Vec2::new(0.5, 1.0 + S3),
+    ]);
+    let c_dn = Polygon::from_slice(&[
+        Vec2::new(0.5, 1.0 + S3),
+        Vec2::new(-0.5, 1.0 + S3),
+        Vec2::new(0.0, 1.0 + H),
+    ]);
+    let y_up = Polygon::from_slice(&[
+        Vec2::new(-0.5, 1.0 + S3),
+        Vec2::new(0.5, 1.0 + S3),
+        Vec2::new(0.0, 1.0 + 3.0 * H),
+    ]);
+    LatticeTiling {
+        id: "kuniform-n15",
+        name: "2-uniform (3⁶; 3³.4²)₂",
+        description: "2-uniform tiling (3⁶; 3³.4²) — staggered square rows alternating with triple triangle strips (every horizontal edge shared back-to-back, square rows flanked by one triangle orbit), the cmm two-uniform 3⁶/3³.4² sibling form (cmm).",
+        lattice: [Vec2::new(1.0, 0.0), Vec2::new(0.5, 1.0 + 3.0 * H)],
+        cells: vec![
+            Cell { poly: sq, seed: 0 },
+            Cell { poly: f_dn, seed: 1 },
+            Cell { poly: f_up, seed: 1 },
+            Cell { poly: y_dn, seed: 2 },
+            Cell { poly: c_up, seed: 3 },
+            Cell { poly: c_dn, seed: 3 },
+            Cell { poly: y_up, seed: 2 },
+        ],
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::Cmm,
+        lattice_kind: LatticeKind::CenteredRectangular,
         category: TilingCategory::TwoUniform,
         secondary: &[],
         seed_pattern: SeedPattern::Uniform,

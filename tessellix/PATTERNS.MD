@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (105 tilings)
+## Implemented (107 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -3841,6 +3841,89 @@ documentation pending).
   test --workspace --all-features 695/695. Remaining k-uniform duals:
   the 9 square-family rows stay blocked on unimplemented primals.
 
+### 62. 2-uniform [4⁴; 3³.4²]₂ (n3) + [3⁶; 3³.4²]₂ (n15) ✅ (M108)
+
+- **Numbering note:** renumbered from the fork's provisional §61 to
+  §62 by landing order (§61 = k-uniform duals batch 3, M106).
+- **Motif:** the two sibling forms of the M103 pair from Krotenheerdt's
+  closed list: Wikipedia `2-uniform n3`, `[4⁴; 3³.4²]₂ (t=3, e=5)`,
+  and Wikipedia `2-uniform n15`, `[3⁶; 3³.4²]₂ (t=4, e=5)`. Label
+  caveat (third occurrence): the sprint brief's row indices were stale
+  again; anchor-based caption extraction from the saved wiki page
+  (caption follows the image inside the same table cell) gives
+  `n3.svg` ↔ `[44; 33.42]2 (t=3, e=5)` and `n15.svg` ↔
+  `[36; 33.42]2 (t=4, e=5)`, with `n4`/`n14` the already-landed
+  siblings and **no `n17` in the wiki set at all**; both torus
+  enumerations below reproduce the corrected (3,5)/(4,5) exactly,
+  confirming the mapping. The brief's p4g stretch row resolves to the
+  `n16` row — see Status.
+- **Constructions.** n3: three-square-tall bands (rows R,C,R —
+  band-height 3) alternating with one-row alternating-triangle bands
+  (height H); consecutive bands staggered by half a unit (forced by
+  the triangle band sharing full edges with both square rows). Basis
+  b1 = (1,0), b2 = (1/2, 3+√3/2), |det| = 3+√3/2; cell = 3 squares +
+  2 triangles; the row color pattern R,C,R is one mirror-fused orbit
+  plus one singleton (3 tile orbits total). n15: single square rows
+  alternating with TRIPLE triangle strips (three rows, height 3H) in
+  which every horizontal edge is shared back-to-back by one triangle
+  above and one below; the two lines bounding a square row carry a
+  single flanker orbit (down triangle on the bottom edge, up triangle
+  on the top edge, squares' own x grid); inner lines step half a unit
+  at a time. Basis b1 = (1,0), b2 = (1/2, 1+3√3/2),
+  |det| = 1+3√3/2; cell = 1 square + 6 triangles in three pairs.
+  Both lattices are centered-rectangular: the orthogonal index-2
+  pairs (1,0), (0, 6+√3) and (1,0), (0, 2+3√3) generate sublattices
+  whose centering vectors (b2 in each case) they lack — so both
+  entries are cmm, not pmm.
+- **Exact solve (tku4_core.py / tku4_run.py / tku4_orbits.py,
+  Q(√3) surd-pair arithmetic):** both tables decoded from the wiki
+  SVGs by level analysis (base-line census with raw centroid grids —
+  mod-1 grids cannot distinguish the back-to-back mesh). Area identity
+  |det| = Σ areas exact; coverage 1.0 over ±6-cell patches;
+  0 edges with >2 sides. **Torus pitfall (new):** the M103-style
+  2×2-cell torus quotient returns t = 8 for n15 — a parity artifact:
+  the half-period staggering splits lattice-orbit classes by cell
+  parity at quotient size 2. Replaced by the exact affine action on
+  lattice-orbit classes (fundamental-domain reduction of every
+  generator image, permutation orbit closure — no quotient-size
+  dependence): n3 tile orbits t = 3 (sizes 1+2+2), edge orbits
+  e = 5 (sizes 1+2+2+2+2 over 9 edge classes), vertex orbits 4444
+  and 33344 (2 classes/cell each); n15 F = 7, E = 11, V = 4
+  (V−E+F = 0), tile orbits t = 4 (sizes 1+2+2+2 — exactly the wiki
+  figure's four colors: square, flanker pair, yellow pair, cyan
+  pair), edge orbits e = 5 (sizes 1+2+2+2+4), vertex orbits 3⁶ and
+  33344 (2 classes/cell each). Both t/e match the wiki
+  parentheticals (3,5) and (4,5) exactly. Full scans: n3 R180
+  (72 centers) + mirror0 (36) + mirror90 (208), nothing else;
+  n15 R180 (9) + mirror0 (9) + mirror90 (203), nothing else —
+  with the centered lattices, the cmm signature. The horizontal
+  mirror through a square-row center fuses each same-colored pair in
+  n15 once the half-period lattice shift is composed in (verified as
+  exact orbit classes, not assumed from color).
+- **Rust:** `kuniform_n3()` / `kuniform_n15()` in `kuniform.rs`
+  (module header "Thirteen entries" → "Fifteen entries"), registered
+  after `kuniform_n14`; 4 tests each (`covers_region`,
+  `rotated_scaled` 0.7/30°, `deterministic`, `vertex_figures`). The
+  vertex-figure tests pin the ±3×±3 patch census from the bit-exact
+  Python replica `rust_expect`: n3 figure `33344` count 72 with reps
+  {(0,0), (1000,3000)} and `4444` count 84 with reps
+  {(1000,1000), (1000,2000)}; n15 figure `333333` count 78 with reps
+  {(500,2732), (1000,1866)} and `33344` count 78 with reps
+  {(500,0), (500,1000)}. One winding fix at port time (batch-3
+  lesson re-applied): the n3 `t_dn` vertex order came out CW in the
+  first port and the CCW sector walk failed with
+  `figure walk gap: sector at 120, expected 60` — reversed to the
+  spike's CCW order.
+- **Census:** 102 → 104 tilings, 114 → 116 memberships, TwoUniform
+  13 → 15, 698 → 706 tests (fork-local).
+- **Status:** landed (M108, fork-local numbering). 15 of the 20
+  closed-list entries landed, 5 remain. Not landed this batch: the
+  p4g stretch — its brief row resolves to the wiki `n16` entry
+  (`[3³.4²; 3².4.3.4]₁ (t=4, e=5)`), whose landing was explicitly
+  excluded by the batch brief; the §60 blocker stands (lattice
+  ⟨((3+√3)/2, (3+√3)/2), (−(3+√3)/2, (3+√3)/2)⟩, area 6+3√3,
+  8 vertices/cell; combinatorial derivation open).
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -5589,3 +5672,31 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   step numbers were on its own base). Full bar green: cargo check +
   clippy (both target sets) zero warnings, cargo test --workspace
   --all-features 707/707. Details in §61.
+- 2026-11-20 — M108 2-uniform n3 + n15 (kuniform-n3 cmm,
+  kuniform-n15 cmm) ✅ (§62): the two sibling forms of the M103 pair.
+  `kuniform-n3` = `[4⁴; 3³.4²]₂ (t=3, e=5)`, cmm: staggered
+  three-square-tall bands + alternating-triangle one-row bands, basis
+  ⟨(1,0), (1/2, 3+√3/2)⟩, det 3+√3/2, 5 tiles/cell; centered
+  rectangular lattice (orthogonal index-2 pair (1,0), (0, 6+√3)).
+  `kuniform-n15` = `[3⁶; 3³.4²]₂ (t=4, e=5)`, cmm: square rows +
+  triple triangle strips (every horizontal edge shared back-to-back,
+  one flanker orbit on the square-row lines), basis ⟨(1,0), (1/2,
+  1+3√3/2)⟩, det 1+3√3/2, 7 tiles/cell in orbits {square}, {flanker
+  pair}, {yellow pair}, {cyan pair} — the wiki figure's four colors
+  confirmed as exact orbit classes. Stale brief row indices corrected
+  against the saved wiki page before porting (caption-cell mapping in
+  §62; the wiki set has no n17). New pitfall solved: the 2×2-cell
+  torus orbit quotient splits staggered cells by parity (spurious
+  t = 8 on n15) — replaced with the exact affine action on
+  lattice-orbit classes; both t/e then match the wiki
+  parentheticals (3,5)/(4,5) exactly. One winding fix at port time
+  (n3 t_dn, caught by the vertex-figure walk). p4g stretch dropped
+  with blocker note: its brief row is the wiki n16 entry, excluded by
+  the batch brief; §60's open construction stands. 8 new tests
+  (4 per entry, incl. vertex_figures pinned by the bit-exact
+  rust_expect replica). Census: 105 → 107 tilings, 117 → 119
+  memberships, TwoUniform 13 → 15, 707 → 715 tests (landed on main
+  after the M106 landing; the fork's step numbers were on its own
+  base). Full bar green: cargo check + clippy (both target sets)
+  zero warnings, cargo test --workspace --all-features 715/715.
+  Details in §62.
