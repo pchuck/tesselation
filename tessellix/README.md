@@ -49,7 +49,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 **Browse mode** — the tab bar lists the ten display categories with card
 counts (`Uniform (11)   Two-Uniform (15)   Laves (22)   Wallpaper (17)   Pentagon
-Types (12)   Islamic (20)   Arrangements (5)   Quasiperiodic (9)   Aperiodic (6)
+Types (12)   Islamic (20)   Arrangements (5)   Quasiperiodic (10)   Aperiodic (6)
 Nonperiodic (4)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
@@ -127,7 +127,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-109 built-in tilings (121 tab memberships), all discoverable in both UIs
+110 built-in tilings (122 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -137,8 +137,8 @@ ten tabs:
 19 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (12), **Islamic** (20), **Arrangements** (5),
-**Quasiperiodic** (9: Penrose family, Ammann–Beenker, Stampfli, shield,
-girih Darb-i Imam, golden bee), **Aperiodic** (6: einstein family, pinwheel, Taylor-Socolar,
+**Quasiperiodic** (10: Penrose family, Ammann–Beenker, Stampfli, shield,
+girih Darb-i Imam, golden bee, fractalizing 3.12.12), **Aperiodic** (6: einstein family, pinwheel, Taylor-Socolar,
 Jeandel-Rao 11-tile Wang tiles), and
 **Nonperiodic** (4: limit-periodic rep-tiles, Hirschhorn). Categories
 are declared on the tiling (never derived from its symmetry), so the
@@ -243,6 +243,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `penrose-pentagon` | Penrose Pentagon (5-tile φ-substitution) | quasiperiodic five-pentagon substitution tiling; 5-fold local symmetry; non-edge-to-edge (φ-substitution split points at t = 1/φ on parent edges) | — | — |
 | `ammann-beenker` | Ammann-Beenker (A5) | quasiperiodic square+45°-rhombus by substitution; local 8-fold symmetry | — | — |
 | `stampfli` | Stampfli (12-fold) | quasiperiodic square+triangle+30°-rhombus by substitution (inflation 2+√3); exact dodecagonal seed star, local 12-fold symmetry | — | — |
+| `fractalizing-3-12-12` | Fractalizing 3.12.12 | limit-periodic fractalizing family over the uniform 3.12.12 (Chavey, Tilings by regular polygons III): same-plane levels, each shrunk by 2+√3, level ≥ 1 a hexagonal flower orbit of 44 triangles + 12 squares + 1 hexagon + 12 dodecagons per cell (69 tiles, cell 84 + 48.5√3 = the level-0 3.12.12 cell at edge 2+√3, exactly); all level-1 vertices on the exact (m + n√3)/6 grid, edge-to-edge closure verified in exact Q(√3) (0 overlaps, 0 T-junctions, exact single coverage) | — | — |
 | `shield` | Gähler shield (12-fold) | quasiperiodic shield-hexagon+square+triangle substitution (Gähler; inflation √(2+√3), kinked supertiles, 4 protos / 8 labelled kinds); dodecagonal frame, Bragg 12-fold, no local 30° center | — | — |
 | `golden-bee` | Golden bee (Ammann A2 chair) | quasiperiodic irreptile (first in the registry): concave hexagon with five right angles and one reflex, edge lengths {s⁻⁴…s} (s = √φ), dissecting into two similar copies of unequal size (scales φ^−1/2 and φ^−1, area law s⁻² + s⁻⁴ = 1); √φ-inflation substitution, 8 orientation classes, exact Q(√φ), T-junctions intrinsic at the s^−4 edge ratio; finite covered patch (Vince 2014; Durand–Shen–Vereshchagin 2020) | — | — |
 | `pinwheel` | Pinwheel (1–2–√5) | aperiodic Pythagorean; tiles in infinitely many orientations | — | — |
@@ -399,6 +400,22 @@ cross-check plus a ratio-sweep coverage test.
   to unit pieces with per-step culling; all anchors stay exact in
   Z[√3]/4, giving edge-to-edge, T-junction-free patches with exact
   12-fold symmetry about the seed at every generation.
+- **Fractalizing 3.12.12** (`fractalizing.rs`) — Chavey's
+  *fractalizing* dodecagon-dense family (Wikipedia "fractalizing
+  k-uniform tilings"): a sequence of edge-to-edge tilings of the same
+  plane, level d having child edge p^{1−d} for p = 2+√3, the level-(d+1)
+  plane being the level-d plane shrunk by 1/p about the origin flower —
+  limit-periodic (a new period per level), hence Quasiperiodic like
+  Stampfli, though each individual level is 6-fold periodic. Level 0 is
+  the uniform 3.12.12 at edge p; levels ≥ 1 are the hexagonal orbit of
+  a 57-tile flower (1 H + 12 S + 44 T) plus 12 dodecagon classes per
+  cell (69 tiles, cell 84 + 48.5√3 — exactly the level-0 cell). All
+  level-1 vertices lie in the exact (m + n√3)/6 grid, so the tables,
+  anchors and dodecagon centers are pure integer Z[√3] until a single
+  float multiply; closure was verified in exact Q(√3) (0 overlaps,
+  edges ≤ 2, 0 T-junctions, exact single coverage, per-cell census
+  forced by the area identity) and is re-checked by an i128 battery in
+  the module tests.
 - **Gähler shield** (`shield.rs`) — the dodecagonal shield tiling
   (Gähler 1988): shield hexagon, square and two unit triangles, each in
   two labelled orientations R/L (the labels carry the matching rules,
@@ -595,7 +612,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 729 tests, all green, zero
+`cargo test --workspace` (currently 738 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,

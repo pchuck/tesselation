@@ -45,7 +45,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 17 | Socolar–Taylor monotile ✅ DONE (M86, decorated-hexagon port of the forced 529-site patch; half-hex substitution hierarchy not reproduced) | Aperiodic | substitution + stripes | L–XL | P2 |
 | 18 | n-fold rhomb family (7-fold GS/Harriss, CAST) | Quasiperiodic | degree-3 arithmetic | L+ | P2 |
 | 19 | Second measured ornamental panel | Wallpaper | M35 pipeline | M–L | P2 |
-| 20 | Fractalizing k-uniform (2+√3 dodecagon) | Quasiperiodic | substitution on uniform basis | M | P2 |
+| 20 | Fractalizing k-uniform (2+√3 dodecagon) ✅ DONE (M110, same-plane limit-periodic family over 3.12.12 — not a substitution) | Quasiperiodic | substitution on uniform basis | M | P2 |
 | 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements; 22b Najm template-tiling generator; 22c rosette transform ✅(M99); 22d parquet deformations; 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite; 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
 
 \* golden-bee tilings are nonperiodic and (canonical form) quasiperiodic;
@@ -1171,8 +1171,23 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   panel: it extends the ornamental family toward the 12-fold arc and
   pairs with #14's generative engine as its validation case.
 
-### 20. Fractalizing k-uniform tilings (2+√3 dodecagon dissection)
+### 20. Fractalizing k-uniform tilings (2+√3 dodecagon dissection) ✅ (M110)
 
+- **Landed (M110)** as `fractalizing-3.12.12` (`fractalizing.rs`,
+  Quasiperiodic, PATTERNS.MD §64). The verify step resolved the
+  classification against the ground-truth figure
+  (`Planar Fractalizing Truncated Hexagonal Tiling II.svg`): the
+  family is **limit-periodic, not substitution-self-similar** — the
+  levels are tilings of the same plane with child edge (2+√3)^{1−d},
+  level d+1 = level d shrunk by 1/(2+√3) about the origin flower, a
+  new period per level, each level individually 6-fold periodic
+  (the earlier σ-patch substitution reading was disproven and the
+  motif retired). Level-1 basis: hexagonal orbit of a 57-tile flower
+  + 12 dodecagon classes/cell — 44 T + 12 S + 1 H + 12 D = 69 tiles
+  per cell, cell 84 + 48.5√3, all vertices on the exact
+  (m + n√3)/6 grid, edge-to-edge closure verified in exact Q(√3);
+  level 0 = the uniform 3.12.12 table we already own, at edge 2+√3
+  (its cell area equals the level-1 flower cell exactly).
 - **Motif:** the "fractalizing" construction (List of k-uniform
   tilings, Wikipedia): dilate a uniform tiling by 2+√3 and fill the
   dissected dodecagons — e.g. the 3.12.12 basis fractalized yields a

@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (109 tilings)
+## Implemented (110 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -134,6 +134,7 @@ figures at the split midpoints, `2.4.4`).
 | `p-pentomino` | P-pentomino (rep-4 reptile) | λ = 2 rep-4 substitution; exactly two dissections of the inflated 20-cell P (exhaustive enumeration, class multisets {0,1,4,6} and {3,4,4,5}), canonical {0,1,4,6} used; 8 chiral orientation classes, doubly stochastic substitution matrix (rows/columns sum to 4); non-edge-to-edge (5 T-junctions per parent); 5×8 seed block, one tile per class (62 such tilings of the rectangle); octave-anchored like chair (M47) |
 | `ammann-beenker` | Ammann–Beenker A5 (octagonal aperiodic) | half-tile substitution (two rhombus halves + square) with per-level mirror flips; exact Q(√2) geometry; edge-to-edge; 8-fold finite patches |
 | `stampfli` | Stampfli 12-fold dodecagonal | squares + equilateral triangles + 30° rhombi; Stampfli substitution, inflation 2+√3 (Bielefeld encyclopedia rule); straddling unit children deduped by exact vertex set; 12-rhombus seed star, exact Z[√3]/4 anchors; edge-to-edge, T-junction-free, 12-fold symmetric at every generation |
+| `fractalizing-3-12-12` | Fractalizing 3.12.12 (limit-periodic dodecagon-dense) | Chavey's fractalizing family over the uniform 3.12.12: same-plane levels, level d at child edge (2+√3)^{1−d} with level d+1 = level d shrunk by 1/(2+√3) about the origin flower; hexagonal flower orbit 44 T + 12 S + 1 H + 12 D per cell (69 tiles, cell 84 + 48.5√3 = the level-0 3.12.12 cell at edge 2+√3); all level-1 vertices on the exact (m + n√3)/6 grid; edge-to-edge closure verified in exact Q(√3) (0 overlaps, 0 T-junctions, exact single coverage) |
 | `shield` | Shield tiling (Gähler, dodecagonal 12-fold) | shield hexagon + square + black/white triangles, each in two labelled orientations R/L — 4 prototiles / 8 substitution kinds carrying Gähler's matching rules; inflation θ = 2cos15° = (√6+√2)/2, PF Perron θ² = 2+√3; children tile kinked supertiles (±¼-unit-square notches); exact Q(√2,√3) geometry, all edges on the 12 dodecagonal directions; Bragg 12-fold (no local 30° center) |
 | `golden-bee` | Golden bee / Ammann chair (A2, inflation √φ, irreptile) | the registry's first irreptile: concave hexagon (five right angles + one reflex), edge lengths {1, s, s⁻¹, s⁻², s⁻³, s⁻⁴} (s = √φ), area s − s⁻⁷; dissects into two similar copies of unequal size (scales φ^−1/2 and φ^−1; area law s⁻² + s⁻⁴ = 1); √φ-inflation substitution over 8 orientation classes (A0…A3 rotations, B0…B3 mirror family), every rule pinned exact in Q(√φ) (4-integer tuples, s⁴ = s² + 1; the girih-quasiperiodic fixed-point trick); non-edge-to-edge by intrinsic T-junctions at the exact s⁻⁴ edge fraction (13 at depth 3, 64 at depth 5, 1 − s⁻⁴ = s⁻²); growth 2^d tiles, Σ s^−2e = 1 exact at every depth; finite covered patch (seed chair = domain, Taylor–Socolar precedent) recentered on the patch bbox center, pinwheel-convention view-anchored depth (nested views bit-identical within one φ-octave); category Quasiperiodic (Vince, AMM 121 (2014), canonical sequence; Durand–Shen–Vereshchagin, DCG 63 (2020), structure of A2); proto = class, seed = size exponent (one hue per size class) (M104) |
 | `hat` | Hat (aperiodic monotile, "einstein") | SMKG 2023; H/T/P/F metatile substitution (29-rule patch, 22 kept), exact Eisenstein placements; inflation φ² only in the limit (iterated outlines drift by design); tiles only with its mirror image; per-view seeded lineage blobs with exact clipped-area acceptance; non-edge-to-edge (565 midpoint T-junctions at depth 3) |
@@ -4080,6 +4081,70 @@ documentation pending).
   (both target sets) zero warnings, cargo test --workspace
   --all-features 729/729.
 
+### 65. Fractalizing 3.12.12 — limit-periodic dodecagon-dense family ✅ (M110)
+
+- **Numbering note:** renumbered from the fork's provisional §64 to
+  §65 by landing order (§64 = golden bee, M104, which landed first).
+- **Motif:** Chavey's *fractalizing* dodecagon-dense family (Tilings by
+  regular polygons III: dodecagon-dense tilings, Symmetry 25(3), 2014;
+  the Wikipedia "fractalizing k-uniform tilings" entries), reconstructed
+  from the ground-truth figure `Planar Fractalizing Truncated Hexagonal
+  Tiling II.svg`. The levels are NOT one substitution: each level is a
+  tiling of the SAME plane, level d at child edge p^{1−d} for
+  p = 2+√3, with the level-(d+1) plane exactly the level-d plane shrunk
+  by 1/p about the origin flower. A new period per level makes the
+  family limit-periodic rather than substitution-self-similar; every
+  single level is 6-fold periodic. Classified Quasiperiodic on the
+  Stampfli rationale (the limit carries the aperiodic flavor), with the
+  limit-periodic nuance declared in the module header, the meta note
+  and every doc. The handoff's σ-patch substitution model
+  (tfract_svg ESCALATE) is disproven by this reconstruction — its
+  per-ring patch rules cannot produce the figure's edge-to-edge flower.
+- **Construction (level 1, child edge 1):** the hexagonal orbit of one
+  57-tile flower unit — motif (1 H at the lattice point + 2 S at
+  (1+√3)/2 and (5+3√3)/2 along the 0° ray + 7 T with centers at
+  inradius √3/6 beyond their source edge) rotated by 60° steps,
+  deduped to 55 tiles, plus 2 seam triangles — on the cell basis
+  ⟨p²(√3/2, 1/2), p²(√3/2, −1/2)⟩ (|det| = 84 + 48.5√3), plus 12
+  dodecagon classes per cell at exact reduced coordinates
+  DM3 ∈ (Z[√3]/3)², one orientation class (vertices at 15° + 30k°,
+  apothem p/2 = cot 15°/2). Per-cell census 44 T + 12 S + 1 H + 12 D
+  = 69 tiles, forced by the area identity
+  44(√3/4) + 12·1 + 3√3/2 + 12(6+3√3) = 84 + 48.5√3 = |det|.
+- **Exact arithmetic:** every level-1 vertex lies on the
+  (m + n√3)/6 grid — the 57-unit table, the DSHAPE and the 12 DM3
+  classes are integer tables; cell anchors and dodecagon centers
+  (m = 3i + u, n = 3j + v; x = (m+n)(36 + 21√3)/18,
+  y = (m−n)(21 + 12√3)/18) stay in integer Z[√3]; depth d evaluates
+  ((m + n√3)/6) · p^{1−d} with the single float multiply last, so no
+  drift accumulates across levels. Depth selection d = 1 +
+  floor(log_p(6/diag)) for view diagonal < 6, capped at 16 (child
+  edge p^{-15} ≈ 2.6e-8 — deeper views fail with a message, the
+  float horizon, mirroring Stampfli's STEP_CAP).
+- **Level-0 seed:** the uniform 3.12.12 at edge p (the shipped
+  archimedean cell table: dodecagons on the lattice
+  p(1.5+√3, 1+√3/2), p(0, 2+√3) plus the E and NE triangle orbits);
+  its cell area (1.5+√3)(2+√3)·p² = 84 + 48.5√3 equals the level-1
+  flower cell exactly — the fixed point the family starts from.
+- **Validation (exact Q(√3) battery, Python 40-dp, mirrored by an
+  i128 Rust test):** over a 5×5-cell level-1 block (1725 = 25×69
+  tiles): 0 pairwise interior overlaps, no edge used more than twice,
+  0 T-junctions, 2500 exact rational sample points in the central
+  2×2-cell window each covered exactly once (0 gaps / 0 overlaps),
+  per-cell census 44/12/1/12 for all 9 central cells, all 300
+  dodecagon edges with squared length exactly 1. The module's
+  `exact_closure_level1` re-runs the battery on a 3×3-cell block in
+  i128; `nested_view_identity` pins
+  render(d+1, scale p, V) == render(d, scale 1, V) to 1e-9 (the
+  nesting law as the user sees it), `growth_p2_and_nested_count_invariance`
+  pins the cell-span p-law and exact nested-window count invariance.
+- **Census:** 108 → 109 tilings, 120 → 121 memberships (Quasiperiodic
+  8 → 9), 721 → 730 tests.
+- **Status:** landed (M110, fork-local numbering — renumbered at
+  integration). Full bar green: cargo check + clippy (both target
+  sets) zero warnings, cargo test --workspace --all-features
+  730/730.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -5922,3 +5987,40 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   sets) zero warnings, cargo test --workspace --all-features
   729/729. Details in §64.
 
+- 2026-11-20 — M110 Fractalizing 3.12.12 (fractalizing-3-12-12) ✅
+  (§65 — renumbered from the fork's provisional §64 by
+  landing order; landed after M104): Chavey's limit-periodic dodecagon-dense fractalizing family
+  over the uniform 3.12.12 (Symmetry 25(3) 2014; Wikipedia
+  fractalizing-k-uniform entries), fully reverse-engineered from
+  `Planar Fractalizing Truncated Hexagonal Tiling II.svg` — the
+  handoff's σ-patch substitution model was disproven against the
+  figure (its per-ring patches cannot close edge-to-edge), so the
+  entry lands as the same-plane nesting it actually is: level d at
+  child edge (2+√3)^{1−d}, level d+1 = level d shrunk by 1/(2+√3)
+  about the origin flower; a new period per level (limit-periodic),
+  every level 6-fold periodic — Quasiperiodic on the Stampfli
+  rationale, nuance declared in header/meta/docs. Level ≥ 1 =
+  hexagonal orbit of a 57-tile flower (44 T + 12 S + 1 H after
+  60°-rotation dedupe + 2 seam triangles) + 12 dodecagon classes per
+  cell at exact reduced coordinates DM3 ∈ (Z[√3]/3)² — 69 tiles per
+  cell, cell 84 + 48.5√3, the census forced by the exact area
+  identity; level 0 = uniform 3.12.12 at edge 2+√3 whose cell area
+  equals the level-1 flower cell exactly. All level-1 vertices on
+  the exact (m + n√3)/6 grid: integer tables, Z[√3] anchors, dodecagon
+  centers (m+n)(36+21√3)/18 × (m−n)(21+12√3)/18, one float multiply
+  per vertex last. Depth d = 1 + floor(log_p(6/diag)), cap 16 with a
+  fail message. Exact Q(√3) acceptance battery (Python 40-dp, mirrored
+  in Rust i128): 5×5-cell block 1725 tiles — 0 interior overlaps,
+  edges ≤ 2, 0 T-junctions, 2500 exact rational samples single-covered,
+  per-cell census 44/12/1/12 × 9 cells, all D edges squared-length 1.
+  Rust: `fractalizing.rs` mirrors `stampfli.rs` (Piece-free direct
+  orbit emission, similarity-map params, STEP_CAP), 6 module tests
+  (i128 exact battery, winding/area table census, cell-span p-law +
+  nested count invariance, nested-view identity
+  render(d+1, scale p, V) == render(d, scale 1, V) to 1e-9, level-0
+  seed structure) + the 3 registry tests. Census: 109 → 110 tilings,
+  121 → 122 memberships, Quasiperiodic 9 → 10, 729 → 738 tests
+  (landed on main after the M104 golden-bee landing; the fork's step
+  numbers were on its own base 419c63a). Full bar green: cargo check
+  + clippy (both target sets) zero warnings, cargo test --workspace
+  --all-features 738/738. Details in §65.

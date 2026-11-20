@@ -98,6 +98,8 @@ pub mod spectre;
 pub mod stampfli;
 #[cfg(feature = "golden_bee")]
 pub mod golden_bee;
+#[cfg(feature = "fractalizing")]
+pub mod fractalizing;
 #[cfg(feature = "shield")]
 pub mod shield;
 #[cfg(feature = "square")]
@@ -209,6 +211,10 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "golden_bee")]
     {
         r = r.register(golden_bee::GoldenBeeTiling);
+    }
+    #[cfg(feature = "fractalizing")]
+    {
+        r = r.register(fractalizing::FractalizingTiling);
     }
     #[cfg(feature = "penrose")]
     {
@@ -598,7 +604,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M104). 109 built-ins — 63 before
+// Census of today's taxonomy (M110). 110 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -607,8 +613,8 @@ mod tests {
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
 //   PentagonTypes 12, Islamic 20, Arrangements 5,
-//   Quasiperiodic 9, Aperiodic 6, Nonperiodic 4.
-// Membership census 121 = 109 primaries + 12 secondaries (3 Laves
+//   Quasiperiodic 10, Aperiodic 6, Nonperiodic 4.
+// Membership census 122 = 110 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -679,20 +685,26 @@ mod tests {
         // inference entry on the elongated-triangular 3.3.3.4.4
         // substrate; θK = 60°, cmm, PATTERNS.MD §63 — the fork's
         // provisional §65 renumbered by landing order).
-        // -> M104 Quasiperiodic 8 -> 9 (golden-bee, the Ammann A2
+// -> M104 Quasiperiodic 8 -> 9 (golden-bee, the Ammann A2
         // chair as a √φ-inflating irreptile substitution; Vince AMM
         // 121 (2014) / Durand–Shen–Vereshchagin DCG 63 (2020)
         // limit-periodic nuance documented; PATTERNS.MD §64 — the
         // fork's provisional §62 renumbered by landing order; landed
         // after M107).
+        // -> M110 Quasiperiodic 9 -> 10 (fractalizing-3-12-12, Chavey's
+        // limit-periodic dodecagon-dense fractalizing family over the
+        // uniform 3.12.12 — flower-orbit planes of triangles, squares,
+        // hexagons and dodecagons, each level shrunk by 2+sqrt3;
+        // PATTERNS.MD §65 — the fork's provisional §64 renumbered by
+        // landing order; landed after M104).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 15, 22, 17, 12, 20, 5, 9, 6, 4],
+            vec![11, 15, 22, 17, 12, 20, 5, 10, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 109, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 121, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 110, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 122, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -1908,6 +1920,60 @@ mod stampfli_tests {
         check_det(
             &StampfliTiling,
             "stampfli",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+}
+
+#[cfg(all(test, feature = "fractalizing"))]
+mod fractalizing_tests {
+    use super::tests::{check_coverage, check_det, check_rotated};
+    use crate::fractalizing::FractalizingTiling;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn fractalizing_covers_region() {
+        let t = FractalizingTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        // level-0 seed plane (view diagonal >= 6):
+        check_coverage(
+            &t,
+            "fractalizing(d0)",
+            &p,
+            BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)),
+        );
+        // level-1 flower-orbit plane (diagonal 5 -> depth 1):
+        check_coverage(
+            &t,
+            "fractalizing(d1)",
+            &p,
+            BBox::new(v2(-2.0, -1.5), v2(2.0, 1.5)),
+        );
+    }
+
+    #[test]
+    fn fractalizing_rotated_scaled() {
+        check_rotated(
+            &FractalizingTiling,
+            "fractalizing(rot25,scale0.6)",
+            BBox::new(v2(-7.0, -7.0), v2(7.0, 7.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn fractalizing_deterministic() {
+        check_det(
+            &FractalizingTiling,
+            "fractalizing",
             BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
         );
     }
