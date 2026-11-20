@@ -146,6 +146,8 @@ pub mod stack_bond;
 pub mod herringbone_45;
 #[cfg(feature = "pavers")]
 pub mod basketweave_3;
+#[cfg(feature = "pentagon1")]
+pub mod pentagon1;
 #[cfg(feature = "pentagon2")]
 pub mod pentagon2;
 #[cfg(feature = "pentagon3")]
@@ -258,6 +260,10 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "pentagon3")]
     {
         r = r.register(pentagon3::spec());
+    }
+    #[cfg(feature = "pentagon1")]
+    {
+        r = r.register(pentagon1::spec());
     }
     #[cfg(feature = "pentagon7")]
     {
@@ -622,7 +628,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M116). 114 built-ins — 63 before
+// Census of today's taxonomy (M117). 115 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -630,9 +636,9 @@ mod tests {
         //   + 11 machine-dualized k-uniform duals (M98, M102, M106) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
-//   PentagonTypes 14, Islamic 21, Arrangements 8,
+//   PentagonTypes 15, Islamic 21, Arrangements 8,
 //   Quasiperiodic 10, Aperiodic 6, Nonperiodic 4.
-// Membership census 128 = 114 primaries + 14 secondaries (3 Laves
+// Membership census 129 = 115 primaries + 14 secondaries (3 Laves
         // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5) join the Pentagon tab as
         // typed secondary members, M122).
@@ -734,14 +740,18 @@ mod tests {
         // vertical course, period 5; pmm on the rectangular lattice
         // <(6,0),(0,5)> — an index-3 superlattice of the true
         // <(2,0),(0,5)>; 15 split dominoes per cell).
+        // -> M117 PentagonTypes 14 -> 15 (pentagon-1, the Reinhardt
+        // type-1 prototype: two pentagons per hexagonal-metric cell;
+        // measured cmm — the prototile is achiral — on the a²=3b²
+        // special centered-rectangular lattice).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 15, 22, 17, 14, 21, 8, 10, 6, 4],
+vec![11, 15, 22, 17, 15, 21, 8, 10, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 114, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 128, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 115, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 129, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -782,14 +792,19 @@ vec![11, 15, 22, 17, 14, 21, 8, 10, 6, 4],
     ///    (`Tiling::lattice_basis`), the lattice it spans must actually
     ///    be of the declared kind. Measured from the basis vectors
     ///    alone — no `generate()` call — via [`measured_kind`]. The
-    ///    measurement reports the lattice's MAXIMAL metric type, so one
-    ///    degenerate realization is admitted: a rectangular or
+    ///    measurement reports the lattice's MAXIMAL metric type, so two
+    ///    degenerate realizations are admitted: a rectangular or
     ///    centered-rectangular lattice whose vectors happen to form a
     ///    square metric lattice (equal-length orthogonal vectors) is
     ///    measured as Square even though the pattern's point group has
     ///    no 4-fold — a square-metric translation lattice under a
     ///    ≤2-fold group is a valid rectangular/c-rectangular Bravais
     ///    realization (running-bond: L = {x+y even}, constant √2).
+    ///    Similarly, a centered-rectangular lattice whose vectors happen
+    ///    to form a hexagonal metric lattice (a 60° equal-length basis,
+    ///    the special a² = 3b² case) is measured as Hexagonal even
+    ///    though the pattern's point group has no 3-/6-fold
+    ///    (pentagon-1: the cmm tiling on Λ = Z(3,−√3) + Z(3,√3)).
     ///    Cross-combos in the other direction are NOT admitted: a
     ///    declared Square must measure Square, a declared Oblique must
     ///    measure Oblique.
@@ -874,6 +889,12 @@ vec![11, 15, 22, 17, 14, 21, 8, 10, 6, 4],
             // equal-length, rectangular otherwise. (A centered lattice
             // never has an orthogonal basis, so this stage cannot
             // misclassify one.)
+            //
+            // NOTE: the lattice kinds checked here are the MAXIMAL metric
+            // type of the lattice itself. A centered-rectangular Bravais
+            // lattice may, as a special parameter, be hexagonal-metric
+            // (a² = 3b², so a 60° equal-length basis exists) even under
+            // a ≤2-fold group; that is admitted below.
             for m in -3..=3 {
                 for n in -3..=3 {
                     if m == 0 && n == 0 {
@@ -952,7 +973,9 @@ vec![11, 15, 22, 17, 14, 21, 8, 10, 6, 4],
                             && matches!(
                                 meta.lattice,
                                 LatticeKind::Rectangular | LatticeKind::CenteredRectangular
-                            )),
+                            ))
+                        || (measured == LatticeKind::Hexagonal
+                            && meta.lattice == LatticeKind::CenteredRectangular),
                     "{}: declared {} but the declared basis measures as {}",
                     t.id(),
                     meta.lattice,
@@ -8644,6 +8667,7 @@ fn kuniform_n12_deterministic() {
     feature = "kuniform",
     feature = "laves",
     feature = "pavers",
+    feature = "pentagon1",
     feature = "pentagon2",
     feature = "pentagon3",
     feature = "pentagon7",
@@ -8662,7 +8686,7 @@ mod lattice_culling_tests {
         alcove_cut_grid, archimedean, basketweave, cairo, chiral_cut_honeycomb, dual, girih,
         girih_sc,
         girih_w85, glide_hexagon_strips, hexagon, herringbone,
-khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, pentagon8, pentagon9, pentagon10, pentagon11, pentagon12,
+khatam_girih, kuniform, laves, pentagon1, pentagon2, pentagon3, pentagon6, pentagon7, pentagon8, pentagon9, pentagon10, pentagon11, pentagon12,
         pentagon13,
         pentagon14, pentagon15,
         pic_3_12_12,
@@ -8820,9 +8844,10 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
                 "alcove-cut-grid",
                 alcove_cut_grid::alcove_cut_grid(),
             ),
-            ("stack-bond", stack_bond::stack_bond()),
+("stack-bond", stack_bond::stack_bond()),
             ("herringbone-45", herringbone_45::herringbone_45()),
             ("basketweave-3", basketweave_3::basketweave_3()),
+            ("pentagon-1", pentagon1::spec()),
             ("pentagon-2", pentagon2::spec()),
             ("pentagon-3", pentagon3::spec()),
             ("pentagon-6", pentagon6::spec()),
@@ -14834,6 +14859,812 @@ mod pentagon10_tests {
             }
         }
         assert!(seen_s[0] && seen_s[1] && seen_s[2], "all three isohedral classes must appear");
+    }
+}
+#[cfg(all(test, feature = "pentagon1"))]
+mod pentagon1_tests {
+    use super::pentagon1::{cell_table, prototile, s3, tile_area, two_fold_centre};
+    use super::tests::{check_coverage, check_det, check_rotated};
+    use crate::lattice::LatticeTiling;
+    use crate::pentagon1::spec;
+    use std::collections::{BTreeMap, BTreeSet, HashSet};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Polygon, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+    use tess_core::tiling::{Query, Tiling};
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    /// Apply the isometry p -> M·p + t, M given as rows (a, b), (c, d).
+    fn apply_iso(m: (f64, f64, f64, f64), t: Vec2, p: Vec2) -> Vec2 {
+        let (a, b, c, d) = m;
+        Vec2::new(a * p.x + b * p.y + t.x, c * p.x + d * p.y + t.y)
+    }
+
+    /// Reflection matrix in the direction u (u must be unit): 2uuᵀ − I.
+    fn mirror(u: Vec2) -> (f64, f64, f64, f64) {
+        (2.0 * u.x * u.x - 1.0, 2.0 * u.x * u.y, 2.0 * u.x * u.y, 2.0 * u.y * u.y - 1.0)
+    }
+
+    /// Rotation matrix through `deg` degrees (counter-clockwise).
+    fn rot(deg: f64) -> (f64, f64, f64, f64) {
+        let r = deg * core::f64::consts::PI / 180.0;
+        let (co, si) = (r.cos(), r.sin());
+        (co, -si, si, co)
+    }
+
+    /// Translation part of the isometry with linear part `m` and fixed
+    /// point `c` (a rotation centre, or a point on the mirror/glide
+    /// axis): t = c − M·c.
+    fn fixed_tr(m: (f64, f64, f64, f64), c: Vec2) -> Vec2 {
+        let (a, b, cc, d) = m;
+        v2(c.x - (a * c.x + b * c.y), c.y - (cc * c.x + d * c.y))
+    }
+
+    /// Vertex-set key on a 1e-6 grid (shared joints agree to ~1e-15 between
+    /// two computations of the same tile, since every cell is built from
+    /// the same runtime prototile array).
+    fn vkey(pts: &[Vec2]) -> Vec<(i64, i64)> {
+        let mut v: Vec<(i64, i64)> = pts
+            .iter()
+            .map(|p| ((p.x * 1e6).round() as i64, (p.y * 1e6).round() as i64))
+            .collect();
+        v.sort_unstable();
+        v
+    }
+
+    /// Interior angle at vertex `i` of a CCW pentagon, and side length of
+    /// edge `i` (from vertex `i` to `i + 1`).
+    fn angle_at(poly: &Polygon, i: usize) -> f64 {
+        let n = poly.len();
+        let (p0, p1, p2) = (poly.pts[(i + n - 1) % n], poly.pts[i], poly.pts[(i + 1) % n]);
+        let (v1, v2) = (p0 - p1, p2 - p1);
+        (v1.dot(v2) / (v1.length() * v2.length())).clamp(-1.0, 1.0).acos()
+    }
+
+    fn side_of(poly: &Polygon, i: usize) -> f64 {
+        let n = poly.len();
+        (poly.pts[(i + 1) % n] - poly.pts[i]).length()
+    }
+
+    /// True when the tile's AABB lies inside `w`.  A tile whose AABB is
+    /// inside `ra` has its polygon inside `ra`, so its image under any
+    /// isometry g intersects g(ra) ⊆ bbox(g(ra)) — and a tile whose polygon
+    /// intersects the region always lies inside the generator's padded
+    /// index range — hence the image is always generated for rb.
+    fn aabb_inside(poly: &Polygon, w: BBox) -> bool {
+        let bb = poly.aabb();
+        bb.min.x >= w.min.x
+            && bb.min.y >= w.min.y
+            && bb.max.x <= w.max.x
+            && bb.max.y <= w.max.y
+    }
+
+    /// Verify that the isometry g = (M, t) preserves the tiling on `ra`:
+    /// images of interior-AABB tiles of ra must be tiles generated for the
+    /// image window bbox(g(ra)).  With `exact = true` (the half-turn case,
+    /// g(ra) = ra) the filtered image set must equal the interior-AABB
+    /// tile set of the window.
+    fn check_iso(
+        t: &LatticeTiling,
+        params: &ParamSet,
+        m: (f64, f64, f64, f64),
+        tr: Vec2,
+        ra: BBox,
+        exact: bool,
+        label: &str,
+    ) {
+        let g = |p: Vec2| apply_iso(m, tr, p);
+        let cs: Vec<Vec2> = ra.corners().iter().map(|&p| g(p)).collect();
+        let rb = BBox::new(
+            v2(
+                cs.iter().map(|p| p.x).fold(f64::MAX, f64::min),
+                cs.iter().map(|p| p.y).fold(f64::MAX, f64::min),
+            ),
+            v2(
+                cs.iter().map(|p| p.x).fold(f64::MIN, f64::max),
+                cs.iter().map(|p| p.y).fold(f64::MIN, f64::max),
+            ),
+        );
+        let ta = t.generate(params, &Query { region: ra });
+        let tb = t.generate(params, &Query { region: rb });
+        assert!(ta.message.is_none(), "{label}: {:?}", ta.message);
+        assert!(tb.message.is_none(), "{label}: {:?}", tb.message);
+        let src: Vec<_> = ta.tiles.iter().filter(|tile| aabb_inside(&tile.poly, ra)).collect();
+        assert!(!src.is_empty(), "{label}: no interior tiles");
+        let set_b: HashSet<Vec<(i64, i64)>> = tb
+            .tiles
+            .iter()
+            .filter(|tile| !exact || aabb_inside(&tile.poly, rb))
+            .map(|tile| vkey(&tile.poly.pts))
+            .collect();
+        let set_a: HashSet<Vec<(i64, i64)>> = src
+            .iter()
+            .map(|tile| vkey(&tile.poly.pts.iter().map(|&p| g(p)).collect::<Vec<_>>()))
+            .collect();
+        assert_eq!(set_a.len(), src.len(), "{label}: isometry must be injective on the patch");
+        if exact {
+            assert_eq!(set_a, set_b, "{label}: the isometry must preserve the tiling");
+        } else {
+            for k in &set_a {
+                assert!(set_b.contains(k), "{label}: missing image tile");
+            }
+        }
+    }
+
+    #[test]
+    fn pentagon_1_covers_region() {
+        let t = spec();
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(&t, "pentagon-1", &p, BBox::new(v2(-5.0, -4.0), v2(9.0, 8.0)));
+    }
+
+    #[test]
+    fn pentagon_1_rotated_scaled() {
+        check_rotated(
+            &spec(),
+            "pentagon-1(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -3.0), v2(6.0, 5.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn pentagon_1_deterministic() {
+        check_det(&spec(), "pentagon-1", BBox::new(v2(-3.0, -3.0), v2(9.0, 9.0)));
+    }
+
+    /// Unit structure of the primitive cell: 2 congruent copies of the
+    /// exact-Q(√3) type-1 prototile (A = B = C = 120°, D = E = 90°,
+    /// a = b = 2, c = e = 1, d = 2√3, area 3√3) on the centered-
+    /// rectangular lattice in its 60° rhombus basis w1 = (3, −√3),
+    /// w2 = (3, √3), det = 6√3 = 2 × tile area (|w1|² = |w2|² = 12,
+    /// w1·w2 = 6: the special a² = 3b² case in which a centered-
+    /// rectangular cell is hexagonal-metric).  The closure identity
+    /// holds to ~1e-15, both cells are CCW and directly congruent
+    /// (cell 1 is the half-turn image of cell 0 about the hexagon
+    /// centre (−2, 0) — same chirality, no mirror in the cell table),
+    /// and the seeds mark the single isohedral orbit.
+    #[test]
+    fn pentagon_1_unit_structure_is_exact() {
+        let t = spec();
+        assert_eq!(t.id, "pentagon-1");
+        assert_eq!(t.cells.len(), 2, "the primitive unit holds two tiles");
+        assert_eq!(t.lattice[0], v2(3.0, -s3()));
+        assert_eq!(t.lattice[1], v2(3.0, s3()));
+        let (w1, w2) = (t.lattice[0], t.lattice[1]);
+        let det = w1.cross(w2);
+        assert!(det > 0.0, "the lattice basis must be positively oriented");
+        let a0 = t.cells[0].poly.area();
+        assert!((det - 2.0 * a0).abs() < 1e-11, "det {det} ≠ 2 × tile area");
+        assert!((det - 6.0 * s3()).abs() < 1e-11, "det {det} ≠ 6√3");
+        assert!((a0 - tile_area()).abs() < 1e-11, "tile area ≠ 3√3");
+        // 60° rhombus basis of the centered-rectangular lattice:
+        // |w1|² = |w2|² = 12, w1·w2 = 6.
+        assert!((w1.dot(w1) - 12.0).abs() < 1e-12, "|w1|² = 12");
+        assert!((w2.dot(w2) - 12.0).abs() < 1e-12, "|w2|² = 12");
+        assert!((w1.dot(w2) - 6.0).abs() < 1e-12, "w1·w2 = 6");
+        // The prototile closes: edge directions 120°, 180°, 240°, 330° of
+        // lengths 2, 2, 1, 2√3; closing edge E→A has direction 60°,
+        // length 1.
+        let pr = prototile();
+        assert!((pr[4].x + 0.5).abs() < 1e-12, "closure E.x = −1/2, got {}", pr[4].x);
+        assert!(
+            (pr[4].y + s3() / 2.0).abs() < 1e-12,
+            "closure E.y = −√3/2, got {}",
+            pr[4].y
+        );
+        let proto = &t.cells[0].poly;
+        assert_eq!(proto.pts[0], v2(0.0, 0.0), "prototile corner A at the origin");
+        for (i, want) in [(0usize, 120.0f64), (1, 120.0), (2, 120.0), (3, 90.0), (4, 90.0)] {
+            let got = angle_at(proto, i).to_degrees();
+            assert!((got - want).abs() < 1e-9, "angle at vertex {i}: {got} ≠ {want}");
+        }
+        for (i, want) in [(0usize, 2.0f64), (1, 2.0), (2, 1.0), (3, 2.0 * s3()), (4, 1.0)] {
+            assert!((side_of(proto, i) - want).abs() < 1e-12, "side {i}");
+        }
+        // Type-1 family identities in the member's own lettering: under
+        // the relabelling (A′, B′, C′, D′, E′) = (C, D, E, A, B) the
+        // family condition is B′ + C′ = D + E = 180°, equivalently
+        // A + B + C = 360°.  Side identities: a = b, c = e.
+        let d_angle = angle_at(proto, 3).to_degrees();
+        let e_angle = angle_at(proto, 4).to_degrees();
+        assert!((d_angle + e_angle - 180.0).abs() < 1e-9, "D + E = 180°");
+        let abc: f64 = (0..3).map(|i| angle_at(proto, i).to_degrees()).sum();
+        assert!((abc - 360.0).abs() < 1e-9, "A + B + C = 360°");
+        assert!((side_of(proto, 0) - side_of(proto, 1)).abs() < 1e-12, "a = b");
+        assert!((side_of(proto, 2) - side_of(proto, 4)).abs() < 1e-12, "c = e");
+        // Single isohedral orbit: both seeds 0.
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(seeds, vec![0, 0], "1-isohedral seeds");
+        let ps = (0..5).map(|i| side_of(proto, i)).collect::<Vec<_>>();
+        let pa = (0..5).map(|i| angle_at(proto, i)).collect::<Vec<_>>();
+        let mut seen: HashSet<Vec<(i64, i64)>> = HashSet::new();
+        for (k, cell) in t.cells.iter().enumerate() {
+            assert!(cell.poly.area() > 0.0, "cell {k} must be stored CCW");
+            assert!((cell.poly.area() - a0).abs() < 1e-12, "cell {k} area");
+            assert_eq!(cell.poly.len(), 5, "cell {k} vertex count");
+            // Cyclic (side, angle) fingerprint against the prototile:
+            // forward only — both cells carry the same chirality.
+            let cs = (0..5).map(|i| side_of(&cell.poly, i)).collect::<Vec<_>>();
+            let ca = (0..5).map(|i| angle_at(&cell.poly, i)).collect::<Vec<_>>();
+            let fwd = (0..5).any(|rot| {
+                (0..5).all(|i| {
+                    (cs[i] - ps[(i + rot) % 5]).abs() < 1e-12
+                        && (ca[i] - pa[(i + rot) % 5]).abs() < 1e-9
+                })
+            });
+            assert!(fwd, "cell {k} is not a directly-congruent type-1 prototile");
+            assert!(seen.insert(vkey(&cell.poly.pts)), "cell {k} duplicates another cell");
+        }
+    }
+
+    /// Window census (default parameters) and declared metadata: culling
+    /// is the tile AABB intersecting the region (+1e-9), matching the
+    /// independent Python emulation of the lattice.rs culling.
+    #[test]
+    fn pentagon_1_window_census() {
+        let t = spec();
+        assert_eq!(t.group, WallpaperGroup::Cmm);
+        assert_eq!(t.lattice_kind, LatticeKind::CenteredRectangular);
+        assert_eq!(t.category, TilingCategory::PentagonTypes);
+        assert_eq!(t.cells[0].seed, 0, "the prototile is the cell-0 tile (seed 0)");
+        let p = ParamSet::default_for(t.params());
+        for (region, want) in [
+            (BBox::new(v2(-6.0, -4.0), v2(8.0, 6.0)), 42),
+            (BBox::new(v2(-8.0, -6.0), v2(10.0, 8.0)), 66),
+            (BBox::new(v2(-10.0, -8.0), v2(14.0, 10.0)), 114),
+        ] {
+            let r = t.generate(&p, &Query { region });
+            assert!(r.message.is_none(), "{:?}", r.message);
+            assert_eq!(r.tiles.len(), want, "window census for {region:?}");
+        }
+    }
+
+    /// Refined edge census over 94 tiles: the tiling is EDGE-TO-EDGE at
+    /// the pentagon level.  Of the sides whose midpoint lies strictly
+    /// inside the window (−9.4, 13.4) × (−7.4, 9.4), every one of the
+    /// 374 is matched by exactly one full side of one neighbour and no
+    /// side carries a T-junction (n_split = 0): whole hexagon sides pair
+    /// full to full, each half side (length 1) pairs one-to-one with a
+    /// neighbouring half side, and each cut d-side (2√3) pairs with the
+    /// companion tile's d-side in the same hexagon.  The window is an
+    /// exact count with a minimum boundary margin of 0.0388 from any
+    /// counted midpoint (verified against the exact Q(√3) tiling), so it
+    /// is robust against the ~1e-15 float difference between the
+    /// runtime-computed prototile and the exact surds.
+    #[test]
+    fn pentagon_1_refined_edge_census() {
+        let t = spec();
+        let p = ParamSet::default_for(t.params());
+        let region = BBox::new(v2(-9.4, -7.4), v2(13.4, 9.4));
+        let r = t.generate(&p, &Query { region });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        assert_eq!(r.tiles.len(), 94, "patch size");
+        let verts: Vec<Vec<Vec2>> = r.tiles.iter().map(|tile| tile.poly.pts.clone()).collect();
+        let n = verts.len();
+        let mut n_split = 0;
+        let mut n_full = 0;
+        let mut bad: Vec<String> = Vec::new();
+        for i in 0..n {
+            for e in 0..5 {
+                let (pp, qq) = (verts[i][e], verts[i][(e + 1) % 5]);
+                let mid = (pp + qq) * 0.5;
+                if !(mid.x > -9.4 && mid.x < 13.4 && mid.y > -7.4 && mid.y < 9.4) {
+                    continue;
+                }
+                let dv = qq - pp;
+                let l2 = dv.dot(dv);
+                let l = l2.sqrt();
+                // Split points: other tiles' vertices strictly inside the
+                // open segment (collinear within 1e-7), binned at 1e-9 and
+                // merged within 1e-8.
+                let mut bins: BTreeSet<i64> = BTreeSet::new();
+                for (j, vj) in verts.iter().enumerate() {
+                    if j == i {
+                        continue;
+                    }
+                    for &vv in vj.iter() {
+                        let tt = (vv - pp).dot(dv) / l2;
+                        if tt <= 1e-6 || tt >= 1.0 - 1e-6 {
+                            continue;
+                        }
+                        let cross = (vv.x - pp.x) * dv.y - (vv.y - pp.y) * dv.x;
+                        if cross.abs() / l < 1e-7 {
+                            bins.insert((tt * 1e9).round() as i64);
+                        }
+                    }
+                }
+                let mut srt: Vec<i64> = Vec::new();
+                for b in bins {
+                    if srt.is_empty() || b - srt[srt.len() - 1] > 10 {
+                        srt.push(b);
+                    }
+                }
+                if srt.len() > 1 {
+                    bad.push(format!("tile {i} edge {e}: {srt:?}"));
+                    continue;
+                }
+                let mut ends: Vec<f64> = vec![0.0];
+                ends.extend(srt.iter().map(|b| *b as f64 / 1e9));
+                ends.push(1.0);
+                for w in ends.windows(2) {
+                    let aq = pp + dv * w[0];
+                    let seg = dv * (w[1] - w[0]);
+                    let lseg = seg.length();
+                    let uh = seg * (1.0 / lseg);
+                    let mut cnt = 0;
+                    for (j, vj) in verts.iter().enumerate() {
+                        if j == i {
+                            continue;
+                        }
+                        for (a1, b1) in (0..5).map(|k| (vj[k], vj[(k + 1) % 5])) {
+                            let c1 = (a1.x - aq.x) * uh.y - (a1.y - aq.y) * uh.x;
+                            let c2 = (b1.x - aq.x) * uh.y - (b1.y - aq.y) * uh.x;
+                            if c1.abs() > 1e-7 || c2.abs() > 1e-7 {
+                                continue;
+                            }
+                            let ta = (a1 - aq).dot(uh);
+                            let tb = (b1 - aq).dot(uh);
+                            if ta.min(tb) <= 1e-7 * lseg && ta.max(tb) >= lseg * (1.0 - 1e-7) {
+                                cnt += 1;
+                            }
+                        }
+                    }
+                    if cnt != 1 {
+                        bad.push(format!(
+                            "tile {i} edge {e} sub [{:.3}, {:.3}] has {cnt} covering edges",
+                            w[0], w[1]
+                        ));
+                    }
+                }
+                if srt.len() == 1 {
+                    n_split += 1;
+                } else {
+                    n_full += 1;
+                }
+            }
+        }
+        assert!(bad.is_empty(), "refined edge census violations: {bad:?}");
+        assert_eq!(n_full, 374, "full (unsplit) edges");
+        assert_eq!(n_split, 0, "no T-junctions: the tiling is edge-to-edge");
+    }
+
+    /// Vertex-figure census over the window (−9.4, −7.4)–(13.4, 9.4):
+    /// every interior vertex (margin 1e-3 from the window edge; the
+    /// tightest counted vertex in this window sits 0.4 away, so the scan
+    /// is boundary-safe) is a complete star — corner rays plus rays of
+    /// edges passing through it (the T-junction points; none occur, the
+    /// tiling is edge-to-edge) — merging within 1e-4 rad, and its
+    /// sectors are exactly the two figures {120°, 120°, 120°} (the
+    /// hexagon-corner vertices, 75 of them) and {90°, 90°, 90°, 90°}
+    /// (the cut-midpoint vertices, 31 of them); 106 vertices in total.
+    #[test]
+    fn pentagon_1_vertex_stars() {
+        let t = spec();
+        let p = ParamSet::default_for(t.params());
+        let big = BBox::new(v2(-9.4, -7.4), v2(13.4, 9.4));
+        let r = t.generate(&p, &Query { region: big });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        const MARG: f64 = 1e-3;
+        let mut pts: Vec<Vec2> = Vec::new();
+        for tile in &r.tiles {
+            for q in &tile.poly.pts {
+                if q.x > big.min.x + MARG
+                    && q.x < big.max.x - MARG
+                    && q.y > big.min.y + MARG
+                    && q.y < big.max.y - MARG
+                    && !pts.iter().any(|o| (*o - *q).length() < 1e-5)
+                {
+                    pts.push(*q);
+                }
+            }
+        }
+        // 3- and 4-valent figures coexist, so key the census by the
+        // sorted angle vector.
+        let figs: [Vec<u32>; 2] = [vec![120, 120, 120], vec![90, 90, 90, 90]];
+        let mut counts: BTreeMap<Vec<u32>, usize> = BTreeMap::new();
+        for pt in &pts {
+            let mut rays: BTreeSet<i64> = BTreeSet::new();
+            for tile in &r.tiles {
+                let nn = tile.poly.len();
+                for k in 0..nn {
+                    if (tile.poly.pts[k] - *pt).length() >= 1e-5 {
+                        continue;
+                    }
+                    for &q in [&tile.poly.pts[(k + nn - 1) % nn], &tile.poly.pts[(k + 1) % nn]] {
+                        let dir = q - *pt;
+                        let th = dir.y.atan2(dir.x).rem_euclid(std::f64::consts::TAU);
+                        rays.insert((th * 1e5).round() as i64);
+                    }
+                }
+                for e in 0..nn {
+                    let (a, b) = (tile.poly.pts[e], tile.poly.pts[(e + 1) % nn]);
+                    let ab = b - a;
+                    let l2 = ab.dot(ab);
+                    let tt = (*pt - a).dot(ab) / l2;
+                    if tt <= 1e-6 || tt >= 1.0 - 1e-6 {
+                        continue;
+                    }
+                    if (*pt - a).cross(ab).abs() / l2.sqrt() < 1e-7 {
+                        let th0 = ab.y.atan2(ab.x);
+                        for add in [0.0, std::f64::consts::PI] {
+                            let th = (th0 + add).rem_euclid(std::f64::consts::TAU);
+                            rays.insert((th * 1e5).round() as i64);
+                        }
+                    }
+                }
+            }
+            let mut mr: Vec<f64> = Vec::new();
+            for k in &rays {
+                let rv = *k as f64 / 1e5;
+                if mr.is_empty() || rv - mr[mr.len() - 1] > 1e-4 {
+                    mr.push(rv);
+                }
+            }
+            if mr.len() > 1 && mr[mr.len() - 1] - mr[0] > std::f64::consts::TAU - 1e-4 {
+                mr.pop();
+            }
+            let mut gaps: Vec<f64> = (0..mr.len())
+                .map(|i| (mr[(i + 1) % mr.len()] - mr[i]).rem_euclid(std::f64::consts::TAU))
+                .collect();
+            gaps.retain(|g| *g > 1e-4);
+            gaps.sort_by(|x, y| x.partial_cmp(y).unwrap());
+            let fig: Vec<u32> = gaps.iter().map(|g| g.to_degrees().round() as u32).collect();
+            assert!(figs.contains(&fig), "unexpected vertex figure {fig:?} at {pt:?}");
+            assert_eq!(fig.iter().sum::<u32>(), 360, "vertex {pt:?} figure {fig:?}");
+            *counts.entry(fig).or_insert(0) += 1;
+        }
+        assert_eq!(pts.len(), 106, "total interior vertices");
+        let want: BTreeMap<Vec<u32>, usize> =
+            [(vec![120u32, 120, 120], 75), (vec![90u32, 90, 90, 90], 31)]
+                .into_iter()
+                .collect();
+        assert_eq!(counts, want, "vertex-figure census");
+    }
+
+    /// The uncoloured wallpaper group is cmm (orbifold \*2222), pinned
+    /// here by a coset-style audit over the 257-tile patch
+    /// (−16, −14)–(20, 16):
+    ///
+    /// POSITIVE — the half-turn about c0 = (−2, 0), the hexagon centre
+    /// that swaps the two cells, preserves the tiling exactly (set
+    /// equality on the symmetric window); the lattice translations i·w1,
+    /// j·w2 carry the prototile onto tiles for i, j ∈ [−2, 2]; the
+    /// half-turn census over the quarter lattice c0 + (i·w1 + j·w2)/4
+    /// finds 2-fold centres exactly at the four coset representatives
+    /// c0 + Λ/2 — the hexagon centre (on both mirror families), the cut
+    /// midpoint (−1/2, −√3/2) (on both), and the two off-mirror classes
+    /// (−1/2, √3/2) and (1, 0) — while the bare quarter lattice
+    /// (i·w1 + j·w2)/4 has none; the two perpendicular mirror families
+    /// (60° lines at s = p·ê150 ≡ 0 mod √3, and 150° lines at
+    /// t = p·ê60 ≡ −1 mod 3) and the six glide axes between them (60°
+    /// at s ≡ √3/2 mod √3 with vector 3ê60 whose square is the lattice
+    /// translation −w1 + 2w2; 150° at t ≡ 1/2 mod 3 with vector
+    /// √3·ê150 whose square is −w1) all preserve the tiling; and the
+    /// prototile is achiral — a −120° rotation about c0 maps it exactly
+    /// onto its y-mirror — so orientation-reversing symmetries exist.
+    ///
+    /// NEGATIVE — the half-lattice shifts w1/2, w2/2, (w1+w2)/2,
+    /// (w1−w2)/2 are not translations; 32 off-family mirror lines
+    /// (60°/150° lines with non-mirror offsets, horizontal, vertical,
+    /// and 30° lines) are not mirrors; 4 extra glide candidates are not
+    /// glides; and no 60/120/240/300° rotation about any of the six
+    /// hexagon-corner classes (with 3×3 lattice shifts) is a symmetry
+    /// (216 probes).  With mirrors + glides, 2-folds on and off the
+    /// mirrors, a centered-rectangular translation lattice (basis
+    /// (6, 0), (0, 2√3), centering (3, √3) — not primitive-rectangular)
+    /// and no 3-/6-folds, the group is cmm rather than pmm (which needs
+    /// all 2-folds on mirrors of a primitive rectangular lattice) and
+    /// rather than p2 (which has no orientation-reversing isometries).
+    #[test]
+    fn pentagon_1_wallpaper_group_is_cmm() {
+        let t = spec();
+        let p = ParamSet::default_for(t.params());
+        let (w1, w2) = (t.lattice[0], t.lattice[1]);
+        let c0 = two_fold_centre();
+        let e60 = v2(0.5, 0.5 * s3());
+        let e150 = v2(-0.5 * s3(), 0.5);
+
+        // Big patch for tile-image membership: every probed image below
+        // (prototile images under i, j ∈ [−2, 2] lattice shifts, and the
+        // half-turn/mirror/rotation probes centred within one cell of the
+        // origin) lies inside this footprint, so membership in the
+        // generated set is the exact question.
+        let big = BBox::new(v2(-16.0, -14.0), v2(20.0, 16.0));
+        let big_tiles = t.generate(&p, &Query { region: big });
+        assert!(big_tiles.message.is_none(), "big patch: {:?}", big_tiles.message);
+        assert_eq!(big_tiles.tiles.len(), 257, "big patch tile count");
+        let set: HashSet<Vec<(i64, i64)>> =
+            big_tiles.tiles.iter().map(|tile| vkey(&tile.poly.pts)).collect();
+        let prot = t.cells[0].poly.pts.clone();
+
+        // Positive: the exact half-turn about c0 (g(ra) = ra).
+        let ra = BBox::new(v2(-14.0, -10.0), v2(10.0, 10.0));
+        check_iso(
+            &t,
+            &p,
+            (-1.0, 0.0, 0.0, -1.0),
+            c0 * 2.0,
+            ra,
+            true,
+            "half-turn about c0",
+        );
+
+        // Positive: lattice translations carry the prototile onto tiles.
+        for i in -2..=2 {
+            for &w in [&w1, &w2] {
+                let img: Vec<Vec2> = prot.iter().map(|q| *q + w * i as f64).collect();
+                assert!(set.contains(&vkey(&img)), "cell0 + {i}·{w:?} must be a tile");
+            }
+        }
+        // Negative: half-lattice shifts are not translations.
+        for h in [w1 * 0.5, w2 * 0.5, (w1 + w2) * 0.5, (w1 - w2) * 0.5] {
+            let img: Vec<Vec2> = prot.iter().map(|q| *q + h).collect();
+            assert!(
+                !set.contains(&vkey(&img)),
+                "half-lattice shift {h:?} is a symmetry"
+            );
+        }
+
+        // Half-turn census over c0 + (i·w1 + j·w2)/4: the only 2-fold
+        // centres are the four coset representatives c0 + Λ/2.
+        let mut found: Vec<(i8, i8)> = Vec::new();
+        for i in 0i8..4 {
+            for j in 0i8..4 {
+                let c = c0 + (w1 * i as f64 + w2 * j as f64) * 0.25;
+                let img: Vec<Vec2> =
+                    prot.iter().map(|q| apply_iso((-1.0, 0.0, 0.0, -1.0), c * 2.0, *q)).collect();
+                if set.contains(&vkey(&img)) {
+                    found.push((i, j));
+                }
+            }
+        }
+        assert_eq!(
+            found,
+            vec![(0, 0), (0, 2), (2, 0), (2, 2)],
+            "2-fold centres must be exactly c0 + Λ/2"
+        );
+        // The bare quarter-lattice points (i·w1 + j·w2)/4 are not centres.
+        for i in 0i8..4 {
+            for j in 0i8..4 {
+                let c = (w1 * i as f64 + w2 * j as f64) * 0.25;
+                let img: Vec<Vec2> =
+                    prot.iter().map(|q| apply_iso((-1.0, 0.0, 0.0, -1.0), c * 2.0, *q)).collect();
+                assert!(
+                    !set.contains(&vkey(&img)),
+                    "bare quarter point ({i}, {j}) must not be a 2-fold centre"
+                );
+            }
+        }
+        // The four classes c0 + Λ/2 survive every whole-lattice shift.
+        for h in [Vec2::ZERO, w1 * 0.5, w2 * 0.5, (w1 + w2) * 0.5] {
+            for i in -1..=1i8 {
+                for j in -1..=1i8 {
+                    let c = c0 + h + w1 * i as f64 + w2 * j as f64;
+                    let img: Vec<Vec2> = prot
+                        .iter()
+                        .map(|q| apply_iso((-1.0, 0.0, 0.0, -1.0), c * 2.0, *q))
+                        .collect();
+                    assert!(
+                        set.contains(&vkey(&img)),
+                        "half-turn about c0 + {h:?} + {i}·w1 + {j}·w2 must map cell0 onto a tile"
+                    );
+                }
+            }
+        }
+
+        // Positive mirrors: 60° lines at s ≡ 0 (mod √3), direction ê60,
+        // through the point s·ê150; 150° lines at t ≡ −1 (mod 3),
+        // direction ê150, through t·ê60.
+        let m60 = mirror(e60);
+        let m150 = mirror(e150);
+        for k in -1..=1i32 {
+            let c = e150 * (k as f64 * s3());
+            check_iso(&t, &p, m60, fixed_tr(m60, c), ra, false, "60° mirror");
+        }
+        for j in -1..=1i32 {
+            let c = e60 * (3.0 * j as f64 - 1.0);
+            check_iso(&t, &p, m150, fixed_tr(m150, c), ra, false, "150° mirror");
+        }
+
+        // Positive glides between the mirror families: the axis
+        // reflection followed by the glide translation (each square lies
+        // in Λ, so each axis is a genuine glide, not a mirror).
+        let g60 = e60 * 3.0; // square: −w1 + 2w2
+        let g150 = e150 * s3(); // square: −w1
+        for k in -1..=1i32 {
+            let c = e150 * ((k as f64 + 0.5) * s3());
+            check_iso(&t, &p, m60, fixed_tr(m60, c) + g60, ra, false, "60° glide");
+        }
+        for j in -1..=1i32 {
+            let c = e60 * (3.0 * j as f64 + 0.5);
+            check_iso(&t, &p, m150, fixed_tr(m150, c) + g150, ra, false, "150° glide");
+        }
+
+        // Negative mirrors: 32 off-family lines — the reflected
+        // prototile must not be a tile of the big patch.
+        let mut n_neg = 0;
+        for k in -1..=1i32 {
+            for f in [0.25f64, 0.5, 0.75] {
+                let c = e150 * (k as f64 + f) * s3();
+                let img: Vec<Vec2> =
+                    prot.iter().map(|q| apply_iso(m60, fixed_tr(m60, c), *q)).collect();
+                assert!(
+                    !set.contains(&vkey(&img)),
+                    "60° mirror at s = √3({k} + {f}) is a symmetry"
+                );
+                n_neg += 1;
+            }
+        }
+        for j in -1..=1i32 {
+            for dd in [0.5f64, 1.0, 1.5] {
+                let c = e60 * (3.0 * j as f64 - 1.0 + dd);
+                let img: Vec<Vec2> =
+                    prot.iter().map(|q| apply_iso(m150, fixed_tr(m150, c), *q)).collect();
+                assert!(
+                    !set.contains(&vkey(&img)),
+                    "150° mirror at t = 3·{j} − 1 + {dd} is a symmetry"
+                );
+                n_neg += 1;
+            }
+        }
+        let mx = mirror(v2(1.0, 0.0));
+        let my = mirror(v2(0.0, 1.0));
+        for y in [0.0f64, s3() / 4.0, s3() / 2.0, 3.0 * s3() / 4.0] {
+            let c = v2(0.0, y);
+            let img: Vec<Vec2> =
+                prot.iter().map(|q| apply_iso(mx, fixed_tr(mx, c), *q)).collect();
+            assert!(!set.contains(&vkey(&img)), "horizontal mirror y = {y} is a symmetry");
+            n_neg += 1;
+        }
+        for x in [0.0f64, 0.75, 1.5, 2.25] {
+            let c = v2(x, 0.0);
+            let img: Vec<Vec2> = prot.iter().map(|q| apply_iso(my, fixed_tr(my, c), *q)).collect();
+            assert!(!set.contains(&vkey(&img)), "vertical mirror x = {x} is a symmetry");
+            n_neg += 1;
+        }
+        let m30 = mirror(v2(0.5 * s3(), 0.5));
+        for k in -1..=1i32 {
+            let c = v2(-0.5, 0.5 * s3()) * (3.0 * k as f64 / 4.0);
+            let img: Vec<Vec2> =
+                prot.iter().map(|q| apply_iso(m30, fixed_tr(m30, c), *q)).collect();
+            assert!(!set.contains(&vkey(&img)), "30° mirror (offset {k}) is a symmetry");
+            n_neg += 1;
+        }
+        for k in -1..=1i32 {
+            let c = v2(0.5 * s3(), 0.5) * (s3() * k as f64 / 4.0);
+            let img: Vec<Vec2> =
+                prot.iter().map(|q| apply_iso(m150, fixed_tr(m150, c), *q)).collect();
+            assert!(
+                !set.contains(&vkey(&img)),
+                "150° mirror (offset {k}) is a symmetry"
+            );
+            n_neg += 1;
+        }
+        assert_eq!(n_neg, 32, "negative mirror line count");
+
+        // Negative glides: glides on the mirror lines (which would
+        // compose with the mirror into non-lattice translations), and
+        // two axis directions with glide squares outside Λ.
+        let g_neg = [
+            (m60, v2(0.0, 0.0), g60),
+            (m150, e60 * -1.0, g150),
+            (mx, v2(0.0, 0.0), v2(1.5, 0.0)),
+            (my, v2(0.0, 0.0), v2(0.0, s3() / 2.0)),
+        ];
+        for (m, c, g) in g_neg {
+            let img: Vec<Vec2> =
+                prot.iter().map(|q| apply_iso(m, fixed_tr(m, c) + g, *q)).collect();
+            assert!(!set.contains(&vkey(&img)), "glide about {c:?} + {g:?} is a symmetry");
+        }
+
+        // No 60/120/240/300° rotation about any hexagon-corner class:
+        // 6 corner classes × 3×3 lattice shifts × 4 angles = 216 probes.
+        let corners = [
+            v2(0.0, 0.0),
+            v2(-1.0, s3()),
+            v2(-3.0, s3()),
+            v2(-4.0, 0.0),
+            v2(-3.0, -s3()),
+            v2(-1.0, -s3()),
+        ];
+        let mut n_rot = 0;
+        for cv in corners {
+            for i in -1..=1i8 {
+                for j in -1..=1i8 {
+                    let c = cv + w1 * i as f64 + w2 * j as f64;
+                    for deg in [60.0f64, 120.0, 240.0, 300.0] {
+                        let m = rot(deg);
+                        let img: Vec<Vec2> =
+                            prot.iter().map(|q| apply_iso(m, fixed_tr(m, c), *q)).collect();
+                        assert!(
+                            !set.contains(&vkey(&img)),
+                            "{deg}° rotation about {c:?} is a symmetry"
+                        );
+                        n_rot += 1;
+                    }
+                }
+            }
+        }
+        assert_eq!(n_rot, 216, "rotation negative probe count");
+
+        // The prototile is achiral: R(−120°) about the hexagon centre c0
+        // maps it exactly onto its y-mirror (A↦C′, B↦B′, C↦A′, D↦E′,
+        // E↦D′), so orientation-reversing symmetries exist and the group
+        // cannot be p2.
+        let m_120 = rot(-120.0);
+        let img: Vec<Vec2> =
+            prot.iter().map(|q| apply_iso(m_120, fixed_tr(m_120, c0), *q)).collect();
+        let pmir: Vec<Vec2> = prot.iter().map(|q| v2(q.x, -q.y)).collect();
+        assert_eq!(
+            vkey(&img),
+            vkey(&pmir),
+            "achirality: R(−120° about c0) must map the prototile onto its y-mirror"
+        );
+    }
+
+    /// 1-isohedral: both cells carry seed 0 and the half-turn about c0
+    /// = (−2, 0) permutes the cell table mod lattice as the transposition
+    /// (0 1), so the two cells form a single full-group orbit; every
+    /// generated tile keeps the prototile side multiset
+    /// {1, 1, 2, 2, 2√3} and seed 0.
+    #[test]
+    fn pentagon_1_isohedral_single_orbit() {
+        let t = spec();
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(seeds, vec![0, 0], "single isohedral class");
+        let (w1, w2) = (t.lattice[0], t.lattice[1]);
+        let det = w1.cross(w2);
+        let u_of = |p: Vec2| {
+            v2((w2.y * p.x - w2.x * p.y) / det, (w1.x * p.y - w1.y * p.x) / det)
+        };
+        let mod1 = |x: f64| (x + 0.5).rem_euclid(1.0) - 0.5;
+        let table = cell_table();
+        let c0 = two_fold_centre();
+        // The half-turn maps each cell's anchor to the other cell's
+        // anchor mod lattice, rotating the tile by 180° (the table has
+        // no mirror, so both cells keep the same chirality).
+        let mut perm: Vec<usize> = Vec::new();
+        for k in 0..2 {
+            let (_fam_k, a_k, th_k) = table[k];
+            let ai = apply_iso((-1.0, 0.0, 0.0, -1.0), c0 * 2.0, a_k);
+            let th_img = 180.0 + th_k;
+            let mut hit = None;
+            for (j, &(_fam_j, a_j, th_j)) in table.iter().enumerate() {
+                let du = u_of(ai - a_j);
+                if mod1(du.x).abs() < 1e-6
+                    && mod1(du.y).abs() < 1e-6
+                    && ((th_img - th_j + 180.0).rem_euclid(360.0) - 180.0).abs() < 1e-6
+                {
+                    hit = Some(j);
+                    break;
+                }
+            }
+            perm.push(hit.unwrap_or_else(|| panic!("cell {k} has no half-turn image")));
+        }
+        assert_eq!(perm, vec![1, 0], "half-turn permutes the cells as (0 1)");
+        // Generated patches: single seed, prototile side multiset kept.
+        let params = ParamSet::default_for(t.params());
+        let rp = t.generate(&params, &Query { region: BBox::new(v2(-6.0, -6.0), v2(10.0, 10.0)) });
+        assert!(rp.message.is_none(), "{:?}", rp.message);
+        assert_eq!(rp.tiles.len(), 69, "isohedral patch size");
+        for tile in &rp.tiles {
+            assert_eq!(tile.seed, 0, "single isohedral orbit -> seed 0 only");
+            let mut sides: Vec<f64> = (0..tile.poly.len())
+                .map(|i| (tile.poly.pts[(i + 1) % tile.poly.len()] - tile.poly.pts[i]).length())
+                .collect();
+            sides.sort_by(|x, y| x.partial_cmp(y).unwrap());
+            let want = [1.0, 1.0, 2.0, 2.0, 2.0 * s3()];
+            for (got, w) in sides.iter().zip(want.iter()) {
+                assert!((got - w).abs() < 1e-12, "side {got} ∉ {{1, 1, 2, 2, 2√3}}");
+            }
+        }
     }
 }
 #[cfg(all(test, feature = "pentagon3"))]

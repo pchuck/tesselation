@@ -1068,11 +1068,11 @@ mod tests {
         assert_eq!(tui.tabs.len(), 10, "one tab per TilingCategory::ALL entry");
         // Multi-tab membership (M76): a tiling appears in its primary
         // tab plus every secondary tab, so the tab sizes sum to the
-// 128 memberships of the 114 registered tilings, not to 114.
+// 129 memberships of the 115 registered tilings, not to 115.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 128, "114 tilings carry 128 tab memberships");
+        assert_eq!(total, 129, "115 tilings carry 129 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-assert_eq!(counts, vec![11, 15, 22, 17, 14, 21, 8, 10, 6, 4]);
+assert_eq!(counts, vec![11, 15, 22, 17, 15, 21, 8, 10, 6, 4]);
     }
 
     #[test]
@@ -1143,7 +1143,7 @@ assert_eq!(counts, vec![11, 15, 22, 17, 14, 21, 8, 10, 6, 4]);
 ("Two-Uniform", 15),
             ("Laves (Catalan duals)", 22),
             ("Wallpaper", 17),
-            ("Pentagon Types", 14),
+("Pentagon Types", 15),
 ("Islamic", 21),
             ("Arrangements", 8),
             ("Quasiperiodic", 10),
@@ -1710,7 +1710,7 @@ assert_eq!(counts, vec![11, 15, 22, 17, 14, 21, 8, 10, 6, 4]);
     }
 
     /// The Pentagon tab sorts by the declared type number: the
-    /// sequential type order 2, 3, 4 (cairo), 5 (floret), …, 15 (the
+    /// sequential type order 1, 2, 3, 4 (cairo), 5 (floret), …, 15 (the
     /// Hirschhorn pentagon is a Nonperiodic primary, not a type).
     #[test]
     fn pentagon_tab_orders_types_sequentially() {
@@ -1720,8 +1720,8 @@ assert_eq!(counts, vec![11, 15, 22, 17, 14, 21, 8, 10, 6, 4]);
             .position(|t| t.category == TilingCategory::PentagonTypes)
             .unwrap()];
         let types: Vec<Option<u8>> = pent.cards.iter().map(|c| c.class.pentagon_type).collect();
-        let expected: Vec<Option<u8>> = (2u8..=15).map(Some).collect();
-        assert_eq!(types, expected, "types 2..=15 in sequence");
+        let expected: Vec<Option<u8>> = (1u8..=15).map(Some).collect();
+        assert_eq!(types, expected, "types 1..=15 in sequence");
     }
 
     /// The Two-Uniform tab sorts by vertex configuration: shared
