@@ -17,6 +17,7 @@
 //! [`App::preview_region`]: crate::app::App::preview_region
 
 use crate::category::TilingCategory;
+use crate::classify::TilingClass;
 use crate::geometry::{BBox, Vec2};
 use crate::params::ParamSet;
 use crate::registry::Registry;
@@ -45,6 +46,10 @@ pub struct CardMeta {
     pub notes: Option<&'static str>,
     /// Number of declared parameters (`0` for fixed tilings).
     pub params: usize,
+    /// The declared classification schema record ([`TilingClass`]).
+    /// Empty for unclassified tilings — UIs render only the fields
+    /// that are present, never a placeholder.
+    pub class: TilingClass,
 }
 
 impl CardMeta {
@@ -111,46 +116,26 @@ pub fn group_rank(g: Option<WallpaperGroup>) -> u8 {
 /// `tab_category`: the header text a card grid should draw above the
 /// first card of each section. Only the Wallpaper tab has sections —
 /// the group catalog is sorted by crystal system, and the key is the
-/// card's declared lattice kind ("oblique", "rectangular", "centered",
-/// "square", "hexagonal"); the tab context is required because the
-/// Wallpaper tab's cards are secondary members whose primary category
-/// is their own family (M76). A centered-rectangular lattice is
-/// normalized by its full 2mm point group, so a card on it can carry
-/// any group whose point symmetries fit in 2mm — everything except pg
-/// (whose half-period glides force a primitive rectangular cell) and
-/// the square/hexagonal groups (whose rotations force square/hexagonal
-/// cells); this is cross-checked with a debug_assert (M78: the first
-/// C-lattice card, stepped-hexominoes (p1), exposed the over-strict
-/// M76 check that allowed only Cm/Cmm). Cards in every other tab, and
-/// lattice-less Wallpaper cards, return `""` (no header).
+/// card's *conventional* lattice (see
+/// [`WallpaperGroup::conventional_lattice`]): the textbook mapping
+/// p1/p2 → oblique, pm/pg/pmm/pgg/pmg → rectangular, cm/cmm →
+/// centered, p4* → square, p3*/p6* → hexagonal. This is deliberately
+/// a display convention derived from the declared group, not from the
+/// representative's measured lattice: a p1 tiling realized on a
+/// centered-rectangular primitive cell (the stepped hexominoes)
+/// still displays under oblique, together with p2, as the textbooks
+/// lay out the 17 groups. The measured per-tiling lattice kind stays
+/// on the card (it is the data-honest attribute line). Cards in every
+/// other tab, and cards with no declared group, return `""` (no
+/// header).
 pub fn section_key(tab_category: TilingCategory, card: &CardMeta) -> &'static str {
     if tab_category != TilingCategory::Wallpaper {
         return "";
     }
-    match card.lattice {
+    match card.group.map(WallpaperGroup::conventional_lattice) {
         Some(LatticeKind::Oblique) => "oblique",
         Some(LatticeKind::Rectangular) => "rectangular",
-        Some(LatticeKind::CenteredRectangular) => {
-            debug_assert!(
-                matches!(
-                    card.group,
-                    Some(
-                        WallpaperGroup::P1
-                        | WallpaperGroup::P2
-                        | WallpaperGroup::Pm
-                        | WallpaperGroup::Pmm
-                        | WallpaperGroup::Cm
-                        | WallpaperGroup::Pgg
-                        | WallpaperGroup::Cmm
-                        | WallpaperGroup::Pmg
-                    )
-                ),
-                "centered-rectangular card {} declares group {:?}, which a C lattice cannot support",
-                card.id,
-                card.group
-            );
-            "centered"
-        }
+        Some(LatticeKind::CenteredRectangular) => "centered",
         Some(LatticeKind::Square) => "square",
         Some(LatticeKind::Hexagonal) => "hexagonal",
         _ => "",
@@ -190,6 +175,13 @@ pub fn wallpaper_gap_note() -> String {
 /// generators report `P1` / `None` as a "not a wallpaper tiling"
 /// placeholder, not as a claim of p1 symmetry.
 pub fn card_meta(t: &dyn Tiling) -> CardMeta {
+    card_meta_with(t, TilingClass::EMPTY)
+}
+
+/// [`card_meta`] with a declared [`TilingClass`] attached (used by
+/// [`browse_tabs_with`]; classification is host-supplied so tess-core
+/// never encodes tiling ids).
+pub fn card_meta_with(t: &dyn Tiling, class: TilingClass) -> CardMeta {
     let params = ParamSet::default_for(t.params());
     let region = BBox::new(PROBE_REGION.0, PROBE_REGION.1);
     let result = t.generate(&params, &Query { region });
@@ -212,44 +204,74 @@ pub fn card_meta(t: &dyn Tiling) -> CardMeta {
         lattice: periodic.then_some(result.symmetry.lattice),
         notes: result.symmetry.notes,
         params: t.params().len(),
+        class,
     }
 }
 
 /// Build the browser: one [`Tab`] per category in canonical
 /// [`TilingCategory::ALL`] order (all tabs, including any that are
-/// empty — a stable tab bar).
-///
-/// Membership: a tiling appears in its primary tab and in every tab
-/// from its [`Tiling::secondary_categories`] (multi-tab membership).
-/// Secondary cards are appended after the primaries, in registry
-/// order, so a card's primary slot is stable across tab changes.
-///
-/// Ordering: the Wallpaper tab (the one-card-per-group catalog) is
-/// sorted by (lattice rank, group rank), i.e. crystal system first
-/// (oblique, rectangular, centered rectangular, square, hexagonal) and
-/// wallpaper group within a crystal system; ties keep registry order
-/// (the sort is stable). Every other tab keeps primary-then-secondary
-/// registry order.
+/// empty — a stable tab bar), with no classification attached (see
+/// [`browse_tabs_with`]).
 pub fn browse_tabs(registry: &Registry) -> Vec<Tab> {
+    browse_tabs_with(registry, |_| TilingClass::EMPTY)
+}
+
+/// [`browse_tabs`] with a classification lookup: `classify(id)` supplies
+/// each card's [`TilingClass`] (the host injects its per-tiling table so
+/// tess-core never encodes tiling ids), and the declared schema fields
+/// drive the per-tab display ordering:
+///
+/// * **Wallpaper** — by (conventional lattice of the declared group,
+///   group rank): the textbook crystal-system sections.
+/// * **Pentagon Types** — by the declared `pentagon_type` (sequential
+///   type order; untyped cards keep registry order at the end).
+/// * **Two-Uniform** — by the declared `vertex_config` string (pairs of
+///   a configuration sort together; config-less cards keep registry
+///   order at the end).
+/// * **Laves** — by the declared `laves_rank` (self-dual regulars, then
+///   the Laves proper, then the 2-uniform duals).
+///
+/// Every other tab keeps membership order (primary cards in registry
+/// order, then secondaries). All sorts are stable.
+pub fn browse_tabs_with(
+    registry: &Registry,
+    classify: impl Fn(&str) -> TilingClass,
+) -> Vec<Tab> {
     let mut tabs = Vec::with_capacity(TilingCategory::ALL.len());
     for cat in TilingCategory::ALL {
         let mut cards: Vec<CardMeta> = registry
             .iter()
             .filter(|t| t.category() == cat)
-            .map(card_meta)
+            .map(|t| card_meta_with(t, classify(t.id())))
             .collect();
         for t in registry.iter().filter(|t| {
             t.category() != cat && t.secondary_categories().contains(&cat)
         }) {
-            cards.push(card_meta(t));
+            cards.push(card_meta_with(t, classify(t.id())));
         }
-        if cat == TilingCategory::Wallpaper {
-            cards.sort_by_key(|c| {
-                (
-                    lattice_rank(c.lattice.unwrap_or(LatticeKind::None)),
-                    group_rank(c.group),
-                )
-            });
+        match cat {
+            TilingCategory::Wallpaper => {
+                cards.sort_by_key(|c| {
+                    (
+                        lattice_rank(
+                            c.group
+                                .map(WallpaperGroup::conventional_lattice)
+                                .unwrap_or(LatticeKind::None),
+                        ),
+                        group_rank(c.group),
+                    )
+                });
+            }
+            TilingCategory::PentagonTypes => {
+                cards.sort_by_key(|c| c.class.pentagon_type.unwrap_or(u8::MAX));
+            }
+            TilingCategory::TwoUniform => {
+                cards.sort_by_key(|c| c.class.vertex_config.unwrap_or("\u{10FFFF}"));
+            }
+            TilingCategory::Laves => {
+                cards.sort_by_key(|c| c.class.laves_rank.unwrap_or(u8::MAX));
+            }
+            _ => {}
         }
         tabs.push(Tab { category: cat, cards });
     }
@@ -424,7 +446,7 @@ mod tests {
     }
 
     #[test]
-    fn wallpaper_ordering_is_lattice_then_group() {
+    fn wallpaper_ordering_is_conventional_lattice_then_group() {
         let r = reg();
         let tabs = browse_tabs(&r);
         let wall = tabs
@@ -432,13 +454,15 @@ mod tests {
             .find(|t| t.category == TilingCategory::Wallpaper)
             .unwrap();
         let ids: Vec<&str> = wall.cards.iter().map(|c| c.id).collect();
-        // oblique, then rectangular, then centered rectangular, then
-        // square (P1 before P2), then hexagonal (the P6m tie between
-        // hex-a and l1 keeps registry order): broken exactly as the
-        // (lattice rank, group rank) keys demand.
+        // Sections follow the CONVENTIONAL lattice of the declared
+        // group (not the representative's measured lattice): the P1
+        // card on a square lattice (sq-a) and the P2 card (sq-b) both
+        // display under oblique with obl-a; then rectangular (pmm),
+        // centered (cmm), hexagonal (the P6m tie between hex-a and l1
+        // keeps registry order).
         assert_eq!(
             ids,
-            vec!["obl-a", "primsq-a", "ctr-a", "sq-a", "sq-b", "hex-a", "l1"]
+            vec!["obl-a", "sq-a", "sq-b", "primsq-a", "ctr-a", "hex-a", "l1"]
         );
     }
 
@@ -498,7 +522,10 @@ mod tests {
         assert_eq!(key("obl-a"), "oblique");
         assert_eq!(key("primsq-a"), "rectangular");
         assert_eq!(key("ctr-a"), "centered");
-        assert_eq!(key("sq-a"), "square");
+        // sq-a declares a square lattice but a p1 group: the section
+        // follows the group's conventional lattice (oblique), while
+        // the measured lattice stays on the card's attribute line.
+        assert_eq!(key("sq-a"), "oblique");
         assert_eq!(key("hex-a"), "hexagonal");
         // Cards in other tabs have no section, whatever their lattice.
         let uni = &tabs
@@ -533,7 +560,11 @@ mod tests {
                 seen.push(k);
             }
         }
-        assert_eq!(seen, vec!["oblique", "rectangular", "centered", "square", "hexagonal"]);
+        assert_eq!(
+            seen,
+            vec!["oblique", "rectangular", "centered", "hexagonal"],
+            "sections must appear in conventional crystal-system order"
+        );
     }
 
     #[test]

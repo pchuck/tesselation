@@ -22,6 +22,36 @@ impl WallpaperGroup {
         WallpaperGroup::P3, WallpaperGroup::P3m1, WallpaperGroup::P31m,
         WallpaperGroup::P6, WallpaperGroup::P6m,
     ];
+
+    /// The conventional (textbook) Bravais lattice a wallpaper group is
+    /// displayed under: p1/p2 oblique, pm/pg/pmm/pgg/pmg rectangular,
+    /// cm/cmm centered rectangular, the p4* groups square, the p3*/p6*
+    /// groups hexagonal.
+    ///
+    /// This is a *display* convention, not a measurement: a group may be
+    /// realized on other Bravais lattices (the catalog's p1
+    /// stepped-hexominoes is measured on a centered-rectangular
+    /// primitive cell), and the declared per-tiling lattice kind stays
+    /// the measured fact. The wallpaper-group catalog groups its cards
+    /// by this mapping so that p1 and p2 sit together in the oblique
+    /// section, as the textbooks lay out the 17 groups.
+    pub fn conventional_lattice(self) -> LatticeKind {
+        match self {
+            WallpaperGroup::P1 | WallpaperGroup::P2 => LatticeKind::Oblique,
+            WallpaperGroup::Pm
+            | WallpaperGroup::Pg
+            | WallpaperGroup::Pmm
+            | WallpaperGroup::Pgg
+            | WallpaperGroup::Pmg => LatticeKind::Rectangular,
+            WallpaperGroup::Cm | WallpaperGroup::Cmm => LatticeKind::CenteredRectangular,
+            WallpaperGroup::P4 | WallpaperGroup::P4m | WallpaperGroup::P4g => LatticeKind::Square,
+            WallpaperGroup::P3
+            | WallpaperGroup::P3m1
+            | WallpaperGroup::P31m
+            | WallpaperGroup::P6
+            | WallpaperGroup::P6m => LatticeKind::Hexagonal,
+        }
+    }
 }
 
 impl fmt::Display for WallpaperGroup {

@@ -17,6 +17,7 @@
 pub mod app;
 pub mod browse;
 pub mod category;
+pub mod classify;
 pub mod geometry;
 pub mod paint;
 pub mod params;
@@ -30,6 +31,7 @@ pub mod view;
 
 pub use app::App;
 pub use category::TilingCategory;
+pub use classify::TilingClass;
 pub use geometry::{Affine, BBox, Point, Polygon, Vec2};
 pub use params::{ParamId, ParamKind, ParamSet, ParamSpec, ParamValue};
 pub use browse::{browse_tabs, card_meta, section_key, wallpaper_gap_note, CardMeta, Tab};
