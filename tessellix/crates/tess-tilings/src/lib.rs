@@ -2625,6 +2625,8 @@ mod girih_tests {
     use super::tests::{check_covers, check_det, check_rotated};
     use crate::girih;
     use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::ParamSet;
+    use tess_core::tiling::{Query, Tiling};
 
     fn v2(x: f64, y: f64) -> Vec2 {
         Vec2::new(x, y)
@@ -2657,6 +2659,23 @@ mod girih_tests {
             "girih-shesh-band",
             BBox::new(v2(-10.0, -10.0), v2(10.0, 10.0)),
         );
+    }
+
+    /// M112: single-tile-per-cell, single orbit — the shipped seed is
+    /// the decorative `SeedPattern::Checker` lattice parity, so a
+    /// bounded view must show both parities (seeds stay in {0, 1}).
+    #[test]
+    fn girih_shesh_band_seed_is_decorative_checkerboard() {
+        let t = girih::girih_shesh_band();
+        let p = ParamSet::default_for(t.params());
+        let r = t.generate(&p, &Query { region: BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)) });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        let mut seen = [false; 2];
+        for tile in &r.tiles {
+            assert!(tile.seed < 2, "checkerboard seed must stay in {{0, 1}}");
+            seen[tile.seed as usize] = true;
+        }
+        assert!(seen[0] && seen[1], "both lattice-parity classes must appear");
     }
 }
 
@@ -3816,6 +3835,8 @@ mod pavers_tests {
     use crate::chiral_cut_honeycomb;
     use crate::split_triangle_grid;
     use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::ParamSet;
+    use tess_core::tiling::{Query, Tiling};
 
     /// Candidate matrices (row-major) used by the paver group probes.
     const M_ROT4: [i64; 4] = [0, -1, 1, 0];
@@ -6828,6 +6849,64 @@ mod pavers_tests {
                 "squared-edge multiset (three congruence classes, achiral as sets)"
             );
         }
+    }
+
+    /// M112: `SeedPattern::Rows` — the tile at lattice index (i, j)
+    /// sits at world y = j on the centered-rectangular lattice
+    /// <(2,0),(1,1)>, so the row-index parity is exactly the course
+    /// parity: every generated tile's seed must equal the parity of
+    /// its row, and a bounded view must show both parities.
+    #[test]
+    fn running_bond_seed_rows_are_course_parity() {
+        let t = running_bond::running_bond();
+        let p = ParamSet::default_for(t.params());
+        let r = t.generate(&p, &Query { region: BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)) });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        let mut seen = [false; 2];
+        for tile in &r.tiles {
+            // Default params (scale 1, rotation 0): a domino of course
+            // j occupies y = [j, j+1], so its aabb min.y is j exactly.
+            let j = tile.poly.aabb().min.y.round() as i64;
+            let want = (((j % 2) + 2) % 2) as u32;
+            assert_eq!(tile.seed, want, "seed at course {j} must equal the course parity");
+            seen[tile.seed as usize] = true;
+        }
+        assert!(seen[0] && seen[1], "both courses must appear");
+    }
+
+    /// M112: single hexomino per cell, single orbit — the shipped seed
+    /// is the decorative `SeedPattern::Checker` lattice parity, so a
+    /// bounded view must show both parities (seeds stay in {0, 1}).
+    #[test]
+    fn stepped_hexominoes_seed_is_decorative_checkerboard() {
+        let t = stepped_hexominoes::stepped_hexominoes();
+        let p = ParamSet::default_for(t.params());
+        let r = t.generate(&p, &Query { region: BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)) });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        let mut seen = [false; 2];
+        for tile in &r.tiles {
+            assert!(tile.seed < 2, "checkerboard seed must stay in {{0, 1}}");
+            seen[tile.seed as usize] = true;
+        }
+        assert!(seen[0] && seen[1], "both lattice-parity classes must appear");
+    }
+
+    /// M112: the three tiles of the cell are R120 images of one chiral
+    /// class (a single orbit) — the shipped seed is the decorative
+    /// `SeedPattern::Checker` lattice parity, so a bounded view must
+    /// show both parities (seeds stay in {0, 1}).
+    #[test]
+    fn chiral_cut_honeycomb_seed_is_decorative_checkerboard() {
+        let t = chiral_cut_honeycomb::chiral_cut_honeycomb();
+        let p = ParamSet::default_for(t.params());
+        let r = t.generate(&p, &Query { region: BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)) });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        let mut seen = [false; 2];
+        for tile in &r.tiles {
+            assert!(tile.seed < 2, "checkerboard seed must stay in {{0, 1}}");
+            seen[tile.seed as usize] = true;
+        }
+        assert!(seen[0] && seen[1], "both lattice-parity classes must appear");
     }
 }
 
@@ -14787,10 +14866,12 @@ mod pentagon3_tests {
         }
     }
 
-    /// 1-isohedral: both cells carry seed 0 and the half-turn about c0
-    /// permutes the cell table mod lattice as the transposition (0 1), so
-    /// the two cells form a single full-group orbit; every generated tile
-    /// keeps the prototile side multiset {1, 2, 2, 3, 4} and seed 0.
+    /// 1-isohedral: both cells carry cell seed 0 (the shipped pattern
+    /// seed is the decorative checkerboard lattice parity, not an orbit
+    /// class) and the half-turn about c0 permutes the cell table mod
+    /// lattice as the transposition (0 1), so the two cells form a
+    /// single full-group orbit; every generated tile keeps the prototile
+    /// side multiset {1, 2, 2, 3, 4}.
     #[test]
     fn pentagon_3_isohedral_single_orbit() {
         let t = spec();
@@ -14826,12 +14907,14 @@ mod pentagon3_tests {
             perm.push(hit.unwrap_or_else(|| panic!("cell {k} has no half-turn image")));
         }
         assert_eq!(perm, vec![1, 0], "half-turn permutes the cells as (0 1)");
-        // Generated patches: single seed, prototile side multiset kept.
+        // Generated patches: the single orbit carries no orbit seed, so
+        // the shipped seed is the decorative checkerboard lattice parity
+        // (0..1); prototile side multiset kept.
         let params = ParamSet::default_for(t.params());
         let rp = t.generate(&params, &Query { region: BBox::new(v2(-6.0, -6.0), v2(10.0, 10.0)) });
         assert!(rp.message.is_none(), "{:?}", rp.message);
         for tile in &rp.tiles {
-            assert_eq!(tile.seed, 0, "single isohedral orbit -> seed 0 only");
+            assert!(tile.seed < 2, "checkerboard seed must stay in {{0, 1}}");
             let mut sides: Vec<f64> = (0..tile.poly.len())
                 .map(|i| (tile.poly.pts[(i + 1) % tile.poly.len()] - tile.poly.pts[i]).length())
                 .collect();
@@ -14841,6 +14924,25 @@ mod pentagon3_tests {
                 assert!((got - w).abs() < 1e-12, "side {got} ∉ {{1, 2, 2, 3, 4}}");
             }
         }
+    }
+
+    /// M112: the two cells of the primitive cell are one orbit
+    /// (1-isohedral), so the shipped seed is the decorative
+    /// `SeedPattern::Checker` lattice parity — a checkerboard over the
+    /// oblique lattice basis, not an orbit class; a bounded view must
+    /// show both parities (seeds stay in {0, 1}).
+    #[test]
+    fn pentagon_3_seed_is_decorative_checkerboard() {
+        let t = spec();
+        let p = ParamSet::default_for(t.params());
+        let r = t.generate(&p, &Query { region: BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)) });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        let mut seen = [false; 2];
+        for tile in &r.tiles {
+            assert!(tile.seed < 2, "checkerboard seed must stay in {{0, 1}}");
+            seen[tile.seed as usize] = true;
+        }
+        assert!(seen[0] && seen[1], "both lattice-parity classes must appear");
     }
 }
 
@@ -15034,9 +15136,10 @@ mod pentagon2_tests {
         let b_angle = angle_at(proto, 1).to_degrees();
         let d_angle = angle_at(proto, 3).to_degrees();
         assert!((b_angle + d_angle - 180.0).abs() < 1e-9, "B + D = 180°");
-        // Single isohedral orbit: all four seeds 0.
+        // Chirality seed classes: the single isohedral orbit carries
+        // the two chirality classes — direct pair 0, mirror pair 1.
         let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
-        assert_eq!(seeds, vec![0, 0, 0, 0], "1-isohedral seeds");
+        assert_eq!(seeds, vec![0, 0, 1, 1], "chirality seeds: direct 0, mirror 1");
         let ps = (0..5).map(|i| side_of(proto, i)).collect::<Vec<_>>();
         let pa = (0..5).map(|i| angle_at(proto, i)).collect::<Vec<_>>();
         // The mirrored prototile's CCW (side, angle) cycle, for the
@@ -15446,17 +15549,18 @@ mod pentagon2_tests {
         }
     }
 
-    /// 1-isohedral: all four cells carry seed 0, and the half-turn plus
-    /// the two glide classes permute the cell table as a single orbit —
-    /// r = (0 1)(2 3), g1 = (0 2)(1 3), g2 = (0 3)(1 2), the glides doing
-    /// the identifying across chiralities; every generated tile keeps the
-    /// prototile side multiset {1/2, 1/2, 1, 1 + √3/2, 1 + √3/2} and
-    /// seed 0.
+    /// 1-isohedral: the four cells carry the two chirality seed classes
+    /// (direct pair seed 0, mirror pair seed 1), and the half-turn plus
+    /// the two glide classes permute the cell table as a single geometric
+    /// orbit — r = (0 1)(2 3), g1 = (0 2)(1 3), g2 = (0 3)(1 2), the
+    /// glides doing the identifying across chiralities; every generated
+    /// tile keeps the prototile side multiset {1/2, 1/2, 1, 1 + √3/2,
+    /// 1 + √3/2} and its chirality seed.
     #[test]
     fn pentagon_2_isohedral_single_orbit() {
         let t = spec();
         let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
-        assert_eq!(seeds, vec![0, 0, 0, 0], "single isohedral class");
+        assert_eq!(seeds, vec![0, 0, 1, 1], "chirality classes: direct pair 0, mirror pair 1");
         let (w1, w2) = (t.lattice[0], t.lattice[1]);
         let det = w1.cross(w2);
         let u_of = |p: Vec2| {
@@ -15520,7 +15624,9 @@ mod pentagon2_tests {
             }
         }
         assert_eq!(orbit, BTreeSet::from([0usize, 1, 2, 3]), "single isohedral orbit");
-        // Generated patches: single seed, prototile side multiset kept.
+        // Generated patches: the shipped coloring distinguishes the two
+        // chiral classes — direct pair (proto 0, 1) seed 0, mirror pair
+        // (proto 2, 3) seed 1 — and keeps the prototile side multiset.
         let params = ParamSet::default_for(t.params());
         let rp = t.generate(
             &params,
@@ -15528,8 +15634,10 @@ mod pentagon2_tests {
         );
         assert!(rp.message.is_none(), "{:?}", rp.message);
         let s = 1.0 + s3() / 2.0;
+        let mut seen = [false; 2];
         for tile in &rp.tiles {
-            assert_eq!(tile.seed, 0, "single isohedral orbit -> seed 0 only");
+            assert_eq!(tile.seed, u32::from(tile.proto >= 2), "tile kept its chirality seed");
+            seen[tile.seed as usize] = true;
             let mut sides: Vec<f64> = (0..tile.poly.len())
                 .map(|i| (tile.poly.pts[(i + 1) % tile.poly.len()] - tile.poly.pts[i]).length())
                 .collect();
@@ -15539,6 +15647,27 @@ mod pentagon2_tests {
                 assert!((got - w).abs() < 1e-12, "side {got} not in the prototile side multiset");
             }
         }
+        assert!(seen[0] && seen[1], "both chiral seed classes must appear");
+    }
+
+    /// M112: the shipped coloring distinguishes the two chiralities —
+    /// the direct chiral pair (cells 0, 1) carries seed 0, the mirror
+    /// pair (cells 2, 3) carries seed 1 — and every generated tile
+    /// keeps the seed class of its cell; a bounded view must show both
+    /// classes.
+    #[test]
+    fn pentagon_2_seed_classes_track_chirality() {
+        let t = spec();
+        let p = ParamSet::default_for(t.params());
+        let r = t.generate(&p, &Query { region: BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)) });
+        assert!(r.message.is_none(), "{:?}", r.message);
+        let mut seen = [false; 2];
+        for tile in &r.tiles {
+            let want = u32::from(tile.proto >= 2);
+            assert_eq!(tile.seed, want, "proto {} must carry its cell's chirality seed", tile.proto);
+            seen[tile.seed as usize] = true;
+        }
+        assert!(seen[0] && seen[1], "both chiral classes must appear");
     }
 }
 

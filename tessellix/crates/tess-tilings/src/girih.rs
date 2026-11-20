@@ -21,6 +21,14 @@
 //!
 //! This is the *periodic stand-in* for the genuinely quasiperiodic girih
 //! star-and-cross tiling (see the separate `girih-quasiperiodic` entry, M18).
+//!
+//! # Seeds
+//!
+//! One tile per cell — a single orbit, so there is no orbit-distinct
+//! coloring to ship.  The shipped seed is therefore *decorative*:
+//! `SeedPattern::Checker` colors lattice sites by the parity of
+//! `(i + j)` on the centered-rectangular basis — a lattice-parity
+//! coloring, not an orbit class.
 
 use tess_core::TilingCategory;
 use tess_core::geometry::{Polygon, Vec2};
@@ -73,7 +81,7 @@ pub fn girih_shesh_band() -> LatticeTiling {
         lattice_kind: LatticeKind::CenteredRectangular,
         category: TilingCategory::Islamic,
         secondary: &[],
-        seed_pattern: SeedPattern::Uniform,
+        seed_pattern: SeedPattern::Checker,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
         color_mode: ColorMode::Pattern,

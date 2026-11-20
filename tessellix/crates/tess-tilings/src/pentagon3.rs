@@ -48,7 +48,12 @@
 //! centres.
 //!
 //! The tiling is **1-isohedral**: the half-turn swaps the two cells of
-//! the primitive cell mod Λ, so both tiles share one seed (0).
+//! the primitive cell mod Λ, so the two tiles are one orbit — there is
+//! no orbit-class coloring to ship.  The shipped seed is therefore
+//! *decorative*: `SeedPattern::Checker` colors lattice sites by the
+//! parity of `(i + j)` — a checkerboard over the oblique lattice basis,
+//! not an orbit class (a lattice-parity coloring; the two cells of one
+//! site share a seed, neighbouring sites alternate).
 //!
 //! It is **not edge-to-edge at the pentagon level**: only the long d = 4
 //! sides are split, each at its exact midpoint t = 1/2 by the ends of
@@ -171,7 +176,7 @@ pub fn spec() -> LatticeTiling {
         lattice_kind: LatticeKind::Oblique,
         category: TilingCategory::PentagonTypes,
         secondary: &[TilingCategory::Wallpaper],
-        seed_pattern: SeedPattern::Uniform,
+        seed_pattern: SeedPattern::Checker,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
         color_mode: ColorMode::Pattern,

@@ -76,10 +76,14 @@
 //!
 //! # Seeds and protos
 //!
-//! One congruence class (chiral) per cell: all three tiles carry
-//! `seed = 0`, so Pattern coloring is monochrome — the pieces are all
-//! "the same tile" up to rotation, and that is exactly what p3 is
-//! about.
+//! One chiral congruence class per cell: the three tiles are R120
+//! images of each other about O — a single orbit, with no
+//! orbit-distinct coloring to ship.  The shipped seed is therefore
+//! *decorative*: `SeedPattern::Checker` colors lattice sites by the
+//! parity of `(i + j)` on the hexagonal basis — a lattice-parity
+//! coloring, not an orbit class.  (Without it, Pattern coloring would
+//! be monochrome: the pieces are all "the same tile" up to rotation,
+//! and that is exactly what p3 is about.)
 //!
 //! # Verification
 //!
@@ -184,7 +188,7 @@ pub fn chiral_cut_honeycomb() -> LatticeTiling {
         lattice_kind: LatticeKind::Hexagonal,
         category: TilingCategory::Wallpaper,
         secondary: &[],
-        seed_pattern: SeedPattern::Uniform,
+        seed_pattern: SeedPattern::Checker,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
         color_mode: ColorMode::Pattern,

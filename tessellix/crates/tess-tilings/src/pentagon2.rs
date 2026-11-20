@@ -32,8 +32,11 @@
 //!
 //! The tiling is **1-isohedral**: the half-turn and the two glide classes
 //! together permute the four cells of the primitive cell as a single
-//! orbit — the glides doing the identifying across chiralities — so all
-//! tiles carry one seed (0).
+//! orbit — the glides doing the identifying across chiralities.  The
+//! shipped pattern coloring nevertheless distinguishes the two chiral
+//! classes: the direct pair (cells 0, 1) carries seed 0 and the mirror
+//! pair (cells 2, 3) carries seed 1 — the same chirality coloring that
+//! drops the pgg group to p2 (see above).
 //!
 //! The primitive cell: **4 tiles** (two chiral pairs) on the rectangular
 //! lattice `w1 = (1/2, 1 + √3/2)`, `w2 = (−2 − √3, 1)` with `w1 ⊥ w2`
@@ -127,9 +130,16 @@ fn cell_polygons() -> [Vec<Vec2>; 4] {
 /// 1-isohedral, 4 tiles (two chiral pairs) per rectangular cell,
 /// wallpaper group pgg, edge-to-edge.
 pub fn spec() -> LatticeTiling {
+    let table = cell_table();
     let cells = cell_polygons()
         .into_iter()
-        .map(|pts| Cell { poly: Polygon::from_slice(&pts), seed: 0 })
+        .enumerate()
+        .map(|(k, pts)| {
+            // Seed class = chirality: the direct pair (cells 0, 1,
+            // `mirror = false`) carries 0, the mirror pair (cells 2, 3)
+            // carries 1.
+            Cell { poly: Polygon::from_slice(&pts), seed: u32::from(table[k].0) }
+        })
         .collect();
     LatticeTiling {
         id: "pentagon-2",

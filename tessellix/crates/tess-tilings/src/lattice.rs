@@ -31,6 +31,9 @@ pub enum SeedPattern {
     Checker,
     /// Seed cycles with `(i - j)` — 3-coloring for hex/triangle lattices.
     Triad,
+    /// Seed parity alternates with the lattice row index `j` — alternate
+    /// courses for paver bonds.
+    Rows,
 }
 
 impl SeedPattern {
@@ -39,6 +42,7 @@ impl SeedPattern {
             SeedPattern::Uniform => 0,
             SeedPattern::Checker => ((((i + j) % 2) + 2) % 2) as u32,
             SeedPattern::Triad => ((((i - j) % 3) + 3) % 3) as u32,
+            SeedPattern::Rows => j.rem_euclid(2) as u32,
         }
     }
 }

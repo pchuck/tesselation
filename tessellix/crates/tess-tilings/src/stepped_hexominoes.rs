@@ -59,7 +59,10 @@
 //!
 //! `proto` = cell index (the single hexomino); `seed` = orientation
 //! class — a single class (0), since every tile is the prototile
-//! itself (1-isohedral, one orbit).
+//! itself (1-isohedral, one orbit).  The shipped seed is therefore
+//! *decorative*: `SeedPattern::Checker` colors lattice sites by the
+//! parity of `(i + j)` on the `⟨(3,1),(0,2)⟩` basis — a
+//! checkerboard-parity coloring, not an orbit class.
 //!
 //! # Verification
 //!
@@ -135,7 +138,7 @@ pub fn stepped_hexominoes() -> LatticeTiling {
         lattice_kind: LatticeKind::CenteredRectangular,
         category: TilingCategory::Wallpaper,
         secondary: &[],
-        seed_pattern: SeedPattern::Uniform,
+        seed_pattern: SeedPattern::Checker,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
         color_mode: ColorMode::Pattern,

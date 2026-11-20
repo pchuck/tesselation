@@ -47,7 +47,11 @@
 //!
 //! `proto` = cell index (both dominoes horizontal); `seed` =
 //! orientation class — a single class (0, horizontal), since every
-//! domino of the running bond is a stretcher.
+//! domino of the running bond is a stretcher.  The shipped seed
+//! alternates by row via `SeedPattern::Rows`: the tile at lattice
+//! index `(i, j)` sits at world `y = j` (lattice `⟨(2,0),(1,1)⟩`), so
+//! the row-index parity `((j % 2) + 2) % 2` is exactly the course
+//! parity — alternate courses (courses of rows) get alternate fills.
 //!
 //! # Verification
 //!
@@ -111,7 +115,7 @@ pub fn running_bond() -> LatticeTiling {
         lattice_kind: LatticeKind::CenteredRectangular,
         category: TilingCategory::Arrangements,
         secondary: &[],
-        seed_pattern: SeedPattern::Uniform,
+        seed_pattern: SeedPattern::Rows,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
         color_mode: ColorMode::Pattern,
