@@ -601,7 +601,8 @@ pub fn classification(id: &str) -> TilingClass {
             ..TilingClass::EMPTY
         },
 
-        // ---- Nonperiodic (4; hirschhorn above) --------------------------------
+        // ---- Nonperiodic (5; hirschhorn above) --------------------------------
+        "armchair" => rep_tile("L-tetromino"),
         "chair" => rep_tile("L-tromino"),
         "sphinx" => rep_tile("sphinx hexiamond"),
         "p-pentomino" => rep_tile("P-pentomino"),
@@ -694,7 +695,8 @@ fn hankin_greedy(base_tiling: &'static str, contact_angle: &'static str, star: &
     }
 }
 
-/// A limit-periodic rep-tile realization (chair, sphinx, P-pentomino).
+/// A limit-periodic rep-tile realization (armchair, chair, sphinx,
+/// P-pentomino).
 fn rep_tile(tile_set: &'static str) -> TilingClass {
     TilingClass {
         families: &["Nonperiodic"],

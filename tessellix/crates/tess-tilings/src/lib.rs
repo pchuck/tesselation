@@ -24,6 +24,8 @@ pub mod ammann_beenker;
 pub mod ammann_beenker_tri;
 #[cfg(feature = "archimedean")]
 pub mod archimedean;
+#[cfg(feature = "armchair")]
+pub mod armchair;
 #[cfg(feature = "cairo")]
 pub mod cairo;
 #[cfg(feature = "chair")]
@@ -328,6 +330,10 @@ pub fn registry() -> tess_core::Registry {
     #[cfg(feature = "cairo")]
     {
         r = r.register(cairo::cairo_pentagonal());
+    }
+    #[cfg(feature = "armchair")]
+    {
+        r = r.register(armchair::ArmchairTiling);
     }
     #[cfg(feature = "chair")]
     {
@@ -638,7 +644,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M129). 120 built-ins — 63 before
+// Census of today's taxonomy (M128+M129). 121 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -647,7 +653,7 @@ mod tests {
         //   M121) + 3 regular secondaries), Wallpaper 17 (the group
         //   catalog — one card per represented group; M85 completed it),
 //   PentagonTypes 15, Islamic 21, Arrangements 8,
-//   Quasiperiodic 11, Aperiodic 6, Nonperiodic 4.
+//   Quasiperiodic 11, Aperiodic 6, Nonperiodic 5.
 // Membership census 134 = 120 primaries + 14 secondaries (3 Laves
         // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5) join the Pentagon tab as
@@ -780,6 +786,12 @@ mod tests {
         // mirrors through the corner-2 point (−1, 1/2), both diagonal
         // classes true half-period glides, no mirror through the 4-fold
         // center).
+        // -> M128 Nonperiodic 4 -> 5 (armchair, the L-tetromino rep-4
+        // substitution: the unique dissection of the scale-2 inflated
+        // armchair into four half-side armchairs, one of each
+        // orientation; limit-periodic — the depth-g block's only
+        // translation period is (2^(g+1), 2^(g+1)); non-edge-to-edge
+        // T-junctions at every scale).
         // -> M129 Quasiperiodic 10 -> 11 (ammann-beenker-tri, the
         // Bielefeld "Ammann-Beenker rhomb triangle" variant of the
         // classic A5: the half-square triangles are emitted as their
@@ -789,11 +801,11 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 17, 24, 17, 15, 21, 8, 11, 6, 4],
+vec![11, 17, 24, 17, 15, 21, 8, 11, 6, 5],
             "per-tab census (update when adding tilings)"
         );
-assert_eq!(r.len(), 120, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 134, "membership census (update when adding tilings)");
+assert_eq!(r.len(), 121, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 135, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -1612,6 +1624,47 @@ mod penrose_pentagon_tests {
         check_det(
             &penrose_pentagon::PenrosePentagonTiling,
             "penrose_pentagon",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+}
+
+#[cfg(all(test, feature = "armchair"))]
+mod armchair_tests {
+    use super::tests::{check_coverage, check_det, check_rotated};
+    use crate::armchair;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn armchair_covers_region() {
+        let t = armchair::ArmchairTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(&t, "armchair", &p, BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)));
+    }
+
+    #[test]
+    fn armchair_rotated_scaled() {
+        check_rotated(
+            &armchair::ArmchairTiling,
+            "armchair(rot25,scale0.6)",
+            BBox::new(v2(-7.0, -7.0), v2(7.0, 7.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn armchair_deterministic() {
+        check_det(
+            &armchair::ArmchairTiling,
+            "armchair",
             BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
         );
     }
