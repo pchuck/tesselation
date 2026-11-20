@@ -190,6 +190,7 @@ pub fn classification(id: &str) -> TilingClass {
         "kuniform-dual-pmm" => kuniform_dual("V3.6.3.6; V3².6²", "(3.6.3.6; 3².6²)"),
         "kuniform-dual-n12" => kuniform_dual("V3².6²; V3⁴.6", "(3².6²; 3⁴.6)"),
         "kuniform-dual-n19" => kuniform_dual("V3⁶; V3⁴.6", "(3⁶; 3⁴.6)₂"),
+        "kuniform-dual-n2" => kuniform_dual("V3.4.3.12; V3.12.12", "(3.12.12; 3.4.3.12)"),
 
         // ---- Pentagon types (13 primaries; cairo = 4, floret = 5 above) ----
         "pentagon-1" => pentagon(&["Pentagon"], 1, 1, "Reinhardt", "1918", Some("achiral")),

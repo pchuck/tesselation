@@ -421,6 +421,7 @@ r = r.register(kuniform::kuniform_n12());
         r = r.register(dual::kuniform_dual_pmm());
         r = r.register(dual::kuniform_dual_n12());
         r = r.register(dual::kuniform_dual_n19());
+        r = r.register(dual::kuniform_dual_n2());
     }
     #[cfg(feature = "laves")]
     {
@@ -630,17 +631,17 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M119). 117 built-ins — 63 before
+// Census of today's taxonomy (M120). 118 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
-        //   TwoUniform 15, Laves 22 (19 primary: 8 incl. cairo-pentagonal
-        //   + 11 machine-dualized k-uniform duals (M98, M102, M106) +
+        //   TwoUniform 17, Laves 23 (20 primary: 8 incl. cairo-pentagonal
+        //   + 12 machine-dualized k-uniform duals (M98, M102, M106, M120) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
 //   PentagonTypes 15, Islamic 21, Arrangements 8,
 //   Quasiperiodic 10, Aperiodic 6, Nonperiodic 4.
-// Membership census 131 = 117 primaries + 14 secondaries (3 Laves
+// Membership census 132 = 118 primaries + 14 secondaries (3 Laves
         // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5) join the Pentagon tab as
         // typed secondary members, M122).
@@ -757,14 +758,21 @@ mod tests {
         // on the torus, matching the wiki's 4-isohedral/5-isotoxal;
         // measured coset structure: D4, axis mirrors pure, diagonal
         // cosets true glides — p4g).
+        // -> M120 Laves 22 -> 23 (kuniform-dual-n2, the face-centroid
+        // dual of the 3-4-3-12 tiling: four kites (3.4.3.12 orbit,
+        // sides (3+√3)/6 & (2+√3)/√3, area 3/4+5√3/12) plus four
+        // isosceles triangles (3.12.12 orbit, base 2+√3, area
+        // 1+7√3/12) per cell; areas sum to 7+4√3 = |det|; measured
+        // p4m — every group coset mod lattice represented by an
+        // operation fixing the primal square center).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 17, 22, 17, 15, 21, 8, 10, 6, 4],
+vec![11, 17, 23, 17, 15, 21, 8, 10, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-assert_eq!(r.len(), 117, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 131, "membership census (update when adding tilings)");
+assert_eq!(r.len(), 118, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 132, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -8953,6 +8961,7 @@ khatam_girih, kuniform, laves, pentagon1, pentagon2, pentagon3, pentagon6, penta
             ("kuniform-dual-pmm", dual::kuniform_dual_pmm()),
             ("kuniform-dual-n12", dual::kuniform_dual_n12()),
             ("kuniform-dual-n19", dual::kuniform_dual_n19()),
+            ("kuniform-dual-n2", dual::kuniform_dual_n2()),
             ("windmill", windmill::spec()),
             ("basketweave", basketweave::basketweave()),
             ("herringbone", herringbone::herringbone()),
