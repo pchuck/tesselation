@@ -157,6 +157,7 @@ pub fn classification(id: &str) -> TilingClass {
         "kuniform-n14" => two_uniform(&["Two-Uniform"], "(3⁶; 3³.4²)₁"),
         "kuniform-n3" => two_uniform(&["Two-Uniform"], "(4⁴; 3³.4²)₂"),
         "kuniform-n15" => two_uniform(&["Two-Uniform"], "(3⁶; 3³.4²)₂"),
+        "kuniform-n2" => two_uniform(&["Two-Uniform"], "(3.12.12; 3.4.3.12)"),
 
         // ---- Laves proper (8, incl. cairo) --------------------------------
         "tetrakis-square" => laves(&["Laves"], "V4.8.8", "truncated square"),

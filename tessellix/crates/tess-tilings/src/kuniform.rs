@@ -1,11 +1,11 @@
 //! 2-uniform (k-uniform) tilings, expressed as [`LatticeTiling`] data
 //! tables.
 //!
-//! Fifteen entries are from the closed list of 20 two-vertex-orbit
+//! Sixteen entries are from the closed list of 20 two-vertex-orbit
 //! tilings by regular polygons (Krotenheerdt; see the Wikipedia
 //! "k-uniform tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`,
 //! `n8`, `n5`, `n1`, `n13`, `n20`, `n12`, `n19`, `n4`, `n14`, `n3`,
-//! `n15`). The
+//! `n15`, `n2`). The
 //! list's entries have no individual proper names, so these are named by
 //! their vertex configurations, following that convention:
 //!
@@ -71,6 +71,11 @@
 //!   e = 5. The n14 sibling: single square rows alternating with
 //!   triple triangle strips (three rows, every horizontal edge shared
 //!   back-to-back); the square row is flanked by one triangle orbit.
+//! * `kuniform-n2` — vertex figures 3.12.12 ; 3.4.3.12, group p4m,
+//!   t = 3, e = 3. The 3-4-3-12 tiling: unit dodecagons kissing flat-
+//!   edge-to-flat-edge on a square lattice of spacing 2 + √3, with each
+//!   four-dodecagon square hole filled by a unit square plus four edge
+//!   triangles; the origin is the square's center.
 //!
 //! All coordinates lie in Z + (√3/2)·Q, stored through [`H`].
 
@@ -1991,6 +1996,110 @@ pub fn kuniform_n15() -> LatticeTiling {
         offset: Vec2::ZERO,
         group: WallpaperGroup::Cmm,
         lattice_kind: LatticeKind::CenteredRectangular,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3.12.12; 3.4.3.12), wallpaper group p4m.
+///
+/// Wikipedia "List of k-uniform tilings" entry `2-uniform n2` and the
+/// dedicated "3-4-3-12 tiling" article: `[3.12.12; 3.4.3.12] (t = 3,
+/// e = 3)`, p4m (4*2).
+///
+/// Construction: unit dodecagons on a square sublattice of spacing
+/// T = 2 + √3, touching flat-edge to flat-edge (their inradius is
+/// (2 + √3)/2 = T/2, so neighbors kiss along full unit edges — those
+/// contacts carry the 3.12.12 vertices); each square hole bounded by
+/// four kissing dodecagons is filled by a unit square plus one unit
+/// triangle on each of its four edges (apex = a dodecagon corner),
+/// giving the 3.4.3.12 vertices at the square corners. The cell is the
+/// cross (square + 4 triangles) centered at the origin plus the
+/// dodecagon centered at (T/2, T/2). The cell area is
+/// 1 + 4·√3/4 + 3(2 + √3) = 7 + 4√3 = T² = |det|, so the square lattice
+/// ⟨(T, 0), (0, T)⟩ is exactly the tiling's translation lattice.
+///
+/// Symmetry: exact coset audit (Python battery tku5_n2.py): translations
+/// mod L give order 8 with point group D4 — reflections across the
+/// horizontal and vertical (no glide: mirror lines through the square
+/// centers and dodecagon centers) and no true glides ⇒ p4m. Torus
+/// orbit census: t = 3 tile orbits (dodecagon, square, 4 triangles),
+/// e = 3 edge orbits, 2 vertex orbits (1/cell dodecagon-corner class
+/// 3.12.12, 1/cell square-corner class 3.4.3.12 — the origin) — both
+/// counts match the Wikipedia parenthetical exactly.
+///
+/// Pattern seeds by polygon class: dodecagon seed 0, square seed 1,
+/// triangles seed 2.
+pub fn kuniform_n2() -> LatticeTiling {
+    // Unit dodecagon centered at (T/2, T/2), T = 2 + √3; corners are
+    // the 12 rotations of the −135° offset −(1+√3)/2·(1,1) about the
+    // center — the first corner is (1/2, 1/2). CCW by construction.
+    let dod = Polygon::from_slice(&[
+        Vec2::new(1.0 / 2.0, 1.0 / 2.0),
+        Vec2::new(1.0 / 2.0 + H, 0.0),
+        Vec2::new(3.0 / 2.0 + H, 0.0),
+        Vec2::new(3.0 / 2.0 + 2.0 * H, 1.0 / 2.0),
+        Vec2::new(2.0 + 2.0 * H, 1.0 / 2.0 + H),
+        Vec2::new(2.0 + 2.0 * H, 3.0 / 2.0 + H),
+        Vec2::new(3.0 / 2.0 + 2.0 * H, 3.0 / 2.0 + 2.0 * H),
+        Vec2::new(3.0 / 2.0 + H, 2.0 + 2.0 * H),
+        Vec2::new(1.0 / 2.0 + H, 2.0 + 2.0 * H),
+        Vec2::new(1.0 / 2.0, 3.0 / 2.0 + 2.0 * H),
+        Vec2::new(0.0, 3.0 / 2.0 + H),
+        Vec2::new(0.0, 1.0 / 2.0 + H),
+    ]);
+    // Unit square centered at the origin (the 3.4.3.12 vertex orbit
+    // includes its corners, but the canonical 3.4.3.12 vertex is e.g.
+    // (1/2, 1/2): triangle + square + triangle + dodecagon).
+    let sq = Polygon::from_slice(&[
+        Vec2::new(-1.0 / 2.0, -1.0 / 2.0),
+        Vec2::new(1.0 / 2.0, -1.0 / 2.0),
+        Vec2::new(1.0 / 2.0, 1.0 / 2.0),
+        Vec2::new(-1.0 / 2.0, 1.0 / 2.0),
+    ]);
+    // The four unit triangles on the square's edges, apex A = 1/2 + √3/2
+    // toward the adjacent dodecagon-center directions. All CCW.
+    let a = 1.0 / 2.0 + H;
+    let t_up = Polygon::from_slice(&[
+        Vec2::new(-1.0 / 2.0, 1.0 / 2.0),
+        Vec2::new(1.0 / 2.0, 1.0 / 2.0),
+        Vec2::new(0.0, a),
+    ]);
+    let t_dn = Polygon::from_slice(&[
+        Vec2::new(1.0 / 2.0, -1.0 / 2.0),
+        Vec2::new(-1.0 / 2.0, -1.0 / 2.0),
+        Vec2::new(0.0, -a),
+    ]);
+    let t_rt = Polygon::from_slice(&[
+        Vec2::new(1.0 / 2.0, 1.0 / 2.0),
+        Vec2::new(1.0 / 2.0, -1.0 / 2.0),
+        Vec2::new(a, 0.0),
+    ]);
+    let t_lf = Polygon::from_slice(&[
+        Vec2::new(-1.0 / 2.0, -1.0 / 2.0),
+        Vec2::new(-1.0 / 2.0, 1.0 / 2.0),
+        Vec2::new(-a, 0.0),
+    ]);
+    LatticeTiling {
+        id: "kuniform-n2",
+        name: "2-uniform (3.12.12; 3.4.3.12)",
+        description: "2-uniform tiling (3.12.12; 3.4.3.12) — dodecagons kissing flat-edge-to-flat-edge on a square lattice with unit squares and edge triangles filling each four-dodecagon hole (p4m).",
+        lattice: [Vec2::new(2.0 + S3, 0.0), Vec2::new(0.0, 2.0 + S3)],
+        cells: vec![
+            Cell { poly: dod, seed: 0 },
+            Cell { poly: sq, seed: 1 },
+            Cell { poly: t_up, seed: 2 },
+            Cell { poly: t_dn, seed: 2 },
+            Cell { poly: t_rt, seed: 2 },
+            Cell { poly: t_lf, seed: 2 },
+        ],
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::P4m,
+        lattice_kind: LatticeKind::Square,
         category: TilingCategory::TwoUniform,
         secondary: &[],
         seed_pattern: SeedPattern::Uniform,

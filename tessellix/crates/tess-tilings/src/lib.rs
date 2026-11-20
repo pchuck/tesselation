@@ -405,6 +405,7 @@ r = r.register(kuniform::kuniform_n12());
         r = r.register(kuniform::kuniform_n14());
         r = r.register(kuniform::kuniform_n3());
         r = r.register(kuniform::kuniform_n15());
+        r = r.register(kuniform::kuniform_n2());
     }
     #[cfg(feature = "kuniform")]
     {
@@ -628,7 +629,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M117). 115 built-ins — 63 before
+// Census of today's taxonomy (M118). 116 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -638,7 +639,7 @@ mod tests {
         //   one card per represented group; M85 completed it),
 //   PentagonTypes 15, Islamic 21, Arrangements 8,
 //   Quasiperiodic 10, Aperiodic 6, Nonperiodic 4.
-// Membership census 129 = 115 primaries + 14 secondaries (3 Laves
+// Membership census 130 = 116 primaries + 14 secondaries (3 Laves
         // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5) join the Pentagon tab as
         // typed secondary members, M122).
@@ -744,14 +745,19 @@ mod tests {
         // type-1 prototype: two pentagons per hexagonal-metric cell;
         // measured cmm — the prototile is achiral — on the a²=3b²
         // special centered-rectangular lattice).
+        // -> M118 TwoUniform 15 -> 16 (kuniform-n2, the p4m
+        // 3.12.12;3.4.3.12 form — the 3-4-3-12 tiling: dodecagons
+        // kissing flat-edge-to-flat-edge with square+4-triangle fills;
+        // torus-exact t/e vs the wiki parentheticals (3,3); the
+        // missing-number hunt of the closed 20-list, batch 4).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 15, 22, 17, 15, 21, 8, 10, 6, 4],
+vec![11, 16, 22, 17, 15, 21, 8, 10, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 115, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 129, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 116, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 130, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -8651,6 +8657,59 @@ fn kuniform_n12_deterministic() {
             ],
         );
     }
+
+    #[test]
+    fn kuniform_n2_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n2(),
+            "kuniform-n2",
+            BBox::new(v2(-4.0, -4.0), v2(8.0, 8.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n2_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n2(),
+            "kuniform-n2(rot30,scale0.7)",
+            BBox::new(v2(-6.0, -6.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n2_deterministic() {
+        check_det(
+            &kuniform::kuniform_n2(),
+            "kuniform-n2",
+            BBox::new(v2(-3.0, -3.0), v2(6.0, 6.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch: the 3.12.12 orbit
+    /// ("31212", the dodecagon–dodecagon kiss points, 4 translation
+    /// classes, 156 interior points) and the 3.4.3.12 orbit ("34312",
+    /// the square corners, 4 classes, 169 interior points). Counts and
+    /// reps match the Python exact battery (tku5_n2j.py).
+    #[test]
+    fn kuniform_n2_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n2(),
+            &[
+                Figure {
+                    figure: "31212",
+                    count: 156,
+                    orbits: &[(0, 1366), (0, 2366), (1366, 0), (2366, 0)],
+                },
+                Figure {
+                    figure: "34312",
+                    count: 169,
+                    orbits: &[(500, 500), (500, 3232), (3232, 500), (3232, 3232)],
+                },
+            ],
+        );
+    }
 }
 #[cfg(all(
     test,
@@ -8802,6 +8861,7 @@ khatam_girih, kuniform, laves, pentagon1, pentagon2, pentagon3, pentagon6, penta
             ("kuniform-n5", kuniform::kuniform_n5()),
             ("kuniform-n1", kuniform::kuniform_n1()),
             ("kuniform-n13", kuniform::kuniform_n13()),
+            ("kuniform-n2", kuniform::kuniform_n2()),
             ("tetrakis-square", laves::tetrakis_square()),
             ("rhombille", laves::rhombille()),
             ("triakis-triangular", laves::triakis_triangular()),
