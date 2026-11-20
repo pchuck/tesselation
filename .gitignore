@@ -4,4 +4,4 @@ python/
 reference/
 # other..
 logs/
-scratch/
+tmp/
