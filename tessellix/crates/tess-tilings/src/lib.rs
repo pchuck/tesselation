@@ -142,6 +142,8 @@ pub mod split_triangle_grid;
 pub mod alcove_cut_grid;
 #[cfg(feature = "pavers")]
 pub mod stack_bond;
+#[cfg(feature = "pavers")]
+pub mod herringbone_45;
 #[cfg(feature = "pentagon2")]
 pub mod pentagon2;
 #[cfg(feature = "pentagon3")]
@@ -438,6 +440,7 @@ r = r.register(kuniform::kuniform_n12());
         r = r.register(split_triangle_grid::split_triangle_grid());
         r = r.register(alcove_cut_grid::alcove_cut_grid());
         r = r.register(stack_bond::stack_bond());
+        r = r.register(herringbone_45::herringbone_45());
     }
     {
         // Unconditional: the socolar feature exists in Cargo.toml
@@ -616,7 +619,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M114). 112 built-ins — 63 before
+// Census of today's taxonomy (M115). 113 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -624,9 +627,9 @@ mod tests {
         //   + 11 machine-dualized k-uniform duals (M98, M102, M106) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
-//   PentagonTypes 14, Islamic 21, Arrangements 6,
+//   PentagonTypes 14, Islamic 21, Arrangements 7,
 //   Quasiperiodic 10, Aperiodic 6, Nonperiodic 4.
-// Membership census 126 = 112 primaries + 14 secondaries (3 Laves
+// Membership census 127 = 113 primaries + 14 secondaries (3 Laves
         // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5) join the Pentagon tab as
         // typed secondary members, M122).
@@ -720,14 +723,17 @@ mod tests {
         // -> M114 Arrangements 5 -> 6 (stack-bond, the pmm stacked
         // 2:1 domino bond on the rectangular lattice <(2,0),(0,1)>;
         // one split domino per cell).
+        // -> M115 Arrangements 6 -> 7 (herringbone-45, the M40 bond in
+        // its 45-degree-laid canonical frame, pgg on the rectangular
+        // lattice <(0,2*sqrt(2)),(sqrt(2),0)>).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 15, 22, 17, 14, 21, 6, 10, 6, 4],
+vec![11, 15, 22, 17, 14, 21, 7, 10, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 112, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 126, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 113, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 127, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -3832,10 +3838,80 @@ fn pavers_exact_is_sym(
     true
 }
 
+/// Exact shape-set wallpaper-group probe for the rotated (non
+/// axis-aligned) paver data tables.
+///
+/// `pavers_exact_is_sym` keys dominoes by their axis-aligned bbox,
+/// which breaks once a cell is rotated 45°. This probe works with
+/// bare vertex sets instead: a candidate isometry `g = (M, v)` is a
+/// symmetry iff `M` maps the lattice basis into the tiling lattice
+/// and, for every source shape `S` in the cell list, the image
+/// `M·S + v` equals some target shape `T` translated by a lattice
+/// vector `p` — `p` is determined as the min-corner anchor (unique:
+/// a bounded shape has no nonzero self-translation). All coordinates
+/// are the table's integer P-coords, where the lattice basis, the
+/// shape vertices, and the translations are all integral.
+#[cfg(all(test, feature = "pavers"))]
+fn shape_set_is_sym(
+    m: [i64; 4], // M = [[m[0], m[1]], [m[2], m[3]]]
+    v: [i64; 2],
+    basis: &[(i64, i64); 2],
+    shapes: &[[[i64; 2]; 6]],
+    in_lattice: impl Fn(i64, i64) -> bool,
+) -> bool {
+    let mv = |p: [i64; 2]| [
+        m[0] * p[0] + m[1] * p[1],
+        m[2] * p[0] + m[3] * p[1],
+    ];
+    // M must map the lattice to itself; all candidates have det ±1, so
+    // checking the basis vectors suffices.
+    for &(bx, by) in basis {
+        let q = mv([bx, by]);
+        if !in_lattice(q[0], q[1]) {
+            return false;
+        }
+    }
+    for s in shapes {
+        let img: Vec<[i64; 2]> = s
+            .iter()
+            .map(|p| {
+                let q = mv(*p);
+                [q[0] + v[0], q[1] + v[1]]
+            })
+            .collect();
+        let img_minx = img.iter().map(|p| p[0]).min().unwrap();
+        let img_miny = img.iter().map(|p| p[1]).min().unwrap();
+        let mut matched = false;
+        for t in shapes {
+            let t_minx = t.iter().map(|p| p[0]).min().unwrap();
+            let t_miny = t.iter().map(|p| p[1]).min().unwrap();
+            let px = img_minx - t_minx;
+            let py = img_miny - t_miny;
+            if !in_lattice(px, py) {
+                continue;
+            }
+            let mut a = img.clone();
+            let mut b: Vec<[i64; 2]> =
+                t.iter().map(|p| [p[0] + px, p[1] + py]).collect();
+            a.sort_unstable();
+            b.sort_unstable();
+            if a == b {
+                matched = true;
+                break;
+            }
+        }
+        if !matched {
+            return false;
+        }
+    }
+    true
+}
+
 #[cfg(test)]
 #[cfg(feature = "pavers")]
 mod pavers_tests {
     use super::pavers_exact_is_sym;
+    use super::shape_set_is_sym;
     use super::tests::{check_covers, check_det, check_rotated};
     use crate::basketweave;
     use crate::herringbone;
@@ -3849,6 +3925,7 @@ mod pavers_tests {
     use crate::chiral_cut_honeycomb;
     use crate::split_triangle_grid;
     use crate::stack_bond;
+    use crate::herringbone_45;
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::ParamSet;
     use tess_core::tiling::{Query, Tiling};
@@ -4480,6 +4557,125 @@ mod pavers_tests {
             assert!(
                 !sym(m, v),
                 "{label} must NOT be a symmetry of the stack bond"
+            );
+        }
+    }
+
+    /// Herringbone-45 (M115) standard trio.
+    #[test]
+    fn herringbone_45_covers_region() {
+        check_covers(
+            &herringbone_45::herringbone_45(),
+            "herringbone-45",
+            BBox::new(v2(-4.0, -4.0), v2(8.0, 8.0)),
+        );
+    }
+
+    #[test]
+    fn herringbone_45_rotated_scaled() {
+        check_rotated(
+            &herringbone_45::herringbone_45(),
+            "herringbone-45(rot30,scale0.7)",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn herringbone_45_deterministic() {
+        check_det(
+            &herringbone_45::herringbone_45(),
+            "herringbone-45",
+            BBox::new(v2(-2.0, -2.0), v2(8.0, 6.0)),
+        );
+    }
+
+    /// Lattice-membership predicate for the herringbone-45 table, in
+    /// its integer P-coords: L'' = <(2,0),(0,4)> = { x even,
+    /// y ≡ 0 (mod 4) }; world = (√2/2)·P.
+    fn h45_in_lattice(x: i64, y: i64) -> bool {
+        x.rem_euclid(2) == 0 && y.rem_euclid(4) == 0
+    }
+
+    #[test]
+    fn herringbone_45_wallpaper_group_is_pgg() {
+        // Cell shapes in integer P-coords (world = (√2/2)·P), each in
+        // cyclic order; the shapes are rotated hexagons, so the probe
+        // uses the vertex-set criterion rather than the axis-aligned
+        // bbox probe.
+        let basis = [(2, 0), (0, 4)];
+        let shapes: [[[i64; 2]; 6]; 2] = [
+            [[0, 0], [1, 1], [2, 2], [1, 3], [0, 2], [-1, 1]],
+            [[2, 2], [3, 3], [2, 4], [1, 5], [0, 4], [1, 3]],
+        ];
+        let sym = |m: [i64; 4], v: [i64; 2]| {
+            shape_set_is_sym(m, v, &basis, &shapes, h45_in_lattice)
+        };
+
+        // pgg: translations L''; 2-folds at v ≡ (1,3) mod (2,4);
+        // vertical glide axes (MIRX, v ≡ (0,2) mod (2,4)); horizontal
+        // glide axes (MIRY, v ≡ (1,1) mod (2,4)); no mirrors, no
+        // 4-folds, no diagonal glides.
+        let expected = [
+            (M_ROT2, [1, 3], "rot2 center (1/2,3/2)"),
+            (M_ROT2, [3, 3], "rot2 center (3/2,3/2)"),
+            (M_ROT2, [-1, 3], "rot2 center (-1/2,3/2)"),
+            (M_ROT2, [1, 7], "rot2 center (1/2,7/2)"),
+            (M_ROT2, [1, -1], "rot2 center (1/2,-1/2)"),
+            (M_ROT2, [3, -1], "rot2 center (3/2,-1/2)"),
+            (M_ROT2, [-1, -1], "rot2 center (-1/2,-1/2)"),
+            (M_MIRX, [0, 2], "glide x=0, shift 1"),
+            (M_MIRX, [2, 2], "glide x=1, shift 1"),
+            (M_MIRX, [0, 6], "glide x=0, shift 3"),
+            (M_MIRX, [-2, 2], "glide x=-1, shift 1"),
+            (M_MIRX, [0, -2], "glide x=0, shift -1"),
+            (M_MIRY, [1, 1], "glide y=1/2, shift 1/2"),
+            (M_MIRY, [3, 1], "glide y=1/2, shift 3/2"),
+            (M_MIRY, [-1, 1], "glide y=1/2, shift -1/2"),
+            (M_MIRY, [1, 5], "glide y=5/2, shift 1/2"),
+            (M_MIRY, [1, -3], "glide y=-3/2, shift 1/2"),
+            (M_MIRY, [3, 5], "glide y=5/2, shift 3/2"),
+        ];
+        for (m, v, label) in expected {
+            assert!(sym(m, v), "{label} must be a symmetry of the 45° herringbone");
+        }
+
+        // No pure mirrors of any family (pgg is chiral): the MIRX
+        // mirror lines (v_y = 0 mod 4) and MIRY mirror lines (v_x
+        // even) are all absent, as are off-family glides, 4-folds,
+        // and diagonal glides.
+        let forbidden = [
+            (M_MIRX, [0, 0], "mir x=0"),
+            (M_MIRX, [2, 0], "mir x=1"),
+            (M_MIRX, [4, 0], "mir x=2"),
+            (M_MIRY, [0, 0], "mir y=0"),
+            (M_MIRY, [0, 4], "mir y=2"),
+            (M_MIRY, [2, 2], "mir y=1"),
+            // 2-folds off the (1,3) mod (2,4) family
+            (M_ROT2, [0, 0], "rot2(0,0)"),
+            (M_ROT2, [2, 0], "rot2(1,0)"),
+            (M_ROT2, [0, 4], "rot2(0,2)"),
+            (M_ROT2, [1, 1], "rot2(1/2,1/2)"),
+            (M_ROT2, [2, 2], "rot2(1,1)"),
+            (M_ROT2, [1, 5], "rot2(1/2,5/2)"),
+            // no 4-folds
+            (M_ROT4, [0, 0], "rot4(0,0)"),
+            (M_ROT4, [2, 0], "rot4(1,0)"),
+            (M_ROT4, [1, 3], "rot4 at a 2-fold"),
+            (M_ROT4, [0, 4], "rot4(0,2)"),
+            // no diagonal mirrors or glides
+            (M_DIAG, [0, 0], "glide/mir y=x"),
+            (M_DIAG, [2, 0], "glide/mir y=x-1"),
+            (M_DIAG, [1, 1], "glide/mir y=x+1/2"),
+            (M_ANTI, [0, 0], "glide/mir y=-x"),
+            (M_ANTI, [2, 0], "glide/mir y=-x+1"),
+            (M_ANTI, [1, 1], "glide/mir y=-x+1/2"),
+        ];
+        for (m, v, label) in forbidden {
+            assert!(
+                !sym(m, v),
+                "{label} must NOT be a symmetry of the 45° herringbone"
             );
         }
     }
@@ -8307,6 +8503,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
         pic_3_12_12,
         pic_3_6_3_6, pic_4_8_8, running_bond, shifted_trapezoid_courses,
         split_triangle_grid, square, stack_bond,
+        herringbone_45,
         stepped_hexominoes, triangle, trapezoid_courses, wavy_courses, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
@@ -8458,6 +8655,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
                 alcove_cut_grid::alcove_cut_grid(),
             ),
             ("stack-bond", stack_bond::stack_bond()),
+            ("herringbone-45", herringbone_45::herringbone_45()),
             ("pentagon-2", pentagon2::spec()),
             ("pentagon-3", pentagon3::spec()),
             ("pentagon-6", pentagon6::spec()),
