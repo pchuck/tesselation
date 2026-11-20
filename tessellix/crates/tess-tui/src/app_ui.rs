@@ -1734,7 +1734,7 @@ assert_eq!(counts, vec![11, 17, 24, 17, 15, 21, 8, 10, 6, 4]);
             .iter()
             .position(|t| t.category == TilingCategory::TwoUniform)
             .unwrap()];
-        assert_eq!(tu.cards.len(), 15);
+        assert_eq!(tu.cards.len(), 17);
         let configs: Vec<Option<&'static str>> =
             tu.cards.iter().map(|c| c.class.vertex_config).collect();
         assert!(
@@ -1767,7 +1767,7 @@ assert_eq!(counts, vec![11, 17, 24, 17, 15, 21, 8, 10, 6, 4]);
             .iter()
             .position(|t| t.category == TilingCategory::Laves)
             .unwrap()];
-        assert_eq!(lv.cards.len(), 22);
+        assert_eq!(lv.cards.len(), 24);
         let ranks: Vec<Option<u8>> = lv.cards.iter().map(|c| c.class.laves_rank).collect();
         let sorted = ranks.windows(2).all(|w| w[0] <= w[1]);
         assert!(sorted, "laves_rank must be non-decreasing: {ranks:?}");
