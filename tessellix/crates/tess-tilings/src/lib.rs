@@ -140,6 +140,8 @@ pub mod chiral_cut_honeycomb;
 pub mod split_triangle_grid;
 #[cfg(feature = "pavers")]
 pub mod alcove_cut_grid;
+#[cfg(feature = "pavers")]
+pub mod stack_bond;
 #[cfg(feature = "pentagon2")]
 pub mod pentagon2;
 #[cfg(feature = "pentagon3")]
@@ -435,6 +437,7 @@ r = r.register(kuniform::kuniform_n12());
         r = r.register(chiral_cut_honeycomb::chiral_cut_honeycomb());
         r = r.register(split_triangle_grid::split_triangle_grid());
         r = r.register(alcove_cut_grid::alcove_cut_grid());
+        r = r.register(stack_bond::stack_bond());
     }
     {
         // Unconditional: the socolar feature exists in Cargo.toml
@@ -613,7 +616,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M111). 111 built-ins — 63 before
+// Census of today's taxonomy (M114). 112 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -621,9 +624,9 @@ mod tests {
         //   + 11 machine-dualized k-uniform duals (M98, M102, M106) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
-//   PentagonTypes 14, Islamic 21, Arrangements 5,
+//   PentagonTypes 14, Islamic 21, Arrangements 6,
 //   Quasiperiodic 10, Aperiodic 6, Nonperiodic 4.
-// Membership census 125 = 111 primaries + 14 secondaries (3 Laves
+// Membership census 126 = 112 primaries + 14 secondaries (3 Laves
         // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5) join the Pentagon tab as
         // typed secondary members, M122).
@@ -714,14 +717,17 @@ mod tests {
         // centered lattice ⟨(L/2,L/2),(L/2,−L/2)⟩; PATTERNS.MD §66 —
         // the fork's provisional claim, number free at landing;
         // landed after M110).
+        // -> M114 Arrangements 5 -> 6 (stack-bond, the pmm stacked
+        // 2:1 domino bond on the rectangular lattice <(2,0),(0,1)>;
+        // one split domino per cell).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 15, 22, 17, 14, 21, 5, 10, 6, 4],
+vec![11, 15, 22, 17, 14, 21, 6, 10, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 111, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 125, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 112, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 126, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -3842,6 +3848,7 @@ mod pavers_tests {
     use crate::alcove_cut_grid;
     use crate::chiral_cut_honeycomb;
     use crate::split_triangle_grid;
+    use crate::stack_bond;
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::ParamSet;
     use tess_core::tiling::{Query, Tiling};
@@ -4345,6 +4352,134 @@ mod pavers_tests {
             assert!(
                 !sym(m, v),
                 "{label} must NOT be a symmetry of the running bond"
+            );
+        }
+    }
+
+    /// Stack-bond (M114) standard trio.
+    #[test]
+    fn stack_bond_covers_region() {
+        check_covers(
+            &stack_bond::stack_bond(),
+            "stack-bond",
+            BBox::new(v2(-3.0, -2.0), v2(9.0, 6.0)),
+        );
+    }
+
+    #[test]
+    fn stack_bond_rotated_scaled() {
+        check_rotated(
+            &stack_bond::stack_bond(),
+            "stack-bond(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn stack_bond_deterministic() {
+        check_det(
+            &stack_bond::stack_bond(),
+            "stack-bond",
+            BBox::new(v2(-2.0, -1.0), v2(8.0, 5.0)),
+        );
+    }
+
+    /// Lattice-membership / origin-set predicates for the stack-bond
+    /// table, in doubled coordinates. L = <(4,0),(0,2)>; domino
+    /// origins = L (all horizontal — there are no vertical dominoes).
+    fn sb_in_lattice(x: i64, y: i64) -> bool {
+        x.rem_euclid(4) == 0 && y.rem_euclid(2) == 0
+    }
+
+    fn sb_in_origin(kind: u8, x: i64, y: i64) -> bool {
+        match kind {
+            0 => sb_in_lattice(x, y),
+            _ => false, // no vertical dominoes in the stack bond
+        }
+    }
+
+    #[test]
+    fn stack_bond_wallpaper_group_is_pmm() {
+        // Unit-cell domino in doubled coordinates: H (0,0);
+        // kind 0 = H.
+        let basis = [(4, 0), (0, 2)];
+        let cells: [(i64, i64, i64, i64, u8); 1] = [(0, 0, 4, 2, 0)];
+        let sym = |m: [i64; 4], v: [i64; 2]| {
+            pavers_exact_is_sym(m, v, &basis, &cells, sb_in_lattice, sb_in_origin)
+        };
+
+        // Mirrors at the integer x-axes and the half-integer
+        // y-axes (row boundaries and row midlines); 2-fold centers at
+        // every mirror intersection (k, n/2).
+        let expected = [
+            (M_MIRX, [0, 0], "mir_x(0)"),
+            (M_MIRX, [4, 0], "mir_x(1)"),
+            (M_MIRX, [8, 0], "mir_x(2)"),
+            (M_MIRX, [-4, 0], "mir_x(-1)"),
+            (M_MIRX, [-8, 0], "mir_x(-2)"),
+            (M_MIRY, [0, 0], "mir_y(0)"),
+            (M_MIRY, [0, 2], "mir_y(1/2)"),
+            (M_MIRY, [0, 4], "mir_y(1)"),
+            (M_MIRY, [0, 6], "mir_y(3/2)"),
+            (M_MIRY, [0, -2], "mir_y(-1/2)"),
+            (M_MIRY, [0, -4], "mir_y(-1)"),
+            // 2-folds at the mirror intersections (k, n/2)
+            (M_ROT2, [0, 0], "rot2(0,0)"),
+            (M_ROT2, [4, 0], "rot2(1,0)"),
+            (M_ROT2, [0, 2], "rot2(0,1/2)"),
+            (M_ROT2, [4, 2], "rot2(1,1/2)"),
+            (M_ROT2, [8, 4], "rot2(2,1)"),
+            (M_ROT2, [-4, 6], "rot2(-1,3/2)"),
+            (M_ROT2, [0, -2], "rot2(0,-1/2)"),
+            (M_ROT2, [12, -4], "rot2(3,-1)"),
+        ];
+        for (m, v, label) in expected {
+            assert!(
+                sym(m, v),
+                "{label} must be a symmetry of the pmm stack bond"
+            );
+        }
+
+        // No half-integer x-mirrors, no y-mirrors off y = n/2, no
+        // 2-folds off the (k, n/2) grid, no 4-folds, no diagonal
+        // mirrors, no glides: this is what pins pmm (vs cmm / p4m /
+        // pgg).
+        let forbidden = [
+            // half-integer x-axes are not mirrors
+            (M_MIRX, [2, 0], "mir_xhalf(1/2)"),
+            (M_MIRX, [6, 0], "mir_xhalf(3/2)"),
+            (M_MIRX, [-2, 0], "mir_xhalf(-1/2)"),
+            // y-mirrors only at y = n/2
+            (M_MIRY, [0, 1], "mir_y(1/4)"),
+            (M_MIRY, [0, 3], "mir_y(3/4)"),
+            (M_MIRY, [0, 5], "mir_y(5/4)"),
+            // 2-folds only at the (k, n/2) intersections
+            (M_ROT2, [2, 0], "rot2(1/2,0)"),
+            (M_ROT2, [2, 2], "rot2(1/2,1/2)"),
+            (M_ROT2, [6, 2], "rot2(3/2,1/2)"),
+            (M_ROT2, [0, 1], "rot2(0,1/4)"),
+            (M_ROT2, [4, 1], "rot2(1,1/4)"),
+            // no 4-folds
+            (M_ROT4, [0, 0], "rot4(0,0)"),
+            (M_ROT4, [4, 0], "rot4(1,0)"),
+            (M_ROT4, [0, 2], "rot4(0,1/2)"),
+            // no diagonal mirrors
+            (M_DIAG, [0, 0], "mir_d(0)"),
+            (M_DIAG, [4, 0], "mir_d(1)"),
+            (M_DIAG, [2, 2], "mir_d(1/2)"),
+            (M_ANTI, [0, 0], "mir_a(0)"),
+            (M_ANTI, [4, 0], "mir_a(1)"),
+            (M_ANTI, [2, 2], "mir_a(1/2)"),
+            // no glides (the rigid sibling of the running bond's cmm)
+            (M_MIRX, [2, 2], "glide(1-x, y+1)"),
+            (M_MIRY, [2, 0], "glide(x+1, -y)"),
+        ];
+        for (m, v, label) in forbidden {
+            assert!(
+                !sym(m, v),
+                "{label} must NOT be a symmetry of the stack bond"
             );
         }
     }
@@ -8171,7 +8306,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
         pentagon14, pentagon15,
         pic_3_12_12,
         pic_3_6_3_6, pic_4_8_8, running_bond, shifted_trapezoid_courses,
-        split_triangle_grid, square,
+        split_triangle_grid, square, stack_bond,
         stepped_hexominoes, triangle, trapezoid_courses, wavy_courses, windmill,
     };
     use tess_core::geometry::{BBox, Polygon, Vec2};
@@ -8322,6 +8457,7 @@ khatam_girih, kuniform, laves, pentagon2, pentagon3, pentagon6, pentagon7, penta
                 "alcove-cut-grid",
                 alcove_cut_grid::alcove_cut_grid(),
             ),
+            ("stack-bond", stack_bond::stack_bond()),
             ("pentagon-2", pentagon2::spec()),
             ("pentagon-3", pentagon3::spec()),
             ("pentagon-6", pentagon6::spec()),

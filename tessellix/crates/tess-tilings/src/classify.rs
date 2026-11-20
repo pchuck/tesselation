@@ -374,6 +374,13 @@ pub fn classification(id: &str) -> TilingClass {
             cell_content: Some("1 domino per cell"),
             ..TilingClass::EMPTY
         },
+        "stack-bond" => TilingClass {
+            families: &["Arrangement"],
+            method: Some("paver bond"),
+            tile_set: Some("2:1 dominoes"),
+            cell_content: Some("1 domino per cell"),
+            ..TilingClass::EMPTY
+        },
         "basketweave" => TilingClass {
             families: &["Arrangement"],
             method: Some("paver bond"),
