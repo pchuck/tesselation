@@ -52,6 +52,8 @@ pub mod rosette_transform;
 pub mod hankin_3_6_3_6;
 #[cfg(feature = "hankin_ext")]
 pub mod hankin_3_4_6_4;
+#[cfg(feature = "hankin_ext")]
+pub mod hankin_3_3_3_4_4;
 #[cfg(feature = "girih_qc")]
 pub mod girih_qc;
 #[cfg(feature = "girih_sc")]
@@ -342,6 +344,7 @@ r = r.register(hankin_3_12_12::hankin_3_12_12());
 r = r.register(hankin_4_8_8_rosette_transform::hankin_4_8_8_rosette_transform());
         r = r.register(hankin_3_6_3_6::hankin_3_6_3_6());
         r = r.register(hankin_3_4_6_4::hankin_3_4_6_4());
+        r = r.register(hankin_3_3_3_4_4::hankin_3_3_3_4_4());
     }
     #[cfg(feature = "khatam_girih")]
     {
@@ -589,7 +592,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M108). 107 built-ins — 63 before
+// Census of today's taxonomy (M107). 108 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -597,9 +600,9 @@ mod tests {
         //   + 11 machine-dualized k-uniform duals (M98, M102, M106) +
         //   3 regular secondaries), Wallpaper 17 (the group catalog —
         //   one card per represented group; M85 completed it),
-//   PentagonTypes 12, Islamic 19, Arrangements 5,
+//   PentagonTypes 12, Islamic 20, Arrangements 5,
 //   Quasiperiodic 8, Aperiodic 6, Nonperiodic 4.
-// Membership census 119 = 107 primaries + 12 secondaries (3 Laves
+// Membership census 120 = 108 primaries + 12 secondaries (3 Laves
         // + 9 Wallpaper).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
@@ -666,14 +669,18 @@ mod tests {
         // sibling; torus-exact t/e vs the wiki parentheticals
         // (3,5)/(4,5), PATTERNS.MD §62 — the fork's provisional §61
         // renumbered by landing order).
+        // -> M107 Islamic 19 -> 20 (hankin-3-3-3-4-4, the hankin
+        // inference entry on the elongated-triangular 3.3.3.4.4
+        // substrate; θK = 60°, cmm, PATTERNS.MD §63 — the fork's
+        // provisional §65 renumbered by landing order).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-            vec![11, 15, 22, 17, 12, 19, 5, 8, 6, 4],
+            vec![11, 15, 22, 17, 12, 20, 5, 8, 6, 4],
             "per-tab census (update when adding tilings)"
         );
-        assert_eq!(r.len(), 107, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 119, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 108, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 120, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -9968,6 +9975,7 @@ mod pic_3_12_12_tests {
 mod hankin_engine_tests {
     use super::hankin;
     use super::hankin_3_12_12;
+    use super::hankin_3_3_3_4_4;
     use super::hankin_3_4_6_4;
     use super::hankin_3_6_3_6;
     use super::hankin_4_6_12;
@@ -10238,6 +10246,43 @@ mod hankin_engine_tests {
     }
 
     #[test]
+    fn engine_matches_emission_3_3_3_4_4() {
+        // M107: no 40-dps Python prototype for this substrate — the
+        // expectations were emitted from the Rust engine itself, so
+        // this test pins the self-consistency of that emission. All
+        // three tile instances pair completely at θK = 60°: both
+        // triangles in the side-1/2 4-subdivision limit (3 pairs, 4
+        // equilateral faces each) and the square in its 5-face motif
+        // (4 pairs, four corner quadrilaterals + central octagon).
+        let (cells, report) = hankin::build_cells(
+            &hankin_3_3_3_4_4::tiles(),
+            hankin_3_3_3_4_4::THETA_E_DEG,
+            hankin_3_3_3_4_4::DELTA,
+        );
+        assert!(report.complete, "all three tiles must pair completely");
+        let lens: Vec<usize> = report.per_tile.iter().map(|r| r.faces).collect();
+        assert_eq!(lens, vec![4, 4, 5], "face census per tile instance");
+        let rays: Vec<usize> = report.per_tile.iter().map(|r| r.rays).collect();
+        let pairs: Vec<usize> = report.per_tile.iter().map(|r| r.pairs).collect();
+        assert_eq!(rays, vec![6, 6, 8], "rays per tile instance");
+        assert_eq!(pairs, vec![3, 3, 4], "pairs per tile instance");
+        for r in &report.per_tile {
+            assert!(r.complete, "every tile pairs completely");
+            assert!((r.area_sum - r.tile_area).abs() < 1e-9);
+        }
+        let mut expected: Vec<Vec<Vec2>> = Vec::new();
+        for k in 0..3 {
+            expected.extend(match k {
+                0 => expected_faces(hankin_3_3_3_4_4::EXPECTED_0_VERTS, hankin_3_3_3_4_4::EXPECTED_0_LENS),
+                1 => expected_faces(hankin_3_3_3_4_4::EXPECTED_1_VERTS, hankin_3_3_3_4_4::EXPECTED_1_LENS),
+                _ => expected_faces(hankin_3_3_3_4_4::EXPECTED_2_VERTS, hankin_3_3_3_4_4::EXPECTED_2_LENS),
+            });
+        }
+        let actual: Vec<Vec<Vec2>> = cells.iter().map(|c| c.poly.pts.clone()).collect();
+        assert_faces_match(&actual, &expected, "hankin-3-3-3-4-4");
+    }
+
+    #[test]
     fn theta_parameters_are_conjugate() {
         // Engine angle θe = 90° − Kaplan contact angle θK, for every
         // shipped configuration (the constants were emitted separately,
@@ -10253,6 +10298,7 @@ assert!((hankin_4_8_8_rosette_transform::THETA_E_DEG
             < 1e-12);
         assert!((hankin_3_6_3_6::THETA_E_DEG - (90.0 - hankin_3_6_3_6::THETA_K_DEG)).abs() < 1e-12);
         assert!((hankin_3_4_6_4::THETA_E_DEG - (90.0 - hankin_3_4_6_4::THETA_K_DEG)).abs() < 1e-12);
+        assert!((hankin_3_3_3_4_4::THETA_E_DEG - (90.0 - hankin_3_3_3_4_4::THETA_K_DEG)).abs() < 1e-12);
     }
 }
 
@@ -10724,6 +10770,74 @@ mod hankin_3_4_6_4_tests {
         assert_eq!(t.id, "hankin-3-4-6-4");
         assert_eq!(t.group, WallpaperGroup::P6m);
         assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
+        assert_eq!(t.category, TilingCategory::Islamic);
+        assert_eq!(t.secondary, &[]);
+    }
+}
+
+/// M107 hankin-3-3-3-4-4 tests: registry-level invariants (cell census,
+/// seed orbits, area identity, symmetry metadata, coverage).
+#[cfg(all(test, feature = "hankin_ext"))]
+mod hankin_3_3_3_4_4_tests {
+    use super::hankin_3_3_3_4_4::hankin_3_3_3_4_4;
+    use super::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    #[test]
+    fn hankin_3_3_3_4_4_covers_region() {
+        check_covers(
+            &hankin_3_3_3_4_4(),
+            "hankin-3-3-3-4-4",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_3_3_3_4_4_rotated_scaled() {
+        check_rotated(
+            &hankin_3_3_3_4_4(),
+            "hankin-3-3-3-4-4(rot20,scale0.6)",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn hankin_3_3_3_4_4_deterministic() {
+        check_det(
+            &hankin_3_3_3_4_4(),
+            "hankin-3-3-3-4-4",
+            BBox::new(Vec2::new(-12.0, -9.0), Vec2::new(12.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_3_3_3_4_4_unit_structure() {
+        let t = hankin_3_3_3_4_4();
+        assert_eq!(t.cells.len(), 13, "4 + 4 + 5 faces per lattice cell");
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(
+            seeds,
+            crate::hankin_3_3_3_4_4::EXPECTED_SEEDS.to_vec(),
+            "seed layout"
+        );
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        // √3 as a literal: std's SQRT_3 constant is still unstable.
+        const RT3: f64 = 1.732_050_807_568_877_2;
+        assert!((det - (1.0 + 0.5 * RT3)).abs() < 1e-9, "per-cell area 1 + √3/2");
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-9, "Σ areas {sum} vs det {det}");
+    }
+
+    #[test]
+    fn hankin_3_3_3_4_4_symmetry_metadata() {
+        let t = hankin_3_3_3_4_4();
+        assert_eq!(t.id, "hankin-3-3-3-4-4");
+        assert_eq!(t.group, WallpaperGroup::Cmm);
+        assert_eq!(t.lattice_kind, LatticeKind::CenteredRectangular);
         assert_eq!(t.category, TilingCategory::Islamic);
         assert_eq!(t.secondary, &[]);
     }

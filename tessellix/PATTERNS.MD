@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (107 tilings)
+## Implemented (108 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -68,6 +68,7 @@ every dual is the face-centroid dual of an exact primal table.
 | `hankin-3-12-12` | Hankin twelvefold khatam (3.12.12) | p6m | M99 inference on 3.12.12 (θK = 45°, δ = 0): 24-gon star core + 12 petals per dodecagon, 4-pointed stars + hexagon tips per triangle orbit; exact Q(√3) (§53) |
 | `hankin-square-two-point` | Hankin two-point square weave (4.4.4.4) | cmm | M99 two-point inference on the unit square (θK = 45°, δ = 0.5): decagonal star per tile — 4 corner triangles + 2 pentagons + 10-gon core (§54) |
 | `hankin-4-8-8-rosette-transform` | Hankin rosette-transform khatam | p4m | Kaplan rosette transform (diss. §3.8) on the 4.8.8 substrate at θK = 45°, δ = 0: each octagon → concentric inner octagon (r′ = r·cos(π/8)/(1+sin(π/8)), rotated π/8, spokes = half the inner side) + 8 pentagons; each square → 4 half-squares of side 1/2 (all four bisectors pass through the centre — Kaplan's cluster heuristic fires: 4 of the 6 bisector-pair intersections, one cluster) — 93-tile transformed table per ⟨(1+√2,0),(0,1+√2)⟩ cell (16 triangles, 36 quads, 32 pentagons, 8 hexagons, one 16-gon), edge-to-edge (0 unpaired, 0 T-junctions, w = 4), area census |det| = 3+2√2, exact Q(√2); then M94 inference at θE = 45°; transformed table p4m-exact to 6.5e-16 (M99) |
+| `hankin-3-3-3-4-4` | Hankin elongated-triangular motif (3.3.3.4.4) | cmm | M107 inference on the elongated-triangular 3.3.3.4.4 substrate (θK = 60°, δ = 0; all-CCW in-cell table — the CW down-triangle and CW square emit outward rays and pair with nothing at every probed angle): both triangle tiles in the side-1/2 4-subdivision limit (4 equilateral faces each), the square as four corner quadrilaterals + central octagon — 13 faces per cell ⟨(1,0),(1/2,1+√3/2)⟩ (det 1+√3/2), exact Q(√3); cmm verified exactly on a 551-face window (§63) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `najm-63-2e-0-3e-ac` | Najm template ([6,3]; 2e, 0, 3e; AC) | p6m | najm-generator substrate (diss. §3.6.1 Fig. 3.21): dodecagons + enneagons sharing equal chords, x = 2/(cot 15° + cot 20°), concave equilateral bowties (70°/220°) at the 2-fold points; 6 tiles/cell, |det| = 3√3/2 (M99) |
 | `najm-44-3e-0-0-a` | Najm template ([4,4]; 3e, 0, 0; A) | p4m | najm-generator substrate (diss. §3.6.1 Fig. 3.22): dodecagons r = √6−√2 on 2Z² sharing chords across odd grid lines + concave equilateral 4-pointed stars (side 4−2√3, 60° tips, 210° notches); exact Q(√2,√3) (M99) |
@@ -3924,6 +3925,85 @@ documentation pending).
   ⟨((3+√3)/2, (3+√3)/2), (−(3+√3)/2, (3+√3)/2)⟩, area 6+3√3,
   8 vertices/cell; combinatorial derivation open).
 
+### 63. Hankin elongated-triangular motif (3.3.3.4.4) ✅ (M107)
+
+- **Motif:** the eighth configuration of the M94 inference engine
+  (`hankin::build_cells`, feature `hankin_ext`) — the first on the
+  elongated-triangular 3.3.3.4.4 substrate (alternating rows of
+  unit equilateral triangles and unit squares, cmm; one lattice
+  cell ⟨(1,0),(1/2,1+√3/2)⟩ = two triangles + one square, det
+  1+√3/2 exact in Q(√3)). Single-point contacts (δ = 0), contact
+  angle θK = 60° (θe = 30°): rays from each edge midpoint lean in
+  at 60° to the edge, greedy min-cost pairing (Kaplan §3.4), planar
+  arrangement against the tile boundary. The down-triangle instance
+  runs CCW in the engine's table: the archimedean module stores it
+  CW, and a CW tile emits outward-pointing rays that pair with
+  nothing at every probed angle (1 face, 0 pairs), so the all-CCW
+  in-cell table is the one that produces a paired motif.
+- **Angle choice (θK ∈ {30°, 45°, 60°, 67.5°, 90°} probed, on the
+  all-CCW in-cell table):** the two triangle tiles pair completely
+  at 30°–67.5° (6 rays, 3 pairs, 4 faces — measured minimum
+  interior angle 30.0° / 45.0° / 60.0° / 45.0°; at 90° the 3
+  spokes meet at the incenter and the pairing degenerates to
+  2 pairs / 2 faces, incomplete). The square pairs completely at
+  30°–67.5° (8 rays, 4 pairs, 5 faces — four corner quadrilaterals
+  + central octagon); at 90° the star collapses to 4 faces. The
+  CW square and CW down-triangle never pair (outward rays, 0 pairs
+  at every probed angle — documented reject). 60° is chosen: the
+  largest minimum interior angle among the complete candidates
+  (60° — both triangles sit in the classical side-1/2
+  4-subdivision limit, orientation-invariant, both instances
+  congruent).
+- **Cell structure:** 13 faces per lattice cell — 8 side-1/2
+  equilateral triangles (area √3/16 each, seed 0 — both
+  subdivision orbits share the (3-gon, √3/16) seed signature), 4
+  square corner quadrilaterals (area (3−√3)/8 each, seed 1), 1
+  central octagon (area (√3−1)/2, seed 2); Σ = 1+√3/2 = |det|
+  exact. Per-instance face/ray/pair censuses [4,4,5] / [6,6,8] /
+  [3,3,4]; all three instances pair completely, so the whole-cell
+  report is "complete". All face vertices lie in Z[1/24] +
+  Z[1/48]·(√3/2) (a/24 + b√3/96, (a,b) ∈ ℤ² unique), verified
+  exactly on a ±9-lattice window of 4693 faces.
+- **Rust:** `hankin_3_3_3_4_4()` in `hankin_3_3_3_4_4.rs`,
+  registered after `hankin_3_4_6_4`. Honest deviation: no 40-dps
+  Python prototype for this substrate — the template tiles and the
+  EXPECTED_* constants were machine-emitted from the Rust engine
+  itself (the angle choice and the θK survey were made on a faithful
+  f64 port of the engine plus an exact Q(√3) symmetry battery), so
+  the engine battery is a self-consistency pin, not an independent
+  cross-check (documented in the module header). Distinct from
+  `elongated-triangular`: same 3.3.3.4.4 substrate, different
+  construction (greedy inference vs. the Archimedean tiling) and a
+  different partition. 6 new tests (1 engine self-consistency: face
+  equivalence against the emitted arrays at 1e-9 + per-instance
+  ray/pair censuses + the θe/θK conjugacy pin; 5 registry:
+  covers_region / rotated_scaled / deterministic / unit_structure
+  (13 cells, seed layout {0×8, 1×4, 1×2}, det = 1+√3/2, Σ areas =
+  det at 1e-9) / symmetry_metadata (cmm, centered rectangular,
+  Islamic)).
+- **Symmetry:** cmm verified exactly (exact Q(√3) face-maps —
+  faces re-canonicalized to CCW / minimum-vertex before keying,
+  rigid images re-canonicalized the same way; the 551-face disk
+  about the square center C = (1, H+1/2) with adaptive R² =
+  24882743452934203698152347053/10²⁶ — two face centroids sit at
+  exactly distance 5, so the probe radius is the strict midpoint of
+  the nearest in/out squared distances): all 20 cmm elements
+  0-mismatch on the face multiset — translations ⟨a1 = (1,0),
+  a2 = (1/2,1+H)⟩; two-fold orbits {C+L} ∪ {C+a1+L} ∪
+  {(1/2,H+1/2)+L} (on the mirror lines) ∪ {(±1/4,H/2)+L} ∪
+  {(1/4,H/2+1+H)} (on the glides); mirrors x = k/2 (all k) and
+  y = −1/2+k(1+H); glides y = H/2+k(1+H) of shift a1/2. Negative
+  controls fail: rot90 about C (exact), rot30/rot60 about the
+  triangle centroids, the off-orbit mirror y = H/2, the off-orbit
+  glides. The substrate's own cmm group survives the hankin
+  partition.
+- **Census:** 100 → 101 tilings, 112 → 113 memberships (Islamic 19
+  → 20), 690 → 696 tests.
+- **Status:** landed (M107, fork-local numbering — renumbered at
+  integration). 101 tilings, 113 memberships, 696 tests. Full bar
+  green: cargo check + clippy (both target sets) zero warnings,
+  cargo test --workspace --all-features 696/696.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,
@@ -5700,3 +5780,37 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   base). Full bar green: cargo check + clippy (both target sets)
   zero warnings, cargo test --workspace --all-features 715/715.
   Details in §62.
+- 2026-11-20 — M107 Hankin elongated-triangular motif (3.3.3.4.4) ✅
+  (§63): the eighth configuration of the M94 inference engine —
+  `hankin-3-3-3-4-4` (θK = 60°, δ = 0) on the elongated-triangular
+  3.3.3.4.4 substrate (cmm, cell ⟨(1,0),(1/2,1+√3/2)⟩, det
+  1+√3/2): both triangle tiles in the side-1/2 4-subdivision limit
+  (six rays, 3 pairs, four equilateral faces each), the square as a
+  four-corner-quadrilateral + central-octagon motif (8 rays, 4
+  pairs, 5 faces) — 13 faces per lattice cell, exact Q(√3) (all
+  vertices on the a/24 + b√3/96 grid, Σ = 1+√3/2 = det). θK = 60°
+  chosen over 30° (30° slivers), 45°/67.5° (sharper 45° minimum
+  interior angle), 90° (triangle pairing degenerates — the 3 spokes
+  meet at the incenter, 2 pairs / 2 faces; the square star
+  collapses to 4 faces); the CW down-triangle and CW square never
+  pair (outward rays, 0 pairs at every probed angle) — the all-CCW
+  in-cell table is the one that produces a paired motif. No 40-dps
+  Python prototype: expected-face constants machine-emitted from the
+  Rust engine (self-consistency pin — documented in the module
+  header). cmm verified exactly over Q(√3) on a 551-face disk about
+  the square center C = (1, H+1/2) (adaptive R² =
+  24882743452934203698152347053/10²⁶ — two face centroids at
+  exactly distance 5; strict midpoint radius; faces re-canonicalized
+  to CCW / minimum-vertex before keying): all 20 cmm elements
+  0-mismatch (translations ⟨a1, a2⟩; 2-fold orbits
+  {C+L} ∪ {C+a1+L} ∪ {(1/2,H+1/2)+L} ∪ {(±1/4,H/2)+L} ∪
+  {(1/4,H/2+1+H)}; mirrors x=k/2 and y=−1/2+k(1+H); glides
+  y=H/2+k(1+H) shift a1/2); negative controls fail (rot90 about C,
+  rot30/60 about the triangle centroids, off-orbit mirror y = H/2,
+  off-orbit glides). 6 new tests (1 engine self-consistency + 5
+  registry). Census: 107 → 108 tilings, 119 → 120 memberships,
+  Islamic 19 → 20, 715 → 721 tests (landed on main after the M108
+  landing; the fork's step numbers were on its own base). Full bar
+  green: cargo check + clippy (both target sets) zero warnings,
+  cargo test --workspace --all-features 721/721. Details in §63
+  (renumbered from the fork's provisional §65 by landing order).

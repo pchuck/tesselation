@@ -1056,7 +1056,22 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   mismatches at 1e-6). θK = 60° chosen over 30° (slivers), 45°
   (no hexagon star; asymmetric triangle motifs), 67.5° (sharper),
   90° (star collapse). Deviations documented in the module
-  header. See PATTERNS.MD §58.
+  header. See PATTERNS.MD §58. An eighth configuration landed in
+  M107 — `hankin-3-3-3-4-4` on the elongated-triangular 3.3.3.4.4
+  substrate (θK = 60°, δ = 0; the all-CCW in-cell table — the CW
+  down-triangle and CW square emit outward rays and pair with
+  nothing at every probed angle): both triangle tiles in the
+  side-1/2 4-subdivision limit (4 equilateral faces each) and the
+  square as four corner quadrilaterals + a central octagon (5
+  faces) — 13 faces per lattice cell
+  ⟨(1,0),(1/2,1+√3/2)⟩ (det 1+√3/2, exact Q(√3)); cmm verified
+  exactly over Q(√3) on a 551-face disk (adaptive R² — two face
+  centroids at exactly distance 5; strict midpoint radius), all
+  20 cmm elements 0-mismatch, negative controls fail. θK = 60°
+  chosen over 30° (30° slivers), 45°/67.5° (sharper 45° minimum
+  interior angle), 90° (triangle pairing degenerates, square star
+  collapse). Deviations documented in the module header. See
+  PATTERNS.MD §63.
 
 ### 15. Random/statistical tilings (blocked on a determinism policy)
 

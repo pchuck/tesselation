@@ -127,7 +127,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-107 built-in tilings (119 tab memberships), all discoverable in both UIs
+108 built-in tilings (120 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -136,7 +136,7 @@ ten tabs:
 **Uniform** (11), **Two-Uniform** (15), **Laves / Catalan duals** (22,
 19 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
-**Pentagon Types** (12), **Islamic** (19), **Arrangements** (5),
+**Pentagon Types** (12), **Islamic** (20), **Arrangements** (5),
 **Quasiperiodic** (8: Penrose family, Ammann–Beenker, Stampfli, shield,
 girih Darb-i Imam), **Aperiodic** (6: einstein family, pinwheel, Taylor-Socolar,
 Jeandel-Rao 11-tile Wang tiles), and
@@ -182,6 +182,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `hankin-4-8-8-rosette-transform` | Hankin rosette-transform khatam | Kaplan rosette transform (§3.8) of the 4.8.8 substrate at θK = 45° — each octagon maps to a concentric inner octagon + 8 pentagons (r′ radius, spokes = half inner side), each square to 4 half-squares (bisectors meet in a centre cluster) — then Hankin motif inference (θE = 45°) on the transformed table: 16 triangles, 36 quads, 32 pentagons, 8 hexagons and one 16-gon per cell ⟨(1+√2,0),(0,1+√2)⟩ (det 3+2√2), exact Q(√2); the cell table is p4m-exact to 6.5e-16 (M99) | p4m | square |
 | `hankin-3-6-3-6` | Hankin sixfold hexagram (3.6.3.6) | Hankin greedy-inference motif on the trihexagonal (3.6.3.6) substrate (θK = 60°, δ = 0): each hexagon becomes a regular hexagram — a 12-gon core with 60° tips and 240° notches (vertices alternating on circles of radius 1/2 and √3/2) plus six 60°-lozenge rhombi (7 faces); the two equilateral triangle tiles pair with no contact rays (0 pairs) and stay single faces — 9 faces per cell ⟨(2,0),(1,√3)⟩ (det 2√3), exact Q(√3); θK = 60° chosen over 30°/45° (no star: core tips 120°/90°) and 67.5°/90° (sharper variant / star collapse) for the classical {6/2} hexagram; p6m verified on a ±5-lattice window, D6-exact (M100) | p6m | hexagonal |
 | `hankin-3-4-6-4` | Hankin sixfold rhombitrihex motif (3.4.6.4) | Hankin greedy-inference motif on the rhombitrihexagonal (3.4.6.4) substrate (θK = 60°, δ = 0): each hexagon becomes a regular hexagram — a 12-gon core with 60° tips and 240° notches plus six 60°-lozenge rhombi (7 faces); the three unit squares pair with no contact rays (0 pairs) and stay single faces; each equilateral triangle tile sits in the side-1/2 4-subdivision limit (its star tips reach the edge midpoints exactly — 4 faces) — 18 faces per cell ⟨(1.5+√3/2, √3/2+1/2),(0,1+√3)⟩ (det 4√3/2+3), exact Q(√3); θK = 60° chosen over 30° (30° slivers), 45° (no hexagon star; asymmetric triangle motifs), 67.5° (sharper, 45° tips), and 90° (star collapse) for the classical {6/2} hexagram; p6m verified on a ±5-lattice window, D6-exact (M100) | p6m | hexagonal |
+| `hankin-3-3-3-4-4` | Hankin elongated-triangular motif (3.3.3.4.4) | Hankin greedy-inference motif on the elongated-triangular (3.3.3.4.4) substrate (θK = 60°, δ = 0; the down-triangle instance must run CCW — a CW tile emits outward rays and pairs with nothing): both triangle tiles in the side-1/2 4-subdivision limit (four equilateral triangles each), the square as four corner quadrilaterals + central octagon — 13 faces per cell ⟨(1,0),(1/2,1+√3/2)⟩ (det 1+√3/2), exact Q(√3); θK = 60° chosen over 30° (30° slivers), 45°/67.5° (sharper 45° tips), and 90° (triangle pairing degenerates, square star collapses); cmm verified exactly on a 551-face window: translations, 2-fold orbits {C+L} ∪ {C+a1+L} ∪ {(1/2,H+1/2)+L} ∪ {(±1/4,H/2)+L} ∪ {(1/4,H/2+1+H)}, mirrors x=k/2 and y=−1/2+k(1+H), glides y=H/2+k(1+H) shift a1/2 (M107) | cmm | centered |
 | `khatam-girih` | Khatam girih decomposition (8-point) | classical kissing {8/3} star-and-cross cut into 8 rhombi + square + 4 pentagons per cell (exact Q(√2) kitab) | p4m | square |
 | `najm-63-2e-0-3e-ac` | Najm template ([6,3]; 2e, 0, 3e; AC) | Najm-template substrate (Kaplan diss. §3.6.1 Fig. 3.21) from the najm generator: regular dodecagons + enneagons sharing equal chords, case-3 inflation x = 2/(cot 15° + cot 20°), + concave equilateral bowties (70°/220°) at the 2-fold points; 1 doz + 2 enne + 3 bowties per cell, |det| = 3√3/2 | p6m | hexagonal |
 | `najm-44-3e-0-0-a` | Najm template ([4,4]; 3e, 0, 0; A) | Najm-template substrate (Kaplan diss. §3.6.1 Fig. 3.22 second row): dodecagons r = √6−√2 on 2Z² sharing chords across the odd grid lines + concave equilateral 4-pointed stars (side 4−2√3, tips 60°, notches 210°); exact Q(√2,√3), areas 24−12√3 and 12√3−20 per cell | p4m | square |
@@ -593,7 +594,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 715 tests, all green, zero
+`cargo test --workspace` (currently 721 tests, all green, zero
 warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
