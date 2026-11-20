@@ -47,6 +47,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 19 | Second measured ornamental panel | Wallpaper | M35 pipeline | M–L | P2 |
 | 20 | Fractalizing k-uniform (2+√3 dodecagon) ✅ DONE (M110, same-plane limit-periodic family over 3.12.12 — not a substitution) | Quasiperiodic | substitution on uniform basis | M | P2 |
 | 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements; 22b Najm template-tiling generator; 22c rosette transform ✅(M99); 22d parquet deformations; 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite; 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
+| 23 | Bielefeld Tilings Encyclopedia survey — candidate clusters (golden-family Q(√φ), 8-fold Q(√2), 12-fold Q(√3), rep-tile/limit-periodic, generalized GLB binary §9-rescope, girih-family, pinwheel family, cubic/quartic field tiers) | mixed | see §23 | S–XL | P1/P2 |
 
 \* golden-bee tilings are nonperiodic and (canonical form) quasiperiodic;
 confirm the diffraction claim during the spike before declaring.
@@ -1388,6 +1389,158 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   reports the completed catalog. The HX-STUDY handoff
   `hx_p3m1_cell.json` has been consumed.
 
+### 23. Bielefeld Tilings Encyclopedia survey — candidate clusters (2026-11-20)
+
+Survey of the substitution index at
+<https://tilings.math.uni-bielefeld.de/substitution/> — **257 unique
+entries** extracted and cross-mapped against the registry roster
+(111 tilings / 123 memberships at survey time). Each entry below was
+checked for canonical status and a construction path; machinery notes
+state what the codebase is missing, not what the literature owes.
+
+**Already covered (13 direct matches):** Ammann Chair (= golden-bee,
+A2), Ammann–Beenker (A5), Penrose rhombs (P3), kite–dart (P2),
+Pentagon–boat–star (P1), Darb-i Imam shrine (= girih-quasiperiodic),
+pinwheel, chair, sphinx, hat, spectre, shield (Gähler), Stampfli
+12-fold. Our fractalizing-3-12-12, turtle, Taylor–Socolar, Jeandel–Rao
+and rep-tile entries sit alongside their own literature rather than on
+this index.
+
+### 23a. Q(√φ) golden family — cheapest landings, machinery already shipped
+
+Golden bee's field layer (quadratic surd + φ-substitution) serves all
+of these; each is a substitution or cut-and-project table.
+
+- **Golden Triangle** (+ coloured variant; cut-and-project, pure
+  point) — golden-triangle/golden-bee style dissection; effort S–M.
+- **Golden Pinwheel** — φ² inflation, dense tile orientations but
+  *FLC*; pinwheel-style generator with a φ lattice; effort M.
+- **Fibonacci×Fibonacci** — 3 prototiles, product substitution;
+  effort S–M.
+- **Cromwell Kite–Rhombus–Trapezium** — mld to Penrose, φ² inflation;
+  effort M.
+- **Golden Rhomboid–Triangle** — effort S–M.
+
+### 23b. 8-fold Q(√2) family — next to Ammann–Beenker
+
+- **Ammann A3** and **Ammann A4** — the missing rungs of the owner's
+  A1–A4 request (A2 = golden bee ✅, A1 parked: no substitution
+  structure, see Parked list). A3/A4 have substitution structure;
+  effort M each.
+- **AB rhomb–triangle** — Ammann–Beenker with the triangle shown;
+  effort S.
+- **Octagonal 1225 tile** — single octagonal prototile, 8-fold;
+  effort M.
+- **CAST 8-fold (DTO)** — dense tile orientations; needs the DTO
+  presentation layer (see 23i); effort L.
+- **Hofstetter 4-fold** — limit-periodic, quasiperiodic by
+  superposition; effort M.
+
+### 23c. 12-fold Q(√3) family — next to shield/stampfli
+
+- **Watanabe–Ito–Soma 8-fold / 12-fold (+variant)** — classical
+  substitution tables; effort M each.
+- **Socolar 12-fold A** — closes #8's remaining item; effort M–L.
+- **Square–triangle** and **Socolar square–triangle** — dodecagonal
+  square–triangle substitutions; effort M each (also popular via the
+  Bielefeld DTO entry).
+- **Stampfli variants** — the index carries near-duplicates of our
+  §6/§22 entries; audit before adopting.
+
+### 23d. Rep-tile / limit-periodic family — next to chair/sphinx/p-pentomino
+
+- **Pregnant chairs**, **Armchair** — chair-family rep-tiles; effort
+  S each (chair machinery exists).
+- **Domino/table tiling (+variants)** and **half-hex family** —
+  limit-periodic, cut-and-project; half-hex also closes the #17
+  substitution-hierarchy gap; effort M each.
+- **Period doubling / period tripling / Thue–Morse 2D / Squiral** —
+  marginal supersubstitutions; Squiral was parked pending rule-table
+  verification (see Parked) — the Bielefeld page provides it; effort
+  S–M each.
+- **Tangram** — rep-tile dissection; effort S–M.
+- **Pentiamond / small rep-tile set** — effort S each.
+
+### 23e. Generalized Godrèche–Lançon–Billard binary — the §9 re-scope candidate
+
+The index hosts both the classical [binary
+tiling](https://tilings.math.uni-bielefeld.de/substitution/binary/)
+(exactly the tiling machine-refuted in the §9 STOP: improper
+substitution, needs Q(2cos π/10) ⊋ Q(√5)) **and** the [Generalized
+GLB Binary](https://tilings.math.uni-bielefeld.de/substitution/generalized_binary/)
+(Hibma 2015 / Pautze 2017 — the same Pautze paper the STOP pinned):
+inflation √(2+2cos(π/n)), (n−1)/2 prototiles for odd n, FLC + finite
+rotations + rhomb tiles, identical to the classical binary at n = 5.
+**Re-scoping §9 to a specific larger odd n is viable** — n = 7, 9 live
+in Q(2cos(π/7,9)) (degree 3), n = 15 in degree 4 — i.e. it needs a
+cubic/quartic cyclotomic field layer we do not ship yet. Frame as its
+own milestone with a field-layer design doc first; effort L+.
+
+### 23f. Girih / Islamic clusters (relevant to the paused girih fork)
+
+- **Andritz Bowtie–Hexagon family** (4 entries: small/large bowtie,
+  hexagon variants) — 5-fold FLC model sets with documented
+  substitutions; effort M each.
+- **Girih-inspired 14-fold** — effort L.
+- Note: the paused `girih-primitive` fork (§ pending owner decision)
+  is the natural integration point for these; do not start them until
+  that fork's disposition is decided.
+
+### 23g. Pinwheel family (dense orientations, FLC)
+
+- **Uberpinwheel**, **cubic / quartic pinwheel**, the 10/13/65-tile
+  self-similar variants — all share the pinwheel generator's
+  irrational-rotation machinery; effort M each. Golden-pinwheel (23a)
+  belongs to both clusters.
+
+### 23h. Einstein family siblings
+
+- **CAP (self-similar hat substitution)** — the natural sibling to
+  our metatile hat; the substitution path the hat entry documents but
+  does not run; effort M.
+- **Hexagonal aperiodic monotile** — the spectre-adjacent soft
+  variant; effort M.
+
+### 23i. New-field tiers (cubic/quartic cyclotomic layers required)
+
+- **Danzer 7-fold (+variants)**, **Harriss 9-fold rhomb**,
+  **Goodman-Strauss 7-fold rhomb**, **CAST 10-fold**, the
+  **Nischke–Danzer deltoids**, **Say-awen 17/21-fold** — each needs
+  degree-3/4 arithmetic before any substitution table; effort XL per
+  family (design docs first; overlaps #18).
+
+### 23j. Out of scope for the registry as-is
+
+- 1-D Rauzy-fractal / self-similar lattice-gas entries (no 2-D plane
+  partition),
+- the FASS-curve family (Gosper/Hilbert/Peano/dragon — curve
+  decorations, not plane tilings),
+- the F₄ recurrent-double-sequence entries (recurrence sequences, not
+  substitutions),
+- polytopal (3-D) entries.
+
+### 23k. Audit-discovered additions (2026-11-20 UI audit)
+
+Not from the Bielefeld index — found while auditing the tabs against
+the owner's report:
+
+- **Duals of the four subscripted 2-uniform pairs** — the Laves tab
+  shows 11 of the 15 implemented 2-uniform duals; missing: duals of
+  (4⁴; 3³.4²)₁/₂ and (3⁶; 3³.4²)₁/₂. effort M each (dual.rs
+  machinery exists). *(The two structurally missing 2-uniform tilings
+  (3.12.12; 3.4.3.12) and (3³.4²; 3².4.3.4) and their duals are being
+  implemented in this sprint, M118–M121.)*
+- **Stack bond, 45° herringbone, three-brick basketweave** — being
+  implemented in this sprint (M114–M116); recorded here for the
+  changelog trail.
+- **Pentagon type 1** — being implemented in this sprint (M117); the
+  §5 census note flips to 15/15 with types 4 (cairo) and 5 (floret)
+  surfacing on the Pentagon tab as secondary members.
+- **Robinson tiles** — the Parked entry stands (machinery duplicates
+  penrose.rs); revisit only as a matching-rule decoration layer.
+- **Fibonacci p1/p2-type quasiperiodic tilings** — see 23a
+  (Fibonacci×Fibonacci).
+
 ## Parked / rejected (with reasons)
 
 - **Quaquaversal tiling** — 3-space tiling; no 2D analogue (removed
@@ -1715,3 +1868,12 @@ that already exists twice.
   group recorded as p2 (authored, M74); the remaining-arc line
   drops type 6 (implemented) and now names 1 and 5 as the only
   remaining coverage-audit items.
+- 2026-11-20 — §23: Bielefeld Tilings Encyclopedia substitution-index
+  survey (257 entries) cross-mapped against the registry — candidate
+  clusters 23a–23j (Q(√φ) golden family, 8-fold Q(√2) with Ammann
+  A3/A4, 12-fold Q(√3) with Socolar-12 and Watanabe–Ito–Soma,
+  rep-tile/limit-periodic, generalized GLB binary as the §9 re-scope
+  candidate, girih-family items gated on the paused girih fork,
+  pinwheel family, einstein siblings, cubic/quartic field tiers) plus
+  23k audit-discovered additions (missing duals of the subscripted
+  2-uniform pairs; this sprint's M114–M121 recorded).
