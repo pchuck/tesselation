@@ -429,7 +429,7 @@ pub fn classification(id: &str) -> TilingClass {
             ..TilingClass::EMPTY
         },
 
-        // ---- Quasiperiodic (10) ----------------------------------------------
+        // ---- Quasiperiodic (11) ----------------------------------------------
         "ammann-beenker" => TilingClass {
             families: &["Quasiperiodic"],
             method: Some("substitution"),
@@ -439,6 +439,20 @@ pub fn classification(id: &str) -> TilingClass {
             source: Some("Ammann & Beenker"),
             year: Some("1982"),
             translational: Some("quasiperiodic"),
+            ..TilingClass::EMPTY
+        },
+        "ammann-beenker-tri" => TilingClass {
+            families: &["Quasiperiodic"],
+            method: Some("substitution"),
+            inflation: Some("1+√2"),
+            cut_project: Some("R⁴ → R², octagonal window"),
+            point_order: Some(8),
+            source: Some("Ammann & Beenker"),
+            year: Some("1982"),
+            translational: Some("quasiperiodic"),
+            tile_set: Some("45° rhombus + two mirror-image half-square triangles"),
+            prototiles: Some(3),
+            reflections: Some(true),
             ..TilingClass::EMPTY
         },
         "shield" => TilingClass {
