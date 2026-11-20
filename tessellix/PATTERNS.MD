@@ -4077,6 +4077,17 @@ documentation pending).
 - **Census:** 108 → 109 tilings, 120 → 121 memberships (Quasiperiodic
   8 → 9), 721 → 729 tests (landed on main after the M107 landing; the
   fork's step numbers were on its own base 91dd843).
+- **Integration fix (default view):** the shared `SIMILARITY_PARAMS`
+  scale default 1.0 rendered the ~1.3-cell-unit patch as a tiny
+  centered chair at depth 0 (pattern index 0, light gray) — reported
+  as a broken-looking preview/render pane. The module now declares its
+  own params with a patch-fitted scale default **7.0**: the standard
+  ~20/scale-unit pane then shows the depth-1 two-child dissection
+  (classes {1, 2}, palette blue/red) covering ≈ 85% of the pane (the
+  reflex notch always leaves a background wedge — the patch is
+  chair-shaped at every depth). Mechanics tests stay pinned at
+  explicit scale 1.0; the default presentation is pinned by
+  `default_view_fills_pane` (classes {1,2} + ≥ 70% grid coverage).
 - **Status:** landed (M104). Full bar green: cargo check + clippy
   (both target sets) zero warnings, cargo test --workspace
   --all-features 729/729.

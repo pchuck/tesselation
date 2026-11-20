@@ -75,7 +75,7 @@ use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 use tess_core::view::ColorMode;
 use tess_core::TilingCategory;
 
-use crate::lattice::{similarity_map, SIMILARITY_PARAMS};
+use crate::lattice::{similarity_map, ROTATION_ID, SCALE_ID};
 
 // ---------------------------------------------------------------------------
 // Exact arithmetic in K = Q(√φ)
@@ -265,6 +265,21 @@ fn refine(tiles: &[Chair]) -> Vec<Chair> {
 // ---------------------------------------------------------------------------
 
 /// Golden bee (Ammann A2 chair) — see the module docs.
+/// Generator parameters: the shared similarity map, but with the scale
+/// default fitted to the finite patch. The patch spans only ~1.3 cell
+/// units (bbox [−0.5, 0.5] × [−s/2, s/2]); under the shared 1.0 default
+/// it rendered as a tiny centered chair — the E ≥ 1 depth rule then
+/// shows the unrefined seed chair alone, painted pattern index 0
+/// (light gray) — reported as a broken-looking preview/render pane.
+/// Scale 7.0 fills the standard 40/3 × 10 pane (patch height 8.9 of 10)
+/// and the depth rule picks d = 1: the defining two-child L:S
+/// dissection, size classes {1, 2} (palette blue/red). The scale slider
+/// (0.1–50) still zooms; depth follows the view as pinned below.
+const PARAMS: [ParamSpec; 2] = [
+ParamSpec::float(SCALE_ID, "scale", 0.1, 50.0, 0.05, 7.0),
+ParamSpec::angle(ROTATION_ID, "rotation (deg)", 0.0, 360.0, 5.0, 0.0),
+];
+
 pub struct GoldenBeeTiling;
 
 impl Tiling for GoldenBeeTiling {
@@ -289,8 +304,9 @@ impl Tiling for GoldenBeeTiling {
         TilingCategory::Quasiperiodic
     }
 
+
     fn params(&self) -> &'static [ParamSpec] {
-        &SIMILARITY_PARAMS
+        &PARAMS
     }
 
     fn default_color_mode(&self) -> ColorMode {
@@ -844,7 +860,11 @@ mod tests {
 
     fn gen_keys(region: BBox) -> Vec<(u8, u32, Vec<u64>)> {
         let t = GoldenBeeTiling;
-        let p = ParamSet::default_for(t.params());
+        // Mechanics pinned at scale 1.0, where the window geometry below
+        // was derived; the DEFAULT scale is 7.0 (patch-fitted — see
+        // default_view_fills_pane).
+        let mut p = ParamSet::default_for(t.params());
+        p.set(SCALE_ID, tess_core::params::ParamValue::Float(1.0));
         let r = t.generate(&p, &Query { region });
         assert!(r.message.is_none(), "unexpected message");
         assert!(!r.tiles.is_empty(), "empty view");
@@ -895,8 +915,12 @@ mod tests {
         }
     }
 
-    // --- standard trio (default scale/rotation; windows inside the
-    // seed chair, whose recentered reflex corner is at (≈0.118, −0.15)) ---
+    // --- standard trio (explicit scale-1.0-style windows; check_covers /
+    // check_det build default params, whose scale default is now the
+    // patch-fitted 7.0 — the windows below still land inside the chair
+    // domain at that scale, just deeper (the depth rule follows the
+    // view). The default presentation itself is pinned by
+    // default_view_fills_pane.)
 
     const WIN: [f64; 4] = [-0.25, -0.1, 0.05, 0.15];
     const WIN_ROT: [f64; 4] = [-0.04, -0.04, 0.04, 0.04];
@@ -929,6 +953,79 @@ mod tests {
             &GoldenBeeTiling,
             "golden-bee",
             BBox::new(Vec2::new(WIN[0], WIN[1]), Vec2::new(WIN[2], WIN[3])),
+        );
+    }
+
+    /// Ray-casting point-in-polygon (test helper; boundary handled by
+    /// the ≥ 0.7 fraction, so edge-exactness is not needed).
+    fn point_in_poly(p: Vec2, pts: &[Vec2]) -> bool {
+        let mut inside = false;
+        let n = pts.len();
+        let mut j = n - 1;
+        for i in 0..n {
+            let (a, b) = (pts[i], pts[j]);
+            if (a.y > p.y) != (b.y > p.y) {
+                let x = b.x + (p.y - b.y) * (a.x - b.x) / (a.y - b.y);
+                if p.x < x {
+                    inside = !inside;
+                }
+            }
+            j = i;
+        }
+        inside
+    }
+
+    #[test]
+    fn default_view_fills_pane() {
+        // The default presentation (UI pane, thumbnails, CLI export):
+        // the patch-fitted scale default (7.0) must show the depth-1
+        // two-child dissection covering the pane — not the tiny
+        // unrefined seed chair the shared 1.0 default produced
+        // (integration fix, M104 landing). The view convention (shared
+        // with the CLI export) is a ~20/scale-unit-tall origin-centered
+        // window, so the default pane is 26.67/7 × 20/7 world units and
+        // the depth rule picks d = 1 (the fork's own S=7 export census).
+        let t = GoldenBeeTiling;
+        let p = ParamSet::default_for(t.params());
+        assert!(
+            (p.float(SCALE_ID, 1.0) - 7.0).abs() < 1e-12,
+            "scale default must stay patch-fitted (7.0)"
+        );
+        let region = BBox::new(
+            Vec2::new(-20.0 / 7.0 * 2.0 / 3.0, -10.0 / 7.0),
+            Vec2::new(20.0 / 7.0 * 2.0 / 3.0, 10.0 / 7.0),
+        );
+        let r = t.generate(&p, &Query { region });
+        assert!(r.message.is_none(), "unexpected message");
+        // Depth 1: exactly the two children, one per size class — the
+        // A2 two-piece dissection, L:S counts 1:1.
+        let mut classes: Vec<u32> = r.tiles.iter().map(|tl| tl.seed).collect();
+        classes.sort_unstable();
+        assert_eq!(classes, vec![1, 2], "default view must be the depth-1 dissection");
+        // The pane is substantially covered — the patch is chair-shaped (the
+        // reflex notch always leaves a background wedge at the pane
+        // corner), so pin a coverage fraction, not full coverage: ≥ 70%
+        // of a grid over the pane must land in some tile. (The 1.0
+        // default produced ~5% fill — the tiny lone chair this fixes.)
+        let nx = 60usize;
+        let ny = 45usize;
+        let mut hit = 0usize;
+        for ix in 0..nx {
+            for iy in 0..ny {
+                let px = region.min.x
+                    + (ix as f64 + 0.5) * (region.max.x - region.min.x) / nx as f64;
+                let py = region.min.y
+                    + (iy as f64 + 0.5) * (region.max.y - region.min.y) / ny as f64;
+                let pt = Vec2::new(px, py);
+                if r.tiles.iter().any(|tl| point_in_poly(pt, &tl.poly.pts)) {
+                    hit += 1;
+                }
+            }
+        }
+        let frac = hit as f64 / (nx * ny) as f64;
+        assert!(
+            frac >= 0.7,
+            "default view covers only {frac:.0}% of the pane"
         );
     }
 }
