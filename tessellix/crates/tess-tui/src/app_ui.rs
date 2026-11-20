@@ -53,8 +53,9 @@ use crate::thumb;
 /// needs one extra row); the grid fits as many full-size cards as the
 /// viewport allows (≥ 1 column, ≥ 1 row) and stretches them to fill.
 const TARGET_CARD_W: u16 = 28;
-/// Ctrl+wheel card-size bounds (the height follows at half the width;
-/// the default card is 28×14, so the height target is `TARGET_CARD_W/2`).
+/// Card-size bounds for the +/- keys and ctrl/shift+wheel (the
+/// height follows at half the width; the default card is 28×14, so
+/// the height target is `TARGET_CARD_W/2`).
 const MIN_CARD_W: u16 = 22;
 const MAX_CARD_W: u16 = 44;
 
@@ -189,11 +190,13 @@ impl Tui {
         self.dirty = true;
     }
 
-    /// Ctrl+wheel card-size step: the target card width moves by
-    /// `delta` (positive = larger cards), clamped to
-    /// `[MIN_CARD_W, MAX_CARD_W]`; the height follows at half the
+    /// Card-size step: the target card width moves by `delta`
+    /// (positive = larger cards), clamped to
+    /// [`MIN_CARD_W, MAX_CARD_W`]; the height follows at half the
     /// width so the default 28×14 aspect is preserved. Resizing
     /// invalidates the thumbnail cache through its size-keyed entries.
+    /// Bound to +/- in Browse and to ctrl/shift+wheel where the
+    /// terminal reports wheel modifiers.
     fn resize_cards(&mut self, delta: i32) {
         let w = (self.card_w as i32 + delta).clamp(MIN_CARD_W as i32, MAX_CARD_W as i32);
         if w != self.card_w as i32 {
@@ -352,6 +355,13 @@ impl Tui {
                 KeyCode::BackTab => self.switch_tab(-1),
                 KeyCode::Char(c @ '1'..='9') => self.switch_tab_to((c as usize) - ('1' as usize)),
                 KeyCode::Char('0') => self.switch_tab_to(9),
+                // Card-grid size: +/- grows/shrinks the browse cards
+                // (the height follows at half the width). The same
+                // keys zoom the canvas in Render; ctrl/shift+wheel
+                // does the same here, where the terminal reports
+                // modifiers on wheel events.
+                KeyCode::Char('+') | KeyCode::Char('=') => self.resize_cards(2),
+                KeyCode::Char('-') | KeyCode::Char('_') => self.resize_cards(-2),
                 KeyCode::Up | KeyCode::Char('k') => self.move_cursor(-(self.grid_cols as i32)),
                 KeyCode::Down | KeyCode::Char('j') => self.move_cursor(self.grid_cols as i32),
                 KeyCode::Left | KeyCode::Char('h') => self.move_cursor(-1),
@@ -432,10 +442,22 @@ impl Tui {
                         self.open_render(i);
                     }
                 }
-                MouseEventKind::ScrollUp if me.modifiers.contains(KeyModifiers::CONTROL) => {
+                // Resize on ctrl/shift+wheel: terminals that report wheel
+                // modifiers let both through; terminals that swallow
+                // them (some intercept ctrl+wheel for their own zoom)
+                // still have the +/- keys.
+                MouseEventKind::ScrollUp
+                    if me
+                        .modifiers
+                        .intersects(KeyModifiers::CONTROL | KeyModifiers::SHIFT) =>
+                {
                     self.resize_cards(2);
                 }
-                MouseEventKind::ScrollDown if me.modifiers.contains(KeyModifiers::CONTROL) => {
+                MouseEventKind::ScrollDown
+                    if me
+                        .modifiers
+                        .intersects(KeyModifiers::CONTROL | KeyModifiers::SHIFT) =>
+                {
                     self.resize_cards(-2);
                 }
                 MouseEventKind::ScrollUp => self.scroll_by(-1),
@@ -893,7 +915,7 @@ fn render_status_browse(frame: &mut Frame, tui: &mut Tui, rect: Rect) {
             tui.match_counts().iter().sum::<usize>()
         ),
         _ => format!(
-            " {} (tab {}/10) │ arrows/hjkl move · enter open · tab/1-9/0 tabs · pgup/pgdn/wheel scroll · / search · q quit",
+            " {} (tab {}/10) │ arrows/hjkl move · enter open · tab/1-9/0 tabs · pgup/pgdn/wheel scroll · +/- card size · / search · q quit",
             tui.active_tab().category.label(),
             tui.tab_idx + 1
         ),
@@ -1580,7 +1602,8 @@ assert_eq!(counts, vec![11, 17, 24, 17, 15, 21, 8, 10, 6, 4]);
         assert_eq!(tui.scroll[0], s0 + 1);
         // Ctrl+wheel in Browse resizes the cards (plain wheel above
         // scrolled); the size clamps to the [22, 44] width window and
-        // plain scroll still works after resizing.
+        // plain scroll still works after resizing. Shift+wheel is an
+        // accepted alias for terminals that pass it through.
         tui.handle_mouse(MouseEvent {
             kind: MouseEventKind::ScrollUp,
             column: 5,
@@ -1588,6 +1611,13 @@ assert_eq!(counts, vec![11, 17, 24, 17, 15, 21, 8, 10, 6, 4]);
             modifiers: KeyModifiers::CONTROL,
         });
         assert_eq!(tui.card_w, TARGET_CARD_W + 2);
+        tui.handle_mouse(MouseEvent {
+            kind: MouseEventKind::ScrollDown,
+            column: 5,
+            row: 5,
+            modifiers: KeyModifiers::SHIFT,
+        });
+        assert_eq!(tui.card_w, TARGET_CARD_W, "shift+wheel mirrors ctrl+wheel");
         for _ in 0..20 {
             tui.resize_cards(2);
         }
@@ -1610,6 +1640,42 @@ assert_eq!(counts, vec![11, 17, 24, 17, 15, 21, 8, 10, 6, 4]);
         let (c44, _, r44, _) = grid_cols_rows(Rect::new(0, 0, 280, 140), 44);
         assert_eq!((c28, r28), (10, 10));
         assert_eq!((c44, r44), (6, 6));
+    }
+
+    /// The +/- keys resize the browse card grid (the same keys zoom
+    /// the canvas in Render mode — mode-dependent behavior), stepping
+    /// by 2 and clamping to the [22, 44] width window.
+    #[test]
+    fn plus_minus_keys_resize_browse_cards() {
+        let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let mut tui = Tui::new();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        assert_eq!(tui.card_w, TARGET_CARD_W);
+        // '=' (unshifted) and '+' (shifted on US layouts) both grow.
+        key(&mut tui, KeyCode::Char('='));
+        assert_eq!(tui.card_w, TARGET_CARD_W + 2);
+        key(&mut tui, KeyCode::Char('+'));
+        assert_eq!(tui.card_w, TARGET_CARD_W + 4);
+        // '-' and '_' both shrink.
+        key(&mut tui, KeyCode::Char('-'));
+        key(&mut tui, KeyCode::Char('_'));
+        assert_eq!(tui.card_w, TARGET_CARD_W);
+        // Clamps hold via the keys too.
+        for _ in 0..20 {
+            key(&mut tui, KeyCode::Char('+'));
+        }
+        assert_eq!(tui.card_w, MAX_CARD_W);
+        for _ in 0..30 {
+            key(&mut tui, KeyCode::Char('-'));
+        }
+        assert_eq!(tui.card_w, MIN_CARD_W);
+        // The keys never fire in Search mode: the search field gets
+        // its characters instead.
+        key(&mut tui, KeyCode::Char('/'));
+        key(&mut tui, KeyCode::Char('+'));
+        assert_eq!(tui.card_w, MIN_CARD_W, "search input does not resize");
+        assert_eq!(tui.search, "+");
+        key(&mut tui, KeyCode::Esc);
     }
 
     // ---- classification schema rendering ----------------------------------

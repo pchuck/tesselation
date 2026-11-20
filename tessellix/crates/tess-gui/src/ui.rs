@@ -48,7 +48,7 @@ const DESC_CHARS: usize = 40;
 /// card's width by the label's own `truncate()`).
 const NAME_CHARS_PER_LINE: usize = 24;
 /// Card inner margin (inset on all four sides), in pixels. The card's
-/// content child is bounded by [`card_inner_w`] × [`CARD_INNER_H`],
+/// content child is bounded by [`card_inner_w`] × [`card_inner_h`],
 /// inset by this margin from the card's allocated rect — which IS the
 /// grid cell, exactly the column width, so the grid fills the window
 /// width without overflowing.
@@ -60,28 +60,48 @@ const CARD_ROW_SPX: f32 = 3.0;
 /// 16 px strong each), description (13 px), symmetry line (12 px).
 /// Each is the galley row height of egui's default proportional font
 /// at that size, plus headroom, so the text content always fits the
-/// fixed card height ([`CARD_INNER_H`]) (pinned by a unit test
-/// against the real galley row heights).
+/// card height ([`card_inner_h`]) (pinned by a unit test against the
+/// real galley row heights).
 const CARD_NAME_LINE_H: f32 = 18.5;
 const CARD_DESC_LINE_H: f32 = 15.0;
 const CARD_SYM_LINE_H: f32 = 14.0;
-/// Fixed inner content height of a card: image + the two-line title +
-/// description + symmetry line + the row spacings between them.
-/// Every card is at least this tall, so all card boxes are the same
-/// size and the grid is orthogonal — every card in every row aligns
-/// (pinned by a unit test).
-const CARD_INNER_H: f32 =
-    CARD_IMG_H as f32
+/// Inner content height of a card at an image height of `img_h`:
+/// image + the two-line title + description + symmetry line + the row
+/// spacings between them. Every card is at least this tall, so all
+/// card boxes are the same size and the grid is orthogonal — every
+/// card in every row aligns (pinned by a unit test). The default
+/// size's value is the historical `CARD_INNER_H` constant (168 px).
+fn card_inner_h(img_h: u32) -> f32 {
+    img_h as f32
         + 2.0 * CARD_NAME_LINE_H
         + CARD_DESC_LINE_H
         + CARD_SYM_LINE_H
-        + 4.0 * CARD_ROW_SPX;
-/// Total card height — the inner content plus the two vertical margins.
-/// `draw_card` allocates exactly `col_w` × [`CARD_TOTAL_H`] per cell, so
-/// every card is identical and the grid's cell sizes never depend on
-/// how the content lays out inside (the LTR-inheritance bug grew cells
+        + 4.0 * CARD_ROW_SPX
+}
+/// Total card height at an image height of `img_h` — the inner
+/// content plus the two vertical margins. `draw_card` allocates
+/// exactly `col_w` × [`card_total_h`] per cell, so every card is
+/// identical and the grid's cell sizes never depend on how the
+/// content lays out inside (the LTR-inheritance bug grew cells
 /// sideways).
-const CARD_TOTAL_H: f32 = CARD_INNER_H + 2.0 * CARD_INNER_MARGIN;
+fn card_total_h(img_h: u32) -> f32 {
+    card_inner_h(img_h) + 2.0 * CARD_INNER_MARGIN
+}
+/// Card-size zoom bounds: the smallest and largest card target
+/// widths reachable through ctrl+wheel / pinch / the +/- keys. The
+/// default ([`CARD_TARGET_W`]) sits comfortably inside the window.
+const CARD_W_MIN: f32 = 150.0;
+const CARD_W_MAX: f32 = 480.0;
+/// The card's preview-image pixel size at a card target width of
+/// `target_w`: the default [`CARD_TARGET_W`] renders the historical
+/// [`CARD_IMG_W`]×[`CARD_IMG_H`] preview; the size scales linearly
+/// with the zoom (keeping the 4:3 preview aspect), so bigger cards
+/// get bigger previews. Quantized to whole pixels (the texture cache
+/// is keyed by the exact pixel size).
+fn card_img_size(target_w: f32) -> (u32, u32) {
+    let w = ((CARD_IMG_W as f32 * (target_w / CARD_TARGET_W)).round() as u32).max(32);
+    (w, w * CARD_IMG_H / CARD_IMG_W)
+}
 
 // Card frame colors (dark theme): neutral outline, hover outline, and
 // the selected card's fill + cyan stroke (the TUI's cyan-border
@@ -140,6 +160,14 @@ pub struct GuiApp {
     /// size). Textures are generated in the draw pass for visible cards
     /// only — generating all 63 up front would stall the first frame.
     card_textures: HashMap<String, egui::TextureHandle>,
+    /// Current card target width for the browse grid (1.0× =
+    /// [`CARD_TARGET_W`]). Ctrl+wheel / trackpad pinch (egui's
+    /// `zoom_delta` — egui diverts ctrl-scroll away from scrolling, so
+    /// the grid never jumps) and the +/- keys scale it, clamped to
+    /// [`CARD_W_MIN`, `CARD_W_MAX`]. The preview image scales with it
+    /// ([`card_img_size`]); changing it prunes stale texture sizes
+    /// ([`GuiApp::prune_card_textures`]).
+    card_target_w: f32,
     /// The browser's search text (name/id/description, all tabs).
     /// Kept in GuiApp rather than `app.search` because the TUI and the
     /// tess-core App.search filter on different fields.
@@ -442,6 +470,7 @@ impl GuiApp {
             search_at_jump: String::new(),
             last_highlighted: (active_tab, selected),
             card_textures: HashMap::new(),
+            card_target_w: CARD_TARGET_W,
             search: String::new(),
             card_rects: Vec::new(),
             card_grid_col_w: 0.0,
@@ -500,6 +529,31 @@ impl GuiApp {
     /// Browse mode: the tab band (tabs + search, one wrapping row) over
     /// the card grid filling the window.
     fn draw_browse(&mut self, ctx: &egui::Context) {
+        // Card-size controls, consumed BEFORE the scroll area is
+        // created. Ctrl+wheel and trackpad pinch arrive through egui's
+        // `zoom_delta()` (egui 0.29 diverts ctrl/cmd-scroll away from
+        // `raw_scroll_delta`, so the grid never scroll-jumps); the +/-
+        // keys step the same target. Typing + or - in the search field
+        // keeps its characters (the keyboard guard skips the keys
+        // while any text field owns the keyboard).
+        let zd = ctx.input(|i| i.zoom_delta());
+        if zd != 1.0 {
+            self.set_card_target_w(self.card_target_w * zd);
+        }
+        if !ctx.wants_keyboard_input() {
+            let (plus, minus) = ctx.input(|i| {
+                (
+                    i.key_pressed(egui::Key::Equals),
+                    i.key_pressed(egui::Key::Minus),
+                )
+            });
+            if plus {
+                self.set_card_target_w(self.card_target_w + 16.0);
+            }
+            if minus {
+                self.set_card_target_w(self.card_target_w - 16.0);
+            }
+        }
         egui::CentralPanel::default().show(ctx, |ui| {
             self.search_jump();
             self.draw_tab_row(ui);
@@ -508,6 +562,23 @@ impl GuiApp {
                 self.draw_card_grid(ctx, ui);
             });
         });
+    }
+
+    /// Set a new card target width (clamped to
+    /// [`CARD_W_MIN, CARD_W_MAX`]) and, when it actually changed,
+    /// prune the preview textures of other sizes — every card renders
+    /// at one shared size, so old-size textures are dead weight (the
+    /// cache is keyed by exact pixel size, and continuous wheel zoom
+    /// would otherwise accumulate one generation per step).
+    fn set_card_target_w(&mut self, w: f32) {
+        let w = w.clamp(CARD_W_MIN, CARD_W_MAX);
+        if w != self.card_target_w {
+            self.card_target_w = w;
+            let (iw, ih) = card_img_size(w);
+            let suffix = format!("|{iw}x{ih}");
+            self.card_textures
+                .retain(|k, _| k.ends_with(&suffix));
+        }
     }
 
     /// Render mode: Escape/arrow handling, the top strip (back / prev /
@@ -760,14 +831,18 @@ impl GuiApp {
             );
             ui.add_space(2.0);
         }
-        // Responsive columns over the full window width ([`
+        // Responsive columns over the current card target width ([`
         // columns_for_width`], fully dynamic — at least one, no
         // upper bound); the column width is the available width
         // minus the grid's horizontal spacing, split among the
-        // columns ([`card_col_w`]).
+        // columns ([`card_col_w`]). The preview image scales with
+        // the target ([`card_img_size`] — ctrl+wheel / pinch / +/-
+        // change it), and the card height follows so the grid stays
+        // orthogonal at every zoom level.
         let avail = ui.available_width();
-        let cols = columns_for_width(avail, CARD_TARGET_W);
+        let cols = columns_for_width(avail, self.card_target_w);
         let col_w = card_col_w(avail, cols, GRID_SPX);
+        let img = card_img_size(self.card_target_w);
         self.card_grid_col_w = col_w;
         // Copy the category out of the tab before the grid closure:
         // the closure takes `&mut self`, so no borrow of `self.tabs`
@@ -796,7 +871,7 @@ impl GuiApp {
                 }
                 for row in section.cards.chunks(cols) {
                     for card in row {
-                        self.draw_card(ctx, ui, card, col_w, changed);
+                        self.draw_card(ctx, ui, card, col_w, img, changed);
                     }
                     ui.end_row();
                 }
@@ -821,7 +896,7 @@ impl GuiApp {
     /// flowed image + name + description + symmetry sideways — the
     /// description truncated to "…" and each card's min_rect grew past
     /// its column, overflowing the row. So instead of a Frame: the card
-    /// allocates its exact cell rect ([`col_w`] × [`CARD_TOTAL_H`]) up
+    /// allocates its exact cell rect ([`col_w`] × [`card_total_h`]) up
     /// front, paints fill/stroke on that rect (rounding 6.0 — the
     /// look the old `Frame` had), and draws the content in an explicit
     /// [`egui::Layout::top_down`] child inset by [`CARD_INNER_MARGIN`],
@@ -836,21 +911,23 @@ impl GuiApp {
         ui: &mut egui::Ui,
         card: &tess_core::CardMeta,
         col_w: f32,
+        img: (u32, u32),
         scroll_to_selected: bool,
     ) {
         let selected = card.id == self.app.selected_id();
-        let img_size = egui::vec2(CARD_IMG_W as f32, CARD_IMG_H as f32);
+        let img_size = egui::vec2(img.0 as f32, img.1 as f32);
+        let total_h = card_total_h(img.1);
         // The exact cell. Inside the grid, `next_cell` = max(allocated,
         // prev_col_width) = col_w, so the cell size — and the grid's
         // total width — are decided here, independent of the content.
         let (card_rect, _cell) =
-            ui.allocate_exact_size(egui::vec2(col_w, CARD_TOTAL_H), egui::Sense::hover());
+            ui.allocate_exact_size(egui::vec2(col_w, total_h), egui::Sense::hover());
         self.card_rects.push(card_rect);
         // Lazy texture generation: generate (or reuse) the texture only
         // when the card's rect is near the scroll area's clip rect, so
         // the first frame pays only for the cards actually in view.
         let handle = if ui.clip_rect().expand(32.0).intersects(card_rect) {
-            Some(self.card_texture(ctx, card, CARD_IMG_W, CARD_IMG_H))
+            Some(self.card_texture(ctx, card, img.0, img.1))
         } else {
             None
         };
@@ -881,7 +958,7 @@ impl GuiApp {
                 .id_salt(card.id)
                 .max_rect(egui::Rect::from_min_size(
                     card_rect.min + egui::vec2(CARD_INNER_MARGIN, CARD_INNER_MARGIN),
-                    egui::vec2(card_inner_w(col_w, CARD_INNER_MARGIN), CARD_INNER_H),
+                    egui::vec2(card_inner_w(col_w, CARD_INNER_MARGIN), card_inner_h(img.1)),
                 ))
                 .layout(egui::Layout::top_down(egui::Align::LEFT)),
         );
@@ -1765,24 +1842,142 @@ mod tests {
         );
     }
 
+    /// The preview image scales linearly with the card target width
+    /// (default → the historical 120×90) and keeps the 4:3 preview
+    /// aspect at every zoom level.
+    #[test]
+    fn card_img_size_scales_with_target() {
+        assert_eq!(super::card_img_size(super::CARD_TARGET_W), (120, 90));
+        assert_eq!(super::card_img_size(super::CARD_W_MAX), (240, 180));
+        assert_eq!(super::card_img_size(super::CARD_W_MIN), (75, 56));
+        assert_eq!(super::card_img_size(192.0), (96, 72));
+        for &t in &[
+            super::CARD_W_MIN,
+            192.0,
+            super::CARD_TARGET_W,
+            300.0,
+            super::CARD_W_MAX,
+        ] {
+            let (w, h) = super::card_img_size(t);
+            assert_eq!(h, w * super::CARD_IMG_H / super::CARD_IMG_W, "4:3 at {t}");
+        }
+    }
+
+    /// The card-size control clamps to [`super::CARD_W_MIN,
+    /// super::CARD_W_MAX`] and, on every actual change, prunes preview
+    /// textures of other sizes (the cache is keyed by exact pixel
+    /// size, so stale-size textures are dead weight under continuous
+    /// wheel zoom). Pruning is exercised through a real headless pass:
+    /// textures are generated at the default size, resizing drops
+    /// them, and the next pass regenerates at the new size.
+    #[test]
+    fn set_card_target_w_clamps_and_prunes_textures() {
+        let ctx = egui::Context::default();
+        let mut gui = super::GuiApp::new();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 900.0));
+        let pass = |gui: &mut super::GuiApp| {
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            let _ = ctx.run(input, |ctx| {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    egui::ScrollArea::vertical()
+                        .id_salt("browser")
+                        .show(ui, |ui| gui.draw_card_grid(ctx, ui));
+                });
+            });
+        };
+        for _ in 0..2 {
+            pass(&mut gui);
+        }
+        assert!(
+            gui.card_textures.keys().any(|k| k.ends_with("|120x90")),
+            "default pass generates 120x90 textures"
+        );
+        // Resize: every stale-size texture is pruned immediately (the
+        // new size regenerates on the next draw pass).
+        gui.set_card_target_w(360.0);
+        assert_eq!(gui.card_target_w, 360.0);
+        assert!(
+            gui.card_textures.is_empty(),
+            "120x90 textures pruned on resize"
+        );
+        pass(&mut gui);
+        assert!(
+            gui.card_textures.keys().all(|k| k.ends_with("|180x135")),
+            "zoomed pass regenerates at the new size"
+        );
+        // Clamps: way past the max lands exactly on it, way below the
+        // min on it.
+        gui.set_card_target_w(10_000.0);
+        assert_eq!(gui.card_target_w, super::CARD_W_MAX);
+        gui.set_card_target_w(0.0);
+        assert_eq!(gui.card_target_w, super::CARD_W_MIN);
+    }
+
+    /// A real headless pass at a zoomed card size: every card
+    /// allocates the zoomed cell (width = the pass's column width,
+    /// height = [`super::card_total_h`] of the zoomed preview), and
+    /// the grid still fills the window width exactly — the dynamic
+    /// height path end-to-end, not just arithmetic.
+    #[test]
+    fn headless_pass_at_zoomed_card_size() {
+        let ctx = egui::Context::default();
+        let mut gui = super::GuiApp::new();
+        gui.set_card_target_w(360.0);
+        let (_iw, ih) = super::card_img_size(360.0);
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 900.0));
+        let mut col_w = 0.0;
+        for _ in 0..3 {
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            let _ = ctx.run(input, |ctx| {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    egui::ScrollArea::vertical()
+                        .id_salt("browser")
+                        .show(ui, |ui| gui.draw_card_grid(ctx, ui));
+                });
+            });
+            col_w = gui.card_grid_col_w;
+        }
+        assert!(!gui.card_rects.is_empty(), "cards painted");
+        for r in &gui.card_rects {
+            assert!(
+                (r.width() - col_w).abs() <= 1.0,
+                "card width {} != col_w {col_w}",
+                r.width()
+            );
+            assert!(
+                (r.height() - super::card_total_h(ih)).abs() <= 0.01,
+                "card height {} != card_total_h({ih}) {}",
+                r.height(),
+                super::card_total_h(ih)
+            );
+        }
+    }
+
     /// The fixed card height is factored purely from constants:
     /// image, the two-line title, description, symmetry line, and the
     /// four row spacings, with the line heights ordered name ≥
     /// description ≥ symmetry. The pinned literal catches a
-    /// card-height constant edited without re-deriving the sum.
+    /// card-height formula edited without re-deriving the sum.
     #[test]
     fn card_inner_h_is_factored_from_constants() {
         assert_eq!(
-            super::CARD_INNER_H,
+            super::card_inner_h(super::CARD_IMG_H),
             super::CARD_IMG_H as f32
                 + 2.0 * super::CARD_NAME_LINE_H
                 + super::CARD_DESC_LINE_H
                 + super::CARD_SYM_LINE_H
                 + 4.0 * super::CARD_ROW_SPX
         );
-        assert_eq!(super::CARD_INNER_H, 168.0);
+        // The default size keeps the historical constant's value.
+        assert_eq!(super::card_inner_h(super::CARD_IMG_H), 168.0);
         assert!(
-            super::CARD_INNER_H > super::CARD_IMG_H as f32,
+            super::card_inner_h(super::CARD_IMG_H) > super::CARD_IMG_H as f32,
             "text rows must add height below the image"
         );
         // Ordering of the line heights (local copies keep the
@@ -1928,10 +2123,10 @@ mod tests {
                     r.width()
                 );
                 assert!(
-                    (r.height() - super::CARD_TOTAL_H).abs() <= 0.01,
-                    "{tag}: card height {} != CARD_TOTAL_H {}",
+                    (r.height() - super::card_total_h(super::CARD_IMG_H)).abs() <= 0.01,
+                    "{tag}: card height {} != card_total_h(IMG_H) {}",
                     r.height(),
-                    super::CARD_TOTAL_H
+                    super::card_total_h(super::CARD_IMG_H)
                 );
             }
 
@@ -1958,8 +2153,8 @@ mod tests {
                         "{tag}: text galley {g:?} sticks out right of card {cr:?}"
                     );
                     // No-clipping at the two-line-title budget: every
-                    // card's text must fit the fixed CARD_INNER_H (the
-                    // 2-line name grew the budget; a stale constant
+                    // card's text must fit the card height (the
+                    // 2-line name grew the budget; a stale formula
                     // would clip the symmetry line below the card).
                     assert!(
                         g.bottom() <= cr.bottom() + 1.0,

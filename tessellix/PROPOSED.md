@@ -1910,3 +1910,22 @@ that already exists twice.
   the M76 measured-lattice sections); Ctrl+wheel resizes browse cards
   (width 22–44, height at half, thumbnail cache follows the size key);
   census 111/123 → 111/125 (PentagonTypes 12 → 14).
+- 2026-11-20 — M123: preview-grid resizing everywhere — the owner's
+  report ("the preview grid doesn't resize on mouse/trackpad or +/-
+  actions") fixed in both UIs. TUI: the +/- keys (with =/_ variants)
+  now resize the browse cards in Browse mode (previously only zooming
+  the canvas in Render), and ctrl+wheel is joined by shift+wheel as an
+  accepted alias (several terminals swallow or strip Ctrl on wheel
+  events); Browse status bar now advertises "+/- card size". GUI: the
+  browse card grid gained a real zoom — ctrl+wheel / trackpad pinch
+  (egui's `zoom_delta`, which already diverts ctrl-scroll away from
+  scrolling, so the grid never scroll-jumps) and +/- keys scale the
+  card target width 150–480 px (keys step 16 px, guarded by
+  `!ctx.wants_keyboard_input()` so the search box keeps its
+  characters); the preview image scales with the card (4:3 kept,
+  120×90 at default → 240×180 at max) and the card height follows
+  (`card_inner_h`/`card_total_h` factored from the image height — the
+  fixed 168 px `CARD_INNER_H` constant retired), stale preview
+  textures of other sizes are pruned on every actual resize (cache is
+  size-keyed); the grid keeps filling the window width exactly at
+  every zoom level (headless-pass tested at default and zoomed sizes).
