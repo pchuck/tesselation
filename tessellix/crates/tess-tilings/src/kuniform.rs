@@ -1,11 +1,11 @@
 //! 2-uniform (k-uniform) tilings, expressed as [`LatticeTiling`] data
 //! tables.
 //!
-//! Sixteen entries are from the closed list of 20 two-vertex-orbit
+//! Seventeen entries are from the closed list of 20 two-vertex-orbit
 //! tilings by regular polygons (Krotenheerdt; see the Wikipedia
 //! "k-uniform tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`,
 //! `n8`, `n5`, `n1`, `n13`, `n20`, `n12`, `n19`, `n4`, `n14`, `n3`,
-//! `n15`, `n2`). The
+//! `n15`, `n2`, `n16`). The
 //! list's entries have no individual proper names, so these are named by
 //! their vertex configurations, following that convention:
 //!
@@ -76,6 +76,12 @@
 //!   edge-to-flat-edge on a square lattice of spacing 2 + √3, with each
 //!   four-dodecagon square hole filled by a unit square plus four edge
 //!   triangles; the origin is the square's center.
+//! * `kuniform-n16` — vertex figures 3³.4² ; 3².4.3.4, group p4g (the
+//!   module's first p4g entry), t = 4, e = 5. Variant 1 of the
+//!   33344-33434 tiling: staggered square rows and triangle bands on
+//!   the diagonally-oriented square lattice ⟨(h,−h), (h,h)⟩,
+//!   h = (3 + √3)/2, with the diagonal mirror classes true glides; the
+//!   origin is a 3².4.3.4 vertex.
 //!
 //! All coordinates lie in Z + (√3/2)·Q, stored through [`H`].
 
@@ -2099,6 +2105,183 @@ pub fn kuniform_n2() -> LatticeTiling {
         ],
         offset: Vec2::ZERO,
         group: WallpaperGroup::P4m,
+        lattice_kind: LatticeKind::Square,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3³.4²; 3².4.3.4), wallpaper group p4g.
+///
+/// Wikipedia "List of k-uniform tilings" entry `2-uniform n16` (the
+/// "33344-33434 tiling" article's variant 1): `[3³.4²; 3².4.3.4]`,
+/// p4g (4\*2), 4-isohedral, 5-isotoxal. (The article's variant 2, the
+/// chiral pgg sibling, is `n17` and is NOT this entry.)
+///
+/// Construction (extracted from the wiki figure 2-uniform_n16.svg and
+/// re-derived exactly): rows of edge-sharing unit squares along y with
+/// square rows staggered, surrounded by up/down triangle bands — the
+/// snub-square-like 3².4.3.4 vertices alternate with the elongated-
+/// triangular 3³.4² vertices in a 2:1 ratio (8 + 4 per cell). The
+/// translation lattice is b1 = (h, −h), b2 = (h, h) with h = (3 + √3)/2
+/// (right-handed, square kind), |det| = 2h² = 6 + 3√3; the cell holds
+/// 6 squares + 12 triangles, area 6 + 12·√3/4 = 6 + 3√3 = |det|
+/// exactly. Vertex classes per cell: 4 of 3³.4² + 8 of 3².4.3.4.
+///
+/// Verification (Python battery tku5_n16f/n16k, exact Q(√3) arithmetic
+/// over a 7×7-cell emission): cell area = |det| exactly; every interior
+/// edge shared by exactly two tiles; vertex-figure census (cyclic
+/// words) only 3.3.3.4.4 / 3.3.4.3.4; fine-grid coverage exactly once.
+/// Symmetry measured by coset audit over the emission: exactly one
+/// isometry coset per D4 linear part (order 8 mod L; periods with
+/// |t| ≤ 4.75 are exactly ±b1, ±b2, ±(b1±b2)), with the axis-mirror
+/// cosets (x- and y-reflections) pure reflections and the two diagonal
+/// cosets TRUE glides (axial shift 7.098 = 3/4 of a diagonal lattice
+/// period, no integral lattice shift cancels it) — the p4g signature.
+/// Torus orbit census: t = 4 tile orbits (sizes 8 + 4 + 4 + 2 = 18)
+/// and e = 5 edge orbits, matching the wiki's 4-isohedral /
+/// 5-isotoxal data exactly.
+///
+/// Seeds by tile orbit (the wiki figure's four colors): seed 0 = the
+/// 4-square axis-aligned orbit, seed 1 = the 2-square tilted orbit;
+/// seed 2 = the 8-triangle orbit, seed 3 = the 4-triangle orbit.
+pub fn kuniform_n16() -> LatticeTiling {
+    // Squares, seed 0 (the 4-orbit): the two unit squares stacked at
+    // x ∈ [H, 1 + H] and the pair at x ∈ [1 + 2H, 3 + 2H].
+    let s0a = Polygon::from_slice(&[
+        Vec2::new(H, -1.0 / 2.0),
+        Vec2::new(1.0 + H, -1.0 / 2.0),
+        Vec2::new(1.0 + H, 1.0 / 2.0),
+        Vec2::new(H, 1.0 / 2.0),
+    ]);
+    let s0b = Polygon::from_slice(&[
+        Vec2::new(H, 1.0 / 2.0),
+        Vec2::new(1.0 + H, 1.0 / 2.0),
+        Vec2::new(1.0 + H, 3.0 / 2.0),
+        Vec2::new(H, 3.0 / 2.0),
+    ]);
+    let s0c = Polygon::from_slice(&[
+        Vec2::new(1.0 + 2.0 * H, 0.0),
+        Vec2::new(2.0 + 2.0 * H, 0.0),
+        Vec2::new(2.0 + 2.0 * H, 1.0),
+        Vec2::new(1.0 + 2.0 * H, 1.0),
+    ]);
+    let s0d = Polygon::from_slice(&[
+        Vec2::new(2.0 + 2.0 * H, 0.0),
+        Vec2::new(3.0 + 2.0 * H, 0.0),
+        Vec2::new(3.0 + 2.0 * H, 1.0),
+        Vec2::new(2.0 + 2.0 * H, 1.0),
+    ]);
+    // Squares, seed 1 (the 2-orbit): the tilted pair closing the
+    // diagonal square columns.
+    let s1a = Polygon::from_slice(&[
+        Vec2::new(3.0 / 2.0 + H, -1.0 / 2.0 - H),
+        Vec2::new(3.0 / 2.0 + 2.0 * H, -H),
+        Vec2::new(1.0 + 2.0 * H, 0.0),
+        Vec2::new(1.0 + H, -1.0 / 2.0),
+    ]);
+    let s1b = Polygon::from_slice(&[
+        Vec2::new(1.0 + H, 3.0 / 2.0),
+        Vec2::new(1.0 + 2.0 * H, 1.0),
+        Vec2::new(3.0 / 2.0 + 2.0 * H, 1.0 + H),
+        Vec2::new(3.0 / 2.0 + H, 3.0 / 2.0 + H),
+    ]);
+    // Triangles, seed 2 (the 8-orbit).
+    let t2a = Polygon::from_slice(&[
+        Vec2::new(H, -1.0 / 2.0),
+        Vec2::new(H, 1.0 / 2.0),
+        Vec2::new(0.0, 0.0),
+    ]);
+    let t2b = Polygon::from_slice(&[
+        Vec2::new(H, 1.0 / 2.0),
+        Vec2::new(H, 3.0 / 2.0),
+        Vec2::new(0.0, 1.0),
+    ]);
+    let t2c = Polygon::from_slice(&[
+        Vec2::new(1.0 / 2.0 + H, -1.0 / 2.0 - H),
+        Vec2::new(3.0 / 2.0 + H, -1.0 / 2.0 - H),
+        Vec2::new(1.0 + H, -1.0 / 2.0),
+    ]);
+    let t2d = Polygon::from_slice(&[
+        Vec2::new(1.0 + H, 3.0 / 2.0),
+        Vec2::new(3.0 / 2.0 + H, 3.0 / 2.0 + H),
+        Vec2::new(1.0 / 2.0 + H, 3.0 / 2.0 + H),
+    ]);
+    let t2e = Polygon::from_slice(&[
+        Vec2::new(1.0 + H, -1.0 / 2.0),
+        Vec2::new(1.0 + 2.0 * H, 0.0),
+        Vec2::new(1.0 + H, 1.0 / 2.0),
+    ]);
+    let t2f = Polygon::from_slice(&[
+        Vec2::new(1.0 + H, 1.0 / 2.0),
+        Vec2::new(1.0 + 2.0 * H, 1.0),
+        Vec2::new(1.0 + H, 3.0 / 2.0),
+    ]);
+    let t2g = Polygon::from_slice(&[
+        Vec2::new(3.0 / 2.0 + 2.0 * H, -H),
+        Vec2::new(2.0 + 2.0 * H, 0.0),
+        Vec2::new(1.0 + 2.0 * H, 0.0),
+    ]);
+    let t2h = Polygon::from_slice(&[
+        Vec2::new(1.0 + 2.0 * H, 1.0),
+        Vec2::new(2.0 + 2.0 * H, 1.0),
+        Vec2::new(3.0 / 2.0 + 2.0 * H, 1.0 + H),
+    ]);
+    // Triangles, seed 3 (the 4-orbit).
+    let t3a = Polygon::from_slice(&[
+        Vec2::new(0.0, 0.0),
+        Vec2::new(H, 1.0 / 2.0),
+        Vec2::new(0.0, 1.0),
+    ]);
+    let t3b = Polygon::from_slice(&[
+        Vec2::new(1.0 / 2.0 + H, -1.0 / 2.0 - H),
+        Vec2::new(1.0 + H, -1.0 / 2.0),
+        Vec2::new(H, -1.0 / 2.0),
+    ]);
+    let t3c = Polygon::from_slice(&[
+        Vec2::new(H, 3.0 / 2.0),
+        Vec2::new(1.0 + H, 3.0 / 2.0),
+        Vec2::new(1.0 / 2.0 + H, 3.0 / 2.0 + H),
+    ]);
+    let t3d = Polygon::from_slice(&[
+        Vec2::new(1.0 + 2.0 * H, 0.0),
+        Vec2::new(1.0 + 2.0 * H, 1.0),
+        Vec2::new(1.0 + H, 1.0 / 2.0),
+    ]);
+    LatticeTiling {
+        id: "kuniform-n16",
+        name: "2-uniform (3³.4²; 3².4.3.4)",
+        description: "2-uniform tiling (3³.4²; 3².4.3.4) — staggered square rows and triangle bands in the snub-square-related 4-isohedral form, diagonal glide mirrors (p4g).",
+        lattice: [
+            Vec2::new(3.0 / 2.0 + H, -(3.0 / 2.0 + H)),
+            Vec2::new(3.0 / 2.0 + H, 3.0 / 2.0 + H),
+        ],
+        cells: vec![
+            Cell { poly: s0a, seed: 0 },
+            Cell { poly: s0b, seed: 0 },
+            Cell { poly: s0c, seed: 0 },
+            Cell { poly: s0d, seed: 0 },
+            Cell { poly: s1a, seed: 1 },
+            Cell { poly: s1b, seed: 1 },
+            Cell { poly: t2a, seed: 2 },
+            Cell { poly: t2b, seed: 2 },
+            Cell { poly: t2c, seed: 2 },
+            Cell { poly: t2d, seed: 2 },
+            Cell { poly: t2e, seed: 2 },
+            Cell { poly: t2f, seed: 2 },
+            Cell { poly: t2g, seed: 2 },
+            Cell { poly: t2h, seed: 2 },
+            Cell { poly: t3a, seed: 3 },
+            Cell { poly: t3b, seed: 3 },
+            Cell { poly: t3c, seed: 3 },
+            Cell { poly: t3d, seed: 3 },
+        ],
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::P4g,
         lattice_kind: LatticeKind::Square,
         category: TilingCategory::TwoUniform,
         secondary: &[],
