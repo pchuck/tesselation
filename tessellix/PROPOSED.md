@@ -1079,7 +1079,31 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   chosen over 30° (30° slivers), 45°/67.5° (sharper 45° minimum
   interior angle), 90° (triangle pairing degenerates, square star
   collapse). Deviations documented in the module header. See
-  PATTERNS.MD §63.
+  PATTERNS.MD §63. A ninth configuration landed in M111 —
+  `hankin-3-3-4-3-4` on the snub-square 3.3.4.3.4 substrate
+  (θK = 60°, δ = 0; all twelve instances stored CCW in their
+  in-cell positions): each square tile in its five-face motif
+  (four corner quadrilaterals + a central octagon, 4 pairs), each
+  triangle tile in the side-1/2 4-subdivision limit (3 pairs,
+  four equilateral faces each) — 52 faces per lattice cell
+  ⟨(1+√3,0),(0,1+√3)⟩ (det 4+2√3); tiles and lattice in Q(√3)
+  with all face vertices in (ℤ+ℤ√3)/4 (the exact Q(√2,√3) audit:
+  √2 and √6 coefficients identically zero — √2 only as the 45°
+  glide-ray direction); p4g verified exactly on a 6292-face
+  window: the face-set translation lattice is the centered
+  lattice Λ′ = ⟨(L/2,L/2),(L/2,−L/2)⟩ with L = 1+√3 (the
+  square-lattice half-steps fail 788/788), 4-fold centers
+  {(L/4, L/4+1/2), (L/4, 3L/4+1/2), (3L/4, L/4+1/2), (3L/4,
+  3L/4+1/2)}, 2-folds = those ∪ {(0,1/2), (0,(L+1)/2),
+  (L/2,1/2), (L/2,(L+1)/2)}, glides off the L/8 grid — 45°
+  lines y−x ≡ L/4+1/2, 3L/4+1/2 (mod L) of shift ±(L/4, L/4)
+  and 135° lines y+x ≡ L/4+1/2, 3L/4+1/2 of shift ±(L/4, −L/4)
+  (785 faces each, 0 mismatch), no mirrors (all 18 t = 0 mirror
+  controls fail). θK = 60° chosen over 30° (30° slivers),
+  45°/67.5° (sharper 45° minimum interior angle), 90° (triangle
+  pairing degenerates, square star collapse). Deviations
+  documented in the module header. See PATTERNS.MD §66
+  (provisional).
 
 ### 15. Random/statistical tilings (blocked on a determinism policy)
 

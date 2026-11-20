@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (110 tilings)
+## Implemented (111 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -69,6 +69,7 @@ every dual is the face-centroid dual of an exact primal table.
 | `hankin-square-two-point` | Hankin two-point square weave (4.4.4.4) | cmm | M99 two-point inference on the unit square (θK = 45°, δ = 0.5): decagonal star per tile — 4 corner triangles + 2 pentagons + 10-gon core (§54) |
 | `hankin-4-8-8-rosette-transform` | Hankin rosette-transform khatam | p4m | Kaplan rosette transform (diss. §3.8) on the 4.8.8 substrate at θK = 45°, δ = 0: each octagon → concentric inner octagon (r′ = r·cos(π/8)/(1+sin(π/8)), rotated π/8, spokes = half the inner side) + 8 pentagons; each square → 4 half-squares of side 1/2 (all four bisectors pass through the centre — Kaplan's cluster heuristic fires: 4 of the 6 bisector-pair intersections, one cluster) — 93-tile transformed table per ⟨(1+√2,0),(0,1+√2)⟩ cell (16 triangles, 36 quads, 32 pentagons, 8 hexagons, one 16-gon), edge-to-edge (0 unpaired, 0 T-junctions, w = 4), area census |det| = 3+2√2, exact Q(√2); then M94 inference at θE = 45°; transformed table p4m-exact to 6.5e-16 (M99) |
 | `hankin-3-3-3-4-4` | Hankin elongated-triangular motif (3.3.3.4.4) | cmm | M107 inference on the elongated-triangular 3.3.3.4.4 substrate (θK = 60°, δ = 0; all-CCW in-cell table — the CW down-triangle and CW square emit outward rays and pair with nothing at every probed angle): both triangle tiles in the side-1/2 4-subdivision limit (4 equilateral faces each), the square as four corner quadrilaterals + central octagon — 13 faces per cell ⟨(1,0),(1/2,1+√3/2)⟩ (det 1+√3/2), exact Q(√3); cmm verified exactly on a 551-face window (§63) |
+| `hankin-3-3-4-3-4` | Hankin snub-square motif (3.3.4.3.4) | p4g | M111 inference on the snub-square 3.3.4.3.4 substrate (θK = 60°, δ = 0; all twelve instances stored CCW in their in-cell positions): each square in its five-face motif (four corner quadrilaterals + central octagon), each triangle in the side-1/2 4-subdivision limit (4 equilateral faces each) — 52 faces per cell ⟨(1+√3,0),(0,1+√3)⟩ (det 4+2√3); tiles and lattice in Q(√3), all face vertices in (ℤ+ℤ√3)/4 (√2 and √6 coefficients identically zero in the full Q(√2,√3) audit; √2 only as the 45° glide-ray direction); p4g verified exactly on a 6292-face window: face-set translations the centered lattice Λ′ = ⟨(L/2,L/2),(L/2,−L/2)⟩ with L = 1+√3, 4-fold centers {(L/4,L/4+½),(L/4,3L/4+½),(3L/4,L/4+½),(3L/4,3L/4+½)}, 2-folds = those ∪ {(0,½),(0,(L+1)/2),(L/2,½),(L/2,(L+1)/2)}, glides on 45° lines y−x ≡ L/4+½, 3L/4+½ and 135° lines y+x ≡ L/4+½, 3L/4+½ with ¼-period shifts ±(L/4,∓L/4) — off the L/8 grid; no mirrors (§66, provisional) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `najm-63-2e-0-3e-ac` | Najm template ([6,3]; 2e, 0, 3e; AC) | p6m | najm-generator substrate (diss. §3.6.1 Fig. 3.21): dodecagons + enneagons sharing equal chords, x = 2/(cot 15° + cot 20°), concave equilateral bowties (70°/220°) at the 2-fold points; 6 tiles/cell, |det| = 3√3/2 (M99) |
 | `najm-44-3e-0-0-a` | Najm template ([4,4]; 3e, 0, 0; A) | p4m | najm-generator substrate (diss. §3.6.1 Fig. 3.22): dodecagons r = √6−√2 on 2Z² sharing chords across odd grid lines + concave equilateral 4-pointed stars (side 4−2√3, 60° tips, 210° notches); exact Q(√2,√3) (M99) |
@@ -4155,6 +4156,108 @@ documentation pending).
   integration). Full bar green: cargo check + clippy (both target
   sets) zero warnings, cargo test --workspace --all-features
   730/730.
+### 66. Hankin snub-square motif (3.3.4.3.4) ✅ (M111)
+
+> Numbering note: numbered §66 on the fork (M111, fork-local
+> numbering — provisional); renumbered at integration by landing
+> order (as §63 was the fork's provisional §65 and §64 the fork's
+> provisional §62).
+
+- **Motif:** the ninth configuration of the M94 inference engine
+  (`hankin::build_cells`, feature `hankin_ext`) — the first on the
+  snub-square 3.3.4.3.4 substrate (the snub of the square tiling: 4
+  unit squares in two orientation classes + 8 unit triangles per
+  cell, p4g; one lattice cell ⟨(1+√3,0),(0,1+√3)⟩, det (1+√3)² =
+  4+2√3 exact in Q(√3)). Single-point contacts (δ = 0), contact
+  angle θK = 60° (θe = 30°): rays from each edge midpoint lean in
+  at 60° to the edge, greedy min-cost pairing (Kaplan §3.4), planar
+  arrangement against the tile boundary. All twelve instances are
+  stored CCW in their in-cell positions in the archimedean module;
+  the CW pitfall probed in the M107/M111 survey still holds — a
+  reversed instance emits rays that point out of the tile interior
+  and pair with nothing at every probed angle (1 face, 0 pairs),
+  so the all-CCW in-cell table is the one that produces a paired
+  motif.
+- **Angle choice (θK ∈ {30°, 45°, 60°, 67.5°, 90°} probed, on the
+  all-CCW in-cell table):** the four square tiles pair completely
+  at 30°–67.5° (8 rays, 4 pairs, 5 faces — measured minimum
+  interior angle 30.0° / 45.0° / 60.0° / 45.0°; at 90° the square
+  star collapses to 4 faces). The eight triangle tiles pair
+  completely at 30°–67.5° (6 rays, 3 pairs, 4 faces — minimum
+  30.0° / 45.0° / 60.0° / 45.0°; at 90° the 3 spokes meet at the
+  incenter and the pairing degenerates to 2 pairs / 2 faces,
+  incomplete). All twelve CW rows never pair (outward rays, 0
+  pairs at every probed angle — documented reject). 60° is
+  chosen: the largest minimum interior angle among the complete
+  candidates (60° — each square in its 5-face motif, each
+  triangle in the classical side-1/2 4-subdivision limit).
+- **Cell structure:** 52 faces per lattice cell = 4 square tiles ×
+  5 faces (four corner quadrilaterals + a central octagon) + 8
+  triangle tiles × 4 faces (side-1/2 4-subdivision): 16 square
+  corner quadrilaterals (area (3−√3)/8 each, seed 0), 4 central
+  octagons (area (√3−1)/2 each, seed 1), 32 side-1/2 equilateral
+  triangles (area √3/16 each, seed 2); Σ = 4+2√3 = |det| exact.
+  Per-instance face/ray/pair censuses [5,5,5,5,4,4,4,4,4,4,4,4] /
+  [8,8,8,8,6,6,6,6,6,6,6,6] / [4,4,4,4,3,3,3,3,3,3,3,3]; all
+  twelve instances pair completely. All face vertices lie in
+  (ℤ+ℤ√3)/4, verified exactly in the full motif field Q(√2,√3):
+  the √2 and √6 coefficients are identically zero (maximum
+  coefficient denominator 4) — √2 enters only as the direction of
+  the 45° motif/glide rays, no face coordinate carries it.
+- **Rust:** `hankin_3_3_4_3_4()` in `hankin_3_3_4_3_4.rs`,
+  registered after `hankin_3_3_3_4_4`. Honest deviation: no 40-dps
+  Python prototype for this substrate — the expected-face
+  constants were machine-emitted by a faithful f64 port of the Rust
+  engine (the M111 spike) and cross-audited exactly in the
+  Q(√2,√3) coefficient ring, so the engine battery is a
+  self-consistency pin, not an independent cross-check (documented
+  in the module header). Distinct from `snub-square`: same 3.3.4.3.4
+  substrate, different construction (greedy inference vs. the
+  Archimedean tiling) and a different partition. 6 new tests (1
+  engine self-consistency: face equivalence against the emitted
+  arrays at 1e-9 + per-instance face/ray/pair censuses + the
+  θe/θK conjugacy pin; 5 registry: covers_region / rotated_scaled
+  / deterministic / unit_structure (52 cells, seed layout
+  {0×16, 1×4, 2×32}, det = 4+2√3, Σ areas = det at 1e-9) /
+  symmetry_metadata (p4g, square, Islamic)).
+- **Symmetry:** p4g verified exactly (exact Q(√2,√3) face-maps —
+  faces re-canonicalized to CCW / minimum-vertex before keying,
+  rigid images re-canonicalized the same way; on the 121-cell
+  window of 6292 faces, all distinct, each candidate censused
+  0-mismatch on its interior square S(c, 2L)): translations (L,0)
+  / (0,L) with L = 1+√3 and the centered (L/2, ±L/2) — 788 faces
+  each, 0 mismatch; (L/2, 0) / (0, L/2) fail 788/788 — so the
+  face-set translation lattice is the CENTERED lattice
+  Λ′ = ⟨(L/2,L/2),(L/2,−L/2)⟩, not L² (conventional p4g cell
+  side L/√2). Four-fold centers (769 faces each, two Λ′ orbits of
+  two points mod L²): {(L/4, L/4+1/2), (L/4, 3L/4+1/2),
+  (3L/4, L/4+1/2), (3L/4, 3L/4+1/2)} ≈ {(0.683, 1.183),
+  (0.683, 2.549), (2.049, 1.183), (2.049, 2.549)}. Two-fold
+  centers (800 faces each, two Λ′ orbits of two points mod L²):
+  the four 4-fold points ∪ {(0, 1/2), (0, (L+1)/2), (L/2, 1/2),
+  (L/2, (L+1)/2)} ≈ {(0, 0.5), (0, 1.866), (1.366, 0.5),
+  (1.366, 1.866)}. Glides, measured off the L/8 grid the window
+  sweep cannot reach: 45° lines y−x ≡ L/4+1/2, 3L/4+1/2 (mod L)
+  of shift ±(L/4, L/4), and 135° lines y+x ≡ L/4+1/2, 3L/4+1/2
+  (mod L) of shift ±(L/4, −L/4) (785 faces each, 0 mismatch).
+  The full-disk census about (5L/4, 5L/4) (2615 faces, adaptive
+  exact R² = 377/6 + 98√3/3 ≈ 119.413660 — the strict midpoint of
+  the nearest in/out squared centroid distances) confirms the
+  orbit structure. Negative controls fail: no mirror line in
+  either family (all 18 t = 0 controls, 772–800 faces tested),
+  the half-period shifts ±(L/2, ±L/2) on the off-grid lines (their
+  squares are the passing centered-lattice translations), rot45
+  about a 4-fold center, and the off-orbit L/8 mirrors and glides
+  — p4g (glides, no mirrors), consistent with the substrate
+  group; the substrate's own p4g survives the hankin partition.
+- **Census:** 109 → 110 tilings, 121 → 122 memberships (Islamic 20
+  → 21), 729 → 735 tests (fork-local numbers; renumbered at
+  integration).
+- **Status:** landed on the hankin-snub fork (M111, fork-local
+  numbering — renumbered at integration). 110 tilings, 122
+  memberships, 735 tests. Full bar green: cargo check + clippy
+  (both target sets) zero warnings, cargo test --workspace
+  --all-features 735/735.
 
 ## Proposed — vetted candidates
 
@@ -5997,6 +6100,56 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   base 91dd843). Full bar green: cargo check + clippy (both target
   sets) zero warnings, cargo test --workspace --all-features
   729/729. Details in §64.
+- 2026-11-20 — M111 Hankin snub-square motif (3.3.4.3.4) ✅
+  (§66, fork-local provisional numbering — renumbered at
+  integration by landing order): the ninth configuration of the M94
+  inference engine — `hankin-3-3-4-3-4` (θK = 60°, δ = 0) on the
+  snub-square 3.3.4.3.4 substrate (p4g, cell ⟨(1+√3,0),(0,1+√3)⟩,
+  det (1+√3)² = 4+2√3): each of the four square tiles in its
+  five-face motif (four corner quadrilaterals + central octagon —
+  8 rays, 4 pairs), each of the eight triangle tiles in the
+  side-1/2 4-subdivision limit (6 rays, 3 pairs, four equilateral
+  faces each) — 52 faces per lattice cell. Tiles and lattice live
+  in Q(√3) with all face vertices in (ℤ+ℤ√3)/4: the exact
+  Q(√2,√3) coefficient audit finds the √2 and √6 coefficients
+  identically zero (denominator max 4) — √2 enters only as the
+  direction of the 45° glide rays, no face coordinate carries it.
+  θK = 60° chosen over 30° (30° slivers), 45°/67.5° (sharper 45°
+  minimum interior angle), and 90° (triangle pairing degenerates —
+  the 3 spokes meet at the incenter, 2 pairs / 2 faces,
+  incomplete; the square star collapses to 4 faces); all twelve CW
+  rows never pair (outward rays, 0 pairs at every probed angle) —
+  the all-CCW in-cell table is the one that produces a paired
+  motif. No 40-dps Python prototype: expected-face constants
+  machine-emitted from a faithful f64 port of the Rust engine,
+  cross-audited exactly in the Q(√2,√3) coefficient ring
+  (self-consistency pin — documented in the module header). p4g
+  verified exactly over the full field Q(√2,√3) on a 121-cell
+  window of 6292 faces (all distinct; each candidate censused
+  0-mismatch on its interior square S(c, 2L); faces
+  re-canonicalized to CCW / minimum-vertex before keying): the
+  face-set translation lattice is the CENTERED lattice
+  Λ′ = ⟨(L/2,L/2),(L/2,−L/2)⟩ with L = 1+√3 — translations
+  (L,0)/(0,L) and the centered (L/2,±L/2) pass 788/788 while the
+  square-lattice half-steps (L/2,0)/(0,L/2) fail 788/788;
+  4-fold centers {(L/4, L/4+1/2), (L/4, 3L/4+1/2), (3L/4,
+  L/4+1/2), (3L/4, 3L/4+1/2)} (769 faces each), 2-folds = those ∪
+  {(0,1/2), (0,(L+1)/2), (L/2,1/2), (L/2,(L+1)/2)} (800 faces
+  each); glides measured off the L/8 grid — 45° lines y−x ≡
+  L/4+1/2, 3L/4+1/2 (mod L) of shift ±(L/4, L/4) and 135° lines
+  y+x ≡ L/4+1/2, 3L/4+1/2 of shift ±(L/4, −L/4) (785 faces each,
+  0 mismatch); full-disk census about (5L/4, 5L/4) — 2615 faces,
+  adaptive exact R² = 377/6 + 98√3/3 ≈ 119.413660. Negative
+  controls fail: no mirror line in either family (all 18 t = 0
+  controls, 772–800 faces tested — p4g has glides, no mirrors),
+  the half-period shifts ±(L/2, ±L/2) on the off-grid lines,
+  rot45 about a 4-fold center, and the off-orbit L/8 mirrors and
+  glides. 6 new tests (1 engine self-consistency + 5 registry).
+  Census: 109 → 110 tilings, 121 → 122 memberships, Islamic 20 →
+  21, 729 → 735 tests (fork-local numbers on the hankin-snub fork;
+  renumbered at integration). Full bar green: cargo check +
+  clippy (both target sets) zero warnings, cargo test --workspace
+  --all-features 735/735. Details in §66.
 
 - 2026-11-20 — M110 Fractalizing 3.12.12 (fractalizing-3-12-12) ✅
   (§65 — renumbered from the fork's provisional §64 by
