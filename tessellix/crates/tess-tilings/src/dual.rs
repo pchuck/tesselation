@@ -576,6 +576,35 @@ pub fn kuniform_dual_n2() -> LatticeTiling {
     .expect("kuniform-n2 dual: non-degenerate lattice")
 }
 
+/// Face-centroid dual of `kuniform-n16` (2-uniform 3³.4²; 3².4.3.4, p4g).
+///
+/// Same lattice as the primal, a1 = (h, −h), a2 = (h, h) with
+/// h = (3+√3)/2, |det| = 6+3√3 (square). The cell holds the 12 dual
+/// faces of the 12 vertex orbits: eight congruent pentagons (the
+/// 3².4.3.4 orbit; sides (3+√3)/6, (3+√3)/6, 1/√3, (3+√3)/6,
+/// (3+√3)/6 in cyclic order; angles 120°/90°/120°/120°/90°; area
+/// 1/2+√3/4) and four congruent pentagons (the 3³.4² orbit; sides
+/// (3+√3)/6, 1, (3+√3)/6, 1/√3, 1/√3 in cyclic order — the unit side
+/// crosses the shared edge of two unit squares; angles
+/// 120°/90°/90°/120°/120°; area 1/2+√3/4, equal to the other class).
+/// The twelve areas sum to 6+3√3 = |det|. Measured symmetry p4g (the
+/// dual keeps the primal's group): order-8 cosets with 4-fold centers
+/// at (√3−1)/4, (5+√3)/4 and its lattice partners, pure axis mirrors
+/// only along the lines x = −1 and y = 1/2 (meeting at the corner-2
+/// point (−1, 1/2)); both diagonal reflection classes are TRUE glides
+/// (measured glide g(x, y) = (y + 3/2 + √3, x − √3/2, half-period
+/// axial shift), so no mirror passes a 4-fold center — the p4g
+/// discriminator against p4m.
+pub fn kuniform_dual_n16() -> LatticeTiling {
+    build(
+        &kuniform::kuniform_n16(),
+        "kuniform-dual-n16",
+        "Dual of 2-uniform (3³.4²; 3².4.3.4)",
+        "Face-centroid dual of the 2-uniform (3³.4²; 3².4.3.4) tiling (p4g) — eight plus four congruent pentagons per cell (the key-lock tiling).",
+    )
+    .expect("kuniform-n16 dual: non-degenerate lattice")
+}
+
 #[cfg(test)]
 mod dual_tests {
     use super::*;
@@ -616,6 +645,9 @@ mod dual_tests {
     /// center and mirrors through a separate mirror-intersection 2-fold
     /// center (a p4g mirror never meets its 4-fold center), with
     /// `mirror_dirs` giving the two pure (axis) directions there.
+    /// `axis_pt` is that mirror-intersection point for the P4g case
+    /// (where the measured mirrors avoid the 4-fold `center`); unused
+    /// (zero) elsewhere.
     struct Case {
         id: &'static str,
         make: fn() -> LatticeTiling,
@@ -625,6 +657,7 @@ mod dual_tests {
         center: Vec2,
         lattice_kind: LatticeKind,
         mirror_dirs: [Vec2; 2],
+        axis_pt: Vec2,
     }
 
     const S3: f64 = 1.7320508075688773; // √3
@@ -649,6 +682,7 @@ mod dual_tests {
                 center: Vec2::ZERO,
                 lattice_kind: LatticeKind::Hexagonal,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-n18",
@@ -662,6 +696,7 @@ mod dual_tests {
                 center: Vec2::ZERO,
                 lattice_kind: LatticeKind::Hexagonal,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-n9",
@@ -675,6 +710,7 @@ mod dual_tests {
                 center: Vec2::ZERO,
                 lattice_kind: LatticeKind::Hexagonal,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-n8",
@@ -688,6 +724,7 @@ mod dual_tests {
                 center: Vec2::ZERO,
                 lattice_kind: LatticeKind::Hexagonal,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-n5",
@@ -701,6 +738,7 @@ mod dual_tests {
                 center: v2(3.0 + S3, 2.0 + 2.0 * S3),
                 lattice_kind: LatticeKind::Hexagonal,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-n1",
@@ -714,6 +752,7 @@ mod dual_tests {
                 center: v2(3.0 * (1.0 + S3) / 2.0, (3.0 + S3) / 2.0),
                 lattice_kind: LatticeKind::Hexagonal,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-n13",
@@ -727,6 +766,7 @@ mod dual_tests {
                 center: v2(5.0 * (1.0 + S3) / 2.0, 5.0 * (3.0 + S3) / 2.0),
                 lattice_kind: LatticeKind::Hexagonal,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-n20",
@@ -740,6 +780,7 @@ mod dual_tests {
                 center: Vec2::ZERO,
                 lattice_kind: LatticeKind::Hexagonal,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-pmm",
@@ -753,6 +794,7 @@ mod dual_tests {
                 center: v2(1.0, 0.0), // rhombus center (a 2-fold center)
                 lattice_kind: LatticeKind::Rectangular,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-n12",
@@ -766,6 +808,7 @@ mod dual_tests {
                 center: Vec2::ZERO, // dual vertex (a 2-fold center on the mirrors)
                 lattice_kind: LatticeKind::CenteredRectangular,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-n19",
@@ -779,6 +822,7 @@ mod dual_tests {
                 center: Vec2::ZERO, // 6-fold center (the primal's flower center)
                 lattice_kind: LatticeKind::Hexagonal,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
             },
             Case {
                 id: "kuniform-dual-n2",
@@ -794,6 +838,25 @@ mod dual_tests {
                 center: Vec2::ZERO, // 4-fold center (the primal square center)
                 lattice_kind: LatticeKind::Square,
                 mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
+            },
+            Case {
+                id: "kuniform-dual-n16",
+                make: kuniform_dual_n16,
+                primal: kuniform::kuniform_n16,
+                classes: [
+                    // Pentagon over the 3².4.3.4 vertices.
+                    (5, 8, 0.5 + S3 / 4.0),
+                    // Pentagon over the 3³.4² vertices (same area).
+                    (5, 4, 0.5 + S3 / 4.0),
+                ],
+                group: WallpaperGroup::P4g,
+                // Measured 4-fold center; the mirrors avoid it.
+                center: v2((S3 - 1.0) / 4.0, (5.0 + S3) / 4.0),
+                lattice_kind: LatticeKind::Square,
+                mirror_dirs: axis_mirrors,
+                // Corner-2 point where the two pure axis mirrors meet.
+                axis_pt: v2(-1.0, 0.5),
             },
         ]
     }
@@ -1236,6 +1299,35 @@ mod dual_tests {
         check_det(
             &kuniform_dual_n2(),
             "kuniform-dual-n2",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n16_covers_region() {
+        check_covers(
+            &kuniform_dual_n16(),
+            "kuniform-dual-n16",
+            BBox::new(v2(-5.0, -4.0), v2(9.0, 8.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n16_rotated_scaled() {
+        check_rotated(
+            &kuniform_dual_n16(),
+            "kuniform-dual-n16(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n16_deterministic() {
+        check_det(
+            &kuniform_dual_n16(),
+            "kuniform-dual-n16",
             BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
         );
     }
@@ -1706,6 +1798,75 @@ mod dual_tests {
                         |p| ctr + v2(0.13, 0.17) + (ctr + v2(0.13, 0.17) - p),
                         false,
                         &format!("{} R180 off-center (negative probe)", c.id),
+                    );
+                }
+                WallpaperGroup::P4g => {
+                    // C4 about the measured 4-fold center: positive
+                    // (p4g has 4-fold rotation centers — the pgg
+                    // discriminator).
+                    for k in 1..=3 {
+                        let ang = (k as f64) * 90.0 * deg;
+                        probe_dual_symmetry(
+                            &dual,
+                            |p| ctr + (p - ctr).rotated(ang),
+                            true,
+                            &format!("{} R{}", c.id, k * 90),
+                        );
+                    }
+                    // Pure mirrors only in the two axis directions,
+                    // through the measured corner-2 point (in p4g the
+                    // mirrors never pass a 4-fold center): positive.
+                    let q = c.axis_pt;
+                    for (mi, d) in c.mirror_dirs.iter().enumerate() {
+                        let d = *d;
+                        probe_dual_symmetry(
+                            &dual,
+                            move |p| q + d * (2.0 * (p - q).dot(d)) - (p - q),
+                            true,
+                            &format!("{} mirror {} (through corner-2 point)", c.id, mi),
+                        );
+                    }
+                    // R180 about the corner-2 point: positive (the
+                    // product of the two mirrors above).
+                    probe_dual_symmetry(
+                        &dual,
+                        |p| q + (q - p),
+                        true,
+                        &format!("{} R180 (corner-2 point)", c.id),
+                    );
+                    // The measured diagonal glide
+                    // g(x, y) = (y + 3/2 + √3, x − √3/2): positive —
+                    // the diagonal classes are true glides, not
+                    // mirrors (this is what separates p4g from p4m
+                    // positively, complementing the negative probes).
+                    probe_dual_symmetry(
+                        &dual,
+                        |p| v2(p.y + 1.5 + S3, p.x - S3 / 2.0),
+                        true,
+                        &format!("{} diagonal glide", c.id),
+                    );
+                    // Every mirror margin through the 4-fold center
+                    // fails (a p4m signature absent here).
+                    for k in 0..4 {
+                        let phi = (k as f64) * 45.0 * deg;
+                        let d = v2(phi.cos(), phi.sin());
+                        probe_dual_symmetry(
+                            &dual,
+                            move |p| ctr + d * (2.0 * (p - ctr).dot(d)) - (p - ctr),
+                            false,
+                            &format!(
+                                "{} M{} through 4-fold center (negative probe)",
+                                c.id,
+                                k * 45
+                            ),
+                        );
+                    }
+                    // R90 about the corner-2 point fails (q is 2-fold only).
+                    probe_dual_symmetry(
+                        &dual,
+                        |p| q + (p - q).rotated(90.0 * deg),
+                        false,
+                        &format!("{} R90 at corner-2 point (negative probe)", c.id),
                     );
                 }
                 WallpaperGroup::P4m => {
