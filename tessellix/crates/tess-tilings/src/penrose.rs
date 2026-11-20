@@ -245,11 +245,11 @@ impl Tiling for PenroseTiling {
     }
 
     fn name(&self) -> &'static str {
-        "Penrose (P3)"
+        "Penrose P3 (rhombs)"
     }
 
     fn description(&self) -> &'static str {
-        "Quasiperiodic rhomb tiling by substitution; local 5-fold symmetry."
+        "Quasiperiodic tiling by thick and thin rhombs, φ-substitution on Robinson triangles; local 5-fold symmetry."
     }
 
     fn category(&self) -> TilingCategory {

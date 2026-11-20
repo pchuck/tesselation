@@ -1433,8 +1433,8 @@ pub fn kuniform_n20() -> LatticeTiling {
     cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(3.0, 4.0 * H), Vec2::new(3.5, 5.0 * H), Vec2::new(2.5, 5.0 * H)]), seed: 4 });
     LatticeTiling {
         id: "kuniform-n20",
-        name: "2-uniform (3⁶; 3⁴.6)",
-        description: "2-uniform tiling (3⁶; 3⁴.6) — unit triangular lattice with index-13 sublattice hexagon flowers, the chiral p6 form of the two-uniform 3⁴.6 family (p6).",
+        name: "2-uniform (3⁶; 3⁴.6)₁",
+        description: "2-uniform tiling (3⁶; 3⁴.6)₁ — unit triangular lattice with index-13 sublattice hexagon flowers, the chiral p6 form of the two-uniform 3⁴.6 family: no mirrors and five tile orbits (t = 5), unlike ₂ (n19), the achiral p6m index-9 form with mirrors and three tile orbits.",
         lattice: [Vec2::new(5.0 / 2.0, 3.0 * H), Vec2::new(-1.0, 4.0 * H)],
         cells,
         offset: Vec2::ZERO,
@@ -1616,8 +1616,8 @@ pub fn kuniform_n19() -> LatticeTiling {
     cells.push(Cell { poly: Polygon::from_slice(&[Vec2::new(0.0, 2.0 * H), Vec2::new(-1.0, 2.0 * H), Vec2::new(-0.5, H)]), seed: 2 });
     LatticeTiling {
         id: "kuniform-n19",
-        name: "2-uniform (3⁶; 3⁴.6)₁",
-        description: "2-uniform tiling (3⁶; 3⁴.6) — unit triangular lattice with index-9 sublattice hexagon flowers, the achiral p6m form of the two-uniform 3⁴.6 family (the wiki table's p6 label under-states the symmetry; n20 is the chiral p6 form).",
+        name: "2-uniform (3⁶; 3⁴.6)₂",
+        description: "2-uniform tiling (3⁶; 3⁴.6)₂ — unit triangular lattice with index-9 sublattice hexagon flowers, the achiral p6m form of the two-uniform 3⁴.6 family: mirrors and three tile orbits (t = 3; the wiki table's p6 label under-states the symmetry), unlike ₁ (n20), the chiral p6 index-13 form without mirrors and five tile orbits.",
         lattice: [Vec2::new(3.0, 0.0), Vec2::new(1.5, 3.0 * H)],
         cells,
         offset: Vec2::ZERO,

@@ -245,11 +245,11 @@ impl Tiling for PenrosePentagonTiling {
     }
 
     fn name(&self) -> &'static str {
-        "Penrose Pentagon (5-tile φ-substitution)"
+        "Penrose pentagons (5-tile φ-substitution)"
     }
 
     fn description(&self) -> &'static str {
-        "Quasiperiodic tiling by five pentagons with a φ-substitution; local 5-fold symmetry."
+        "Quasiperiodic tiling by five pentagon prototiles (three with 216° reflex angles) with a φ-substitution — unlike P1, whose four prototiles are pentagon, 10-point star, boat and diamond; local 5-fold symmetry."
     }
 
     fn category(&self) -> TilingCategory {

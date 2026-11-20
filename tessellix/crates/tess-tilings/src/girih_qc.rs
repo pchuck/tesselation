@@ -1985,7 +1985,7 @@ impl Tiling for GirihQuasiperiodicTiling {
     }
 
     fn name(&self) -> &'static str {
-        "Girih Star-and-Cross (quasiperiodic, Darb-i Imam substitution)"
+        "Girih Star-and-Cross (quasiperiodic)"
     }
 
     fn description(&self) -> &'static str {

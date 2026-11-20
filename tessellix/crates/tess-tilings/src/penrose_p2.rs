@@ -298,7 +298,7 @@ impl Tiling for PenroseP2Tiling {
     }
 
     fn name(&self) -> &'static str {
-        "Penrose (P2)"
+        "Penrose P2 (kite and dart)"
     }
 
     fn description(&self) -> &'static str {

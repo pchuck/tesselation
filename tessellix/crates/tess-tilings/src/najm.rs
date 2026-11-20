@@ -485,8 +485,8 @@ pub fn najm_63_2e_0_3e_ac() -> LatticeTiling {
 
     LatticeTiling {
         id: "najm-63-2e-0-3e-ac",
-        name: "Najm template ([6,3]; 2e, 0, 3e; AC)",
-        description: "Najm-template substrate (Kaplan diss. §3.6.1, Fig. 3.21): regular dodecagons and enneagons sharing equal chords, case-3 AC inflation x = 2/(cot 15° + cot 20°), plus concave equilateral bowties (70°/220°) at the 2-fold points; 1 dodecagon + 2 enneagons + 3 bowties per cell, vertex figures 150.140.70 ×12 and 140.220 ×6; wallpaper group p6m.",
+        name: "Najm template (6,3)",
+        description: "Najm-template substrate ([6,3]; 2e, 0, 3e; AC), Kaplan diss. §3.6.1 Fig. 3.21: regular dodecagons and enneagons sharing equal chords, case-3 AC inflation x = 2/(cot 15° + cot 20°), plus concave equilateral bowties (70°/220°) at the 2-fold points; 1 dodecagon + 2 enneagons + 3 bowties per cell, vertex figures 150.140.70 ×12 and 140.220 ×6; wallpaper group p6m.",
         lattice: [a1, a2],
         cells,
         offset: Vec2::ZERO,
@@ -561,8 +561,8 @@ pub fn najm_44_3e_0_0_a() -> LatticeTiling {
 
     LatticeTiling {
         id: "najm-44-3e-0-0-a",
-        name: "Najm template ([4,4]; 3e, 0, 0; A)",
-        description: "Najm-template substrate (Kaplan diss. §3.6.1, Fig. 3.22 second row): regular dodecagons r_A = √6 − √2 sharing chords across the odd grid lines of the square lattice, with concave equilateral 4-pointed stars (side 4 − 2√3, tips 60°, reflex notches 210°) in the interstices; exact in Q(√2, √3), areas 24 − 12√3 and 12√3 − 20 per cell; wallpaper group p4m.",
+        name: "Najm template (4,4)",
+        description: "Najm-template substrate ([4,4]; 3e, 0, 0; A), Kaplan diss. §3.6.1 Fig. 3.22 second row: regular dodecagons r_A = √6 − √2 sharing chords across the odd grid lines of the square lattice, with concave equilateral 4-pointed stars (side 4 − 2√3, tips 60°, reflex notches 210°) in the interstices; exact in Q(√2, √3), areas 24 − 12√3 and 12√3 − 20 per cell; wallpaper group p4m.",
         lattice: [Vec2::new(2.0, 0.0), Vec2::new(0.0, 2.0)],
         cells: vec![
             Cell {
