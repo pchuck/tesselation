@@ -615,7 +615,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
 - **Status:** implemented on branch stampfli (pending integration);
   committed as M45.
 
-### 7. Golden bee / Ammann chair (Ammann A2, inflation √φ)
+### 7. Golden bee / Ammann chair (Ammann A2, inflation √φ) ✅ (M104)
 
 - **Motif:** the golden bee — a concave hexagon (five right angles and
   one reflex) that dissects into **two smaller similar copies of
@@ -647,6 +647,14 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   proves the canonical sequence quasiperiodic; if the diffraction
   claim stays outside our verification reach, declare Aperiodic with
   a documented note (chair precedent).
+- **Status:** landed (M104) as `golden-bee`, category Quasiperiodic
+  (this module implements exactly Vince's canonical sequence; the
+  exact Q(√φ) battery verifies the substitution mechanics, not the
+  diffraction limit — the module header documents the scope). 8
+  module tests; census 96 → 97 tilings, 108 → 109 memberships,
+  Quasiperiodic 8 → 9, 674 → 682 tests (fork-local on 91dd843).
+  Details in PATTERNS.MD §62 (provisional number; renumber at
+  integration).
 
 ### 8. Socolar 12-fold (and the shield tiling) — shield DONE (M51) ✅
 

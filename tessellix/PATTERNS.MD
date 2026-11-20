@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (108 tilings)
+## Implemented (109 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -135,6 +135,7 @@ figures at the split midpoints, `2.4.4`).
 | `ammann-beenker` | Ammann–Beenker A5 (octagonal aperiodic) | half-tile substitution (two rhombus halves + square) with per-level mirror flips; exact Q(√2) geometry; edge-to-edge; 8-fold finite patches |
 | `stampfli` | Stampfli 12-fold dodecagonal | squares + equilateral triangles + 30° rhombi; Stampfli substitution, inflation 2+√3 (Bielefeld encyclopedia rule); straddling unit children deduped by exact vertex set; 12-rhombus seed star, exact Z[√3]/4 anchors; edge-to-edge, T-junction-free, 12-fold symmetric at every generation |
 | `shield` | Shield tiling (Gähler, dodecagonal 12-fold) | shield hexagon + square + black/white triangles, each in two labelled orientations R/L — 4 prototiles / 8 substitution kinds carrying Gähler's matching rules; inflation θ = 2cos15° = (√6+√2)/2, PF Perron θ² = 2+√3; children tile kinked supertiles (±¼-unit-square notches); exact Q(√2,√3) geometry, all edges on the 12 dodecagonal directions; Bragg 12-fold (no local 30° center) |
+| `golden-bee` | Golden bee / Ammann chair (A2, inflation √φ, irreptile) | the registry's first irreptile: concave hexagon (five right angles + one reflex), edge lengths {1, s, s⁻¹, s⁻², s⁻³, s⁻⁴} (s = √φ), area s − s⁻⁷; dissects into two similar copies of unequal size (scales φ^−1/2 and φ^−1; area law s⁻² + s⁻⁴ = 1); √φ-inflation substitution over 8 orientation classes (A0…A3 rotations, B0…B3 mirror family), every rule pinned exact in Q(√φ) (4-integer tuples, s⁴ = s² + 1; the girih-quasiperiodic fixed-point trick); non-edge-to-edge by intrinsic T-junctions at the exact s⁻⁴ edge fraction (13 at depth 3, 64 at depth 5, 1 − s⁻⁴ = s⁻²); growth 2^d tiles, Σ s^−2e = 1 exact at every depth; finite covered patch (seed chair = domain, Taylor–Socolar precedent) recentered on the patch bbox center, pinwheel-convention view-anchored depth (nested views bit-identical within one φ-octave); category Quasiperiodic (Vince, AMM 121 (2014), canonical sequence; Durand–Shen–Vereshchagin, DCG 63 (2020), structure of A2); proto = class, seed = size exponent (one hue per size class) (M104) |
 | `hat` | Hat (aperiodic monotile, "einstein") | SMKG 2023; H/T/P/F metatile substitution (29-rule patch, 22 kept), exact Eisenstein placements; inflation φ² only in the limit (iterated outlines drift by design); tiles only with its mirror image; per-view seeded lineage blobs with exact clipped-area acceptance; non-edge-to-edge (565 midpoint T-junctions at depth 3) |
 | `turtle` | Turtle ("hats in turtles", einstein family) | turtle (14 sides, area 10√3) + hat prototiles on Kaplan's exact hex lattice; 9-label 8+1 key-point substitution with per-level chirality flip; homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge; turtle:hat ratio → 4+√15 |
 | `spectre` | Spectre (chiral einstein Tile(1,1)) | single equal-edge prototile, aperiodic *without* reflections; 9-label D12 substitution (spectre.js-identical), exact Q(√3) surd geometry; edge-to-edge |
@@ -4003,6 +4004,81 @@ documentation pending).
   integration). 101 tilings, 113 memberships, 696 tests. Full bar
   green: cargo check + clippy (both target sets) zero warnings,
   cargo test --workspace --all-features 696/696.
+### 64. Golden bee / Ammann chair (Ammann A2, inflation √φ) ✅ (M104)
+
+> Numbering note: renumbered from the fork's provisional §62 to
+> §64 by landing order (§63 = hankin-3-3-3-4-4, M107; this landing
+> followed M107's).
+
+- **Motif:** the registry's first **irreptile** — Ammann's A2 "chair": a
+  concave hexagon with five right angles and one reflex angle, six edge
+  lengths {1, s, s⁻¹, s⁻², s⁻³, s⁻⁴} (s = √φ), area s − s⁻⁷. It dissects
+  into exactly **two similar copies of unequal size** — a large child at
+  scale s⁻¹ = φ^−1/2 (area fraction 1/φ) and a small child at scale
+  s⁻² = φ⁻¹ (area fraction 1/φ²), area law s⁻² + s⁻⁴ = 1. Ammann's
+  aperiodic set A2; the only polygon besides non-isosceles right
+  triangles that partitions into a non-congruent similar pair (Vince,
+  "Self-Similar Polygonal Tilings", Amer. Math. Monthly 121 (2014));
+  A2-tiling structure: Durand–Shen–Vereshchagin, Discrete Comput. Geom.
+  63 (2020).
+- **Construction:** √φ-inflation substitution over 8 orientation classes
+  (A0…A3 = rotations of the unit chair by 90°·k, B0…B3 = the mirror
+  family); each parent dissects into L (scale s⁻¹) + S (scale s⁻²) at
+  pinned exact offsets (module rule table). 8/8 dissections verified
+  exact by open-slab even-odd sweeps; growth census d0…d5 (2^d tiles;
+  class parity even {A0,A2,B1,B3} / odd {A1,A3,B0,B2} at 2^(d−2); size
+  histograms; Σ s^−2e = 1) all asserted as exact K equalities.
+- **Exact arithmetic:** all geometry in K = Q(√φ) — integer 4-tuples
+  (a0,a1,a2,a3) = a0 + a1·s + a2·s² + a3·s³ with s² = φ and reduction
+  s⁴ = s² + 1 (the same quartic-field fixed-point trick as
+  girih-quasiperiodic). The 8 unit shapes (edge multiset, 2·area =
+  (0,−8,0,6), turn census 5 right + 1 reflex, bbox 1×s/s×1), all child
+  anchors, all growth invariants, and the junction ratios are exact K
+  assertions; f64 only for the real embedding that orders K (distinct
+  elements separate by > 1e-9, asserted at each comparison) and at
+  emission.
+- **Anchoring:** finite-patch model (Taylor–Socolar / Jeandel–Rao
+  precedent) — the seed is a single unit A0 chair and the patch *is* the
+  covered domain; cell space recentered on the patch bbox center via a
+  fixed float offset (−1/2, −s/2) (1/2 ∉ Z[√φ] — documented, not
+  lattice-exact). Depth is view-anchored (pinwheel convention): E =
+  cell-space view diagonal, d = 0 for E ≥ 1 else
+  ceil(−ln E / ln φ), cap 17 (2^17 ≤ tile budget); the largest tile
+  (width s^−d) is ≈ √E, so nested views within one φ-octave emit
+  bit-identical tiles on their intersection (pinned).
+- **T-junctions:** not edge-to-edge, intrinsically — a child's reflex
+  (notch) corner lands in the relative interior of its sibling's long
+  edge at exactly the s⁻⁴ fraction of that edge (s⁻² from the other end,
+  since 1 − s⁻⁴ = s⁻²). Per-line slab coverage depth ∈ {0,1,2} (1 iff on
+  the patch boundary); junction census 13 (depth 3) / 64 (depth 5),
+  every junction at the exact ratio, pinned.
+- **Rust:** `GoldenBeeTiling` in `golden_bee.rs` (feature
+  `golden_bee`, default-on), registered after `stampfli`; category
+  Quasiperiodic — this module implements exactly Vince's canonical
+  sequence, and the header states the scope honestly: the battery
+  verifies substitution mechanics (two-piece dissections, area law,
+  size hierarchy, junction ratios), not the diffraction limit; the
+  quasiperiodicity claim rests on the cited theorem (chair precedent).
+  `proto` = orientation class (0…7), `seed` = size exponent e (width
+  s^−e), so the default Pattern coloring paints one hue per size class.
+- **Tests:** 8 module tests — (1) 8-shape exact battery (SINV/SPOWS
+  power-table cross-checks vs independent floats; edge multiset
+  {s⁻⁴…s}; exact 2·area; turn census 5+1; bbox origin + 1×s/s×1);
+  (2) all 8 two-piece dissections exact (area law, slab union == parent,
+  child disjointness, on-boundary ⟺ depth 1, junction ratios); (3)
+  growth census d0…d5 (counts, class censuses, size histograms, exact
+  area law) + depth-6 count; (4) global junction census 13/64 at the
+  exact s-ratio; (5) nested-view bit-identity (5 windows, one φ-octave,
+  depth pinned by size classes e ∈ 3..=6); (6–8) standard trio
+  (covers_region / rotated_scaled / deterministic) on windows inside the
+  seed chair.
+- **Symmetry:** P1, no lattice (finite patch; no symmetry claimed).
+- **Census:** 108 → 109 tilings, 120 → 121 memberships (Quasiperiodic
+  8 → 9), 721 → 729 tests (landed on main after the M107 landing; the
+  fork's step numbers were on its own base 91dd843).
+- **Status:** landed (M104). Full bar green: cargo check + clippy
+  (both target sets) zero warnings, cargo test --workspace
+  --all-features 729/729.
 
 ## Proposed — vetted candidates
 
@@ -5814,3 +5890,35 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   green: cargo check + clippy (both target sets) zero warnings,
   cargo test --workspace --all-features 721/721. Details in §63
   (renumbered from the fork's provisional §65 by landing order).
+- 2026-11-20 — M104 Golden bee / Ammann chair (A2, inflation √φ) ✅
+  (§64 — renumbered
+  from the fork's provisional §62 by landing order): the registry's first irreptile — the
+  concave chair hexagon (five right angles + one reflex; edges
+  {1, s, s⁻¹, s⁻², s⁻³, s⁻⁴}, s = √φ; area s − s⁻⁷) dissecting into two
+  similar copies of unequal size (scales φ^−1/2 and φ^−1; area law
+  s⁻² + s⁻⁴ = 1). √φ-inflation substitution over 8 orientation classes
+  (A0…A3 rotations, B0…B3 mirror family); all 8 rules pinned exact in
+  Q(√φ) (integer 4-tuples, s⁴ = s² + 1 — the girih-quasiperiodic
+  fixed-point trick): 8/8 two-piece dissections verified slab-exact
+  (open-slab even-odd sweeps), growth census d0…d5 (2^d tiles, class
+  parities, size histograms, Σ s^−2e = 1 exact) and the intrinsic
+  T-junction census 13 (depth 3) / 64 (depth 5), every junction at
+  exactly the s⁻⁴ edge fraction (1 − s⁻⁴ = s⁻²), all asserted as exact
+  K equalities. Finite covered patch (seed chair = domain;
+  Taylor–Socolar precedent) recentered on the patch bbox center (fixed
+  float (−1/2, −s/2), 1/2 ∉ Z[√φ] documented), pinwheel-convention
+  view-anchored depth (nested views bit-identical within one φ-octave,
+  pinned). Category Quasiperiodic — Vince (AMM 121, 2014) proves the
+  canonical sequence quasiperiodic (the module implements exactly that
+  sequence); DSV (DCG 63, 2020) classifies A2 tilings; the battery
+  verifies substitution mechanics, not the diffraction limit (module
+  header says so; chair precedent for the declared-strongest
+  category). 8 module tests (exact-field battery, two-piece
+  dissections, growth census, junction census, nested-view
+  bit-identity, standard trio). Census: 108 → 109 tilings, 120 → 121
+  memberships, Quasiperiodic 8 → 9, 721 → 729 tests (landed on main
+  after the M107 landing; the fork's step numbers were on its own
+  base 91dd843). Full bar green: cargo check + clippy (both target
+  sets) zero warnings, cargo test --workspace --all-features
+  729/729. Details in §64.
+
