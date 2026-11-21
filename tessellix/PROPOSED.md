@@ -1413,6 +1413,7 @@ of these; each is a substitution or cut-and-project table.
 
 - **Golden Triangle** (+ coloured variant; cut-and-project, pure
   point) — golden-triangle/golden-bee style dissection; effort S–M.
+  ✅ landed M127 as `golden-triangle` (substitution realization).
 - **Golden Pinwheel** — φ² inflation, dense tile orientations but
   *FLC*; pinwheel-style generator with a φ lattice; effort M.
 - **Fibonacci×Fibonacci** — 3 prototiles, product substitution;
@@ -1428,7 +1429,7 @@ of these; each is a substitution or cut-and-project table.
   structure, see Parked list). A3/A4 have substitution structure;
   effort M each.
 - **AB rhomb–triangle** — Ammann–Beenker with the triangle shown;
-  effort S.
+  effort S. ✅ landed M129 as `ammann-beenker-tri`.
 - **Octagonal 1225 tile** — single octagonal prototile, 8-fold;
   effort M.
 - **CAST 8-fold (DTO)** — dense tile orientations; needs the DTO
@@ -1450,7 +1451,7 @@ of these; each is a substitution or cut-and-project table.
 ### 23d. Rep-tile / limit-periodic family — next to chair/sphinx/p-pentomino
 
 - **Pregnant chairs**, **Armchair** — chair-family rep-tiles; effort
-  S each (chair machinery exists).
+  S each (chair machinery exists). **Armchair** ✅ landed M128.
 - **Domino/table tiling (+variants)** and **half-hex family** —
   limit-periodic, cut-and-project; half-hex also closes the #17
   substitution-hierarchy gap; effort M each.
@@ -1891,7 +1892,8 @@ that already exists twice.
   kuniform-n16 = 33344-33434 variant 1 (3³.4²; 3².4.3.4) p4g —
   axis mirrors pure, diagonal cosets true ½-period glides — + M121
   its "key-lock" pentagon dual; both duals face-censused in exact
-  ℚ(√3), areas summing to |det|). Census 111/125 → 119/133. Still
+  ℚ(√3), areas summing to |det|). Census 111/125 → 122/136 (the
+  M114–M121 batch landed before M123/M127–M129 on main). Still
   missing from the closed 20-list: n6, n7 (the two [3.4².6; 3.6.3.6]
   forms) and n17 (the pgg sibling of n16).
 - 2026-11-20 — M122: classification schema + UI audit fixes —
@@ -1929,3 +1931,25 @@ that already exists twice.
   textures of other sizes are pruned on every actual resize (cache is
   size-keyed); the grid keeps filling the window width exactly at
   every zoom level (headless-pass tested at default and zoomed sizes).
+- 2026-11-20 — M127: **Golden Triangle** landed as `golden-triangle`
+  (§23a ✅) — the √(−τ) reptile substitution: right triangle (legs 1,
+  √τ; hypotenuse τ) dissected by its altitude into two similar
+  children (scales τ^−1, τ^−1/2; area law τ^−2 + τ^−1 = 1), complex
+  λ = i√τ inflation in exact Q(λ), uniform rule, chirality in the
+  vertex order, finite covered patch; category Quasiperiodic on the
+  Danzer–van Ophuysen 2000 family (the cut-and-project variant above
+  stays open). Census: Quasiperiodic 10 → 11, 120/134 at the commit.
+- 2026-11-20 — M128: **Armchair** landed (§23d ✅) — the L-tetromino
+  rep-4, chair machinery mirrored: unique dissection (exhaustive
+  enumeration, one child per orientation, rule forced), non-edge-to-
+  edge T-junction at (2,2), limit-periodic with depth-g period
+  (2^(g+1), 2^(g+1)). Census: Nonperiodic 4 → 5, 120/134 at the
+  commit. **Pregnant chairs** remains open (effort S).
+- 2026-11-20 — M129: **AB rhomb–triangle** landed as
+  `ammann-beenker-tri` (§23b ✅) — the A5 substitution with the
+  half-square triangles emitted as their own tile class (3 prototiles,
+  hypotenuse-pairing step removed, same silver-mean deflation);
+  PF-orbit census and edge-to-edge growth verified in exact Q(√2).
+  Census: Quasiperiodic 11, 120/134 at the commit. Registry end state
+  after the M127–M129 batch: 122 tilings / 136 memberships, pinned by
+  the tess-tilings census test.

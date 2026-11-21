@@ -614,7 +614,10 @@ mod tests {
     /// primary tab plus every tab from its
     /// [`Tiling::secondary_categories`]. The per-tab census pins today's
     /// taxonomy — extend it when adding a tiling (and the README's
-    /// count).
+    /// count; the doc-sync guards
+    /// `readme_catalog_matches_registry` and
+    /// `patterns_implemented_matches_registry` below fail the suite if
+    /// the docs are not updated).
     #[test]
     fn registry_groups_are_complete_and_canonically_ordered() {
         let r = super::registry();
@@ -844,6 +847,155 @@ assert_eq!(r.len(), 122, "built-in tiling count (update when adding tilings)");
             .filter(|g| !tess_core::browse::WALLPAPER_GROUP_GAPS.contains(*g))
             .collect();
         assert_eq!(groups, expected, "represented groups = 17 - gaps");
+    }
+
+    /// Doc-sync guard: the README's "Supported tilings" section must
+    /// mirror the registry — the census sentence ("N built-in tilings
+    /// (M tab memberships)"), the per-tab counts in "The ten tabs:"
+    /// prose, and the catalog table (every registry id, exactly once,
+    /// no stale rows). Without this guard the README drifted to
+    /// 119/133 while the registry moved to 122/136 (11 rows never
+    /// landed); this test fails the suite until the docs catch up.
+    #[test]
+    fn readme_catalog_matches_registry() {
+        /// The number immediately preceding `phrase` (digits only).
+        fn phrase_number(text: &str, phrase: &str, what: &str) -> usize {
+            let i = text
+                .find(phrase)
+                .unwrap_or_else(|| panic!("README phrase missing: {what}"));
+            let before = text[..i].trim_end();
+            let start = before
+                .rfind(|c: char| !c.is_ascii_digit())
+                .map_or(0, |p| p + 1);
+            before[start..]
+                .parse()
+                .unwrap_or_else(|_| panic!("README number not parseable: {what}"))
+        }
+
+        let readme = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../README.md"),
+        )
+        .expect("README.md readable from crates/tess-tilings");
+        let r = super::registry();
+        let tabs = tess_core::browse_tabs(&r);
+        let memberships: usize = tabs.iter().map(|t| t.cards.len()).sum();
+
+        // Census sentence.
+        assert_eq!(
+            phrase_number(&readme, " built-in tilings (", "built-in census"),
+            r.len(),
+            "README built-in tiling count"
+        );
+        assert_eq!(
+            phrase_number(&readme, " tab memberships)", "membership census"),
+            memberships,
+            "README tab-membership count"
+        );
+
+        // Per-tab prose counts, in canonical order. The README's Laves
+        // alias is "Laves / Catalan duals" (the category label uses
+        // parentheses).
+        let aliases = [
+            "Uniform",
+            "Two-Uniform",
+            "Laves / Catalan duals",
+            "Wallpaper",
+            "Pentagon Types",
+            "Islamic",
+            "Arrangements",
+            "Quasiperiodic",
+            "Aperiodic",
+            "Nonperiodic",
+        ];
+        for (tab, alias) in tabs.iter().zip(aliases) {
+            let marker = format!("**{alias}** (");
+            let i = readme
+                .find(&marker)
+                .unwrap_or_else(|| panic!("README per-tab prose missing for {alias}"));
+            let digits: String = readme[i + marker.len()..]
+                .chars()
+                .take_while(|c| c.is_ascii_digit())
+                .collect();
+            let n: usize = digits
+                .parse()
+                .unwrap_or_else(|_| panic!("README per-tab count not parseable for {alias}"));
+            assert_eq!(n, tab.cards.len(), "README per-tab count for {alias}");
+        }
+
+        // Catalog table: header row, then `| `id` | ...` data rows.
+        let table_start = readme
+            .find("| id | name | type |")
+            .expect("README catalog table header row");
+        let mut ids: Vec<&str> = readme[table_start..]
+            .lines()
+            .skip(2) // header + separator
+            .take_while(|l| l.starts_with("| `"))
+            .map(|l| {
+                let rest = &l["| `".len()..];
+                rest.split('`')
+                    .next()
+                    .expect("catalog row id has a closing backtick")
+            })
+            .collect();
+        ids.sort_unstable();
+        let mut expected: Vec<&str> = r.iter().map(|t| t.id()).collect();
+        expected.sort_unstable();
+        assert_eq!(
+            ids, expected,
+            "README catalog table must list every registry id exactly once (missing, \
+             stale, or duplicated rows)"
+        );
+    }
+
+    /// Doc-sync guard for PATTERNS.MD: the "Implemented (N tilings)"
+    /// heading must state the registry size, and every registry id must
+    /// appear exactly once as a table row inside the Implemented
+    /// section (the drift that shipped 119 rows for a 122-tiling
+    /// registry — 27 rows never landed, and a mis-merge absorbed the
+    /// two-uniform/dual/pentagon tables into the paver-bonds table
+    /// without section headers — is what this guard prevents).
+    #[test]
+    fn patterns_implemented_matches_registry() {
+        let patterns = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../PATTERNS.MD"),
+        )
+        .expect("PATTERNS.MD readable from crates/tess-tilings");
+        let r = super::registry();
+
+        let heading = patterns
+            .find("## Implemented (")
+            .expect("PATTERNS.MD '## Implemented (' heading");
+        let heading_end = heading + "## Implemented (".len();
+        let digits: String = patterns[heading_end..]
+            .chars()
+            .take_while(|c| c.is_ascii_digit())
+            .collect();
+        let n: usize = digits
+            .parse()
+            .expect("PATTERNS.MD Implemented census not parseable");
+        assert_eq!(n, r.len(), "PATTERNS.MD Implemented census heading");
+
+        // The Implemented section runs to the next top-level heading.
+        let section_end = patterns[heading_end..]
+            .find("\n## ")
+            .map_or(patterns.len(), |i| heading_end + i);
+        let mut ids: Vec<&str> = patterns[heading..section_end]
+            .lines()
+            .filter_map(|l| l.strip_prefix("| `"))
+            .map(|rest| {
+                rest.split('`')
+                    .next()
+                    .expect("Implemented row id has a closing backtick")
+            })
+            .collect();
+        ids.sort_unstable();
+        let mut expected: Vec<&str> = r.iter().map(|t| t.id()).collect();
+        expected.sort_unstable();
+        assert_eq!(
+            ids, expected,
+            "PATTERNS.MD Implemented section must list every registry id exactly once \
+             (missing, stale, or duplicated rows)"
+        );
     }
 
     /// Part A legality test (M76). Two independent claims per tiling:

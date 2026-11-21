@@ -13,7 +13,7 @@ Status markers:
 - 🔭 **proposed** — vetted candidate with a known construction path
 - ❓ **research** — promising but needs design/investigation before scheduling
 
-## Implemented (119 tilings)
+## Implemented (122 tilings)
 
 ### Uniform (Archimedean) — the complete set of 11
 
@@ -66,6 +66,8 @@ every dual is the face-centroid dual of an exact primal table.
 | `hankin-4-6-12` | Hankin inference twelvefold | p6m | M94 inference on 4.6.12 (θK = 60°, δ = 0): 12-petal dodecagon rosette, 4-pointed stars in the squares, 6-petal hexagon rosettes; exact Q(√3) (§44 config B) |
 | `hankin-hex-two-point` | Hankin two-point weave | p6m | M94 two-point inference on the unit hexagon (θK = 45°, δ = 0.5): 12 bracket-and-diamond faces around a central dodecagon; Kaplan Fig 3.6 (§44 config C) |
 | `hankin-3-12-12` | Hankin twelvefold khatam (3.12.12) | p6m | M99 inference on 3.12.12 (θK = 45°, δ = 0): 24-gon star core + 12 petals per dodecagon, 4-pointed stars + hexagon tips per triangle orbit; exact Q(√3) (§53) |
+| `hankin-3-6-3-6` | Hankin sixfold hexagram (3.6.3.6) | p6m | M100 inference on the trihexagonal 3.6.3.6 substrate (θK = 60°, δ = 0): each hexagon → regular hexagram — 12-gon core with 60° tips and 240° notches (vertices alternating on circles of radius 1/2 and √3/2) + six 60°-lozenge rhombi (7 faces); the two equilateral triangle tiles pair with no contact rays and stay single faces — 9 faces per cell ⟨(2,0),(1,√3)⟩ (det 2√3), exact Q(√3); θK = 60° chosen over 30°/45° (no star: core tips 120°/90°) and 67.5°/90° (sharper variant / star collapse) for the classical {6/2} hexagram; p6m verified on a ±5-lattice window (§57) |
+| `hankin-3-4-6-4` | Hankin sixfold rhombitrihex motif (3.4.6.4) | p6m | M100 inference on the rhombitrihexagonal 3.4.6.4 substrate (θK = 60°, δ = 0): each hexagon → the regular hexagram (12-gon core + six 60°-lozenge rhombi), the three unit squares pair with no contact rays and stay single faces, each equilateral triangle in the side-1/2 4-subdivision limit (star tips reach the edge midpoints exactly — 4 faces) — 18 faces per cell ⟨(1.5+√3/2, √3/2+1/2),(0,1+√3)⟩ (det 4√3/2+3), exact Q(√3); θK = 60° chosen over 30° (30° slivers), 45° (no hexagon star), 67.5° (45° tips), and 90° (star collapse); p6m verified on a ±5-lattice window (§56) |
 | `hankin-square-two-point` | Hankin two-point square weave (4.4.4.4) | cmm | M99 two-point inference on the unit square (θK = 45°, δ = 0.5): decagonal star per tile — 4 corner triangles + 2 pentagons + 10-gon core (§54) |
 | `hankin-4-8-8-rosette-transform` | Hankin rosette-transform khatam | p4m | Kaplan rosette transform (diss. §3.8) on the 4.8.8 substrate at θK = 45°, δ = 0: each octagon → concentric inner octagon (r′ = r·cos(π/8)/(1+sin(π/8)), rotated π/8, spokes = half the inner side) + 8 pentagons; each square → 4 half-squares of side 1/2 (all four bisectors pass through the centre — Kaplan's cluster heuristic fires: 4 of the 6 bisector-pair intersections, one cluster) — 93-tile transformed table per ⟨(1+√2,0),(0,1+√2)⟩ cell (16 triangles, 36 quads, 32 pentagons, 8 hexagons, one 16-gon), edge-to-edge (0 unpaired, 0 T-junctions, w = 4), area census |det| = 3+2√2, exact Q(√2); then M94 inference at θE = 45°; transformed table p4m-exact to 6.5e-16 (M99) |
 | `hankin-3-3-3-4-4` | Hankin elongated-triangular motif (3.3.3.4.4) | cmm | M107 inference on the elongated-triangular 3.3.3.4.4 substrate (θK = 60°, δ = 0; all-CCW in-cell table — the CW down-triangle and CW square emit outward rays and pair with nothing at every probed angle): both triangle tiles in the side-1/2 4-subdivision limit (4 equilateral faces each), the square as four corner quadrilaterals + central octagon — 13 faces per cell ⟨(1,0),(1/2,1+√3/2)⟩ (det 1+√3/2), exact Q(√3); cmm verified exactly on a 551-face window (§63) |
@@ -88,6 +90,39 @@ figures at the split midpoints, `2.4.4`).
 | `basketweave` | 2:1 dominoes in 2×2 alternating blocks | p4g | 45°-rotated square lattice ⟨(2,2),(2,−2)⟩, 4 split dominoes per cell; 4-folds at the even-even points, mirrors at the odd axes only (offset from the 4-fold centers — p4g, not p4m), six glide families; exact coset group probe (M39) |
 | `herringbone` | 2:1 dominoes in chiral L-pairs | pgg | rectangular lattice ⟨(2,2),(1,−1)⟩ (M76), 2 split dominoes per cell; single-direction (chiral): 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal + anti-diagonal axes), no mirrors; exact coset group probe (M40) |
 | `running-bond` | 2:1 dominoes in stretcher rows, half-brick offset | cmm | centered rectangular lattice ⟨(2,0),(1,1)⟩ (M76; the measured lattice is the √2-degenerate square lattice — the legality test's documented exception), 1 split domino per cell; mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions; exact coset group probe (M41) |
+| `stack-bond` | 2:1 dominoes stacked directly on top of one another (no offset) | pmm | rectangular lattice ⟨(2,0),(0,1)⟩ (det 2), 1 split domino per cell — the running bond without its half-brick offset; figures 4.4.4.4 at even-x points and 2.2 at odd-x split midpoints; mirrors x = k and y = n/2, 2-folds at (k, n/2), no glides; exact coset probe, ROT4/DIAG/ANTI negative (M114) |
+| `herringbone-45` | the herringbone bond in its 45°-laid canonical frame | pgg | rectangular lattice ⟨(0,2√2),(√2,0)⟩ (det 4), 2 split 45° dominoes per cell (the L-pair) — M40 rotated by 45°; 2-folds at (√2/4 + k√2/2, 3√2/4 + ℓ√2), vertical glides x = k√2/2 (glide √2), horizontal glides y = ℓ√2 + √2/4 (glide √2/2) descended from M40's diagonal/anti-diagonal glides, no mirrors, no 4-folds; shape-set coset probe (rotated cells break the axis-aligned bbox probe) + conjugated M40 group cross-check (M115) |
+| `basketweave-3` | three horizontal courses + one vertical course of 2:1 dominoes (period 5) | pmm | rectangular lattice ⟨(6,0),(0,5)⟩ (det 30) — an index-3 superlattice of the true ⟨(2,0),(0,5)⟩, kept for the whole-cluster cell convention (cf. M39); 15 split dominoes per cell (9 horizontal + 6 vertical); mirrors x = k and y = 2.5k + 1.5, 2-folds at (k, 2.5k′ + 1.5), no 4-folds, no glides; exact Python battery before porting: cell area sum 30 = \|det\|, 6474-point fine grid covered once, 296 interior unit edges each shared by exactly 2 (M116) |
+
+### Paver tilings (wallpaper-catalog completion, M78–M85)
+
+One realizer per missing wallpaper group, each a `LatticeTiling` data
+table, each edge-to-edge (0 T-junctions, exact cell-area sums) —
+closing the last gap (p3m1) of the 17-group wallpaper catalog at M85
+(HX-STUDY handoff). The first realizer of each group is noted.
+
+| id | motif | group | notes |
+|---|---|---|---|
+| `stepped-hexominoes` | asymmetric 2-step staircase hexomino | p1 | one tile per cell on the centered rectangular lattice ⟨(3,1),(0,2)⟩ (primitive cell; centered cell 6×2 with center (−3,1)), edge-to-edge with 180° at the four collinear corners; the catalog's first p1 realizer — the centered-rectangular normalizer {I, R180, Mx, My} broken by the asymmetric staircase (M78) |
+| `trapezoid-courses` | two courses of trapezoids per 2×1 cell | pm | rectangular lattice ⟨(2,0),(0,1)⟩ (det 2): four trapezoids, two incongruent shapes (areas 3/5 and 2/5) each with its mirror in x = 1, edge-to-edge (slant slope 1/5); the catalog's first pm realizer — vertical mirror lines x = integer, no horizontal mirrors or half-turns (the incongruent prototile classes kill pmm) (M79) |
+| `glide-hexagon-strips` | two interlocking hexagon strips per 1×2 cell | pg | rectangular lattice ⟨(1,0),(0,2)⟩ (det 2): fat (area 29/40) and waist (area 11/40) hexagons, strip 1 the glide image of strip 0 under g(x,y) = (x+1/2, −y) with g² = (1,0); edge-to-edge, five edge directions, no verticals; the catalog's first pg realizer — one horizontal glide family (glide 1/2; axes y ∈ ℤ in two orbits), no mirrors, no rotations (M80) |
+| `shifted-trapezoid-courses` | the trapezoid-course row stacked in rows of height 1, alternate rows reflected and shifted | pmg | rectangular lattice ⟨(2,0),(0,2)⟩ (det 4), alternate rows reflected in y = 1 and shifted by (1,0): eight trapezoids, two incongruent shapes × mirror × row-flip; edge-to-edge (slant slope 1/5); the catalog's first pmg realizer — vertical mirrors x ∈ ℤ, one horizontal glide family (glide 1), half-turns at (m+1/2, n); the (1,0) row shift kills the horizontal mirrors that would make it pmm (M81) |
+| `wavy-courses` | zigzag courses of height 4/3 (waves of slope ±1/3) | cm | centered-rectangular lattice ⟨(1,1),(2,0)⟩ (det 2; the x+y-even lattice, also square-metric): each column-course quadrilateral split by a diagonal seam alternating slope +1/−1 with column–course parity — four triangles, two incongruent shapes (areas 1/3 and 2/3, squared edges {4,10,18} vs {10,16,18} ×9); edge-to-edge; the catalog's first cm realizer — mirrors x = integer, glides (2j+1−x, y+1) with glide (0,1), no half-turns, no horizontal mirrors (M82) |
+| `chiral-cut-honeycomb` | side-2 hexagon cut by a chiral three-armed Y from alternating vertices | p3 | hexagonal cell ⟨(2√3,0),(√3,3)⟩ (det 6√3): three tiles, one chiral congruence class (all seed 0); edge-to-edge (450 interior edges, 0 T-junctions); the catalog's first p3 realizer — 120°/240° rotations about three 3-fold centre orbits (the "333" fingerprint) plus translations only; each arm bends once (Wk = mid(Vk,O) + rotated delta, delta = (−1/8,−1/10) rotating with the arm — straight cuts would be the p6m rhombille) (M83) |
+| `split-triangle-grid` | side-2 triangular grid, every small triangle split by its orbit point | p31m | hexagonal cell ⟨(2,0),(1,√3)⟩ (det 2√3): 8 tiles, two congruence classes (inner triangles achiral, corner quads chiral); edge-to-edge (750 interior edges, 0 T-junctions); the catalog's first p31m realizer — mirrors exactly on the grid lines (0°/60°/120° families), rot120 centres in three orbits with the on-mirror incidence (grid-vertex orbit on mirrors, both centroid orbits off) separating p31m from p3m1 (M84) |
+| `alcove-cut-grid` | side-2 triangular grid on the index-3 sublattice, every grid triangle cut from its alcove point | p3m1 | hexagonal cell ⟨(3,−√3),(3,√3)⟩ (det 6√3): 18 tiles, three congruence classes (each mirror-closed, achiral as a set); edge-to-edge (1350 interior edges, 0 T-junctions); the catalog's p3m1 realizer — the *333 fingerprint (all three rot120 centre orbits on mirrors, the contrast to M84's p31m one-orbit-on-mirror), mirrors in the 0°/60°/120° families; closes the last gap of the 17-group wallpaper catalog (M85) |
+
+### Two-uniform (k-uniform) family
+
+Vertex-2-uniform tilings as `LatticeTiling` data tables; ids are the
+Wikipedia 2-uniform numbers (`n*`), plus the two named classic forms
+(`kuniform-p6m`, `kuniform-pmm`). The two (3⁶; 3⁴.6) flower forms are
+distinguished by subscript since the M113 naming audit: n20 ₁ is the
+chiral p6 form (index-13 sublattice flowers, no mirrors), n19 ₂ the
+achiral p6m form (index-9 flowers, both mirror classes pass exactly).
+
+| id | motif | group | notes |
+|---|---|---|---|
 | `kuniform-p6m` | 2-uniform (3⁶; 3².6²) | p6m | hexagonal tiling with one of every three hexagons (index-3 sublattice m ≡ n mod 3 of the honeycomb centers) dissected into six-triangle fans; Wikipedia `2-uniform n10`, t = 2, e = 3 |
 | `kuniform-pmm` | 2-uniform (3.6.3.6; 3².6²) | pmm | hexagonal tiling with rows of up- and down-pointing triangles filling the gaps between rows of hexagons (rectangular lattice, hexagons share full horizontal edges); Wikipedia `2-uniform n11`, t = 2, e = 3 |
 | `kuniform-n18` | 2-uniform (3⁶; 3².4.3.4) | p6m | squares + two triangle orbits around the 3⁶ vertices; 60° hexagonal basis, \|b1\| = \|b2\| = 1+√3, det 3+2√3 (left-handed); origin a 3⁶ vertex = 6-fold center; 11 tiles/cell; Wikipedia `2-uniform n18`, t = 3, e = 3 (M87) |
@@ -99,6 +134,22 @@ figures at the split midpoints, `2.4.4`).
 | `kuniform-n20` | 2-uniform (3⁶; 3⁴.6) | p6 | flower form: unit triangular lattice, hexagons dissected at the points of the index-13 sublattice ⟨(1,3),(−3,4)⟩; 60° hexagonal basis, \|b1\| = \|b2\| = √13, det 13√3/2 (right-handed); origin a hexagon center = 6-fold point; 21 tiles/cell; the two-uniform family's first p6 entry — R60 PASS + six mirror probes FAIL + full translation scan pin p6; Wikipedia `2-uniform n20`, t = 5 (e = 6 exact; the wiki parenthetical's e = 7 disagrees, see §46) (M96) |
 | `kuniform-n12` | 2-uniform (3².6²; 3⁴.6) | cmm | rows of edge-sharing hexagons with unit-triangle bands between the rows; centered rectangular primitive basis ⟨(√3,0),(√3/2,5/2)⟩, det 5√3/2 (right-handed) — the centering vector is a basis vector; origin a hexagon center = 2-fold point; 5 tiles/cell (1 hex + 4 tri; the 10-tile centered cell is S ⊎ (S + c)); the two-uniform family's first cmm entry — six 2-fold probes + both mirror families PASS, valley 2-folds FAIL, no 3/4/6-fold; Wikipedia `2-uniform n12`, t = 2, e = 4 (both confirmed exactly) (M97) |
 | `kuniform-n19` | 2-uniform (3⁶; 3⁴.6)₁ | p6m | the t = 3 flower form of the 3⁴.6 pair: unit triangular lattice, hexagons dissected at the points of the index-9 sublattice ⟨(3,0),(0,3)⟩; 60° hexagonal basis, \|b1\| = \|b2\| = 3, det 9√3/2 (right-handed); origin a hexagon center = 6-fold point; 13 tiles/cell (1 hex + 6 petals + 6 gap triangles); Wikipedia `2-uniform n19`, t = 3, e = 3 — e = 3 confirmed under the full group (edge orbits {6,12,3}; under p6 alone the petal edges split 6+6 giving e = 4); the wiki table's p6 label under-states the symmetry: both mirror classes (axes 0°/30°/60°/90°) pass exactly, so the group is p6m — n20 is the genuinely chiral p6 form (M95) |
+| `kuniform-n4` | 2-uniform (4⁴; 3³.4²)₁ | cmm | staggered two-square-tall bands alternating with alternating-triangle bands one triangle high; centered rectangular basis ⟨(1,0),(1/2, 2+√3/2)⟩ with orthogonal index-2 pair (1,0), (0, 4+√3), det 2+√3/2 (right-handed); 4 tiles/cell (2 squares + 2 triangles); Wikipedia `2-uniform n4`, t = 2, e = 4; vertex orbits 4444 (1 class/cell) + 33344 (2 classes/cell) (M103) |
+| `kuniform-n14` | 2-uniform (3⁶; 3³.4²)₁ | pmm | single square rows alternating with double triangle strips — two counterposed unit-triangle rows, strip height √3; rectangular (primitive) basis ⟨(1,0),(0,1+√3)⟩, det 1+√3 (right-handed); 5 tiles/cell (1 square + 4 triangles in three orbits {strip1-up, strip2-down}, {strip1-down, strip2-up}); Wikipedia `2-uniform n14`, t = 3, e = 4; 3⁶ vertex orbit 1 class/cell, 33344 2 classes/cell (M103) |
+| `kuniform-n3` | 2-uniform (4⁴; 3³.4²)₂ | cmm | staggered three-square-tall bands alternating with alternating-triangle bands one triangle high — the n4 sibling; centered rectangular basis ⟨(1,0),(1/2, 3+√3/2)⟩ with orthogonal index-2 pair (1,0), (0, 6+√3), det 3+√3/2 (right-handed); 5 tiles/cell (3 squares + 2 triangles in orbits {rowA, rowC}, {rowB}, {triangles}); Wikipedia `2-uniform n3`, t = 3, e = 5; 4444 and 33344 vertex orbits, 2 classes/cell each (M108) |
+| `kuniform-n15` | 2-uniform (3⁶; 3³.4²)₂ | cmm | staggered square rows alternating with triple triangle strips — three unit-triangle rows, every horizontal edge shared back-to-back, square rows flanked by one triangle orbit; centered rectangular basis ⟨(1,0),(1/2, 1+3√3/2)⟩ with orthogonal index-2 pair (1,0), (0, 2+3√3), det 1+3√3/2 (right-handed); 7 tiles/cell (1 square + 6 triangles in orbits {flanker pair}, {yellow pair}, {cyan pair}); Wikipedia `2-uniform n15`, t = 4, e = 5; 3⁶ and 33344 vertex orbits, 2 classes/cell each (M108) |
+| `kuniform-n2` | 2-uniform (3.12.12; 3.4.3.12) | p4m | the 3-4-3-12 tiling: dodecagons kissing flat-edge-to-flat-edge on a square lattice, 1 unit square at the origin + 4 unit edge triangles (apex = dodecagon corner) filling each four-dodecagon hole; square basis ⟨(2+√3,0),(0,2+√3)⟩, det 7+4√3 exact; 6 tiles/cell; Wikipedia `2-uniform n2`, t = 3, e = 3 (torus orbits 3 tiles / 2 vertex classes / 3 edges — matching the wiki parenthetical exactly); p4m by coset audit (order 8 mod L, D4, no true glides) (M118) |
+| `kuniform-n16` | 2-uniform (3³.4²; 3².4.3.4) | p4g | staggered square rows and triangle bands in the snub-square-related form, variant 1 of the wiki's 33344-33434 tiling (variant 2 = n17, pgg, remains open); 45°-rotated square basis ⟨(h,−h),(h,h)⟩ with h = (3+√3)/2, det 6+3√3 exact; 18 tiles/cell (6 squares + 12 triangles; 4 vertex classes of 3³.4² and 8 of 3².4.3.4); Wikipedia `2-uniform n16`, 4-isohedral / 5-isotoxal (torus census 4 tile orbits of sizes 8+4+4+2 + 5 edge orbits); p4g by coset audit — axis-reflection cosets pure, both diagonal cosets true glides (axial shift 3/4 of a diagonal lattice period, no integral shift cancels) (M119) |
+
+### Two-uniform duals (face-centroid duals, Laves tab)
+
+Face-centroid duals of the tables above, constructed by the `dual()`
+helper (first batch M98, second batch M102, rectangular/cmm batch
+M106, square-lattice batch M120–M121). Every dual is a Laves-tab
+primary entry.
+
+| id | motif | group | notes |
+|---|---|---|---|
 | `kuniform-dual-p6m` | dual of 2-uniform (3⁶; 3².6²) | p6m | face-centroid dual of `kuniform-p6m`, constructed by the `dual()` helper (M98); 7 faces/cell — 1 regular hexagon (side 1/√3, area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3, 2√3/3, √3; angles 60°/60°/120°/120°; area 2√3/3); Σ = 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) |
 | `kuniform-dual-n18` | dual of 2-uniform (3⁶; 3².4.3.4) | p6m | face-centroid dual of `kuniform-n18`, constructed by the `dual()` helper; 7 faces/cell — 1 regular hexagon (side 1/√3) + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6; angles 90°/90°/120°/120°/120°; area (2+√3)/4); Σ = 3+2√3 = \|det\|, edge-to-edge, origin a 3⁶ vertex = 6-fold center (M98) |
 | `kuniform-dual-n9` | dual of 2-uniform (3.4.6.4; 3².4.3.4) | p6m | face-centroid dual of `kuniform-n9`, constructed by the `dual()` helper; 12 faces/cell — 6 congruent quadrilaterals (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/120°; area (3+2√3)/6) + 6 pentagons congruent to the n18-dual pentagons (area (2+√3)/4); Σ = 6+7√3/2 = \|det\|, edge-to-edge, origin a hexagon center = 6-fold center (M98) |
@@ -110,6 +161,20 @@ figures at the split midpoints, `2.4.4`).
 | `kuniform-dual-pmm` | dual of 2-uniform (3.6.3.6; 3².6²) | pmm | face-centroid dual of `kuniform-pmm`, constructed by the `dual()` helper; 3 faces/cell — 1 rhombus (side 2/√3, angles 60°/120°, area 2√3/3) + 2 congruent quadrilaterals (sides 1/√3, 2/√3, 2/√3, √3; angles 60°/60°/120°/120°; area 2√3/3); Σ = 2√3 = \|det\|, edge-to-edge, four 2-fold centers per cell (0,0), (1,0), (0,√3/2), (1,√3/2) all on mirror intersections, mirrors horizontal/vertical through all of them (M106) |
 | `kuniform-dual-n12` | dual of 2-uniform (3².6²; 3⁴.6) | cmm | face-centroid dual of `kuniform-n12`, constructed by the `dual()` helper; 4 faces/cell — 2 congruent quadrilaterals (sides 1/√3, 2/√3, 2/√3, √3; angles 60°/60°/120°/120°; area 2√3/3) + 2 congruent pentagons (sides 1/√3 ×3, 2/√3 ×2; angles 60°/120°/120°/120°/120°; area 7√3/12 — the n20-dual pentagon); Σ = 5√3/2 = \|det\|, edge-to-edge, 2-folds at (0,0) and (√3/2,0) on the mirror intersections plus the glide-only (off-mirror) centers (√3/4,5/4) and (3√3/4,5/4) (M106) |
 | `kuniform-dual-n19` | dual of 2-uniform (3⁶; 3⁴.6) | p6m | face-centroid dual of `kuniform-n19`, constructed by the `dual()` helper; 8 faces/cell — 6 congruent pentagons (the 3⁴.6 orbit; sides 1/√3 ×3, 2/√3 ×2; area 7√3/12) + 2 regular hexagons (the 3⁶ orbit; side 1/√3, area √3/2); Σ = 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (the primal's flower center, where the six pentagons meet), 2-folds additionally at (3/2,0), (3/4,3√3/4), (9/4,3√3/4) (M106) |
+| `kuniform-dual-n2` | dual of 2-uniform (3.12.12; 3.4.3.12) | p4m | face-centroid dual of `kuniform-n2` — same square lattice ⟨(2+√3,0),(0,2+√3)⟩, det 7+4√3, inherited; 8 faces/cell over the primal's 8 vertex orbits — 4 congruent kites (the 3.4.3.12 orbit; sides (3+√3)/6, (2+√3)/√3, (2+√3)/√3, (3+√3)/6; angles 90°/120°/30°/120°; area 3/4+5√3/12) + 4 congruent isosceles triangles (the 3.12.12 orbit; sides (2+√3)/√3 ×2 over base 2+√3; angles 120°/30°/30°); Σ = 7+4√3 = \|det\|, edge-to-edge, 4-fold center at the origin; p4m — every orientation-reversing coset a pure reflection (zero glide cosets), face/vertex/edge orbits 2/3/3 matching the primal's e = 3 (M120) |
+| `kuniform-dual-n16` | dual of 2-uniform (3³.4²; 3².4.3.4) | p4g | face-centroid dual of `kuniform-n16` — same 45°-rotated square lattice ⟨(h,−h),(h,h)⟩, h = (3+√3)/2, det 6+3√3, inherited — the key-lock tiling; 12 faces/cell over the primal's 12 vertex orbits — 8 congruent pentagons (the 3².4.3.4 orbit; sides (3+√3)/6 ×4, 1/√3; angles 120°/90°/120°/120°/90°) + 4 congruent pentagons (the 3³.4² orbit; sides (3+√3)/6, 1, (3+√3)/6, 1/√3, 1/√3 — the unit side crossing two squares' shared edge; angles 120°/90°/90°/120°/120°), both areas 1/2+√3/4; Σ = 6+3√3 = \|det\|, edge-to-edge; p4g — axis mirrors pure (meeting at the corner-2 point), both diagonal cosets true half-period glides, 4-fold centers at ((√3−1)/4,(5+√3)/4) + partners with no mirror through any of them; tile/vertex/edge orbits 2 (8+4) / 4 / 5 (M121) |
+
+### Pentagon types (the 15-type census)
+
+The convex pentagonal tiling census as `LatticeTiling` data tables;
+ids are the type numbers. Types 4 and 5 are realized by the Laves-tab
+Catalan duals `cairo-pentagonal` and `floret-pentagonal` (section
+above, and typed Pentagon-members since M122); the other 13 types are
+here. The M101 coverage audit verified types 1/4/5 and falsified the
+shipped hirschhorn member's type-8 label (it is type 1).
+
+| id | motif | group | notes |
+|---|---|---|---|
 | `pentagon-13` | Rice pentagon, type 13 (1977, A = 120°) | p2 | 2-isohedral chiral pair (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3); long side split into two collinear a-edges (M49) |
 | `pentagon-14` | Stein pentagon, type 14 (completely determined) | p2 | 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, exact Q(√57, β) with β = √((11√57−25)/8); long sides split into two collinear unit fine edges — 7/5/6-vertex cells (M50) |
 | `pentagon-15` | Mann pentagon, type 15 (MMVD 2015) | pgg | 3-isohedral (seeds 0/1/2), 12 tiles per rectangular cell = 4 congruent 3-tile blocks, exact Q(√3) (a = 2, b = d = e = 1, c = √(2+√3), all vertices on the (p+q√3)/2 grid); non-edge-to-edge — 4 T-split edges per cell (M55) |
@@ -120,6 +185,9 @@ figures at the split midpoints, `2.4.4`).
 | `pentagon-3` | Reinhardt pentagon, type 3 (family 3, 1918) | p2 | 1-isohedral (single orbit), 2 tiles per oblique cell, exact Q(√3) (pinned integral member (a,b,c,d,e) = (2,2,1,4,3): A = B = C = D = 120°, E = 60° — a = b, d = c + e, B + E = 180°; area 5√3); non-edge-to-edge — only the d = 4 sides split, at their exact midpoints between two length-2 (a/b) partner sides, all other sides full-side matched; vertex stars {60°,120°,180°} (A/E-type) and {120°,120°,120°} (B/C/D-type); chiral prototile, one chirality used — the classical three-tile type-3 pinwheel admits no periodic cell for this member (complete det-15 closure search + norm-form x²+3y²=120), so the shipped structure is the discovered minimal 2-tile p2 cell, four half-turn classes d/2 + Λ/2, no mirrors or glides (M64) |
 | `pentagon-6` | Kershner pentagon, type 6 (1968) | p2 | 2-isohedral (seeds 0/1, orbits {0,1}/{2,3}), 4 tiles per oblique cell w1 = (1, 2√3), w2 = (−3, √3) (det = 7√3 = 4 × area 7√3/4), exact Q(√3) at the unique 30°-grid-pinnable member (A = B = D = E = 120°, C = 60°, a = d = e = 1, b = c = 2; A = 2C, C + E = 180°); edge-to-edge — all 20 stored sides exactly once reverse-glued under an involution (4 in-unit pairs + 6 across ±w1, ±w2, ±(w1−w2); census a-a:1, a-d:2, b-b:1, b-c:2, c-c:1, d-e:2, e-e:1), 20 directed sides → 18 torus classes with one double-covered arc; vertex stars {60°,60°,120°,120°} 340 + {120°,120°,120°} 682 in the 787-tile window (1022 of 1286 interior vertices, all 360°); p2: half-turns one coset c0 + Λ/2 (c0 = (1/2, 0)), no mirrors — 22-ray search, 0 genuine, no candidate direction normalizes Λ; achiral prototile congruent to the floret-pentagonal tile (one pentagon, two tilings: p2 2-iso vs floret p6 1-iso) (M74) |
 | `pentagon-8` | Kershner pentagon, type 8 (1968) | pgg | 2-isohedral (seeds 0/1, orbits {0,3,4,7}/{1,2,5,6}, each orbit mixing both chiralities), 8 tiles per rectangular cell w1 = (36, 24√3), w2 = (−36, 18√3) (w1 ⊥ w2, det = 1512√3 = 8 × area 189√3), exact Q(√3) at the shipped B = C = 120° member (tan A = 3√3, cos D = 1/7, tan E = −√3/2, A = E − 60°, a = 6√7, b = c = d = e = 14; vertices on the Z[√3] grid); edge-to-edge — all 20 torus side pairs reverse-glued (a-a:4, b-c:4, b-d:4, c-c:2, d-e:4, e-e:2); vertex stars {A,A,C,D} ×30, {B,B,C} ×36, {D,E,E} ×25 (all sum 360°); two perpendicular glide families squaring to w1 and −w2, no mirrors (M77) |
+| `pentagon-1` | Reinhardt pentagon, type 1 (1918) | cmm | 1-isohedral, 2 tiles per centered-rectangular cell (60°-rhombus basis, the a² = 3b² hexagonal-metric special case — declared CenteredRectangular per the cmm convention), exact Q(√3) at the regular-hexagon member: a side-2 hexagon cut by the segment joining the midpoints of two opposite edges (A = B = C = 120°, D = E = 90°, sides (2, 2, 1, 2√3, 1), tile area 3√3, cell det 6√3 = 2 × area); edge-to-edge — vertex stars {120°,120°,120°} at hexagon corners, {90°,90°,90°,90°} at cut midpoints; measured cmm (the brief's p2 pin overridden by the audit): achiral prototile, two perpendicular mirror families (60°/150° lines) + glides between them, four half-turn classes (two on-mirror, two off — the off-mirror 2-folds rule out pmm, the reversing isometries rule out p2); type-1 exclusive under all 10 dihedral relabellings, distinct from the also-type-1 `prismatic-pentagonal` (different pentagon) (M117) |
+| `pentagon-2` | Reinhardt pentagon, type 2 (family 2, 1918) | pgg | 1-isohedral, 4 tiles (two chiral pairs) per rectangular cell, exact Q(√3) at the pinned a = 1 member (A = B = D = 90°, C = 120°, E = 150°, sides a = 1, b = d = 1 + √3/2, c = e = 1/2; the family conditions c = e, d = b, B + D = 180°); edge-to-edge; two perpendicular glide families squaring to w1 and −w2, no mirrors; M112 seed audit: seeds track chirality — the direct pair carries 0, the mirror pair 1 (the same coloring that drops the group to p2) (M65) |
+| `pentagon-7` | Kershner pentagon, type 7 (1968) | pgg | 2-isohedral (seeds 0/1 — four direct, four mirror), 8 tiles per rectangular cell, edge-to-edge (every side matched by exactly one full partner side); family b = c = d = e, B + 2E = 2C + D = 360° at the published E = 106° member (A ≈ 58.86°, B = 148°, C ≈ 132.86°, D ≈ 94.27°, a ≈ 1.0357942, b = c = d = e = 1/2 — prototile computed at runtime, the family's published members are not surd angles); two perpendicular glide families squaring to w1 and −w2, no mirrors (M72) |
 
 ### Aperiodic / nonperiodic
 
@@ -131,13 +199,16 @@ figures at the split midpoints, `2.4.4`).
 | `penrose-pentagon` | five pentagons (φ-substitution) | aperiodic set found by exhaustive pool search (strict-0 + 1-hole layers); M = [[0,1,0,1,0],[1,1,0,0,1],[2,0,0,0,3],[0,0,1,0,0],[1,1,0,0,1]] in order (50,105,451,468,484); single-seed deflation growth; non-edge-to-edge (φ-substitution children meet parent edges at t = 1/φ) |
 | `pinwheel` | 1–2–√5 right triangle | Conway–Radin; √5 inflation + arctan(1/2) twist; infinitely many tile orientations; view-independent octave-anchored patches |
 | `chair` | Chair (L-tromino) | λ = 2 rep-4 substitution; the inflated chair's dissection is unique (exhaustive enumeration) so the rule is forced; non-edge-to-edge (T-junctions at every scale); limit-periodic; 4×3 seed blocks, one chair per orientation; octave-anchored like pinwheel |
+| `armchair` | Armchair (L-tetromino rep-4) | the chair-family line's L-tetromino member (2×3 bbox, area 4): the scale-2 inflated armchair has a unique L-tetromino dissection (exhaustive exact-integer enumeration — one child of each of the four orientations, rule forced); non-edge-to-edge (the canonical side-2 parent carries a T-junction at (2,2); T-junction counts 32/144/656/2736 per generation); limit-periodic — the depth-g block's only translation period is (2^(g+1), 2^(g+1)), measured on the integer grid; 4×4 seed block, one armchair per orientation; octave-anchored like chair (M128) |
 | `sphinx` | Sphinx (pentagonal hexiamond) | λ = 2 rep-4 substitution on the triangular lattice; of 12 hexiamonds only the 3×1 rhombus and the sphinx are rep-4, and the sphinx's dissection is unique (rule forced); 12 orientation classes (dissection mixes chiralities), doubly stochastic substitution matrix; non-edge-to-edge; 2×3 rhombus seed (exactly 2 sphinxes, unique); octave-anchored like chair |
 | `p-pentomino` | P-pentomino (rep-4 reptile) | λ = 2 rep-4 substitution; exactly two dissections of the inflated 20-cell P (exhaustive enumeration, class multisets {0,1,4,6} and {3,4,4,5}), canonical {0,1,4,6} used; 8 chiral orientation classes, doubly stochastic substitution matrix (rows/columns sum to 4); non-edge-to-edge (5 T-junctions per parent); 5×8 seed block, one tile per class (62 such tilings of the rectangle); octave-anchored like chair (M47) |
 | `ammann-beenker` | Ammann–Beenker A5 (octagonal aperiodic) | half-tile substitution (two rhombus halves + square) with per-level mirror flips; exact Q(√2) geometry; edge-to-edge; 8-fold finite patches |
+| `ammann-beenker-tri` | Ammann–Beenker rhomb-triangle (A5 variant, 3 prototiles) | Bielefeld's "Ammann-Beenker rhomb triangle" entry: the A5 substitution's half-square triangles emitted as their own tile class instead of being paired back into squares — rhombus (proto 0) + R-triangle (proto 1) + L-triangle (proto 2), same silver-mean deflation as the classic entry (hypotenuse-pairing step removed); exact Q(√2), 8-rhombus star seed, edge-to-edge growth (no interior overlaps, hypotenuse groups ≤ 2 and R–L paired), PF-orbit counts (24,16,16) → (136,96,96) → (792,560,560) → (4616,3264,3264); 8-fold finite patches (M129) |
 | `stampfli` | Stampfli 12-fold dodecagonal | squares + equilateral triangles + 30° rhombi; Stampfli substitution, inflation 2+√3 (Bielefeld encyclopedia rule); straddling unit children deduped by exact vertex set; 12-rhombus seed star, exact Z[√3]/4 anchors; edge-to-edge, T-junction-free, 12-fold symmetric at every generation |
 | `fractalizing-3-12-12` | Fractalizing 3.12.12 (limit-periodic dodecagon-dense) | Chavey's fractalizing family over the uniform 3.12.12: same-plane levels, level d at child edge (2+√3)^{1−d} with level d+1 = level d shrunk by 1/(2+√3) about the origin flower; hexagonal flower orbit 44 T + 12 S + 1 H + 12 D per cell (69 tiles, cell 84 + 48.5√3 = the level-0 3.12.12 cell at edge 2+√3); all level-1 vertices on the exact (m + n√3)/6 grid; edge-to-edge closure verified in exact Q(√3) (0 overlaps, 0 T-junctions, exact single coverage) |
 | `shield` | Shield tiling (Gähler, dodecagonal 12-fold) | shield hexagon + square + black/white triangles, each in two labelled orientations R/L — 4 prototiles / 8 substitution kinds carrying Gähler's matching rules; inflation θ = 2cos15° = (√6+√2)/2, PF Perron θ² = 2+√3; children tile kinked supertiles (±¼-unit-square notches); exact Q(√2,√3) geometry, all edges on the 12 dodecagonal directions; Bragg 12-fold (no local 30° center) |
 | `golden-bee` | Golden bee / Ammann chair (A2, inflation √φ, irreptile) | the registry's first irreptile: concave hexagon (five right angles + one reflex), edge lengths {1, s, s⁻¹, s⁻², s⁻³, s⁻⁴} (s = √φ), area s − s⁻⁷; dissects into two similar copies of unequal size (scales φ^−1/2 and φ^−1; area law s⁻² + s⁻⁴ = 1); √φ-inflation substitution over 8 orientation classes (A0…A3 rotations, B0…B3 mirror family), every rule pinned exact in Q(√φ) (4-integer tuples, s⁴ = s² + 1; the girih-quasiperiodic fixed-point trick); non-edge-to-edge by intrinsic T-junctions at the exact s⁻⁴ edge fraction (13 at depth 3, 64 at depth 5, 1 − s⁻⁴ = s⁻²); growth 2^d tiles, Σ s^−2e = 1 exact at every depth; finite covered patch (seed chair = domain, Taylor–Socolar precedent) recentered on the patch bbox center, pinwheel-convention view-anchored depth (nested views bit-identical within one φ-octave); category Quasiperiodic (Vince, AMM 121 (2014), canonical sequence; Durand–Shen–Vereshchagin, DCG 63 (2020), structure of A2); proto = class, seed = size exponent (one hue per size class) (M104) |
+| `golden-triangle` | Golden triangle (√−τ reptile, Danzer–van Ophuysen) | the right triangle (legs 1, √τ; hypotenuse τ) dissected by the altitude from its right angle into two similar children (scales τ^−1 and τ^−1/2, area law τ^−2 + τ^−1 = 1); complex √(−τ)-inflation viewpoint (λ = i√τ, λ² = −τ, λL = L ∪ S, λS = L) in exact K = Q(λ), λ⁴ = 1 − λ²; uniform rule foot F = P + τ^−2(Q − P) (τ^−2 = 2 − τ exact); canonical vertex order carries chirality (flips every cut), class = parity of −e; both mirror chiralities, dense rotations, T-junctions at the τ^−2 hypotenuse ratio; finite covered patch (seed triangle = domain, chair/girih precedent), depth = clamp(ceil(−ln(E/τ)/ln τ), 5, 17); category Quasiperiodic per the Danzer–van Ophuysen 2000 triangle-pair family (scope note in module docs) (M127) |
 | `hat` | Hat (aperiodic monotile, "einstein") | SMKG 2023; H/T/P/F metatile substitution (29-rule patch, 22 kept), exact Eisenstein placements; inflation φ² only in the limit (iterated outlines drift by design); tiles only with its mirror image; per-view seeded lineage blobs with exact clipped-area acceptance; non-edge-to-edge (565 midpoint T-junctions at depth 3) |
 | `turtle` | Turtle ("hats in turtles", einstein family) | turtle (14 sides, area 10√3) + hat prototiles on Kaplan's exact hex lattice; 9-label 8+1 key-point substitution with per-level chirality flip; homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge; turtle:hat ratio → 4+√15 |
 | `spectre` | Spectre (chiral einstein Tile(1,1)) | single equal-edge prototile, aperiodic *without* reflections; 9-label D12 substitution (spectre.js-identical), exact Q(√3) surd geometry; edge-to-edge |
@@ -6202,3 +6273,230 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   numbers were on its own base 419c63a). Full bar green: cargo check
   + clippy (both target sets) zero warnings, cargo test --workspace
   --all-features 738/738. Details in §65.
+- 2026-11-20 — M112 seed-class coloring for uniform-seed cards (UI
+  audit) ✅: fixed the "plain outlines on gray" finding — tilings whose
+  every tile carried seed 0 painted one flat PALETTE[0] color in
+  Pattern mode. New `SeedPattern::Rows` (seed parity alternates with
+  the lattice row index j — alternate courses for paver bonds);
+  per-tiling declarations: pentagon-2 seeds track chirality (the same
+  coloring that drops the group to p2), pentagon-3 / stepped-
+  hexominoes / chiral-cut-honeycomb / girih-shesh-band decorative
+  checkers, running-bond Rows (course parity). No geometry, lattice,
+  group, or description numbers changed; census untouched. Six new
+  seed-variation tests; full bar green.
+- 2026-11-20 — M113 naming and typography audit (UI audit) ✅: titles
+  aligned to the family scheme with ids/geometry/censuses unchanged —
+  the duplicate two-uniform pair resolved by subscripts (n20 →
+  "(3⁶; 3⁴.6)₁" chiral p6 index-13 flowers; n19 → "(3⁶; 3⁴.6)₂"
+  achiral p6m index-9 flowers, mirrors confirmed), najm titles
+  simplified ("Najm template (6,3)" / "(4,4)"), Penrose titles
+  disambiguated (P3 (rhombs) / P2 (kite and dart) / pentagons (5-tile
+  φ-substitution)), all eleven dual names brought to the Laves style
+  "Dual of 2-uniform (V<config>)" with V-markers on both members
+  (also fixing the n19/n20 duals' duplicate title via ₁/₂
+  subscripts). Registry-wide name uniqueness re-verified (temporary
+  test, since removed); 745 tests green at the commit.
+- 2026-11-20 — M114 Stack bond tiling (2:1 dominoes) ✅: new
+  `LatticeTiling` (id `stack-bond`, Arrangements) — rows of 2:1
+  dominoes stacked directly on top of one another, the running bond
+  without its half-brick offset; lattice ⟨(2,0),(0,1)⟩ (area 2), one
+  split horizontal domino per cell ([0,2]×[0,1], long sides split
+  into two collinear unit edges — 180° figures at the split
+  midpoints); measured pmm (mirrors x = k and y = n/2, 2-folds at
+  (k, n/2), no glides; coset probe 128-per-coset exact,
+  ROT4/ROT4_270/DIAG/ANTI never); figures 4.4.4.4 at even-x points,
+  2.2 at odd-x split midpoints. Census: Arrangements 5 → 6,
+  112 built-ins, 124 memberships.
+- 2026-11-20 — M115 Herringbone 45° tiling (2:1 dominoes) ✅: the M40
+  herringbone bond in its 45°-laid canonical frame (`herringbone-45`,
+  Arrangements) — exact radical geometry via std::f64::consts::SQRT_2;
+  lattice ⟨(0,2√2),(√2,0)⟩ (area 4), two split 45° dominoes per cell
+  (the L-pair); measured pgg — 2-folds at (√2/4 + k√2/2, 3√2/4 + ℓ√2),
+  vertical glides x = k√2/2 (glide √2), horizontal glides
+  y = ℓ√2 + √2/4 (glide √2/2), descended from M40's diagonal/
+  anti-diagonal glides under the 45° rotation; verified in integer
+  P-coords (world = (√2/2)·P): cell area sum 8 = |det|, 3906-point
+  fine grid covered once, 192 interior unit edges each shared by
+  exactly 2, all 113 interior vertex figures 2.4.4, coset probe via
+  the new shape-set helper `shape_set_is_sym` (rotated cells break
+  the axis-aligned bbox probe) + the independently measured M40 group
+  conjugated by the rotation reproducing all 8 candidate matrices.
+  Census: Arrangements 7, 113 built-ins, 125 memberships.
+- 2026-11-20 — M116 Basketweave three-brick tiling (2:1 dominoes) ✅
+  (`basketweave-3`, Arrangements): the triple-basketweave paver bond —
+  three courses of horizontal 2:1 dominoes stacked without offset,
+  then one course of vertical dominoes, repeating with vertical
+  period 5; lattice ⟨(6,0),(0,5)⟩ (area 30) an index-3 superlattice
+  of the true ⟨(2,0),(0,5)⟩, kept for the whole-cluster cell
+  convention (cf. M39); 15 split dominoes per cell (9 horizontal +
+  6 vertical, long sides split into collinear unit edges); measured
+  pmm (mirrors x = k and y = 2.5k + 1.5, 2-folds at (k, 2.5k′ + 1.5),
+  no 4-folds, no essential glides); verified exactly in Python
+  (stdlib) before porting: cell area sum 30 = |det|, fine shifted
+  grid covered exactly once (6474 points), 296 interior unit edges
+  each shared by exactly 2, vertex figures sum to 360.
+  Census: Arrangements 8, 114 built-ins, 126 memberships.
+- 2026-11-20 — M117 Pentagon type 1 tiling (Reinhardt type 1) ✅
+  (`pentagon-1`): the regular-hexagon member — a side-2 hexagon cut
+  by the segment joining the midpoints of two opposite edges (cut
+  unique up to the hexagon's symmetry; (A,B,C,D,E) = (120°,120°,
+  120°,90°,90°), sides (2,2,1,2√3,1), tile area 3√3, all in Q(√3));
+  1-isohedral, 2 tiles per centered-rectangular cell (60°-rhombus
+  basis, det 6√3 = 2 × area; the legality test now documents the
+  a² = 3b² hexagonal-metric special realization); edge-to-edge,
+  vertex stars {120°,120°,120°} / {90°,90°,90°,90°}; measured cmm
+  overriding the brief's p2 pin (achiral prototile — a −120° rotation
+  about the hexagon centre maps it onto its y-mirror; two
+  perpendicular mirror families + glides between them; four
+  half-turn classes, two off every mirror — ruling out pmm — plus
+  orientation-reversing isometries ruling out p2); type-1 exclusive
+  under all 10 dihedral relabellings; distinct from the shipped
+  prismatic-pentagonal (also type 1, different pentagon). Python
+  audit 31/31 before porting; 9-test in-module suite.
+  Census: PentagonTypes 12 → 13, 112 built-ins, 124 memberships.
+- 2026-11-20 — M118 2-uniform (3.12.12; 3.4.3.12) tiling ✅
+  (`kuniform-n2`): the 3-4-3-12 tiling — dodecagons kissing
+  flat-edge-to-flat-edge on a square lattice with 1 unit square (at
+  the origin) + 4 unit edge triangles (apex = dodecagon corner)
+  filling each four-dodecagon hole; square basis ⟨(2+√3,0),
+  (0,2+√3)⟩, det 7+4√3 exact; 6 tiles/cell; p4m measured by coset
+  audit (order 8 mod L, point group D4, no true glides); torus
+  orbits t = 3 tiles / 2 vertex classes / 3 edges — matching the
+  Wikipedia parenthetical exactly. Python exact battery (Q(√3)
+  arithmetic) before porting. Census: TwoUniform 15 → 16,
+  112 built-ins, 124 memberships.
+- 2026-11-20 — M119 2-uniform (3³.4²; 3².4.3.4) tiling ✅
+  (`kuniform-n16`): variant 1 of the wiki's 33344-33434 tiling
+  (variant 2 = n17, pgg, remains open) — staggered square rows and
+  triangle bands in the snub-square-related form; 45°-rotated square
+  basis ⟨(h,−h),(h,h)⟩, h = (3+√3)/2, det 6+3√3; 18 tiles/cell
+  (6 squares + 12 triangles; 4 vertex classes of 3³.4² and 8 of
+  3².4.3.4); p4g measured by coset audit — axis-reflection cosets
+  pure, both diagonal cosets true glides (axial shift 3/4 of a
+  diagonal lattice period, no integral shift cancels); torus census
+  4 tile orbits (8+4+4+2) + 5 edge orbits = the wiki's
+  4-isohedral/5-isotoxal exactly. Census: TwoUniform 16 → 17,
+  113 built-ins, 125 memberships.
+- 2026-11-20 — M120 Dual of 2-uniform (3.12.12; 3.4.3.12) ✅
+  (`kuniform-dual-n2`, Laves tab): face-centroid dual of
+  `kuniform-n2` — same square lattice, det 7+4√3 inherited; 8
+  faces/cell over the primal's 8 vertex orbits: 4 congruent kites
+  (3.4.3.12 orbit; sides (3+√3)/6, (2+√3)/√3, (2+√3)/√3, (3+√3)/6;
+  angles 90/120/30/120; area 3/4+5√3/12) + 4 congruent isosceles
+  triangles (3.12.12 orbit; sides (2+√3)/√3 ×2 over base 2+√3,
+  angles 120/30/30); Σ = 7+4√3 = |det| exact; p4m — every
+  orientation-reversing coset a pure reflection (zero glide cosets);
+  face/vertex/edge orbits 2/3/3 matching the primal's e = 3; tiled
+  dual edge-to-edge. Census: Laves 22 → 23, 114 built-ins,
+  126 memberships.
+- 2026-11-20 — M121 Dual of 2-uniform (3³.4²; 3².4.3.4) ✅
+  (`kuniform-dual-n16`, Laves tab) — the key-lock tiling:
+  face-centroid dual of `kuniform-n16` — same 45°-rotated square
+  lattice, det 6+3√3 inherited; 12 faces/cell over the primal's 12
+  vertex orbits: 8 congruent pentagons (3².4.3.4 orbit; sides
+  (3+√3)/6 ×4, 1/√3; angles 120/90/120/120/90) + 4 congruent
+  pentagons (3³.4² orbit; sides (3+√3)/6, 1, (3+√3)/6, 1/√3, 1/√3 —
+  the unit side crossing two squares' shared edge; angles
+  120/90/90/120/120), both exact areas 1/2+√3/4; Σ = 6+3√3 = |det|
+  exact; p4g — axis mirrors pure (meeting at the corner-2 point),
+  both diagonal cosets true half-period glides, 4-fold centers at
+  ((√3−1)/4, (5+√3)/4) + partners with no mirror through any of
+  them; new Rust P4g probe arm (Case gained an axis_pt field); tile
+  orbits 2 (8+4), vertex orbits 4, edge orbits 5. Census end state:
+  Laves 23 → 24, 115 built-ins, 127 memberships.
+- 2026-11-20 — M122 classification schema ✅: `TilingClass` +
+  per-tiling classification table in tess-core (substitution family,
+  inflation, point order, prototile count, reflections), cards
+  composed from the schema, declared (measured-lattice) tab sorts —
+  Pentagon types sequential 2–15 with cairo = type 4 and floret =
+  type 5 joining as typed secondary members (PentagonTypes 12 → 14),
+  Two-Uniform by vertex configuration with ₁/₂ pairs adjacent, Laves
+  by rank regulars→proper→duals, Wallpaper by the group's
+  conventional lattice (p1/p2 oblique … p3*/p6* hexagonal, fixing
+  the M76 measured-lattice sections); Ctrl+wheel resizes browse
+  cards (width 22–44, height at half, thumbnail cache keyed by size).
+  Census: 111/123 → 111/125 at the commit (cairo/floret secondary
+  memberships).
+- 2026-11-20 — M123 preview-grid resizing everywhere ✅ (owner
+  report: "the preview grid doesn't resize on mouse/trackpad or +/-"):
+  TUI — the +/- keys (with =/_ variants) resize Browse-mode cards
+  (previously only zooming the canvas in Render), shift+wheel joins
+  ctrl+wheel as an accepted alias (several terminals swallow or strip
+  Ctrl on wheel), Browse status bar advertises "+/- card size"; GUI —
+  real card-grid zoom: ctrl+wheel / trackpad pinch (egui's
+  zoom_delta, which already diverts ctrl-scroll away from scrolling,
+  so the grid never scroll-jumps) and +/- keys scale the card target
+  width across [150, 480] px with the preview image scaling along
+  (4:3 kept; the fixed 168 px CARD_INNER_H retired for
+  card_inner_h/card_total_h of the live image size; stale textures of
+  other sizes pruned; the grid fills the window width exactly at
+  every zoom level). Tests: TUI key/wheel/search-isolation; GUI
+  scaling pins + real headless passes at default and zoomed sizes.
+  800 tests at the commit.
+- 2026-11-20 — M127 Golden triangle tiling (√−τ reptile
+  substitution) ✅ (`golden-triangle`, Quasiperiodic): the right
+  triangle (legs 1, √τ; hypotenuse τ) dissected by the altitude from
+  its right angle into two similar children (scales τ^−1 and
+  τ^−1/2, area law τ^−2 + τ^−1 = 1); complex √(−τ)-inflation
+  viewpoint (λ = i√τ, λ² = −τ, λL = L ∪ S, λS = L) in exact
+  K = Q(λ), λ⁴ = 1 − λ², embedding (a + bλ + cλ² + dλ³) →
+  (a − cτ) + i√τ(b − dτ); uniform rule foot F = P + τ^−2(Q − P)
+  (τ^−2 = 2 − τ exact); canonical vertex order carries chirality
+  (flips every cut), class = parity of −e with hyp² = τ^(e+2);
+  finite covered patch (seed L0), recentred, depth =
+  clamp(ceil(−ln(E/τ)/ln τ), 5, 17), scale default 3.5 (chair
+  framing); category Quasiperiodic on the Danzer–van Ophuysen 2000
+  triangle-pair family (scope note in module docs); classify entry
+  substitution / √(−τ) / 2000. Python battery: field axioms,
+  prototile identities, exact altitude cuts, d ≤ 6 triangulation
+  (2^d tiles, 2^(d−1) per class, exact area conservation, no
+  crossings, strict PIP), junction census, chirality flip, exact
+  child-rotation multipliers. Census: Quasiperiodic 10 → 11,
+  120 built-ins, 134 memberships, 814 tests at the commit.
+- 2026-11-20 — M128 Armchair tiling (L-tetromino rep-4) ✅
+  (`armchair`, Nonperiodic): the chair-family rep-tile line's next
+  member (PROPOSED.md §23d), mirroring the chair machinery — the
+  L-tetromino "armchair" (2×3 bbox, area 4); the scale-2 inflated
+  armchair has a unique L-tetromino dissection (exhaustive
+  exact-integer enumeration: one child of each of the four
+  orientations, rule forced); non-edge-to-edge (the canonical side-2
+  parent carries a T-junction at (2,2)); limit-periodic (the depth-g
+  block's only translation period (2^(g+1), 2^(g+1)), measured on
+  the integer grid; Python period lattice (4,4)/(8,8)/(16,16)/(32,32)
+  and T-junction counts 32/144/656/2736 per generation); 9 in-module
+  tests + the standard trio. Census: Nonperiodic 4 → 5, 120
+  built-ins, 134 memberships at the commit.
+- 2026-11-20 — M129 Ammann-Beenker rhomb-triangle tiling ✅
+  (`ammann-beenker-tri`, Quasiperiodic): Bielefeld's "Ammann-Beenker
+  rhomb triangle" entry (PROPOSED.md §23b) — the A5 substitution's
+  half-square triangles emitted as their own tile class instead of
+  being paired back into squares: 3 prototiles (rhombus 0,
+  R-triangle 1, L-triangle 2), same silver-mean deflation as the
+  classic entry (hypotenuse-pairing step removed); module mirrors
+  ammann_beenker.rs (rule tables, Q(√2) deflation, 8-rhombus star
+  seed, STEP_CAP 20). Python battery (exact Q(√2), star depths 1–4):
+  per-parent substitution covers, PF-orbit counts (24,16,16) →
+  (136,96,96) → (792,560,560) → (4616,3264,3264), edge-to-edge
+  growth, no interior overlaps, hypotenuse groups ≤ 2 with R–L
+  paired, parity H = 2P + U, H/r → √2. Census: Quasiperiodic 11,
+  120 built-ins, 134 memberships, 810 tests at the commit.
+  Visual-by-proxy: TUI proto export 1016 tiles (436 rhombi + 580
+  triangles, R/L 290/290).
+- 2026-11-20 — doc-sync pass (this file): the Implemented census
+  heading, tables and changelog brought level with the registry —
+  122 tilings / 136 memberships pinned by
+  `registry_groups_are_complete_and_canonically_ordered`; the
+  paver-bonds table (which had absorbed the two-uniform, dual and
+  pentagon rows without section headers) split into Paver bonds /
+  Two-uniform / Two-uniform duals / Pentagon types / Paver tilings
+  (M78–M85) sections; the 27 rows that had never landed here added
+  (hankin-3-6-3-6, hankin-3-4-6-4; stack-bond, herringbone-45,
+  basketweave-3; kuniform n2/n16/n3/n4/n14/n15; kuniform-dual
+  n2/n16; pentagon-1/2/7; golden-triangle, armchair,
+  ammann-beenker-tri). A tess-tilings guard test now fails when any
+  registry id is missing from this section or from the README
+  catalog table, or when the stated counts drift. Note: the
+  M111–M129 tilings each landed with their own census lines on their
+  own bases (the M122 schema landed on main before the M114–M121
+  batch); the end state is the pinned 122/136 with per-tab
+  [11,17,24,17,15,21,8,12,6,5].
