@@ -42,8 +42,11 @@ registry) and its numbered build arcs (§N — code comments cite these).
 
 ## Where new content goes
 
-- **New tiling in family F** → code in `families/F/` + row and arc in
-  `docs/families/F.md` (see [docs/briefs/TEMPLATE.md](briefs/TEMPLATE.md))
+- **New tiling in family F** → dispatch a brief
+  ([docs/briefs/TEMPLATE.md](briefs/TEMPLATE.md); worked examples in
+  that directory), code in `families/F/` + row in
+  `docs/families/F.md`; the orchestrator integrates per the fleet
+  protocol in [AGENTS.md](../AGENTS.md)
 - **New milestone M<n>** → one changelog line in
   `docs/history/CHANGELOG.md` (appended at integration)
 - **New candidate** → queue entry in `docs/ROADMAP.md`, dossier in

@@ -97,7 +97,80 @@ fundamental region.
    (`TilingCategory`: Uniform / Laves / Wallpaper / Quasiperiodic /
    Aperiodic / Nonperiodic — see `tess-core/src/category.rs`; the UIs
    group their lists by it), add the 3 standard tests, and add the
-   doc row + build arc to `docs/families/<family>.md`.
+   catalog row to `docs/families/<family>.md` (guard-checked) — plus a
+   numbered build arc when the build introduces a new technique or a
+   hard-won lesson (row-only is otherwise fine; M127–M129 precedent).
+
+## Fleet protocol (parallel agents)
+
+The family refactor made **one family = one collision-free unit**: a
+family's code files and its family doc never overlap with another
+family's. When several agents work in parallel, each executes exactly
+one brief (template: `docs/briefs/TEMPLATE.md`, worked examples in the
+same directory) and touches only its own surfaces.
+
+**Worker ownership** (for the brief's duration, exclusive):
+
+- `crates/tess-tilings/src/families/<family>/` — the new module(s).
+- `crates/tess-tilings/src/families/<family>.rs` — module decl,
+  `register` slice, `classification` arms, census `IDS`,
+  `lattice_tilings()` entries.
+- `docs/families/<family>.md` — the catalog row (and arc if arc-worthy).
+- Scratch under `/tmp/opencode/<brief-id>/` (Python spikes, batteries).
+
+**Orchestrator-only** (workers never edit):
+
+- `crates/tess-tilings/src/lib.rs` — the pinned census
+  (`registry_groups_are_complete_and_canonically_ordered` + the census
+  comment block), the doc/README guard tests, and the
+  `lattice_culling_tests` `lattices.extend(...)` lines. A
+  `LatticeTiling` brief therefore flags the new tiling in its report
+  instead of wiring the culling test itself.
+- `README.md` (counts + catalog), `docs/INDEX.md` (family sizes).
+- `docs/history/CHANGELOG.md` — append-only, integrated by the
+  orchestrator.
+- `docs/ROADMAP.md` (queue status flips) and `PROPOSED.md` (dossier
+  annotations).
+- Every other family's files, `tess-core`, `tess-tui`, `tess-gui`.
+  Adding a tiling never requires UI code (parameters are
+  self-describing); if a brief seems to, stop and report — the design
+  is wrong.
+
+A brief whose *goal* is itself cross-cutting (a core trait, taxonomy,
+UI feature) is not dispatched this way — run it solo on the affected
+files with family work paused there.
+
+**M-number allocation is orchestrator-only.** Workers do not know
+their M number and never write changelog entries; numbers are assigned
+strictly sequentially at integration (the last entry in
+`docs/history/CHANGELOG.md` is the head). The worker's report proposes
+the commit-message body; the orchestrator writes the final
+`M<n>: <name> tiling (<vertex figure>)` subject.
+
+**Worker report** (what "done" means):
+
+1. Diff-scope statement: exactly the owned files, nothing else.
+2. Verification evidence, programmatic only — the Python battery's
+   numbers (area sums, edge parity, orbit censuses, dissection counts)
+   and the Rust test list with exact pass counts. A visual look is
+   recon, never evidence.
+3. Expected census deltas (family n → n+1; built-ins; memberships;
+   `LatticeTiling`? → remind the orchestrator about the culling line).
+4. Proposed commit-message body (lattice, cell contents, verification).
+
+**Integration checklist** (orchestrator, per landing):
+
+1. Scope check: `git diff --stat` shows only owned files.
+2. `cargo check --workspace` zero warnings; `cargo test --workspace`
+   green.
+3. Guards green (`family_docs_match_registrations`,
+   `readme_catalog_matches_registry`,
+   `registry_groups_are_complete_and_canonically_ordered`); add the
+   culling-test line first if the tiling is a lattice table.
+4. Shared-file updates: README count + catalog row, `docs/INDEX.md`
+   size, ROADMAP status flip, PROPOSED annotation, CHANGELOG append.
+5. Assign `M<n>` and land **one commit per tiling** with the
+   shared-file updates folded in — the M-commit is the unit of history.
 
 **Seeds:** main/largest tile = 0, other classes 1, 2, …; "pattern" color
 = `seed % 8`, "proto" = `proto % 8` (8-color palette in
