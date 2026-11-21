@@ -15,6 +15,7 @@ pub mod hexagram;
 pub mod zellige;
 pub mod girih;
 pub mod girih_bowtie;
+pub mod girih_rhombus;
 pub mod girih_qc;
 pub mod girih_sc;
 pub mod girih_w85;
@@ -61,6 +62,7 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(najm::najm_63_2e_0_3e_ac());
         r = r.register(najm::najm_44_3e_0_0_a());
         r = r.register(girih_bowtie::girih_bowtie());
+        r = r.register(girih_rhombus::girih_rhombus());
     r
 }
 
@@ -89,6 +91,12 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             families: &["Islamic"],
             method: Some("girih prototile tiling"),
             tile_set: Some("girih bowtie (concave hexagon)"),
+            ..TilingClass::EMPTY
+        },
+        "girih-rhombus" => TilingClass {
+            families: &["Islamic"],
+            method: Some("girih prototile tiling"),
+            tile_set: Some("girih rhombus"),
             ..TilingClass::EMPTY
         },
         "girih-star-cross" => TilingClass {
@@ -185,6 +193,7 @@ pub(crate) fn lattice_tilings() -> Vec<(&'static str, crate::lattice::LatticeTil
     vec![
             ("girih", girih::girih_shesh_band()),
             ("girih-bowtie", girih_bowtie::girih_bowtie()),
+            ("girih-rhombus", girih_rhombus::girih_rhombus()),
             ("girih-sc", girih_sc::girih_star_cross()),
             ("girih-w85", girih_w85::girih_w85()),
             ("pic-4-8-8", pic_4_8_8::pic_4_8_8()),
@@ -228,6 +237,7 @@ mod census {
         "najm-44-3e-0-0-a",
         "hexagram",
         "girih-bowtie",
+        "girih-rhombus",
     ];
 
     #[test]
@@ -235,7 +245,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            23,
+            24,
             "islamic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();

@@ -2001,3 +2001,12 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   wedges closed-or-boundary, irrational-offset grid coverage.
   Registry 122 → 123 built-ins, memberships 136 → 137, per-tab
   [11,17,24,17,15,22,8,12,6,5].
+- 2026-11-21 — M132: Girih rhombus tiling (72.72.108.108) ✅: the
+  classical thin girih rhombus (72°/108°, unit edges on the 36°
+  frame) tessellates the plane alone — single-tile cmm
+  CenteredRectangular lattice table ⟨(1,0),(cos72°,sin72°)⟩,
+  |det| = sin72° = tile area exact over K = Q(2cos π/10).
+  7×7-patch battery: 84 interior / 28 boundary edge occurrences of
+  196 (shared exactly 2), wedges closed-or-boundary, coverage once
+  per sample. Registry 124 built-ins, memberships 138, per-tab
+  [11,17,24,17,15,23,8,12,6,5].
