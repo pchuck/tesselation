@@ -129,11 +129,18 @@ the "mixed floret/cairo/prismatic" patterns.
 ### Research (no construction path chosen yet)
 
 - 🔭 **Cyclotomic field layer (§23e/§23i)** — exact degree-3/4
-  arithmetic (K₇, K₉, K₁₅, …) as the gated first step for the
-  7/9/14/15/21-fold families (Danzer, Harriss, Goodman-Strauss, CAST,
-  Nischke–Danzer deltoids, Say-awen, GLB-binary re-scope); frontier
-  brief [cyclotomic-field-layer](briefs/cyclotomic-field-layer.md)
-  produces the design doc + proof-of-concept spike; dispatched.
+  arithmetic as the gated first step for the 7/9/14/15/21-fold
+  families (Danzer, Harriss, Goodman-Strauss, CAST, Nischke–Danzer
+  deltoids, Say-awen, GLB-binary re-scope). **Design doc landed:**
+  [docs/cyclotomic-field-layer.md](cyclotomic-field-layer.md) —
+  oblique U(k) frame (rotation = companion matrix, no sine stored),
+  derived + Sturm-certified minpolies (K₇/K₉/K₁₅/K₂₁/K₁₇/L₁₀), Sturm
+  sign engine, per-family applicability table; CAST 10-fold re-scoped
+  to L₁₀ (the girih field, NOT Q(√5) — dense DTO orientations handled
+  per orientation class); all 20 shipped girih ROTMs reproduced
+  bit-for-bit by the generic recipe. Next gated step: `fields.rs` +
+  K₇ per doc §7 — [fields-layer-k7](briefs/fields-layer-k7.md);
+  dispatched (frontier).
 - ❓ **Wheel tiling (Nissen)** — **parked (M61)** with a proven
   negative: the edge-orthogonal dual of the shield substitution is
   exact but admits no substitution at any inflation (algebraic killer

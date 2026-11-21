@@ -27,6 +27,10 @@ registry) and its numbered build arcs (§N — code comments cite these).
 
 - [docs/ROADMAP.md](ROADMAP.md) — vetted-candidates queue + research areas
   (dossiers in [PROPOSED.md](../PROPOSED.md))
+- [docs/cyclotomic-field-layer.md](cyclotomic-field-layer.md) — exact
+  degree-3/4 cyclotomic arithmetic design doc (§23e/§23i gate: oblique
+  U(k) frame, certified minpolies, Sturm sign engine, applicability
+  table; stdlib spike + log in `.scratch/cyclotomic-design/`)
 - [docs/TAXONOMY.md](TAXONOMY.md) — the ten-tab gallery taxonomy (M76)
 - [docs/2D_Tilings_Reference.md](2D_Tilings_Reference.md) — mathematical
   background (uniform/Laves/wallpaper/quasiperiodic/aperiodic reference)

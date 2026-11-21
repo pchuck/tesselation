@@ -23,6 +23,11 @@ stdlib-only Python proof-of-concept**, not registry code.
 
 ### Specifics the doc must pin
 
+> **Erratum (added post-delivery):** "quartic K₁₆" below is wrong —
+> Q(2cos(π/16)) has degree 8; the quartic 16-fold field is
+> Q(2cos(π/8)) = Q(2cos(2π/16)), minpoly x⁴−4x²+2. The delivered
+> doc's half-step rule (its §1) resolves this systematically.
+
 1. **Element representation** per field: the integer coefficient
    tuple (c₀ + c₁a + … , a = 2cos(π/n)) with exact reduction tables
    (minpoly aᵈ − … via the Chebyshev identities), following the
