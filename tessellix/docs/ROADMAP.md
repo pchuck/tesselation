@@ -79,6 +79,13 @@ the "mixed floret/cairo/prismatic" patterns.
   96-point stars), search over an aesthetic objective to replace
   ad-hoc contact corrections, and the star-order-set question
   (nearly-regular polygons; the Altair near-miss tiling).
+- 🔭 **Girih primitive tiles** — the four missing classical primitives
+  (decagon, bowtie, 72°/108° rhombus, pentagon) as periodic data
+  tables beside shesh-band; strong-tier brief
+  [girih-primitive](briefs/girih-primitive.md). Revives the paused
+  pre-rework fork (PROPOSED.md §23f note): disposition now "revived as
+  a brief", which unblocks the §23f follow-ups (Andritz bowtie–hexagon
+  family, girih-inspired 14-fold) once these land.
 
 ### Aperiodic substitution (each needs rule derivation first)
 
@@ -90,6 +97,14 @@ the "mixed floret/cairo/prismatic" patterns.
   Research entry below.*
 - 🔭 **Ammann sets A1–A4** — the rest of Ammann's aperiodic families;
   moderate each once the AB machinery exists.
+- 🔭 **§23 Bielefeld salvage wave** — four briefs revived from the
+  lost pre-rework §23 session (rules pinned in the briefs; prototype
+  batteries archived in `.scratch/salvage-20261120/`):
+  [golden-rhomboid](briefs/golden-rhomboid.md) (Y/O/R φ-substitution,
+  Andritz), [fibonacci-product](briefs/fibonacci-product.md) (product
+  substitution, τ²), [tangram](briefs/tangram.md) (§23d rep-tile
+  dissection, Z[√2]); [pregnant-chairs](briefs/pregnant-chairs.md)
+  (§23d, √3 / Z[√3]) is in flight.
 
 ### Finite verified patches (patch-style entries)
 
