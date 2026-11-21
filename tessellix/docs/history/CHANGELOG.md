@@ -1991,3 +1991,13 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   visibly larger rhombs), rotation 0° → 30° via Down + 6 Rights
   repaints rotated output (53 → 92 tiles); tess-tui suite 27/27,
   workspace 848/848.
+- 2026-11-21 — M131: Girih bowtie tiling (72.72.216) ✅: the classical
+  concave girih hexagon (papillon; unit edges on the 36° girih frame,
+  interior angles 216°,72°,72° ×2) tessellates the plane alone —
+  single-tile cmm CenteredRectangular lattice table, det(t1,t2) =
+  area(tile) ≈ 1.314328 exact over K = Q(2cos π/10); interior vertex
+  figure 72/72/216. 7×7-patch battery: shoelace area == det < 1e-15,
+  interior edge occurrences shared exactly 2 (6-digit keys), vertex
+  wedges closed-or-boundary, irrational-offset grid coverage.
+  Registry 122 → 123 built-ins, memberships 136 → 137, per-tab
+  [11,17,24,17,15,22,8,12,6,5].
