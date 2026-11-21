@@ -109,6 +109,11 @@ the "mixed floret/cairo/prismatic" patterns.
   substitution, τ²), [tangram](briefs/tangram.md) (§23d rep-tile
   dissection, Z[√2]); [pregnant-chairs](briefs/pregnant-chairs.md)
   (§23d, √3 / Z[√3]) is in flight.
+- 🔭 **Andritz Bowtie–Hexagon family (§23f)** — four 5-fold FLC
+  substitution entries (small/large bowtie, hexagon variants) built
+  on the now-shipped M131–M134 girih primitive tables;
+  [andritz-bowtie-hexagon](briefs/andritz-bowtie-hexagon.md);
+  dispatched (strong tier, per-landing commits).
 
 ### Finite verified patches (patch-style entries)
 
@@ -122,6 +127,12 @@ the "mixed floret/cairo/prismatic" patterns.
 
 ### Research (no construction path chosen yet)
 
+- 🔭 **Cyclotomic field layer (§23e/§23i)** — exact degree-3/4
+  arithmetic (K₇, K₉, K₁₅, …) as the gated first step for the
+  7/9/14/15/21-fold families (Danzer, Harriss, Goodman-Strauss, CAST,
+  Nischke–Danzer deltoids, Say-awen, GLB-binary re-scope); frontier
+  brief [cyclotomic-field-layer](briefs/cyclotomic-field-layer.md)
+  produces the design doc + proof-of-concept spike; dispatched.
 - ❓ **Wheel tiling (Nissen)** — **parked (M61)** with a proven
   negative: the edge-orthogonal dual of the shield substitution is
   exact but admits no substitution at any inflation (algebraic killer
