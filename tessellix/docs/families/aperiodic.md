@@ -1,6 +1,6 @@
 # Aperiodic family
 
-Aperiodic monotiles and forcing sets: hat, turtle, spectre, Taylor–Socolar, Jeandel–Rao; plus the limit-periodic half-hex substitution tiling.
+Aperiodic monotiles and forcing sets: hat, turtle, spectre, Taylor–Socolar, Jeandel–Rao; plus the limit-periodic half-hex and domino (table) substitution tilings.
 
 Code: `crates/tess-tilings/src/families/aperiodic/` — cargo feature `aperiodic` (default-on).
 Adding a tiling here touches only this family: `families/aperiodic.rs`
@@ -8,7 +8,7 @@ Adding a tiling here touches only this family: `families/aperiodic.rs`
 `lattice_tilings` entries) plus the new module and its doc row below.
 Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 
-## Implemented (6 tilings)
+## Implemented (7 tilings)
 
 ### Aperiodic monotiles and tile sets
 
@@ -20,6 +20,7 @@ Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 | `taylor-socolar` | Taylor-Socolar striped hexagon (decorated-hexagon monotile) | the paper's forced 529-hexagon patch (Fig. 18 of arXiv:1008.3103) as a verbatim state table, each hexagon partitioned into 8 non-overlapping convex sub-polygons carrying one thick vertex-to-vertex chord plus a centre-split axis (2 chord-band halves + 2 axis half-bands + 2 body pentagons + 2 body triangles, 12 templates); the chords close into complete equilateral Taylor triangles on three scales (60 / 12 / 2 of side √3, 3√3, 7√3), and the state rules stay exact (R1 0/2992, R2 0/2816, R3 0/2904 re-derived in tests); finite covered patch (girih precedent), no period within hex-radius 30 |
 | `jeandel-rao` | Jeandel-Rao 11-tile Wang tiles (smallest aperiodic Wang set) | the author's canonical 100x100 patch (arXiv:1506.06492, cited not re-proven) as an emitted table, each unit cell partitioned into 5 non-overlapping convex sub-polygons (4 edge bands of width 0.08 + interior, areas exact in Q) whose band colors make the Wang edge matching visible (H 0/9900, V 0/9900 on exact 9-color ids re-derived in tests); tile frequencies pinned; no grid translation period |t| ≤ 30 (2820 probes); finite covered patch (Taylor-Socolar precedent); no generator port — the study's DFS growth is a proven dead end (M93) |
 | `half-hex` | Half-hexagon (Socolar limit-periodic substitution) | Bielefeld entry "half-hex": one **achiral** half-hexagon prototile, six rotation classes (no reflection class — its mirror is a translation of a rotation), λ = 2 substitution into 4 children (substitution matrix S[j][i] = 1 iff (j−i) mod 6 ∈ {0,2,3,4}; PF eigenvalue 4 = λ², char poly (x−4)(x−2)(x−1)²(x+1)², pinned by exact 720-permutation i128 expansion); finite covered patch = 2^d-scaled half-hexagon recentered on the origin, d = 5..8 picked by the view diagonal (nested views bit-identical on their intersection); exact √3-field integer-pair (u,v) arithmetic end to end, floats only at the view boundary; limit-periodic — the minimal x-period of the depth-g patch is (3/2)·2^g = 6, 12, 24, 48, 96 at g = 2..6 (strictly 2× growing), cited not re-proven (Fre02 cut-and-project; GS87 Ex. 10.1.3) |
+| `domino` | Domino (table) substitution (Lançon limit-periodic) | Bielefeld entry "domino" (says verbatim "Also known as 'table tiling'" — no independent "table" entry in the substitution index; "table" is an alias of this one tiling): two domino prototiles on the square lattice — A = vertical 1×2, B = horizontal 2×1 — λ = 2 orientation-preserving substitution into 4 children (substitution matrix S = [[2,2],[2,2]], column sums = 4 = λ², PF eigenvalue 4 = λ², char poly x²−4x = x(x−4), pinned by exact 2×2 determinants); finite covered patch = the 2^d × 2^(d+1) block recentered on the origin, d = 5..8 picked by the view diagonal (nested views bit-identical on their intersection); exact integer cell arithmetic on Z² end to end, floats only at the view boundary; limit-periodic via **approximating periodic tilings** — the depth-g patch carries no proper within-patch period (measured g = 1..6; Rust battery g = 2..6): it is itself the fundamental cell of the period-(2^g, 2^(g+1)) approximant, (2,4), (4,8), (8,16), (16,32), (32,64), (64,128), strictly 2× growing per level — a different kind from half-hex, whose patch is itself (3/2)·2^g-periodic; **not** a cut-and-project / model-set structure (entry states verbatim that its dynamical spectrum has a continuous component, "Thus it cannot be a cut and project tiling" — Solomyak ETDS 17(3) 1997; Robinson Indag. Math. 10(4) 1999, "On the table and the chair"); entry tags: Finite Rotations {id}, Polyomio Tiling, Rep-Tiles, Self-Similar Substitution; discovered by Frédéric Lançon |
 
 ## Build arcs
 

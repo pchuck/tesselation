@@ -1456,10 +1456,18 @@ of these; each is a substitution or cut-and-project table.
   **Pregnant chairs** ✅ landed M136 (λ = √3 two-prototile rule,
   salvage-pinned).
 - **Domino/table tiling (+variants)** and **half-hex family** —
-  limit-periodic, cut-and-project; half-hex also closes the #17
-  substitution-hierarchy gap; effort M each. **Half-hex** ✅ landed
-  M135 (measured period hierarchy p = (3/2)·2^g); domino/table
-  dispatched.
+  limit-periodic; **not cut-and-project** — dossier correction at
+  landing: the entry's own text cites the continuous spectral
+  component (Solomyak ETDS 17(3) 1997; Robinson Indag. Math. 10(4)
+  1999, "On the table and the chair"), so the model-set claim is
+  dropped. Domino ≡ table is ONE entry (index: "Also known as 'table
+  tiling.'"). Half-hex also closes the #17 substitution-hierarchy
+  gap. **Half-hex** ✅ landed M135 (measured period hierarchy p =
+  (3/2)·2^g). **Domino (table)** ✅ landed M138 — limit-periodic via
+  approximating periodic tilings: the depth-g patch is itself the
+  fundamental cell of the period-(2^g, 2^(g+1)) approximant (measured
+  g = 1..6, ratio 2; no proper within-patch period — "full-block"
+  manifest, kind-different from half-hex).
 - **Period doubling / period tripling / Thue–Morse 2D / Squiral** —
   marginal supersubstitutions; Squiral was parked pending rule-table
   verification (see Parked) — the Bielefeld page provides it; effort

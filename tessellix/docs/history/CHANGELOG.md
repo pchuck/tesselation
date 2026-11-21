@@ -2109,3 +2109,35 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   step 3. No census change (registers no tilings; lib.rs gains
   exactly one line). Module carries #![allow(dead_code)] until a
   consumer family lands.
+- 2026-11-21 — M138: Domino (table) substitution tiling ✅ (§23d):
+  Lançon's limit-periodic domino substitution lands as ONE tiling,
+  id `domino` ("Domino (table) substitution") — the Bielefeld entry
+  says verbatim "Also known as 'table tiling.'", so "table" is an
+  index alias, not a second entry. Pinned rule (entry
+  https://tilings.math.uni-bielefeld.de/substitution/domino/): two
+  domino prototiles on Z² — A = vertical 1×2, B = horizontal 2×1 —
+  λ = 2 orientation-preserving into 4 children; substitution matrix
+  S = [[2,2],[2,2]], column sums 4 = λ², PF eigenvalue 4 = λ², char
+  poly x²−4x = x(x−4) pinned by exact 2×2 determinants; exact
+  integer cell arithmetic on Z² end to end, floats only at the
+  emission boundary; finite covered patch = the 2^d × 2^(d+1) block
+  recentered on the origin, d = 5..8 picked by the view diagonal,
+  nested views bit-identical on their intersection. Limit-periodicity
+  measured, not asserted: the depth-g patch carries no proper
+  within-patch period — it is itself the fundamental cell of the
+  period-(2^g, 2^(g+1)) approximating periodic tiling: (2,4), (4,8),
+  (8,16), (16,32), (32,64), (64,128) at g = 1..6, 2× per level
+  ("full-block" manifest, kind-different from half-hex's in-patch
+  p = (3/2)·2^g hierarchy). NOT cut-and-project / model-set: the
+  entry states the dynamical spectrum has a continuous component
+  ("Thus it cannot be a cut and project tiling") — Solomyak, ETDS
+  17(3) 1997; Robinson, Indag. Math. 10(4) 1999, "On the table and
+  the chair" — the PROPOSED §23d cut-and-project claim corrected
+  accordingly. Battery: rule line (containment/disjoint/area),
+  depth-2 figure blocks reproduced exactly (16 tiles each),
+  zero-overlap single coverage (counts 4/16/64/256; ¼-cell grid
+  points 128/512/2048/8192), period hierarchy, nested-view bit
+  identity, default-view pin, trio
+  coverage/rotated-scaled/determinism. Census: aperiodic family
+  6 → 7; Aperiodic tab 7 → 8; built-ins 128 → 129; tab memberships
+  142 → 143. Not a lattice table — no culling line.

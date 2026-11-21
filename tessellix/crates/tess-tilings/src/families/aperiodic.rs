@@ -1,5 +1,5 @@
-//! Aperiodic family: aperiodic monotiles and forcing sets: hat, turtle, spectre,
-//! Taylor-Socolar, Jeandel-Rao, half-hex
+//! Aperiodic family: aperiodic monotiles and forcing sets: hat, turtle,
+//! spectre, Taylor-Socolar, Jeandel-Rao, half-hex, domino
 //!
 //! Owned here: module declarations, `register` (the family's registry
 //! slice, in within-tab order), `classification` arms, the family's
@@ -9,6 +9,7 @@
 use tess_core::classify::TilingClass;
 use tess_core::Registry;
 
+pub mod domino;
 pub mod half_hex;
 pub mod hat;
 pub mod jr_aperiodic;
@@ -24,6 +25,7 @@ pub fn register(mut r: Registry) -> Registry {
     r = r.register(taylor_socolar::TaylorSocolarTiling);
     r = r.register(jr_aperiodic::JeandelRaoTiling);
     r = r.register(half_hex::HalfHexTiling);
+    r = r.register(domino::DominoTiling);
     r
 }
 
@@ -100,6 +102,15 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             translational: Some("limit-periodic"),
             ..TilingClass::EMPTY
         },
+        "domino" => TilingClass {
+            families: &["Aperiodic"],
+            method: Some("substitution"),
+            prototiles: Some(1),
+            source: Some("Lançon"),
+            aperiodic_status: Some("limit-periodic"),
+            translational: Some("limit-periodic"),
+            ..TilingClass::EMPTY
+        },
         _ => return None,
     })
 }
@@ -121,6 +132,7 @@ mod census {
         "taylor-socolar",
         "jeandel-rao",
         "half-hex",
+        "domino",
     ];
 
     #[test]
@@ -128,7 +140,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            6,
+            7,
             "aperiodic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
@@ -401,6 +413,72 @@ mod half_hex_tests {
         check_det(
             &half_hex::HalfHexTiling,
             "half-hex",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+}
+
+#[cfg(test)]
+mod domino_tests {
+    use super::domino;
+    use crate::tests::{check_coverage, check_det, check_rotated};
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn domino_covers_region() {
+        let t = domino::DominoTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(&t, "domino", &p, BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)));
+    }
+
+    /// The finite covered patch (the 2^d × 2^(d+1) block, d picked from
+    /// the view diagonal, recentered on the origin) is view-anchored, so
+    /// distant views are in-domain when their picked depth's block
+    /// contains them: three far windows (d = 6 / 7 / 8 respectively —
+    /// E² = 2 / 0.72 / 0.08) verify the depth rule, the recentering and
+    /// the clip-area accounting away from the origin.
+    #[test]
+    fn domino_covers_large_and_distant_views() {
+        let t = domino::DominoTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        for (cx, cy, w, h) in [
+            (20.0, 50.0, 0.5, 0.5),
+            (50.0, 100.0, 0.3, 0.3),
+            (100.0, 200.0, 0.1, 0.1),
+        ] {
+            check_coverage(
+                &t,
+                "domino",
+                &p,
+                BBox::new(v2(cx - w, cy - h), v2(cx + w, cy + h)),
+            );
+        }
+    }
+
+    #[test]
+    fn domino_rotated_scaled() {
+        check_rotated(
+            &domino::DominoTiling,
+            "domino(rot25,scale0.6)",
+            BBox::new(v2(-3.0, -3.0), v2(3.0, 3.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn domino_deterministic() {
+        check_det(
+            &domino::DominoTiling,
+            "domino",
             BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
         );
     }

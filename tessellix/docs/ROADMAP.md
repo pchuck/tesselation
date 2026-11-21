@@ -100,8 +100,13 @@ the "mixed floret/cairo/prismatic" patterns.
 - 🔭 **§23d limit-periodic substitutions** — ✅ **half-hex landed (M135)**
   (Socolar's half-hexagon substitution; closes the #17
   substitution-hierarchy gap; measured period hierarchy
-  p = (3/2)·2^g = 6, 12, 24, 48, 96); domino/table (+variants)
-  dispatched: [domino-table](briefs/domino-table.md) (fast tier).
+  p = (3/2)·2^g = 6, 12, 24, 48, 96) and ✅ **domino (table) landed
+  (M138)** — one entry ("Also known as 'table tiling.'"),
+  limit-periodic via approximating periodic tilings, the depth-g
+  patch itself the fundamental cell of the period-(2^g, 2^(g+1))
+  approximant ("full-block" manifest); NOT cut-and-project (Solomyak
+  1997 / Robinson 1999 continuous spectral component — dossier
+  corrected); brief: [domino-table](briefs/domino-table.md).
 - 🔭 **§23 Bielefeld salvage wave** — four briefs revived from the
   lost pre-rework §23 session (rules pinned in the briefs; prototype
   batteries archived in `.scratch/salvage-20261120/`):

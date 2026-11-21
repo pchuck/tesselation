@@ -15,7 +15,7 @@ cross-cutting reference docs, and frozen history.
 | laves | [docs/families/laves.md](families/laves.md) | 8 | 1 |
 | kuniform | [docs/families/kuniform.md](families/kuniform.md) | 30 | 14 |
 | reptiles | [docs/families/reptiles.md](families/reptiles.md) | 5 | 2 |
-| aperiodic | [docs/families/aperiodic.md](families/aperiodic.md) | 6 | 5 |
+| aperiodic | [docs/families/aperiodic.md](families/aperiodic.md) | 7 | 5 |
 | pavers | [docs/families/pavers.md](families/pavers.md) | 14 | 8 |
 | islamic | [docs/families/islamic.md](families/islamic.md) | 26 | 12 |
 

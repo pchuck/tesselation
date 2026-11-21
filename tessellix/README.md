@@ -49,8 +49,8 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 **Browse mode** — the tab bar lists the ten display categories with card
 counts (`Uniform (11)   Two-Uniform (17)   Laves (24)   Wallpaper (17)   Pentagon
-Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (12)   Aperiodic (7)
-Nonperiodic (5)`); below it a responsive card grid shows the active tab's
+Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (12)   Aperiodic (8)
+Nonperiodic (6)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
 fragment, and `params: n` when the tiling has adjustable parameters. A
@@ -127,7 +127,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-128 built-in tilings (142 tab memberships), all discoverable in both UIs
+129 built-in tilings (143 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -141,8 +141,9 @@ cairo-pentagonal (type 4) and floret-pentagonal (type 5) as typed
 secondary members), **Islamic** (25), **Arrangements** (8),
 **Quasiperiodic** (12: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, fractalizing 3.12.12,
-girih Darb-i Imam), **Aperiodic** (7: einstein family, pinwheel,
-Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex), and
+girih Darb-i Imam), **Aperiodic** (8: einstein family, pinwheel,
+Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
+(table)), and
 **Nonperiodic** (6: limit-periodic rep-tiles, Hirschhorn,
 pregnant-chair). Categories
 are declared on the tiling (never derived from its symmetry), so the
@@ -272,6 +273,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `taylor-socolar` | Taylor-Socolar striped hexagon | aperiodic decorated-hexagon monotile (Taylor & Socolar, arXiv:1008.3103); the paper's forced 529-hexagon patch (its Fig. 18), each hexagon partitioned into 8 decorated sub-polygons carrying the canonical chord + split-axis decoration (one thick vertex-to-vertex chord plus a centre-split red/blue axis) whose chords close into nested equilateral Taylor triangles, state rules realized exactly (R1 0/2992, R2 0/2816, R3 0/2904, re-derived in tests); finite covered patch, no period within hex-radius 30 | — | — |
 | `jeandel-rao` | Jeandel-Rao 11-tile Wang tiles | aperiodic 11-tile edge-colored Wang set (Jeandel-Rao, arXiv:1506.06492); the author's canonical 100x100 patch, each unit cell partitioned into 5 sub-polygons whose edge bands carry the Wang edge colors (H 0/9900, V 0/9900, exact 9-color ids, re-derived in tests); finite covered patch, no period \|t\|<=30 | — | — |
 | `half-hex` | Half-hex (limit-periodic substitution) | achiral half-hexagon prototile (trapezoid half of a unit hexagon, edges {2,1,1,1}), λ = 2 into 4 children (S[j][i] = 1 iff (j−i) mod 6 ∈ {0,2,3,4}); PF eigenvalue 4 = λ², char poly (x−4)(x−2)(x−1)²(x+1)²; limit-periodic — measured minimal x-period p = (3/2)·2^g = 6, 12, 24, 48, 96 at g = 2..6; exact √3-field (u,v) integer-pair arithmetic | — | — |
+| `domino` | Domino (table) substitution | Lançon's limit-periodic domino substitution (Bielefeld entry "domino" — "Also known as 'table tiling.'", one entry); A = vertical 1×2, B = horizontal 2×1 on Z², λ = 2 orientation-preserving into 4 children; S = [[2,2],[2,2]], PF eigenvalue 4 = λ², char poly x²−4x; limit-periodic via approximating periodic tilings — the depth-g patch is itself the fundamental cell of the period-(2^g, 2^(g+1)) approximant, measured (2,4), (4,8), (8,16), (16,32), (32,64), (64,128) at g = 1..6, no proper within-patch period; not cut-and-project (continuous spectral component — Solomyak 1997, Robinson 1999); exact integer arithmetic on Z² (M138) | — | — |
 | `hirschhorn` | Hirschhorn pentagon | nonperiodic monohedral (Hirschhorn–Hunt 1985) | — | — |
 | `chair` | Chair (L-tromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge | — | — |
 | `armchair` | Armchair (L-tetromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge (T-junctions intrinsic at every scale) (M128) | — | — |
