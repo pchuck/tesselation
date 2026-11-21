@@ -5,8 +5,8 @@
 - If `strong-worker` doesn't resolve it after a few tries, call `frontier` with the failing output and what was tried.
 - Use `frontier` for the most challenging tasks, or when other workers aren't converging on a solution.
 - **One job per agent at a time.** Each agent session is dispatched exactly one job at a time — never give a busy agent a second job, never multiplex tasks within one session. Launch one job at a time and confirm it is established, then decide on the next dispatch; never batch multiple launches.
-- **Tier parallelism:** all worker tiers run on separate hardware and can handle tasks in parallel. `worker` and `fast-worker` can each handle up to two jobs in parallel; `strong-worker` and `frontier` are sized to each handle one large/complex task at a time.
-- **Keep idle tiers fed.** When workers are idle and dependency-free work is in the queue, feed open tasks of appropriate difficulty to the idle worker(s) — match the task's difficulty to the tier (fast-worker: discrete/mechanical; worker: standard; strong-worker: hard geometry/correctness; frontier: novel derivation). Work whose inputs depend on an in-flight job stays queued until that job lands.
+- **Tier parallelism — one job per tier:** all four tiers run on separate hardware and work in **parallel**, but each tier carries **exactly one in-flight job at a time** — at most four concurrent jobs: 1x `worker` + 1x `fast-worker` + 1x `strong-worker` + 1x `frontier`. Never dispatch a second job to a tier whose current job is still running (regardless of task size); the tier's next job waits until its current one lands and is integrated.
+- **Keep idle tiers fed.** When a tier has **no** in-flight job and dependency-free work is in the queue, dispatch to it — match the task's difficulty to the tier (fast-worker: discrete/mechanical; worker: standard; strong-worker: hard geometry/correctness; frontier: novel derivation). Work whose inputs depend on an in-flight job stays queued until that job lands.
 - Briefs must be self-contained: goal, files, constraints, how to verify.
 
 ## Harness discipline
