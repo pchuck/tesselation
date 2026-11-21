@@ -1976,3 +1976,18 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   own bases (the M122 schema landed on main before the M114–M121
   batch); the end state is the pinned 122/136 with per-tab
   [11,17,24,17,15,21,8,12,6,5].
+- 2026-11-20 — M130: TUI params-strip repaint fix — the render-mode
+  arrow branches for the params strip (Left/Right adjusting the
+  pointed-at parameter, Up/Down moving the cursor) changed app state
+  without setting the render-loop `dirty` flag, so the frame never
+  repainted: parameter steps and cursor moves showed no feedback and
+  the canvas kept the pre-adjust tiling until some other key
+  dirtied the frame (found by visual testing: scale sat at "1" on
+  screen while the param set read 1.2). Fix: set `dirty = true` in
+  the four branches (the state-changing helpers in Browse —
+  `move_cursor`, `walk`, `scroll_by`, `resize_cards` — already set
+  it internally). Verified live on X11: scale 1 → 2 via 20 Right
+  steps repaints each step (Penrose P3 tile count 130 → 53 with
+  visibly larger rhombs), rotation 0° → 30° via Down + 6 Rights
+  repaints rotated output (53 → 92 tiles); tess-tui suite 27/27,
+  workspace 848/848.

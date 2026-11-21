@@ -390,6 +390,7 @@ impl Tui {
                 KeyCode::Left => {
                     if self.params_open {
                         self.app.adjust_param(-1);
+                        self.dirty = true;
                     } else {
                         self.walk(-1);
                     }
@@ -397,12 +398,19 @@ impl Tui {
                 KeyCode::Right => {
                     if self.params_open {
                         self.app.adjust_param(1);
+                        self.dirty = true;
                     } else {
                         self.walk(1);
                     }
                 }
-                KeyCode::Up if self.params_open => self.app.move_param_cursor(-1),
-                KeyCode::Down if self.params_open => self.app.move_param_cursor(1),
+                KeyCode::Up if self.params_open => {
+                    self.app.move_param_cursor(-1);
+                    self.dirty = true;
+                }
+                KeyCode::Down if self.params_open => {
+                    self.app.move_param_cursor(1);
+                    self.dirty = true;
+                }
                 KeyCode::Char('h') => self.pan(-1, 0),
                 KeyCode::Char('l') => self.pan(1, 0),
                 KeyCode::Char('j') => self.pan(0, 1),
