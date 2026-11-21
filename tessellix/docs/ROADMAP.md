@@ -138,9 +138,11 @@ the "mixed floret/cairo/prismatic" patterns.
   sign engine, per-family applicability table; CAST 10-fold re-scoped
   to L₁₀ (the girih field, NOT Q(√5) — dense DTO orientations handled
   per orientation class); all 20 shipped girih ROTMs reproduced
-  bit-for-bit by the generic recipe. Next gated step: `fields.rs` +
-  K₇ per doc §7 — [fields-layer-k7](briefs/fields-layer-k7.md);
-  dispatched (frontier).
+  bit-for-bit by the generic recipe. ✅ **K₇ core landed (M137,
+  fields.rs)** — generic degree-D exact layer (kmul/knorm/ksign) +
+  oblique frame + star walks + sign battery, no census change; next:
+  K₉/K₁₅ + the girih ROTM anchor (§7 step 2), then the first
+  consumer family (step 3).
 - ❓ **Wheel tiling (Nissen)** — **parked (M61)** with a proven
   negative: the edge-orthogonal dual of the shield substitution is
   exact but admits no substitution at any inflation (algebraic killer

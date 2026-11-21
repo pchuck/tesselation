@@ -2087,3 +2087,25 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   12 exact module tests green. Nonperiodic tab 5 → 6, reptiles
   family 4 → 5. Registry 127 → 128 built-ins, memberships 141 → 142,
   per-tab [11,17,24,17,15,25,8,12,7,6]. Not a lattice table.
+- 2026-11-21 — M137: Cyclotomic field layer — K₇ exact core
+  (fields.rs) ✅: first landing of the §23e/§23i gate (design doc
+  docs/cyclotomic-field-layer.md §7 step 1) — a generic degree-D
+  exact-field layer (kmul convolution+reduction fold in i128 with
+  loud overflow; knorm via fraction-free Bareiss Sylvester; ksign
+  exact sign/order via interval-Horner bisection over a
+  Sturm-certified dyadic isolating interval of b, steered by the
+  EXACT sign of m(mid) — no floats in the engine) + the concrete
+  K₇ = Q(2cos(2π/7)) core: minpoly x³+x²−2x−1, reduction
+  b³ = 1+2b−b², b⁴ = −1−b+3b², isolating interval
+  [2677868308/2³¹, 2677868309/2³¹] (all derived + certified in the
+  scratch spike, re-asserted in Rust), and the P7 oblique frame
+  (norm² = A²+B²+A·B·b, sine-free cross-sign, companion rotation
+  R = [[0,−1],[1,b]]). 10 tests: minpoly zero-test; interval
+  bracketing exact; frame battery (|U(k)|²=1, ΣU(k)=0, R^k
+  consistency, float ≤1e−12); {7/1} and {7/3} star walks closing
+  exactly with exact shoelaces 4+3b+b² and −8+b+5b²; the 29-element
+  sign/order battery vs float; Sylvester norm identities. K₉/K₁₅ +
+  the girih ROTM anchor follow (§7 step 2); first consumer family at
+  step 3. No census change (registers no tilings; lib.rs gains
+  exactly one line). Module carries #![allow(dead_code)] until a
+  consumer family lands.

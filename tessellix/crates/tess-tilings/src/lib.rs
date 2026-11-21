@@ -22,6 +22,7 @@ pub mod classify;
 
 pub use classify::classification;
 
+mod fields;
 // M86/M93: Taylor-Socolar and Jeandel-Rao deliberately carry no per-tiling
 // feature gate (pre-refactor, the former was ungated despite a non-default
 // `socolar` feature existing, and the latter had no feature at all). They
