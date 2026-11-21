@@ -8,3 +8,6 @@ tmp/
 # gui-tools: unpacked deb binaries (re-fetch per gui-tools/README.md)
 gui-tools/bin/
 gui-tools/lib/
+
+# local tooling + stray scratch dumps (never commit)
+gui-tools/
