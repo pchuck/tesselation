@@ -10,9 +10,20 @@
 //!   Clicking a card opens Render mode.
 //! * **Render** — the whole window is the canvas (drag-pan,
 //!   wheel-zoom) with a top strip (`← back`, `◀`/`▶` prev/next in the
-//!   tab order, a params toggle, reset) and a collapsible bottom panel
-//!   holding the params, color mode, and symmetry readout. Escape or
-//!   `← back` returns to Browse exactly as left (same tab + selection).
+//!   tab order, a params toggle, a zoom cluster `− [nnn%] +` whose
+//!   percentage label doubles as zoom-reset, reset) and a collapsible
+//!   bottom panel holding the params, color mode, and symmetry
+//!   readout. The `+`/`−` keys zoom around the canvas center (wheel
+//!   anchors at the cursor). Escape or `← back` returns to Browse
+//!   exactly as left (same tab + selection).
+//! * **Physical zoom controls** — the wheel/pinch gestures don't
+//!   arrive on every desktop (virtual/X11 sessions can strip them), so
+//!   both modes carry clickable `−`/`+` buttons: the Render strip
+//!   zooms the canvas, the Browse tab row steps the card grid by ONE
+//!   column per press (the grid fills the window, so raw width steps
+//!   are invisible until they cross a column threshold — column steps
+//!   always reflow visibly). Each cluster's middle label resets to the
+//!   default; the Browse keys (+/−) step columns the same way.
 //!
 //! No fixed-width side panel in either mode: grid and canvas each own
 //! the full window, so the layout mirrors the TUI by construction.
@@ -92,6 +103,10 @@ fn card_total_h(img_h: u32) -> f32 {
 /// default ([`CARD_TARGET_W`]) sits comfortably inside the window.
 const CARD_W_MIN: f32 = 150.0;
 const CARD_W_MAX: f32 = 480.0;
+/// Multiplicative zoom factor per physical +/− step on the Render
+/// canvas (the TUI's convention), for both the top-strip buttons and
+/// the keyboard keys.
+const RENDER_ZOOM_STEP: f64 = 1.3;
 /// The card's preview-image pixel size at a card target width of
 /// `target_w`: the default [`CARD_TARGET_W`] renders the historical
 /// [`CARD_IMG_W`]×[`CARD_IMG_H`] preview; the size scales linearly
@@ -181,6 +196,24 @@ pub struct GuiApp {
     card_rects: Vec<egui::Rect>,
     #[cfg_attr(not(test), allow(dead_code))]
     card_grid_col_w: f32,
+    /// The column count and available width recorded by the last
+    /// `draw_card_grid` pass — the count feeds the tab-band card-size
+    /// label, the width is the baseline the `−`/`+` card-size controls
+    /// step from (one column per press, always a visible reflow).
+    /// Zero avail = no grid drawn yet (the controls no-op). Both are
+    /// read live from the recorded pass, so a window resize between
+    /// passes makes the first post-resize step land on the old
+    /// geometry once; the next press self-corrects.
+    card_grid_cols: usize,
+    card_grid_avail: f32,
+    /// The canvas rect of the last Render pass — the zoom buttons'
+    /// anchor (its center), so button zoom keeps the view centered the
+    /// way keyboard zoom does. `None` before the first canvas pass
+    /// (zoom then anchors at the viewport center).
+    canvas_rect: Option<egui::Rect>,
+    /// The viewport zoom the app was constructed with — the 100%
+    /// baseline for the zoom label and its click-to-reset.
+    zoom_default: f64,
 }
 
 /// Region-independent metadata shown in the side panel.
@@ -338,6 +371,21 @@ fn columns_for_width(width: f32, card_w: f32) -> usize {
     raw.max(1)
 }
 
+/// The card target width that lays the grid out as exactly `cols`
+/// columns at `avail` — the inverse of [`columns_for_width`] taken at
+/// the regime's upper edge (`avail/cols` floors back to `cols`); a
+/// relative epsilon guards the f32 division from rounding one ulp
+/// below the count. Column-count stepping (the `−`/`+` buttons and
+/// keys) lands the target exactly here, so every step reflows the grid
+/// visibly — unlike raw width steps, which sit invisible inside a
+/// column regime. Pure, unit-tested.
+fn card_target_for_cols(avail: f32, cols: usize) -> f32 {
+    if cols == 0 {
+        return CARD_W_MIN;
+    }
+    avail / cols as f32 * (1.0 - 1e-5)
+}
+
 /// Column width for a browse grid of `cols` columns given `avail`
 /// available width: budget the inter-column spacing and split the
 /// rest among the columns. Each card's outer rect (the grid cell,
@@ -447,6 +495,9 @@ fn title_lines(name: &str, per_line: usize) -> [String; 2] {
 impl GuiApp {
     pub fn new() -> Self {
         let app = tess_core::App::new(tess_tilings::registry(), 60.0);
+        // The zoom label's 100% baseline: the construction zoom (the
+        // render bar has no other record of "default zoom").
+        let zoom_default = app.viewport.zoom;
         // The classification table drives the declared tab sort orders
         // (pentagon types, 2-uniform configurations, Laves ranks,
         // wallpaper crystal systems) and supplies each card's schema.
@@ -474,6 +525,10 @@ impl GuiApp {
             search: String::new(),
             card_rects: Vec::new(),
             card_grid_col_w: 0.0,
+            card_grid_cols: 0,
+            card_grid_avail: 0.0,
+            canvas_rect: None,
+            zoom_default,
         }
     }
 
@@ -547,11 +602,15 @@ impl GuiApp {
                     i.key_pressed(egui::Key::Minus),
                 )
             });
+            // One COLUMN per press — a raw width step is invisible until
+            // it crosses a column threshold (the grid fills the window),
+            // which read as dead keys. "+" = bigger cards (fewer
+            // columns), "−" = smaller cards (more columns).
             if plus {
-                self.set_card_target_w(self.card_target_w + 16.0);
+                self.step_card_columns(-1);
             }
             if minus {
-                self.set_card_target_w(self.card_target_w - 16.0);
+                self.step_card_columns(1);
             }
         }
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -571,13 +630,46 @@ impl GuiApp {
     /// cache is keyed by exact pixel size, and continuous wheel zoom
     /// would otherwise accumulate one generation per step).
     fn set_card_target_w(&mut self, w: f32) {
-        let w = w.clamp(CARD_W_MIN, CARD_W_MAX);
+        self.set_card_target_w_impl(w.clamp(CARD_W_MIN, CARD_W_MAX));
+    }
+
+    /// Column-stepping path: the target IS the column geometry
+    /// (`avail/cols`, [`card_target_for_cols`]), which legitimately
+    /// leaves `[CARD_W_MIN, CARD_W_MAX]` on either side — few huge
+    /// cards or many small ones are the point of a column step. The
+    /// wheel path keeps the clamp; this one only prunes.
+    fn set_card_target_w_exact(&mut self, w: f32) {
+        self.set_card_target_w_impl(w);
+    }
+
+    fn set_card_target_w_impl(&mut self, w: f32) {
         if w != self.card_target_w {
             self.card_target_w = w;
             let (iw, ih) = card_img_size(w);
             let suffix = format!("|{iw}x{ih}");
             self.card_textures
                 .retain(|k, _| k.ends_with(&suffix));
+        }
+    }
+
+    /// Step the card grid by `delta` columns (+ = more columns,
+    /// smaller cards; − = fewer, bigger), landing the target exactly on
+    /// the new regime's edge ([`card_target_for_cols`]) so every press
+    /// reflows the grid visibly. The current count is derived from the
+    /// target itself (not the last pass's recorded count), so repeated
+    /// presses within one frame step correctly. Clamped to `[1, the
+    /// column count at [`CARD_W_MIN`]]`; a no-op before the first grid
+    /// pass records the geometry.
+    fn step_card_columns(&mut self, delta: i32) {
+        let avail = self.card_grid_avail;
+        if !(avail > 0.0) {
+            return;
+        }
+        let cur = columns_for_width(avail, self.card_target_w);
+        let max_cols = columns_for_width(avail, CARD_W_MIN).max(1);
+        let next = (cur as i32 + delta).clamp(1, max_cols as i32) as usize;
+        if next != cur {
+            self.set_card_target_w_exact(card_target_for_cols(avail, next));
         }
     }
 
@@ -629,6 +721,23 @@ impl GuiApp {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("⟲ reset").clicked() {
                         self.app.reset_view();
+                    }
+                    ui.separator();
+                    // Physical zoom cluster (wheel/pinch don't arrive on
+                    // every desktop): +/− step around the canvas center,
+                    // the percentage label doubles as zoom-reset.
+                    if ui.button("+").clicked() {
+                        self.zoom_by_step(1);
+                    }
+                    if ui
+                        .button(self.zoom_label())
+                        .on_hover_text("reset zoom to 100%")
+                        .clicked()
+                    {
+                        self.zoom_reset();
+                    }
+                    if ui.button("−").clicked() {
+                        self.zoom_by_step(-1);
                     }
                 });
             });
@@ -702,6 +811,29 @@ impl GuiApp {
                     .hint_text("search")
                     .desired_width(160.0),
             );
+            // Physical card-size controls (the wheel/pinch gestures
+            // don't arrive on every desktop): one column per press, the
+            // count label doubles as reset-to-default. "+" = bigger
+            // cards (fewer columns), "−" = smaller (more).
+            ui.separator();
+            if ui.button("−").clicked() {
+                self.step_card_columns(1);
+            }
+            let cols_label = if self.card_grid_cols >= 1 {
+                format!("{}×", self.card_grid_cols)
+            } else {
+                "cards".to_string()
+            };
+            if ui
+                .button(cols_label)
+                .on_hover_text("reset card size")
+                .clicked()
+            {
+                self.set_card_target_w(CARD_TARGET_W);
+            }
+            if ui.button("+").clicked() {
+                self.step_card_columns(-1);
+            }
         });
         if let Some(i) = clicked {
             self.select_tab(i);
@@ -844,6 +976,10 @@ impl GuiApp {
         let col_w = card_col_w(avail, cols, GRID_SPX);
         let img = card_img_size(self.card_target_w);
         self.card_grid_col_w = col_w;
+        // Record the pass geometry for the +/− column-stepping
+        // controls (they compute the next regime's target from these).
+        self.card_grid_avail = avail;
+        self.card_grid_cols = cols;
         // Copy the category out of the tab before the grid closure:
         // the closure takes `&mut self`, so no borrow of `self.tabs`
         // (or of `tab`) may survive into it.
@@ -1133,6 +1269,51 @@ impl GuiApp {
 }
 
 impl GuiApp {
+    /// One physical zoom step on the Render canvas (`dir` +1 in, −1
+    /// out, factor [`RENDER_ZOOM_STEP`] — the TUI's convention),
+    /// anchored at the last canvas pass's center so the view stays
+    /// put while zooming. Before the first canvas pass there is no
+    /// anchor and the viewport center holds.
+    fn zoom_by_step(&mut self, dir: i32) {
+        let factor = if dir >= 0 {
+            RENDER_ZOOM_STEP
+        } else {
+            1.0 / RENDER_ZOOM_STEP
+        };
+        let anchor = self.canvas_rect.map(|rect| {
+            let c = rect.center();
+            self.app.viewport.screen_to_world(
+                (c.x - rect.min.x) as f64,
+                (c.y - rect.min.y) as f64,
+                rect.width() as f64,
+                rect.height() as f64,
+            )
+        });
+        self.app.zoom(factor, anchor);
+    }
+
+    /// Reset the zoom to the construction baseline (the zoom label's
+    /// 100%); the center is untouched (⟲ reset re-centers).
+    fn zoom_reset(&mut self) {
+        if self.zoom_default > 0.0 {
+            self.app.viewport.zoom = self.zoom_default;
+        }
+    }
+
+    /// The zoom label shown between the −/+ buttons — the current zoom
+    /// as a percentage of the construction baseline. Doubles as the
+    /// reset button.
+    fn zoom_label(&self) -> String {
+        if self.zoom_default > 0.0 {
+            let pct = (self.app.viewport.zoom / self.zoom_default * 100.0)
+                .round()
+                .max(1.0);
+            format!("{pct:.0}%")
+        } else {
+            "zoom".to_string()
+        }
+    }
+
     fn draw_canvas(&mut self, ctx: &egui::Context) {
         let (painter, response, rect) = egui::CentralPanel::default()
             .show(ctx, |ui| {
@@ -1156,6 +1337,35 @@ impl GuiApp {
             });
             self.app.zoom(z as f64, anchor);
         }
+        // Physical zoom keys (+/−): same step as the top-strip buttons,
+        // anchored at the canvas center (the wheel anchors at the
+        // cursor; keys have none). Skipped while a widget owns the
+        // keyboard — a param DragValue in edit mode may want '-' as a
+        // sign.
+        if !ctx.wants_keyboard_input() {
+            let (zin, zout) = ctx.input(|i| {
+                (
+                    i.key_pressed(egui::Key::Equals),
+                    i.key_pressed(egui::Key::Minus),
+                )
+            });
+            let anchor = Some(self.app.viewport.screen_to_world(
+                rect.width() as f64 / 2.0,
+                rect.height() as f64 / 2.0,
+                rect.width() as f64,
+                rect.height() as f64,
+            ));
+            if zin {
+                self.app.zoom(RENDER_ZOOM_STEP, anchor);
+            }
+            if zout {
+                self.app.zoom(1.0 / RENDER_ZOOM_STEP, anchor);
+            }
+        }
+        // Record for the zoom buttons' anchor (before the message
+        // early-return below, so they anchor correctly even while the
+        // too-many-tiles message shows).
+        self.canvas_rect = Some(rect);
         if response.dragged() {
             let d = response.drag_delta();
             self.app.pan(d.x as f64, d.y as f64);
@@ -1914,6 +2124,90 @@ mod tests {
         assert_eq!(gui.card_target_w, super::CARD_W_MAX);
         gui.set_card_target_w(0.0);
         assert_eq!(gui.card_target_w, super::CARD_W_MIN);
+    }
+
+    /// `card_target_for_cols` is the exact inverse of
+    /// `columns_for_width` at the regime edge: for a sweep of
+    /// width/cols pairs the round trip reproduces `cols` — the
+    /// guarantee that makes column stepping land on a visible reflow
+    /// every press. The cols=0 guard returns the min width.
+    #[test]
+    fn card_target_for_cols_round_trips_columns() {
+        for &avail in &[320.0_f32, 901.0, 1280.0, 2560.0] {
+            for cols in 1..=12 {
+                let target = super::card_target_for_cols(avail, cols);
+                assert_eq!(
+                    super::columns_for_width(avail, target),
+                    cols,
+                    "avail {avail}, cols {cols}: target {target}"
+                );
+            }
+        }
+        assert_eq!(super::card_target_for_cols(901.0, 0), super::CARD_W_MIN);
+    }
+
+    /// The `−`/`+` card-size controls step exactly one column per
+    /// press (each step lands the target on the new regime's edge),
+    /// clamp at the 1-column and squash-floor column counts, and no-op
+    /// before the first grid pass records the geometry.
+    #[test]
+    fn step_card_columns_steps_one_column_and_clamps() {
+        let mut gui = super::GuiApp::new();
+        let avail = 901.0_f32;
+        gui.card_grid_avail = avail;
+        gui.card_target_w = super::card_target_for_cols(avail, 5);
+
+        gui.step_card_columns(-1); // bigger cards: 5 -> 4 columns
+        assert_eq!(gui.card_target_w, super::card_target_for_cols(avail, 4));
+        gui.step_card_columns(1); // smaller cards: back to 5
+        assert_eq!(gui.card_target_w, super::card_target_for_cols(avail, 5));
+
+        // Clamp at one column.
+        for _ in 0..10 {
+            gui.step_card_columns(-1);
+        }
+        assert_eq!(gui.card_target_w, super::card_target_for_cols(avail, 1));
+
+        // ...and at the column count of the squash floor (the same
+        // ceiling the wheel path's CARD_W_MIN clamp induces).
+        let max_cols = super::columns_for_width(avail, super::CARD_W_MIN);
+        for _ in 0..max_cols + 5 {
+            gui.step_card_columns(1);
+        }
+        assert_eq!(
+            super::columns_for_width(avail, gui.card_target_w),
+            max_cols,
+            "stepping + never goes below the squash-floor column count"
+        );
+
+        // No grid pass yet (avail never recorded): a no-op.
+        let mut fresh = super::GuiApp::new();
+        let before = fresh.card_target_w;
+        fresh.step_card_columns(1);
+        fresh.step_card_columns(-1);
+        assert_eq!(fresh.card_target_w, before);
+    }
+
+    /// The render zoom cluster: `+`/`−` multiply/divide the viewport
+    /// zoom by exactly [`super::RENDER_ZOOM_STEP`], the label reads the
+    /// percentage of the construction baseline, and clicking it resets
+    /// to 100% (center untouched).
+    #[test]
+    fn render_zoom_steps_label_and_reset() {
+        let mut gui = super::GuiApp::new();
+        assert_eq!(gui.zoom_label(), "100%");
+        gui.zoom_by_step(1);
+        assert!(
+            (gui.app.viewport.zoom - 60.0 * super::RENDER_ZOOM_STEP).abs() < 1e-9,
+            "one + step is one RENDER_ZOOM_STEP"
+        );
+        gui.zoom_by_step(-1);
+        assert!((gui.app.viewport.zoom - 60.0).abs() < 1e-9);
+        gui.app.viewport.zoom = 180.0;
+        assert_eq!(gui.zoom_label(), "300%");
+        gui.zoom_reset();
+        assert_eq!(gui.app.viewport.zoom, 60.0);
+        assert_eq!(gui.zoom_label(), "100%");
     }
 
     /// A real headless pass at a zoomed card size: every card

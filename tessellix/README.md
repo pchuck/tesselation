@@ -97,7 +97,12 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
   (the ten category tabs with card counts + a search field, one
   wrapping row) sits over a responsive card grid: the column count is
   computed from the window width (target card ~240 px, fully dynamic
-  — no upper bound) and the cards stretch to fill. The Wallpaper tab
+  — no upper bound) and the cards stretch to fill. Card size is
+  zoomable three ways: ctrl+wheel / trackpad pinch (continuous), the
+  tab-band `−`/`+` buttons and the `+`/`−` keys (both step exactly one
+  column per press, so every press visibly reflows the grid; the
+  column-count label between the buttons resets the default size).
+  The Wallpaper tab
   (one card per wallpaper group — the group catalog; since M85 all 17
   groups are represented) opens with a catalog note reporting the
   completed catalog. Cards show crystal-system section headers
@@ -113,7 +118,11 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 - **Render mode** — the whole window is the canvas (drag to pan,
   scroll to zoom anchored at the cursor). A top strip offers `← back`,
   `◀`/`▶` prev/next (walking the current tab's order, wrapping), a
-  params toggle, and `⟲ reset`; **Escape** and `← back` both return to
+  params toggle, a zoom cluster (`−` / live zoom-percentage / `+`,
+  where clicking the percentage resets 100%) and `⟲ reset`; the
+  `+`/`−` keys zoom by the same step around the canvas center (so
+  zoom works without wheel/pinch gestures, which some desktops strip).
+  **Escape** and `← back` both return to
   Browse exactly as left (same tab + selection). A collapsible bottom
   panel (expanded by default on entry) holds the parameter editors,
   the color-mode selector (single / pattern / proto), and the
