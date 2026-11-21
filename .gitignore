@@ -5,3 +5,6 @@ reference/
 # other..
 logs/
 tmp/
+# gui-tools: unpacked deb binaries (re-fetch per gui-tools/README.md)
+gui-tools/bin/
+gui-tools/lib/
