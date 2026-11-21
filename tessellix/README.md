@@ -127,7 +127,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-124 built-in tilings (138 tab memberships), all discoverable in both UIs
+125 built-in tilings (139 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -138,7 +138,7 @@ ten tabs:
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
 cairo-pentagonal (type 4) and floret-pentagonal (type 5) as typed
-secondary members), **Islamic** (23), **Arrangements** (8),
+secondary members), **Islamic** (24), **Arrangements** (8),
 **Quasiperiodic** (12: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, fractalizing 3.12.12,
 girih Darb-i Imam), **Aperiodic** (6: einstein family, pinwheel,
@@ -176,6 +176,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `girih-w85` | Girih 12-pointed star interlace (W85) | Wichmann panel data18/W85 (Alhambra, Mexuar patio): exact Q(√3) strap grid L = 283.92, strap 9; 42 tiles per hexagonal cell; drawn interlace chiral | p6 | hexagonal |
 | `girih-bowtie` | Girih bowtie (72.72.216) | classical concave girih hexagon (papillon, unit edges on the 36° frame) tessellating the plane alone; one tile per cell | cmm | centered |
 | `girih-rhombus` | Girih rhombus (72.72.108.108) | classical thin girih rhombus (72°/108°, unit edges) tessellating the plane alone; one tile per cell | cmm | centered |
+| `girih-decagon` | Girih decagon (10.6.10) | classical regular decagon with bowtie infill per cell (144°+72°+144° closes every vertex); exact K = Q(2cos 18°) table | cmm | centered |
 | `pic-4-8-8` | Hankin PIC fourfold khatam | Hankin polygons-in-contact strapwork on the 4.8.8 substrate (contact angle δ = 45°): midpoint-chord walls — {8/2} octagram in each octagon — partitioning the plane into octagon + small square + 4 house pentagons + 8 star tips per cell, exact Q(√2) | p4m | square |
 | `pic-3-6-3-6` | Hankin PIC sixfold khatam | Hankin polygons-in-contact strapwork on the trihexagonal (3.6.3.6) substrate (contact angle δ = 60°): midpoint-chord walls — {6/2} hexagram in each hexagon, midsegments in each triangle — partitioning the plane into 4 hexagram-core hexagons + 6 hexagram tips + 2 midsegment triangles per cell (a half-scale 3.6.3.6), exact Q(√3) | p6m | hexagonal |
 | `pic-3-12-12` | Hankin PIC twelvefold khatam | Hankin polygons-in-contact strapwork on the truncated-hexagonal (3.12.12) substrate (contact angle δ = 60° — the only angle closing both the dodecagon and the triangle): midpoint-chord walls — {12/4} twelvefold rosette in each dodecagon, midsegments in each triangle — partitioning the plane into rosette-core dodecagon + 6 vertex pentagons + 12 band quads + 2 medial triangles + 12 inner quads + 12 star notches per cell, exact Q(√3) | p6m | hexagonal |

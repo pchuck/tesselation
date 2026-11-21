@@ -2010,3 +2010,17 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   196 (shared exactly 2), wedges closed-or-boundary, coverage once
   per sample. Registry 124 built-ins, memberships 138, per-tab
   [11,17,24,17,15,23,8,12,6,5].
+- 2026-11-21 — M133: Girih decagon tiling (10.6.10) ✅: the classical
+  regular girih decagon cannot close a figure alone (144° reflex
+  pairing needs 144+72+144 = 360) — cell = 1 DEC + 1 BOW on a cmm
+  CenteredRectangular lattice ⟨(0,−(1+√5)·S72), (5/4+3√5/4, √5·S72)⟩,
+  det = 2a³−5a/2 ≈ 9.008536623 = DEC+BOW areas, exact over
+  K = Q(2cos 18°); tile-level wallpaper probe (mirrors on both
+  centered-rectangle axes, interleaved glides, rot180 off mirrors) →
+  cmm. 7×7-patch battery: 313 interior / 158 boundary of 784 edge
+  occurrences, wedges closed-or-boundary, 1600 irrational-offset
+  samples covered exactly once. Assembly cross-check (exact-K):
+  classic rosette DEC + 10 PENT — 0 overlaps, all 10 decagon
+  vertices close at exactly 360° (144+108+108); DEC-cell DEC+BOW
+  shares exactly 1 edge. Registry 125 built-ins, memberships 139,
+  per-tab [11,17,24,17,15,24,8,12,6,5].
