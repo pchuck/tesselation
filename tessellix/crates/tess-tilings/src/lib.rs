@@ -194,7 +194,7 @@ mod tests {
     /// taxonomy — extend it when adding a tiling (and the README's
     /// count; the doc-sync guards
     /// `readme_catalog_matches_registry` and
-    /// `patterns_implemented_matches_registry` below fail the suite if
+    /// `family_docs_match_registrations` below fail the suite if
     /// the docs are not updated).
     #[test]
     fn registry_groups_are_complete_and_canonically_ordered() {
@@ -278,19 +278,19 @@ mod tests {
 // e = 3 under D6, matching the wiki's (t=3, e=3) exactly)
 // -> M99 Islamic 13 -> 14 (hankin-square-two-point, the
         // two-point hankin entry on the square 4.4.4.4 substrate;
-// θK = 45°, δ = 0.5, cmm, PATTERNS.MD §54).
+// θK = 45°, δ = 0.5, cmm, docs/families/islamic.md §54).
         // -> M99 Islamic 14 -> 15 (hankin-4-8-8-rosette-transform,
         // the rosette transform of the 4.8.8 substrate at θK = 45°,
-        // PATTERNS.MD §55).
+        // docs/families/islamic.md §55).
         // -> M99 Islamic 15 -> 17 (najm-63-2e-0-3e-ac, najm-44-3e-0-0-a;
         // roadmap item 22b: the najm template generator, diss. §3.6.1,
-        // PATTERNS.MD §56).
+        // docs/families/islamic.md §56).
         // -> M100 Islamic 17 -> 18 (hankin-3-6-3-6, the hankin
         // inference entry on the trihexagonal 3.6.3.6 substrate;
-// θK = 60° — the regular hexagram, PATTERNS.MD §57).
+// θK = 60° — the regular hexagram, docs/families/islamic.md §57).
         // -> M100 Islamic 18 -> 19 (hankin-3-4-6-4, the hankin
         // inference entry on the rhombitrihexagonal 3.4.6.4
-        // substrate; θK = 60°, PATTERNS.MD §58).
+        // substrate; θK = 60°, docs/families/islamic.md §58).
 // -> M102 Laves 15 -> 19 (the dual() helper dualizes
         // kuniform-n5 / -n1 / -n13 / -n20, k-uniform batch 2;
         // Laves-primary only; provisional numbering, renumbered at
@@ -298,38 +298,38 @@ mod tests {
 // -> M103 TwoUniform 11 -> 13 (kuniform-n4, the cmm
         // 4⁴;3³.4² form, and kuniform-n14, the pmm 3⁶;3³.4² form;
         // torus-exact t/e vs the wiki parentheticals (2,4)/(3,4),
-        // PATTERNS.MD §60 — the fork's provisional §61 renumbered
+        // docs/families/kuniform.md §60 — the fork's provisional §61 renumbered
         // by landing order).
 // -> M106 Laves 19 -> 22 (the dual() helper dualizes
         // kuniform-pmm / -n12 / -n19, k-uniform batch 3: rectangular,
         // centered-rectangular and hexagonal primals; Laves-primary
-        // only; PATTERNS.MD §61 — the fork's provisional §64
+        // only; docs/families/kuniform.md §61 — the fork's provisional §64
         // renumbered by landing order).
         // -> M108 TwoUniform 13 -> 15 (kuniform-n3, the cmm
         // 4⁴;3³.4² sibling, and kuniform-n15, the cmm 3⁶;3³.4²
         // sibling; torus-exact t/e vs the wiki parentheticals
-        // (3,5)/(4,5), PATTERNS.MD §62 — the fork's provisional §61
+        // (3,5)/(4,5), docs/families/kuniform.md §62 — the fork's provisional §61
         // renumbered by landing order).
         // -> M107 Islamic 19 -> 20 (hankin-3-3-3-4-4, the hankin
         // inference entry on the elongated-triangular 3.3.3.4.4
-        // substrate; θK = 60°, cmm, PATTERNS.MD §63 — the fork's
+        // substrate; θK = 60°, cmm, docs/families/islamic.md §63 — the fork's
         // provisional §65 renumbered by landing order).
 // -> M104 Quasiperiodic 8 -> 9 (golden-bee, the Ammann A2
         // chair as a √φ-inflating irreptile substitution; Vince AMM
         // 121 (2014) / Durand–Shen–Vereshchagin DCG 63 (2020)
-        // limit-periodic nuance documented; PATTERNS.MD §64 — the
+        // limit-periodic nuance documented; docs/families/quasiperiodic.md §64 — the
         // fork's provisional §62 renumbered by landing order; landed
         // after M107).
 // -> M110 Quasiperiodic 9 -> 10 (fractalizing-3-12-12, Chavey's
         // limit-periodic dodecagon-dense fractalizing family over the
         // uniform 3.12.12 — flower-orbit planes of triangles, squares,
         // hexagons and dodecagons, each level shrunk by 2+sqrt3;
-        // PATTERNS.MD §65 — the fork's provisional §64 renumbered by
+        // docs/families/quasiperiodic.md §65 — the fork's provisional §64 renumbered by
         // landing order; landed after M104).
         // -> M111 Islamic 20 -> 21 (hankin-3-3-4-3-4, the hankin
         // inference entry on the snub-square 3.3.4.3.4 substrate —
         // first chiral substrate; θK = 60°, measured p4g on the
-        // centered lattice ⟨(L/2,L/2),(L/2,−L/2)⟩; PATTERNS.MD §66 —
+        // centered lattice ⟨(L/2,L/2),(L/2,−L/2)⟩; docs/families/islamic.md §66 —
         // the fork's provisional claim, number free at landing;
         // landed after M110).
         // -> M114 Arrangements 5 -> 6 (stack-bond, the pmm stacked
@@ -525,55 +525,83 @@ assert_eq!(r.len(), 122, "built-in tiling count (update when adding tilings)");
         );
     }
 
-    /// Doc-sync guard for PATTERNS.MD: the "Implemented (N tilings)"
-    /// heading must state the registry size, and every registry id must
-    /// appear exactly once as a table row inside the Implemented
-    /// section (the drift that shipped 119 rows for a 122-tiling
+    /// Doc-sync guard for the per-family docs: each
+    /// `docs/families/<family>.md` must state its family's registered
+    /// size in the "Implemented (N tilings)" heading and list every
+    /// registered id of that family exactly once across its tables —
+    /// and no others (the drift that shipped 119 rows for a 122-tiling
     /// registry — 27 rows never landed, and a mis-merge absorbed the
     /// two-uniform/dual/pentagon tables into the paver-bonds table
-    /// without section headers — is what this guard prevents).
+    /// without section headers — is what this guard prevents, now per
+    /// family so a failure names the one file to fix).
     #[test]
-    fn patterns_implemented_matches_registry() {
-        let patterns = std::fs::read_to_string(
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../PATTERNS.MD"),
-        )
-        .expect("PATTERNS.MD readable from crates/tess-tilings");
-        let r = super::registry();
+    fn family_docs_match_registrations() {
+        let mut cases: Vec<(&str, fn(tess_core::Registry) -> tess_core::Registry)> = Vec::new();
+        #[cfg(feature = "uniform")]
+        cases.push(("uniform", crate::families::uniform::register));
+        #[cfg(feature = "quasiperiodic")]
+        cases.push(("quasiperiodic", crate::families::quasiperiodic::register));
+        #[cfg(feature = "arrangements")]
+        cases.push(("arrangements", crate::families::arrangements::register));
+        #[cfg(feature = "pentagons")]
+        cases.push(("pentagons", crate::families::pentagons::register));
+        #[cfg(feature = "laves")]
+        cases.push(("laves", crate::families::laves::register));
+        #[cfg(feature = "kuniform")]
+        cases.push(("kuniform", crate::families::kuniform::register));
+        #[cfg(feature = "reptiles")]
+        cases.push(("reptiles", crate::families::reptiles::register));
+        #[cfg(feature = "aperiodic")]
+        cases.push(("aperiodic", crate::families::aperiodic::register));
+        #[cfg(feature = "pavers")]
+        cases.push(("pavers", crate::families::pavers::register));
+        #[cfg(feature = "islamic")]
+        cases.push(("islamic", crate::families::islamic::register));
+        assert!(!cases.is_empty(), "at least one family doc is guarded");
 
-        let heading = patterns
-            .find("## Implemented (")
-            .expect("PATTERNS.MD '## Implemented (' heading");
-        let heading_end = heading + "## Implemented (".len();
-        let digits: String = patterns[heading_end..]
-            .chars()
-            .take_while(|c| c.is_ascii_digit())
-            .collect();
-        let n: usize = digits
-            .parse()
-            .expect("PATTERNS.MD Implemented census not parseable");
-        assert_eq!(n, r.len(), "PATTERNS.MD Implemented census heading");
+        for (fam, register) in cases {
+            let doc = std::fs::read_to_string(
+                std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join(format!("../../docs/families/{fam}.md")),
+            )
+            .unwrap_or_else(|e| panic!("docs/families/{fam}.md readable: {e}"));
+            let r = register(tess_core::Registry::new());
 
-        // The Implemented section runs to the next top-level heading.
-        let section_end = patterns[heading_end..]
-            .find("\n## ")
-            .map_or(patterns.len(), |i| heading_end + i);
-        let mut ids: Vec<&str> = patterns[heading..section_end]
-            .lines()
-            .filter_map(|l| l.strip_prefix("| `"))
-            .map(|rest| {
-                rest.split('`')
-                    .next()
-                    .expect("Implemented row id has a closing backtick")
-            })
-            .collect();
-        ids.sort_unstable();
-        let mut expected: Vec<&str> = r.iter().map(|t| t.id()).collect();
-        expected.sort_unstable();
-        assert_eq!(
-            ids, expected,
-            "PATTERNS.MD Implemented section must list every registry id exactly once \
-             (missing, stale, or duplicated rows)"
-        );
+            let heading = doc
+                .find("## Implemented (")
+                .unwrap_or_else(|| panic!("docs/families/{fam}.md '## Implemented (' heading"));
+            let heading_end = heading + "## Implemented (".len();
+            let digits: String = doc[heading_end..]
+                .chars()
+                .take_while(|c| c.is_ascii_digit())
+                .collect();
+            let n: usize = digits
+                .parse()
+                .unwrap_or_else(|_| panic!("docs/families/{fam}.md census not parseable"));
+            assert_eq!(n, r.len(), "docs/families/{fam}.md Implemented census heading");
+
+            // The Implemented section runs to the family's Build arcs.
+            let section_end = doc[heading_end..]
+                .find("\n## Build arcs")
+                .map_or(doc.len(), |i| heading_end + i);
+            let mut ids: Vec<&str> = doc[heading..section_end]
+                .lines()
+                .filter_map(|l| l.strip_prefix("| `"))
+                .map(|rest| {
+                    rest.split('`')
+                        .next()
+                        .expect("Implemented row id has a closing backtick")
+                })
+                .collect();
+            ids.sort_unstable();
+            let mut expected: Vec<&str> = r.iter().map(|t| t.id()).collect();
+            expected.sort_unstable();
+            assert_eq!(
+                ids, expected,
+                "docs/families/{fam}.md Implemented section must list every {fam} \
+                 id exactly once (missing, stale, or duplicated rows)"
+            );
+        }
     }
 
     /// Part A legality test (M76). Two independent claims per tiling:

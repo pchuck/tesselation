@@ -54,6 +54,12 @@ fundamental region.
   and **`tess-gui`** (eframe/egui 0.29) are both thin layers over
   `tess_core::App`. Parameters are self-describing (`ParamSpec`), so
   **adding a tiling never requires touching UI code**.
+- **`docs/`** — one doc per family (`docs/families/<family>.md`: the
+  family's catalog table + its numbered build arcs), guarded against
+  registry drift by `family_docs_match_registrations`. The candidate
+  queue and research areas live in `docs/ROADMAP.md`, the gallery
+  taxonomy in `docs/TAXONOMY.md`, the append-only milestone changelog
+  in `docs/history/CHANGELOG.md`; `docs/INDEX.md` is the map.
 
 ## Adding a periodic tiling (the common case)
 
@@ -83,11 +89,15 @@ fundamental region.
    (4.6.12 = truncated trihexagonal / great rhombitrihexagonal;
    3.6.3.6 = trihexagonal; 3.3.4.3.4 = snub square — in this repo as
    `snub-square`).
-5. Append the fn to `src/archimedean.rs` (+ header line), register in
-   `registry()` in `src/lib.rs`, declare its category in the table
+5. Append the fn to the family's module (`families/<family>/<name>.rs`,
+   e.g. `families/uniform/archimedean.rs`), then edit only the family
+   file `families/<family>.rs`: module decl + `register` slice +
+   `classification` arm + census `IDS` (+ `lattice_tilings()` for
+   lattice tables). Declare its category in the module
    (`TilingCategory`: Uniform / Laves / Wallpaper / Quasiperiodic /
    Aperiodic / Nonperiodic — see `tess-core/src/category.rs`; the UIs
-   group their lists by it), add the 3 standard tests.
+   group their lists by it), add the 3 standard tests, and add the
+   doc row + build arc to `docs/families/<family>.md`.
 
 **Seeds:** main/largest tile = 0, other classes 1, 2, …; "pattern" color
 = `seed % 8`, "proto" = `proto % 8` (8-color palette in
@@ -98,7 +108,8 @@ fundamental region.
 - One commit per tiling, message `M<n>: <name> tiling (<vertex figure>)`
   with a body stating the lattice, cell contents, and the verification
   performed (worked examples in the archived `tessellix/.git.bak/`
-  history; PATTERNS.MD records the same per-tiling details).
+  history; the tiling's family doc `docs/families/<family>.md` records
+  the same per-tiling details).
 - Keep `cargo check --workspace` warning-free.
 - Tile budget: `MAX_TILES = 250_000` (`lattice.rs`) — exceeding it
   returns the "too many tiles for this view — zoom in" message, which the

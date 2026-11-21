@@ -3,10 +3,10 @@
 Researched candidate backlog: additional tiling patterns worth adding to
 tessellix, each with a verified literature basis, a construction path in
 this codebase, an exact-arithmetic plan, and an effort estimate. This is
-the research dossier behind the 🔭/❓ markers in PATTERNS.MD — that file
-remains the status tracker (✅ implemented / 🚧 in progress / 🔭 proposed /
+the research dossier behind the 🔭/❓ markers in docs/ROADMAP.md —
+that file remains the status tracker (✅ implemented / 🚧 in progress / 🔭 proposed /
 ❓ research); when an entry here is adopted it gets an `M<n>` commit per
-AGENTS.md, its status flips in PATTERNS.MD, and this entry is annotated.
+AGENTS.md, its status flips in docs/ROADMAP.md, and this entry is annotated.
 
 Research method (2026-11-12): every candidate below was checked against
 Wikipedia / primary papers / the Bielefeld Tilings Encyclopedia for
@@ -90,7 +90,7 @@ confirm the diffraction claim during the spike before declaring.
   offset from every 4-fold center, with no diagonal mirrors (the 90°
   swap sends the mirror set to the even axes, which are not mirrors).
   Exact coset symmetry check, forbidden list included; see the M39
-  changelog entry in PATTERNS.MD.
+  changelog entry in docs/history/CHANGELOG.md.
 - ✅ **M40 delivered (2026-11-12): herringbone** — `herringbone.rs`
   (feature `pavers`), chiral single-direction L-pairs
   `H(a,b) + V(a+2,b)` on the oblique lattice ⟨(1,3),(2,2)⟩ (area 4),
@@ -100,7 +100,7 @@ confirm the diffraction claim during the spike before declaring.
   diagonal axes `y = x + c` and anti-diagonal axes `y = −x + c` — with
   the off-family glides `(1−y,1−x)`, `(−x,y+1)`, `(x+1,−y)` absent.
   Exact coset symmetry check, forbidden list included; see the M40
-  changelog entry in PATTERNS.MD.
+  changelog entry in docs/history/CHANGELOG.md.
 - ✅ **M41 delivered (2026-11-12): running bond — trio complete** —
   `running_bond.rs` (feature `pavers`), stretcher rows of 2:1 dominoes
   offset by half a brick on the rectangular lattice ⟨(2,0),(0,2)⟩,
@@ -111,7 +111,7 @@ confirm the diffraction claim during the spike before declaring.
   (reps `(x+1,−y)`, `(x+1,4−y)`, `(1−x,y+1)`, `(3−x,y+1)`), no
   diagonal mirrors, no 4-folds, and the off-axis glides
   `(x+1,1−y)`, `(−x,y+1)` absent. Exact coset symmetry check,
-  forbidden list included; see the M41 changelog entry in PATTERNS.MD.
+  forbidden list included; see the M41 changelog entry in docs/history/CHANGELOG.md.
 
 ### 2. Hexagram-and-hexagon ({6/2} star-and-cross)
 
@@ -165,18 +165,18 @@ confirm the diffraction claim during the spike before declaring.
   | p6m | 3⁶ ; 3².4.12 ✅ `kuniform-n13` (M92) | 4,4 |
   | p4m | 3.12.12 ; 3.4.3.12 | 3,3 |
   | p6m | 3⁶ ; 3².6² ✅ `kuniform-p6m` (M44) | 2,3 |
-  | p6  | 3⁶ ; 3.4.6 (variant 1) ✅ `kuniform-n19` (M95) | 3,3 (group p6m exact: both mirror classes verified — the wiki's p6 label under-states it, see PATTERNS.MD §50) |
-  | p6  | 3⁶ ; 3.4.6 (variant 2) ✅ `kuniform-n20` (M96) | 5,7 → e = 6 exact (M96 torus enumeration, see PATTERNS.MD §46) |
+  | p6  | 3⁶ ; 3.4.6 (variant 1) ✅ `kuniform-n19` (M95) | 3,3 (group p6m exact: both mirror classes verified — the wiki's p6 label under-states it, see docs/families/kuniform.md §50) |
+  | p6  | 3⁶ ; 3.4.6 (variant 2) ✅ `kuniform-n20` (M96) | 5,7 → e = 6 exact (M96 torus enumeration, see docs/families/kuniform.md §46) |
   | cmm | 3².6² ; 3.4.6 ✅ `kuniform-n12` (M97) | 2,4 (both confirmed exact, M97 orbit enumeration — t = 2, e = 4) |
   | pmm | 3.6.3.6 ; 3².6² ✅ `kuniform-pmm` (M48) | 2,3 |
   | cmm | 3.4².6 ; 3.6.3.6 (variant 2) | 3,4 |
   | pmm | 3.4².6 ; 3.6.3.6 (variant 1) | 4,4 |
   | p4g | 3³.4² ; 3².4.3.4 (variant 1) | 4,5 |
   | pgg | 3³.4² ; 3².4.3.4 (variant 2) | 3,6 |
-  | cmm | 4⁴ ; 3³.4² (variant 1) ✅ `kuniform-n4` (M103) | 2,4 (confirmed exact, M103 torus enumeration; PATTERNS.MD §60) |
-  | cmm | 4⁴ ; 3³.4² (variant 2) ✅ `kuniform-n3` (M108) | 3,5 (confirmed exact, M108 exact-class enumeration; PATTERNS.MD §62) |
-  | pmm | 3⁶ ; 3³.4² (variant 1) ✅ `kuniform-n14` (M103) | 3,4 (confirmed exact, M103 torus enumeration; PATTERNS.MD §60) |
-  | cmm | 3⁶ ; 3³.4² (variant 2) ✅ `kuniform-n15` (M108) | 4,5 (confirmed exact, M108 exact-class enumeration; PATTERNS.MD §62) |
+  | cmm | 4⁴ ; 3³.4² (variant 1) ✅ `kuniform-n4` (M103) | 2,4 (confirmed exact, M103 torus enumeration; docs/families/kuniform.md §60) |
+  | cmm | 4⁴ ; 3³.4² (variant 2) ✅ `kuniform-n3` (M108) | 3,5 (confirmed exact, M108 exact-class enumeration; docs/families/kuniform.md §62) |
+  | pmm | 3⁶ ; 3³.4² (variant 1) ✅ `kuniform-n14` (M103) | 3,4 (confirmed exact, M103 torus enumeration; docs/families/kuniform.md §60) |
+  | cmm | 3⁶ ; 3³.4² (variant 2) ✅ `kuniform-n15` (M108) | 4,5 (confirmed exact, M108 exact-class enumeration; docs/families/kuniform.md §62) |
 
 - **Construction:** `LatticeTiling` tables like the Archimedean ones —
   each is a supercell of an existing uniform lattice (supercell areas
@@ -187,7 +187,7 @@ confirm the diffraction claim during the spike before declaring.
 - **Scope note:** all 20 is the arc goal (like Laves 8/8); the first
   batch should be 3–5 tables. Duals of 2-uniform tilings are a cheap
   bonus family later (mixed floret/cairo-like duals) via the
-  dual-construction helper (PATTERNS.MD research area 2).
+  dual-construction helper (docs/ROADMAP.md research area 2).
   **First dual batch landed (M98):** the helper now exists —
   `dual()` in `tess-tilings/src/dual.rs`, oracle-validated exactly
   against all 7 hand-built Laves tables — and the four p6m duals
@@ -268,7 +268,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   with edge orbits {6,12,3} — matching the table's 3,3 parenthetical,
   though the wiki's p6 group label under-states the symmetry: both
   mirror classes pass exactly, so the entry registers as p6m; see
-  PATTERNS.MD §50). The two-entry cmm/pmm batch (M103
+  docs/families/kuniform.md §50). The two-entry cmm/pmm batch (M103
   `kuniform-n4` 4⁴ ; 3³.4² variant 1 — staggered two-square-tall bands
   with alternating-triangle one-row bands, basis ⟨(1,0), (1/2,
   2+√3/2)⟩, |det| = 2+√3/2 RIGHT-handed, centered rectangular lattice
@@ -277,7 +277,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   lattice ⟨(1,0), (0,1+√3)⟩, |det| = 1+√3, pmm pinned by full scan;
   both exact torus enumerations reproduce the wiki parentheticals
   (2,4) and (3,4); the sprint brief's stale row labels were corrected
-  against the current wiki table first — see PATTERNS.MD §60). The
+  against the current wiki table first — see docs/families/kuniform.md §60). The
   sibling batch (M108 `kuniform-n3` 4⁴ ; 3³.4² variant 2 — staggered
   three-square-tall bands with alternating-triangle one-row bands,
   basis ⟨(1,0), (1/2, 3+√3/2)⟩, |det| = 3+√3/2, centered rectangular,
@@ -286,7 +286,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   basis ⟨(1,0), (1/2, 1+3√3/2)⟩, |det| = 1+3√3/2, centered
   rectangular, cmm; both exact orbit-class enumerations reproduce the
   wiki parentheticals (3,5) and (4,5); stale brief row indices
-  corrected against the saved wiki page first — see PATTERNS.MD §62).
+  corrected against the saved wiki page first — see docs/families/kuniform.md §62).
 
 ---
 
@@ -425,7 +425,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   (g1² = w1, g2² = −w2, half-turns c0 = (1/4, 0) + Λ/2, 24 negative
   probes), 8-tile 2-isohedral rectangular cell (four direct + four
   mirror), 11 tess-tilings tests (62 tilings, 476 tests). See
-  PATTERNS.MD §25.
+  docs/families/pentagons.md §25.
   **Type 8: DONE (M77)** — Kershner 1968 family b = c = d = e,
   2B + C = D + 2E = 360°, pinned to the exact Q(√3) member
   B = C = 120°: tan A = 3√3 (A ≈ 79.11°), cos D = 1/7
@@ -452,7 +452,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   stars 91 = 30 × {A,A,C,D} + 36 × {B,B,C} + 25 × {D,E,E},
   every star 360°. Window census 79/42/20/5 at four fixed
   windows. 11 tess-tilings tests (62 tilings, 485 tests). See
-  PATTERNS.MD §26.
+  docs/families/pentagons.md §26.
   **Type 11: DONE (M60)** — Rice 1977 family 2a+c=d=e, A=90°,
   2B+C=360°, C+E=180° (⇒ C=360−2B, E=2B−180, D=270−B; convex
   90°<B<180°); pinned the reference construction's B=156° member at
@@ -464,7 +464,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   two a-sides; rectangular lattice det = 8·area; **pgg** by
   anchor-pair symmetry audit on the exact model (perpendicular glides
   g1²=w1, g2²=−w2, half-turns at c0=(−0.3716…, 0.7601…), no mirrors);
-  PATTERNS.MD §19.
+  docs/families/quasiperiodic.md §19.
   **Type 12: DONE (M62)** — Rice 1977 family 2a = d = c + e,
   A = 90°, 2B + C = 360° (⇒ C = 360 − 2B, D = 270 − B,
   E = 2B − 180; convex 90° < B < 180°, b the second free
@@ -490,7 +490,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   tess-tilings tests; the edge-census window was re-pinned to an
   exact-count window ((−7.45, 13.55) × (−7.6, 11.4), min boundary
   gap 0.0888 from any counted midpoint) after the ~1e-15 float noise
-  of the runtime-computed prototile was identified. PATTERNS.MD §21.
+  of the runtime-computed prototile was identified. docs/families/pentagons.md §21.
   **Sprint allocation (2026-11-15): M63 = type 10** (a=b=c+e, A=90°,
   B+E=180°, B+2C=360°; 6-tile 3-iso unit, p2/cmm, NON-edge-to-edge —
   the last animation-bearing type; reference frames + M60/M62 pipeline),
@@ -529,7 +529,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   d = 4 sides split, at their exact midpoints between two length-2
   partner sides; vertex figures {60°,120°,180°} and {120°,120°,120°}),
   1-isohedral, four half-turn classes d/2 + Λ/2, chiral prototile used
-  in one chirality (no mirrors/glides).  PATTERNS.MD §23.
+  in one chirality (no mirrors/glides).  docs/families/pentagons.md §23.
    **Type 10: DONE (M63)** — James 1975 family a = b = c + e,
    A = 90°, B + E = 180° (⇒ C = 180 − B/2, D = 90 + B/2,
    E = 180 − B; convex 90° < B < 180°, e/c the second free
@@ -556,7 +556,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
    index-2 sublattice L' = Z(3,3)+Z(−7,7) (3√2 × 7√2,
    det 42) has centre (−2,5) ∈ L\L' → cmm, not pmm;
    registered as Oblique since w1·w2 = 38 ≠ 0. 9 tess-tilings
-   tests (59 tilings, 409 tests). PATTERNS.MD §22.
+   tests (59 tilings, 409 tests). docs/families/pentagons.md §22.
    **Type 2: DONE (M65)** — Reinhardt 1918 family 2 (c = e,
    d = b, B + D = 180°) — the arc's **edge-to-edge** variation —
    pinned to the exact-Q(√3) member a = 1: A = B = D = 90°,
@@ -583,7 +583,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
    splits. Vertex figures {90°,120°,150°} 237× +
    {90°,90°,90°,90°} 118× (355 interior vertices over the
    281-tile block window). 9 tess-tilings tests (61 tilings,
-   465 tests). PATTERNS.MD §24.
+   465 tests). docs/families/pentagons.md §24.
 
 ### 6. Stampfli 12-fold quasiperiodic tiling (inflation 2+√3)
 
@@ -654,7 +654,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   diffraction limit — the module header documents the scope). 8
   module tests; census 96 → 97 tilings, 108 → 109 memberships,
   Quasiperiodic 8 → 9, 674 → 682 tests (fork-local on 91dd843).
-  Details in PATTERNS.MD §62 (provisional number; renumber at
+  Details in docs/families/kuniform.md §62 (provisional number; renumber at
   integration).
 
 ### 8. Socolar 12-fold (and the shield tiling) — shield DONE (M51) ✅
@@ -800,7 +800,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   2ᵃ≠3ᵇ argument, no known hierarchical proof) → Jeandel–Rao 11,
   minimal. A Wang entry would be tessellix's first edge-*colored*
   square-tile family and the natural testbed for the Ammann-bar /
-  stripe-decoration layer (PATTERNS.MD research area 4).
+  stripe-decoration layer (docs/ROADMAP.md research area 4).
 - **Construction:** tiles are unit squares (polygon trivial); the work
   is the *generation policy*: (a) deterministic Sturmian/rotation-
   sequence rows — Kari–Culik tilings arise from Beatty sequences and
@@ -825,7 +825,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   tests). The Sturmian/substitution generation policy was not
   ported (the study's independent DFS growth is a proven dead end);
   set aperiodicity and subshift minimality stay cited, not proven.
-  Details in PATTERNS §43.
+  Details in docs/families/aperiodic.md §43.
 
 ### 12. Trilobite and crab (Goodman-Strauss's 2-tile aperiodic set)
 
@@ -905,7 +905,8 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
     ∝ view). TUI/GUI live overlay deferred (documented follow-up).
   - **No new registry tiling:** layer mode is a rendering/generator
     facility; the built-in count stays 53. Docs: README export
-    section + PATTERNS.MD M57 changelog + this entry's Done bullet.
+    section + the docs/history/CHANGELOG.md M57 entry + this entry's
+    Done bullet.
 - **Done (M53):** the design question is answered **tiling mode**: the
   strapwork region partition is itself a face-to-face periodic tiling,
   so `pic-4-8-8` (`pic_4_8_8.rs`) registers it directly (M35 precedent)
@@ -1020,7 +1021,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   as `hankin::build_cells` (`hankin_ext`) with three first-class
   configurations — `hankin-4-8-8-rosette` (4.8.8, θK = 67.5°),
   `hankin-4-6-12` (4.6.12, θK = 60°), `hankin-hex-two-point` (6³,
-  θK = 45°, δ = 0.5 two-point) — see PATTERNS.MD §44. The layer-mode
+  θK = 45°, δ = 0.5 two-point) — see docs/families/islamic.md §44. The layer-mode
   generalization (one engine × every substrate × 3 openings) remains
   open for further substrates/angles.
 - **Status update (M99):** a fourth configuration landed —
@@ -1030,7 +1031,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   the shining twelve-pointed khatam (24-gon star core + 12 petals
   per dodecagon). θK = 45° chosen over 30°/60° (flat / spiky
   limits) for the mid-"shine" twelve-pointed star; p6m verified
-  on a ±4-lattice window, D6-exact. See PATTERNS.MD §53. A fifth
+  on a ±4-lattice window, D6-exact. See docs/families/islamic.md §53. A fifth
   configuration landed in the same milestone —
   `hankin-square-two-point` (θK = 45°, δ = 0.5 two-point) on the
   square 4.4.4.4 substrate: a decagonal star per unit square
@@ -1039,7 +1040,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   falsified, diagonal mirror families x∓y=k with on- and
   off-mirror 2-folds, 0 unexpected outcomes on a 10-element
   radius-4 window battery. Substrate deviations are documented in
-  the module headers. See PATTERNS.MD §54. A sixth configuration
+  the module headers. See docs/families/islamic.md §54. A sixth configuration
   landed in M100 — `hankin-3-6-3-6` on the trihexagonal 3.6.3.6
   substrate (θK = 60°, δ = 0): a regular {6/2} hexagram per
   hexagon (12-gon core with 60° tips and 240° notches plus six
@@ -1052,8 +1053,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   Distinct from `pic-3-6-3-6` (same substrate, different
   construction — greedy inference vs. reflection chords).
   Deviations (no 40-dps Python prototype; machine-emitted
-  expectations) documented in the module header. See PATTERNS.MD
-  §57. A seventh configuration landed in M100 — `hankin-3-4-6-4`
+  expectations) documented in the module header. See docs/families/islamic.md §57. A seventh configuration landed in M100 — `hankin-3-4-6-4`
   on the rhombitrihexagonal 3.4.6.4 substrate (θK = 60°, δ = 0):
   a regular {6/2} hexagram per hexagon (12-gon core plus six
   60°-lozenge rhombi, 7 faces); the three unit squares unpaired
@@ -1065,7 +1065,8 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   mismatches at 1e-6). θK = 60° chosen over 30° (slivers), 45°
   (no hexagon star; asymmetric triangle motifs), 67.5° (sharper),
   90° (star collapse). Deviations documented in the module
-  header. See PATTERNS.MD §58. An eighth configuration landed in
+  header. See docs/families/islamic.md, the Hankin sixfold rhombitrihex
+  motif arc (numbered §56 there). An eighth configuration landed in
   M107 — `hankin-3-3-3-4-4` on the elongated-triangular 3.3.3.4.4
   substrate (θK = 60°, δ = 0; the all-CCW in-cell table — the CW
   down-triangle and CW square emit outward rays and pair with
@@ -1080,7 +1081,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   chosen over 30° (30° slivers), 45°/67.5° (sharper 45° minimum
   interior angle), 90° (triangle pairing degenerates, square star
   collapse). Deviations documented in the module header. See
-  PATTERNS.MD §63. A ninth configuration landed in M111 —
+  docs/families/islamic.md §63. A ninth configuration landed in M111 —
   `hankin-3-3-4-3-4` on the snub-square 3.3.4.3.4 substrate
   (θK = 60°, δ = 0; all twelve instances stored CCW in their
   in-cell positions): each square tile in its five-face motif
@@ -1103,7 +1104,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   controls fail). θK = 60° chosen over 30° (30° slivers),
   45°/67.5° (sharper 45° minimum interior angle), 90° (triangle
   pairing degenerates, square star collapse). Deviations
-  documented in the module header. See PATTERNS.MD §66
+  documented in the module header. See docs/families/islamic.md §66
   (provisional).
 
 ### 15. Random/statistical tilings (blocked on a determinism policy)
@@ -1155,7 +1156,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   (`taylor_socolar.rs`) ships the paper's forced 529-hexagon patch
   (Fig. 18), each hexagon partitioned into 13 decorated sub-polygons
   realizing the edge-midpoint stripe handoff rules exactly (AP-STUDY
-  handoff; details in PATTERNS §36). The half-hex pseudo-inflation
+  handoff; details in docs/families/aperiodic.md §36). The half-hex pseudo-inflation
   generator remains unimplemented, and the plane-tiling
   aperiodicity / limit-periodic hierarchy stays cited, not proven.
 
@@ -1199,7 +1200,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
 ### 20. Fractalizing k-uniform tilings (2+√3 dodecagon dissection) ✅ (M110)
 
 - **Landed (M110)** as `fractalizing-3.12.12` (`fractalizing.rs`,
-  Quasiperiodic, PATTERNS.MD §64). The verify step resolved the
+  Quasiperiodic, docs/families/quasiperiodic.md §64). The verify step resolved the
   classification against the ground-truth figure
   (`Planar Fractalizing Truncated Hexagonal Tiling II.svg`): the
   family is **limit-periodic, not substitution-self-similar** — the
@@ -1373,7 +1374,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
 - **Construction:** per the adoption checklist — Python spike first
   (exact geometry + group probe), then the standard battery + a
   group-audit probe like the M40/M41 coset probes, then registry +
-  census + README/PATTERNS updates.
+  census + README/family-doc updates.
 - **Verify:** the M76 legality test
   (`declared_symmetry_is_legal_and_matches_the_measured_lattice`)
   already enforces (group, lattice kind) legality and
@@ -1545,7 +1546,8 @@ the owner's report:
 ## Parked / rejected (with reasons)
 
 - **Quaquaversal tiling** — 3-space tiling; no 2D analogue (removed
-  from the queue 2026-11-09, PATTERNS.MD #7). 3D generally out of
+  from the queue 2026-11-09; arc §7, now
+  docs/history/not-applicable.md). 3D generally out of
   scope (incl. Culik–Kari's 21 Wang cubes).
 - **X-pentomino as a rep-tile entry** — not a rep-tile: a polyomino
   rep-tile must cover a corner of its rectangular hull (necessary
@@ -1637,7 +1639,7 @@ can be adopted independently through the standard checklist.
     construction-specific formulas verified in the spike — a generic
     hole decomposition remains open. Deviation: the extracted case-3
     text `T(l) = T(x)/sin(π/n)` is missing a factor ½; re-derived and
-    verified at 60 digits (see PATTERNS.MD §56). Euclidean [4,4]/[6,3]
+    verified at 60 digits (see docs/families/islamic.md §56). Euclidean [4,4]/[6,3]
     only, as before.
 - **22c. Rosette transform (Najm ↔ Hankin bridge)** — diss. §3.8.
   A tiling-to-tiling operation: a Najm tiling becomes the
@@ -1665,8 +1667,7 @@ can be adopted independently through the standard checklist.
     instance `hankin-4-8-8-rosette-transform` (4.8.8, θK = θE = 45°,
     δ = 0) ships: 93-tile transformed table (16 triangles, 36 quads,
     32 pentagons, 8 hexagons, one 16-gon per cell), edge-to-edge,
-    area census |det|, cell table p4m-exact to 6.5e-16 (PATTERNS.MD
-    §55). Remaining: 11/13-pointed-star angle-mismatch instances
+    area census |det|, cell table p4m-exact to 6.5e-16 (docs/families/islamic.md §55). Remaining: 11/13-pointed-star angle-mismatch instances
     (need 22b/22e substrates) and Bonner's off-center contact
     adjustments (unformalized).
 - **22d. Islamic parquet deformations** — diss. §3.4.1. θ becomes a
@@ -1759,7 +1760,8 @@ can be adopted independently through the standard checklist.
 4. If `LatticeTiling`: extend `lattice_culling_matches_brute_force`.
 5. Standard trio + family-specific battery; `proto`/`seed` docs.
 6. One commit `M<n>: <name> tiling (<vertex figure>)` with lattice,
-   cell contents, verification; flip PATTERNS.MD status; annotate the
+   cell contents, verification; flip the docs/ROADMAP.md queue status;
+   annotate the
    entry here with the M number.
 
 ## Suggested order (next milestones, M39+)
@@ -1849,7 +1851,8 @@ that already exists twice.
   tail (Moroccan saft skeletons, optimization correction, strange
   stars). Existing M53–M57/M94 coverage audited — items are the
   additive delta.
-- 2026-11-12 — created from PATTERNS.MD's proposed/research sections +
+- 2026-11-12 — created from the old PATTERNS.MD's proposed/research sections
+  (now docs/ROADMAP.md) +
   a literature sweep (20 candidates: 4 P0 quick wins, 8 P1 sprints,
   8 P2 arcs; 8 parked/rejected with reasons).
 - 2026-11-17 — M76: (1) pentagon-census coverage line updated —

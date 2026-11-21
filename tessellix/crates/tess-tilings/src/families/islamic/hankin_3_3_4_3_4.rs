@@ -106,7 +106,7 @@
 //! (L/4, L/4); 135° lines y + x ≡ L/4 + 1/2, 3L/4 + 1/2 (mod L)
 //! with shift (L/4, −L/4). No mirror lines.
 //!
-//! PATTERNS.MD §66 (provisional).
+//! docs/families/islamic.md §66 (provisional).
 
 use tess_core::TilingCategory;
 use tess_core::geometry::Vec2;
