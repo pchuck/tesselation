@@ -2141,3 +2141,29 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   coverage/rotated-scaled/determinism. Census: aperiodic family
   6 → 7; Aperiodic tab 7 → 8; built-ins 128 → 129; tab memberships
   142 → 143. Not a lattice table — no culling line.
+- 2026-11-21 — M139: Cyclotomic field layer — K₉ + K₁₅ + the girih
+  ROTM anchor (fields.rs) ✅: §7 step 2 of the design doc, fields.rs
+  only (817 → 2123 lines), no census change. K₉ = Q(2cos(2π/9)) core
+  (minpoly x³−3x+1; reduction rows per doc §2.1; isolating interval
+  at 2⁻³¹; P9 frame; walks {9/1}, {9/4}) and K₁₅ =
+  Q(2cos(2π/15)) core (minpoly x⁴−x³−4x²+4x+1; interval at 2⁻²⁶; P15
+  frame; walks {15/1}, {15/7}; the exact √5-subfield probe
+  b³−3b = 2cos(2π/5) — K₁₅ ⊃ Q(√5) pinned); L₁₀ = the girih quartic
+  (a⁴ = 5a²−5, N(a) = 5) with the PERMANENT regression anchor: all
+  20 shipped girih ROTM matrices rebuilt through the generic
+  kmul::<4>/RED_L10 path at denominator /64 (girih-identical
+  %64-assert-then-divide per product) and compared bit-for-bit
+  against 80 pasted girih_qc integers — 20/20 exact. Generic layer
+  extended (kbasis + koblique_norm2/dot2/cross/rot free fns; P7
+  methods → behavior-preserving thin delegates); BISECT_CAP 10 → 4
+  with the i128-envelope derivation in the doc comment (deg-4 worst
+  case ≈ 2^125.6 < 2^127). All constants derived + Sturm-certified in
+  the scratch spike (checkpointed at .scratch/fields-layer-k9-k15/ —
+  derive_k9k15l10.py, self-contained, re-runs in ~2 min). Test
+  battery: one generic machinery set called per field — 35 fields
+  tests (10 K₇ + 10 K₉ + 11 K₁₅ + 4 L₁₀): minpoly zero-tests +
+  float ≤1e−12; exact interval bracketing; frame batteries; star-walk
+  closure + centered equivariance + exact shoelaces; sign/order
+  batteries vs float; norm identities; ROTM anchor. Next: §7 step 3 —
+  the first consumer family (GLB generalized binary n = 7, the
+  cheapest XL; quasiperiodic-family landing).

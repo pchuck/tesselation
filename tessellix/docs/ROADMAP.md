@@ -145,9 +145,14 @@ the "mixed floret/cairo/prismatic" patterns.
   per orientation class); all 20 shipped girih ROTMs reproduced
   bit-for-bit by the generic recipe. ✅ **K₇ core landed (M137,
   fields.rs)** — generic degree-D exact layer (kmul/knorm/ksign) +
-  oblique frame + star walks + sign battery, no census change; next:
-  K₉/K₁₅ + the girih ROTM anchor (§7 step 2), then the first
-  consumer family (step 3).
+  oblique frame + star walks + sign battery, no census change.
+  ✅ **K₉ + K₁₅ + the girih ROTM anchor landed (M139)** — both cores
+  (minpolies x³−3x+1, x⁴−x³−4x²+4x+1) + L₁₀ (the girih quartic) with
+  the permanent regression anchor: all 20 shipped girih ROTM matrices
+  rebuilt through the generic kmul/RED_L10 path at /64, bit-for-bit;
+  BISECT_CAP tightened 10→4 with the i128-envelope derivation. Next:
+  the first consumer family (§7 step 3 — GLB binary n = 7, the
+  cheapest XL).
 - ❓ **Wheel tiling (Nissen)** — **parked (M61)** with a proven
   negative: the edge-orthogonal dual of the shield substitution is
   exact but admits no substitution at any inflation (algebraic killer
