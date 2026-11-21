@@ -1457,7 +1457,9 @@ of these; each is a substitution or cut-and-project table.
   salvage-pinned).
 - **Domino/table tiling (+variants)** and **half-hex family** —
   limit-periodic, cut-and-project; half-hex also closes the #17
-  substitution-hierarchy gap; effort M each.
+  substitution-hierarchy gap; effort M each. **Half-hex** ✅ landed
+  M135 (measured period hierarchy p = (3/2)·2^g); domino/table
+  dispatched.
 - **Period doubling / period tripling / Thue–Morse 2D / Squiral** —
   marginal supersubstitutions; Squiral was parked pending rule-table
   verification (see Parked) — the Bielefeld page provides it; effort
