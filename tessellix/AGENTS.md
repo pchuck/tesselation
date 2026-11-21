@@ -9,7 +9,7 @@ is archived, gitignored, in `tessellix/.git.bak/`.
 ## Commands
 
 ```sh
-cargo test --workspace        # full suite (838 tests); must stay green
+cargo test --workspace        # full suite (848 tests); must stay green
 cargo test -p tess-tilings <test_name>   # single test
 cargo check --workspace       # convention: ZERO warnings (enforced on every commit)
 
@@ -38,14 +38,18 @@ fundamental region.
   `*_deterministic`. For the periodic tables,
   `lattice_culling_matches_brute_force` additionally re-emits every tile
   over a fixed index window and requires the exact same tile set as the
-  generator's range-based culling — extend its `lattices` list when
-  adding a new `LatticeTiling`.
+  generator's range-based culling — add the entry to the family's
+  `lattice_tilings()` list when adding a new `LatticeTiling`.
 - **`tess-tilings`** — the built-ins. Periodic tilings are **data tables**
   (`LatticeTiling` in `src/lattice.rs`: lattice basis, cell polygons,
-  wallpaper group, seed pattern), not code. Each family is behind a cargo
-  feature (all default-on); aperiodic families (penrose, pinwheel,
-  hirschhorn, chair, sphinx, hat, turtle, spectre) implement `Tiling`
-  directly.
+  wallpaper group, seed pattern), not code. Tilings are grouped into ten
+  **families** (`src/families/`: uniform, quasiperiodic, arrangements,
+  pentagons, laves, kuniform, reptiles, aperiodic, pavers, islamic) —
+  each family is a cargo feature (all default-on) and owns its modules,
+  registration slice, classification arms and census pin; a tiling is
+  added by touching only its family file. The aperiodic /
+  nonperiodic members (penrose, pinwheel, hirschhorn, chair, sphinx,
+  hat, turtle, spectre, …) implement `Tiling` directly.
 - **`tess-tui`** (ratatui+crossterm; software rasterizer into char cells)
   and **`tess-gui`** (eframe/egui 0.29) are both thin layers over
   `tess_core::App`. Parameters are self-describing (`ParamSpec`), so

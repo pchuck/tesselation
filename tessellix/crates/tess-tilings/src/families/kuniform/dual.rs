@@ -2012,7 +2012,7 @@ mod dual_tests {
     // cells matching up to lattice translation + vertex rotation/reversal).
     // ------------------------------------------------------------------
 
-    #[cfg(all(feature = "archimedean", feature = "laves"))]
+    #[cfg(all(feature = "uniform", feature = "laves"))]
     mod oracle {
         use super::*;
         use crate::archimedean;

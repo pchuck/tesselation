@@ -296,7 +296,7 @@ tessellix/
 ├── Cargo.toml              # workspace (resolver 2, edition 2021, MIT)
 └── crates/
     ├── tess-core/          # core abstractions — no external deps
-    ├── tess-tilings/       # built-in generators, one cargo feature each
+    ├── tess-tilings/       # built-in generators, ten family features
     ├── tess-tui/           # ratatui TUI + CLI (list / export)
     └── tess-gui/           # eframe/egui desktop app
 ```
@@ -580,7 +580,7 @@ cross-check plus a ratio-sweep coverage test.
   decagon, and edge-to-edge, T-junction-free patches at every
   generation (frozen core: tiles are depth-independent inside radius
   ~79).
-- **Najm** (`najm.rs`, feature `najm`) — the Najm template-tiling
+- **Najm** (`families/islamic/najm.rs`, part of the `islamic` family\n  feature) — the Najm template-tiling
   generator (Kaplan diss. §3.6.1, roadmap 22b): notation
   `([p,q]; m_A o_A, m_B o_B, m_C o_C; inflation)` → circumradii
   (`NajmSpec::radii`, inflation cases 1–4 via the absolute-trig extent
@@ -688,16 +688,19 @@ every interior vertex realizes the stated vertex figure.
 **Periodic (wallpaper) tiling** — the common case:
 
 1. Write a function returning a `LatticeTiling` data table (see
-   `archimedean.rs` for 8 examples): lattice basis, cell polygons,
-   wallpaper group, lattice kind, seed pattern.
-2. Gate it behind a cargo feature and register it in `registry()` in
-   `tess-tilings/src/lib.rs`.
+   `families/uniform/archimedean.rs` for 8 examples): lattice basis, cell
+   polygons, wallpaper group, lattice kind, seed pattern.
+2. Declare the module in its family file (`tess-tilings/src/families/<family>.rs`)
+   and add it to that family's `register` slice, `classification` arms,
+   census `IDS` list — and `lattice_tilings()` for the culling
+   cross-check. Nothing outside the family file changes.
 3. Add the standard three tests (`covers_region`, `rotated_scaled`,
    `deterministic`) using `check_coverage` / `check_deterministic`.
 
 Both UIs then pick it up automatically.
 
 **Aperiodic / continuous family** — implement `tess_core::Tiling`
-directly (see `penrose.rs`, `ammann_beenker.rs`, `pinwheel.rs`,
-`hirschhorn.rs`), declare its category in the impl (`TilingCategory` —
+directly (see `families/quasiperiodic/penrose.rs`,
+`families/arrangements/pinwheel.rs`, `families/pentagons/hirschhorn.rs`),
+declare its category in the impl (`TilingCategory` —
 see `tess-core/src/category.rs`), register it, and test it the same way.
