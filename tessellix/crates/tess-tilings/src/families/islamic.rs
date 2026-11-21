@@ -16,6 +16,7 @@ pub mod zellige;
 pub mod girih;
 pub mod girih_bowtie;
 pub mod girih_decagon;
+pub mod girih_pentagon;
 pub mod girih_rhombus;
 pub mod girih_qc;
 pub mod girih_sc;
@@ -64,6 +65,7 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(najm::najm_44_3e_0_0_a());
         r = r.register(girih_bowtie::girih_bowtie());
         r = r.register(girih_decagon::girih_decagon());
+        r = r.register(girih_pentagon::girih_pentagon());
         r = r.register(girih_rhombus::girih_rhombus());
     r
 }
@@ -100,6 +102,13 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             method: Some("girih prototile tiling"),
             tile_set: Some("girih decagon + bowtie infill"),
             vertex_config: Some("10.6.10"),
+            ..TilingClass::EMPTY
+        },
+        "girih-pentagon" => TilingClass {
+            families: &["Islamic"],
+            method: Some("girih prototile tiling"),
+            tile_set: Some("girih pentagon + hexagon + rhombus infill"),
+            vertex_config: Some("5.5.4.4"),
             ..TilingClass::EMPTY
         },
         "girih-rhombus" => TilingClass {
@@ -203,6 +212,7 @@ pub(crate) fn lattice_tilings() -> Vec<(&'static str, crate::lattice::LatticeTil
             ("girih", girih::girih_shesh_band()),
             ("girih-bowtie", girih_bowtie::girih_bowtie()),
             ("girih-decagon", girih_decagon::girih_decagon()),
+            ("girih-pentagon", girih_pentagon::girih_pentagon()),
             ("girih-rhombus", girih_rhombus::girih_rhombus()),
             ("girih-sc", girih_sc::girih_star_cross()),
             ("girih-w85", girih_w85::girih_w85()),
@@ -248,6 +258,7 @@ mod census {
         "hexagram",
         "girih-bowtie",
         "girih-decagon",
+        "girih-pentagon",
         "girih-rhombus",
     ];
 
@@ -256,7 +267,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            25,
+            26,
             "islamic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();

@@ -79,13 +79,13 @@ the "mixed floret/cairo/prismatic" patterns.
   96-point stars), search over an aesthetic objective to replace
   ad-hoc contact corrections, and the star-order-set question
   (nearly-regular polygons; the Altair near-miss tiling).
-- 🔭 **Girih primitive tiles** — the four missing classical primitives
-  (decagon, bowtie, 72°/108° rhombus, pentagon) as periodic data
-  tables beside shesh-band; strong-tier brief
-  [girih-primitive](briefs/girih-primitive.md). Revives the paused
-  pre-rework fork (PROPOSED.md §23f note): disposition now "revived as
-  a brief", which unblocks the §23f follow-ups (Andritz bowtie–hexagon
-  family, girih-inspired 14-fold) once these land.
+- ✅ **Girih primitive tiles (M131–M134).** *All five classical
+  primitives now ship as periodic data tables beside shesh-band:
+  bowtie (72.72.216, M131), 72°/108° rhombus (M132), decagon
+  (10.6.10, M133), pentagon (5.5.4.4, M134) — exact
+  K = Q(2cos π/10) tables with patch batteries and cross-table
+  assembly congruence. Unblocks the §23f follow-ups (Andritz
+  bowtie–hexagon family, girih-inspired 14-fold).*
 
 ### Aperiodic substitution (each needs rule derivation first)
 

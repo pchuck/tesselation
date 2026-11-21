@@ -1485,8 +1485,10 @@ own milestone with a field-layer design doc first; effort L+.
   substitutions; effort M each.
 - **Girih-inspired 14-fold** — effort L.
 - Note: the paused `girih-primitive` fork (§ pending owner decision)
-  is the natural integration point for these; do not start them until
-  that fork's disposition is decided.
+  was revived as a brief and **landed M131–M134** (bowtie, rhombus,
+  decagon, pentagon as periodic K-exact data tables beside
+  shesh-band) — the Andritz Bowtie–Hexagon family and the
+  girih-inspired 14-fold below are unblocked.
 
 ### 23g. Pinwheel family (dense orientations, FLC)
 

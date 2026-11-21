@@ -8,7 +8,7 @@ Adding a tiling here touches only this family: `families/islamic.rs`
 `lattice_tilings` entries) plus the new module and its doc row below.
 Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 
-## Implemented (25 tilings)
+## Implemented (26 tilings)
 
 ### Periodic decorative families
 
@@ -37,6 +37,7 @@ Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 | `najm-44-3e-0-0-a` | Najm template ([4,4]; 3e, 0, 0; A) | p4m | najm-generator substrate (diss. §3.6.1 Fig. 3.22): dodecagons r = √6−√2 on 2Z² sharing chords across odd grid lines + concave equilateral 4-pointed stars (side 4−2√3, 60° tips, 210° notches); exact Q(√2,√3) (M99) |
 | `girih-bowtie` | girih bowtie (papillon) prototile tiling | cmm | the concave equilateral girih hexagon (216°,72°,72°,216°,72°,72°, unit edges) tiles the plane by translation alone on the centered rectangular lattice ⟨(cos36°+cos72°, sin36°−sin72°), (1+cos36°, sin36°)⟩; det = tile area exact over Q(√5); vertex figure 72.72.216 at every interior vertex; tile mirrors along both rectangle axes give cmm |
 | `girih-decagon` | girih decagon prototile tiling | cmm | the regular girih decagon (144°, unit edges) cannot tile alone; its primitive periodic edge-to-edge arrangement is the two-tile cell of one decagon plus one forced bowtie infill on the centered rectangular lattice ⟨(0, −2(sin72°+sin36°)), (1/2+3cos36°, sin72°+2sin36°)⟩; det = decagon+bowtie area exact over Q(√5); vertex figure 10.6.10 (two decagons + one bowtie close 144+72+144); two perpendicular mirror families with interleaved glides give cmm |
+| `girih-pentagon` | girih pentagon prototile tiling | cm | the regular girih pentagon (108°, unit edges) cannot tile alone; its primitive periodic edge-to-edge arrangement is the seven-tile cell of a pentagon pair + two shesh-band hexagons + three girih rhombi on the centered rectangular lattice ⟨(−cos36°, −2sin72°−sin36°), (2+√5, 0)⟩; det = the seven tile areas exact over Q(√5); vertex figure 5.5.4.4 (two pentagons + two rhombi close 108+108+72+72); one mirror family with interleaved glides and no rotations gives cm |
 | `girih-rhombus` | girih rhombus prototile tiling | cmm | the thin equilateral girih rhombus (72°,108°,72°,108°, unit edges) tiles the plane by translation alone on the centered rectangular lattice ⟨(1,0), (cos72°, sin72°)⟩ spanned by two adjacent edge directions; det = sin 72° = tile area exact over Q(√5); vertex figure 72.72.108.108 at every interior vertex; the diagonally orthogonal basis (diagonals U0±U2) with tile D2-mirrors along both rectangle axes gives cmm |
 
 ### Quasiperiodic member: girih star-and-cross {10/3} (category Quasiperiodic, family islamic)

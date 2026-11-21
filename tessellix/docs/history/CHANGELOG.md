@@ -2024,3 +2024,20 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   vertices close at exactly 360° (144+108+108); DEC-cell DEC+BOW
   shares exactly 1 edge. Registry 125 built-ins, memberships 139,
   per-tab [11,17,24,17,15,24,8,12,6,5].
+- 2026-11-21 — M134: Girih pentagon tiling (5.5.4.4) ✅: the classical
+  regular girih pentagon leaves 36° gaps alone (108°×5) — cell = 2
+  PENT (paired on a shared edge) + 2 HEX (shesh-band hexagons) + 3
+  RHOMB on a cm CenteredRectangular lattice ⟨(−C36, −2·S72−S36),
+  (2+√5, 0)⟩, det ≈ 10.547378392 = 2·PENT + 2·HEX + 3·RHOMB exact
+  over K (exact-field tuple identity as the area certificate;
+  float det within 1e-14 = 2 ulp); exactly one mirror family
+  (72°, pentagon-pair axis) with interleaved glides, no rotations →
+  cm. 7×7-patch battery: 765 interior / 136 boundary of 1666 edge
+  occurrences (reconfirmed on the shipped tables with exact-K and
+  6-digit keys), 1600 irrational-offset samples covered exactly
+  once. Cross-table congruence: rhombus-table tile ≅ PENT-cell
+  rhombi, DEC-cell bowtie ≅ bowtie-table tile. Registry 126
+  built-ins, memberships 140, per-tab [11,17,24,17,15,25,8,12,6,5].
+  Girih-primitive cluster complete (M131–M134): all five classical
+  primitives now ship as periodic tables beside the quasiperiodic
+  girih-qc entry.
