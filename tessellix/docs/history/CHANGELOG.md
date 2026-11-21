@@ -2167,3 +2167,33 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   batteries vs float; norm identities; ROTM anchor. Next: §7 step 3 —
   the first consumer family (GLB generalized binary n = 7, the
   cheapest XL; quasiperiodic-family landing).
+- 2026-11-21 — M140: 2-uniform (3³.4²; 3².4.3.4)₂ `kuniform-n17` ✅
+  (§2, the 2-uniform 20-list — n17 was the last missing 2-uniform
+  sibling on the list alongside n6/n7): variant 2 of the Wikipedia
+  33344-33434 two-uniform entry (File:2-uniform n17-1.svg — the −1
+  filename-suffix trap pinned; the wiki n-numbers are not row-major,
+  the file links are authoritative), the pgg sibling of M119 n16.
+  12 tiles/cell (4 unit squares + 8 equilateral triangles in two
+  4-orbits, seeds 0/1/2), edge = 1, area 4+2√3 = |det|; exact Q(√3)
+  via the family H/S3 consts. Rectangular right-handed lattice
+  b1 = (½, 1+√3/2), b2 = (−2−√3, 1) (b1 ⊥ b2 exactly, |b2| = 2|b1|);
+  the Python coset audit proves L is the TRUE primitive period
+  lattice (0 of 12 square-centroid coset reps and 0 of 1942 short
+  shifts qualify as extra periods — no index-2 superlattice, the
+  emission cell is the true cell). pgg measured, not declared: 4
+  two-fold centers/cell on the half-period grid in exactly 2 group
+  orbits with 2(c1−c2) = b1+b2 exact; one glide per axis (g² = T
+  axis); 0 reflections (295 of 1097 bisector candidates
+  full-checked) — pgg, not cmm. Torus census t = 3 tile orbits
+  (4+4+4), e = 6 edge orbits (4+4+4+4+2+2), v = 2 vertex orbits
+  (4+4) — matches the wiki's 3-isohedral/6-isotoxal data. Vertex
+  figures 33344 (156) + 33434 (136) over the ±3 patch, both
+  self-reverse, all 495 patch vertices valency 5; all 8 orbit reps
+  pinned in the Rust vertex-figures test. Battery spike6.py (stdlib
+  only, 18.6 s, all green) checkpointed at .scratch/kuniform-n17/;
+  pin values permanently encoded in the Rust tests. Culling
+  genuinely covered: the entry was added to the family
+  lattice_tilings() list (the lib.rs extend is per-family), the
+  brute-force guard runs n17. Census: TwoUniform tab 17 → 18;
+  kuniform family 30 → 31; built-ins 129 → 130; memberships
+  143 → 144. Still missing from the closed 20-list: n6, n7.

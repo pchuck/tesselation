@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (17)   Laves (24)   Wallpaper (17)   Pentagon
+counts (`Uniform (11)   Two-Uniform (18)   Laves (24)   Wallpaper (17)   Pentagon
 Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (12)   Aperiodic (8)
 Nonperiodic (6)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -127,13 +127,13 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-129 built-in tilings (143 tab memberships), all discoverable in both UIs
+130 built-in tilings (144 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 ten tabs:
-**Uniform** (11), **Two-Uniform** (17), **Laves / Catalan duals** (24,
+**Uniform** (11), **Two-Uniform** (18), **Laves / Catalan duals** (24,
 21 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
@@ -229,6 +229,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `kuniform-n15` | 2-uniform (3⁶; 3³.4²)₂ | 2-uniform k-uniform: staggered square rows alternating with triple triangle strips — three unit-triangle rows, every horizontal edge shared back-to-back, square rows flanked by one triangle orbit (Wikipedia `2-uniform n15`, t = 4, e = 5); centered rectangular basis ⟨(1, 0), (1/2, 1+3√3/2)⟩ with orthogonal index-2 pair (1, 0), (0, 2+3√3), det 1+3√3/2 (right-handed); 7 tiles/cell (1 square + 6 triangles in orbits {flanker pair}, {yellow pair}, {cyan pair}); 3⁶ and 33344 vertex orbits, 2 classes/cell each (M108) | cmm | centered |
 | `kuniform-n2` | 2-uniform (3.12.12; 3.4.3.12) | 2-uniform k-uniform: dodecagons kissing flat-edge-to-flat-edge on a square lattice, unit squares and edge triangles filling each four-dodecagon hole (Wikipedia `2-uniform n=2`, t = 2, e = 3); square basis ⟨(2+√3,0),(0,2+√3)⟩, det 7+4√3; 6 tiles/cell (1 dodecagon + 1 square + 4 triangles); origin a dodecagon center = 4-fold center (M118) | p4m | square |
 | `kuniform-n16` | 2-uniform (3³.4²; 3².4.3.4) | 2-uniform k-uniform: staggered square rows and triangle bands in the snub-square-related form (Wikipedia `2-uniform n=16`, t = 4, e = 5 — 4-isohedral, 5-isotoxal); 45°-rotated square basis ⟨(h,−h),(h,h)⟩ with h = (3+√3)/2, det 2h² = 6+3√3; 14 tiles/cell (2 square orbits + 1 triangle orbit); the diagonal cosets are true glides — the p4g signature, torus census 4 tile orbits (8+4+4+2) + 5 edge orbits (M119) | p4g | square |
+| `kuniform-n17` | 2-uniform (3³.4²; 3².4.3.4)₂ | 2-uniform k-uniform: the pgg sibling of `kuniform-n16` — variant 2 of the Wikipedia 33344-33434 entry (`2-uniform n17-1.svg`; the −1 filename suffix is a trap; t = 3, e = 6, 3-isohedral / 6-isotoxal); stair-stepped unit squares + triangles, 12 tiles/cell (4 squares + 8 triangles in two 4-orbits), area 4+2√3; rectangular lattice ⟨(½, 1+√3/2), (−2−√3, 1)⟩ (b1 ⊥ b2, |b2| = 2|b1|, det 4+2√3) proven the true primitive period lattice by the exact Q(√3) coset audit (0 of 12 square-centroid coset reps + 0 of 1942 short shifts as extra periods); pgg measured: 4 two-fold centers/cell in 2 group orbits with 2(c1−c2) = b1+b2 exact, one glide per axis, 0 of 295 mirror candidates; torus census t = 3 (4+4+4), e = 6, v = 2; vertex figures 33344 (156) + 33434 (136), 8 orbit reps pinned (M140) | pgg | rectangular |
 | `kuniform-dual-p6m` | Dual of 2-uniform (3⁶; 3².6²) | face-centroid dual of `kuniform-p6m` (p6m, det 9√3/2): 1 regular hexagon (side 1/√3, area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3, 2√3/3, √3 in cyclic order; angles 60°/60°/120°/120°; area 2√3/3) per cell, sum 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
 | `kuniform-dual-n18` | Dual of 2-uniform (3⁶; 3².4.3.4) | face-centroid dual of `kuniform-n18` (p6m, det 3+2√3): 1 regular hexagon (side 1/√3) + 6 congruent pentagons (one side 1/√3, four sides (3+√3)/6; angles 90°/90°/120°/120°/120°; area (2+√3)/4) per cell, sum 3+2√3 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |
 | `kuniform-dual-n9` | Dual of 2-uniform (3.4.6.4; 3².4.3.4) | face-centroid dual of `kuniform-n9` (p6m, det 6+7√3/2): 6 congruent quadrilaterals (two sides (3+√3)/6, two sides (1+√3)/2; angles 60°/90°/90°/120°; area (3+2√3)/6) + 6 congruent pentagons (congruent to the `kuniform-dual-n18` pentagons; area (2+√3)/4) per cell, sum 6+7√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) | p6m | hexagonal |

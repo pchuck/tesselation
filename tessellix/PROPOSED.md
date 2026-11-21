@@ -1912,7 +1912,10 @@ that already exists twice.
   ℚ(√3), areas summing to |det|). Census 111/125 → 122/136 (the
   M114–M121 batch landed before M123/M127–M129 on main). Still
   missing from the closed 20-list: n6, n7 (the two [3.4².6; 3.6.3.6]
-  forms) and n17 (the pgg sibling of n16).
+  forms) — **n17** ✅ landed M140 (the pgg sibling of n16: t = 3,
+  e = 6; exact Q(√3) proof that the emission cell is the primitive
+  period cell; pgg measured — 4 two-fold centers in 2 group orbits,
+  one glide per axis, 0/295 mirror candidates).
 - 2026-11-20 — M122: classification schema + UI audit fixes —
   `TilingClass` (optional per-family fields in tess-core, declared in a
   new `tess-tilings/src/classify.rs` table covering all 111 tilings;
