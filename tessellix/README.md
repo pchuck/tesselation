@@ -127,7 +127,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-127 built-in tilings (141 tab memberships), all discoverable in both UIs
+128 built-in tilings (142 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -143,7 +143,8 @@ secondary members), **Islamic** (25), **Arrangements** (8),
 Stampfli, shield, golden bee, golden triangle, fractalizing 3.12.12,
 girih Darb-i Imam), **Aperiodic** (7: einstein family, pinwheel,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex), and
-**Nonperiodic** (5: limit-periodic rep-tiles, Hirschhorn). Categories
+**Nonperiodic** (6: limit-periodic rep-tiles, Hirschhorn,
+pregnant-chair). Categories
 are declared on the tiling (never derived from its symmetry), so the
 grouping is honest about what the mathematics distinguishes; see
 `tess-core/src/category.rs`.
@@ -276,6 +277,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `armchair` | Armchair (L-tetromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge (T-junctions intrinsic at every scale) (M128) | — | — |
 | `sphinx` | Sphinx (pentagonal hexiamond) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 12 orientations; non-edge-to-edge | — | — |
 | `p-pentomino` | P-pentomino (rep-4 reptile, limit-periodic) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 8 chiral orientation classes; non-edge-to-edge | — | — |
+| `pregnant-chair` | Pregnant chair (rep-tile) | λ = √3 two-prototile rep-tile (Bielefeld substitution index, E. Amezcua): the √3-inflated large chair tiles as 1 large + 6 small, the inflated small chair is exactly one large chair (area-conservative); exact Z[√3] integer-pair arithmetic; finite-depth approximant with view-quantized depth, patch-stable under panning/zooming; chiral — 4 of 8 dihedral orientation classes | — | — |
 | `girih-quasiperiodic` | Girih star-and-cross (quasiperiodic, {10/3}) | quasiperiodic girih via the Darb-i Imam 3-prototile substitution (Lu & Steinhardt 2007), IF = 2φ³; exact 10-fold seed rosette | — | — |
 
 Every periodic tiling reports its wallpaper group, lattice kind, and (for

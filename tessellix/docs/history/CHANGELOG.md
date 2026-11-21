@@ -2066,3 +2066,24 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   Registry 126 → 127 built-ins, memberships 140 → 141, per-tab
   [11,17,24,17,15,25,8,12,7,5]; aperiodic family 5 → 6. Not a lattice
   table — no culling line.
+- 2026-11-21 — M136: Pregnant chair tiling (rep-tile) ✅: the
+  √3-inflation two-prototile rep-tile from the Bielefeld substitution
+  index (E. Amezcua; rule salvage-pinned against the recovered
+  pc_rule/pc_battery/pc_seed battery, C1 = x-mirror of the published
+  figure) — large chair [0,3]×[0,2√3]∪[3,6]×[√3,2√3], small chair
+  [0,2]×[0,√3]∪[0,1]×[√3,2√3]; the inflated large chair tiles as
+  1 large + 6 small, the inflated small chair is exactly one large
+  (area-conservative: 3√3·small = 9 = large). Exact-integer Z[√3]
+  (i,j)-pair arithmetic throughout, floats only at render.
+  Finite-depth approximant: two-chair seed blocks on the base period
+  lattice, refined depth times; per-step culling by the proven
+  orientation-agnostic superset box (√3^r·shape, half-extents
+  6√3^r / 2√3^r); depth = octave quantization of the view extent, so
+  panning/zooming keeps bit-identical overlapping tiles. Battery:
+  seed-block exact cover, depth-4 block = 266 leaves (area law
+  9nL+3nS = 18·3^d), depth-1 block = 14 tiles with 11 exact-zcmp
+  T-junctions, single-seed d4 = 133 leaves = 55L+78S (area 729),
+  chiral orientation census {0,2,6,7} (4 of 8 dihedral classes);
+  12 exact module tests green. Nonperiodic tab 5 → 6, reptiles
+  family 4 → 5. Registry 127 → 128 built-ins, memberships 141 → 142,
+  per-tab [11,17,24,17,15,25,8,12,7,6]. Not a lattice table.

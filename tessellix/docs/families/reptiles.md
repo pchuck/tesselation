@@ -8,7 +8,7 @@ Adding a tiling here touches only this family: `families/reptiles.rs`
 `lattice_tilings` entries) plus the new module and its doc row below.
 Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 
-## Implemented (4 tilings)
+## Implemented (5 tilings)
 
 ### Rep-tiles (nonperiodic / limit-periodic)
 
@@ -18,6 +18,7 @@ Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 | `armchair` | Armchair (L-tetromino rep-4) | the chair-family line's L-tetromino member (2×3 bbox, area 4): the scale-2 inflated armchair has a unique L-tetromino dissection (exhaustive exact-integer enumeration — one child of each of the four orientations, rule forced); non-edge-to-edge (the canonical side-2 parent carries a T-junction at (2,2); T-junction counts 32/144/656/2736 per generation); limit-periodic — the depth-g block's only translation period is (2^(g+1), 2^(g+1)), measured on the integer grid; 4×4 seed block, one armchair per orientation; octave-anchored like chair (M128) |
 | `sphinx` | Sphinx (pentagonal hexiamond) | λ = 2 rep-4 substitution on the triangular lattice; of 12 hexiamonds only the 3×1 rhombus and the sphinx are rep-4, and the sphinx's dissection is unique (rule forced); 12 orientation classes (dissection mixes chiralities), doubly stochastic substitution matrix; non-edge-to-edge; 2×3 rhombus seed (exactly 2 sphinxes, unique); octave-anchored like chair |
 | `p-pentomino` | P-pentomino (rep-4 reptile) | λ = 2 rep-4 substitution; exactly two dissections of the inflated 20-cell P (exhaustive enumeration, class multisets {0,1,4,6} and {3,4,4,5}), canonical {0,1,4,6} used; 8 chiral orientation classes, doubly stochastic substitution matrix (rows/columns sum to 4); non-edge-to-edge (5 T-junctions per parent); 5×8 seed block, one tile per class (62 such tilings of the rectangle); octave-anchored like chair (M47) |
+| `pregnant-chair` | Pregnant chairs (large + small) | λ = √3 two-prototile substitution (Bielefeld substitution index entry, E. Amezcua): the √3-inflated large chair (area 9√3) is tiled by ONE large + SIX small chairs, and the √3-inflated small chair (area 3√3) is exactly one large chair (area conserved: 3√3·√3 = 9√3); rule pinned (C1 = x-mirror of the published Bielefeld figure), non-edge-to-edge (11 T-junctions in the 14-tile depth-1 seed block); limit-periodic — the depth-g block period √3^g·(9, 0) × √3^g·(0, 2√3) grows without bound; 9×2√3 two-chair seed block (two large chairs) on the origin-anchored period lattice; chiral orientation census — m ∈ {0, 2, 6, 7} at every depth ≥ 1, the four other dihedral classes never occur; per-generation (L, S) leaf-count law (L, S) → (L + S, 6L): single seed 7 → 13 → 55 → 133 at depths 1/2/3/4; leaves are always unit scale, so depth changes the L/S mix, not tile size; octave-anchored like armchair (M128) |
 
 ## Build arcs
 

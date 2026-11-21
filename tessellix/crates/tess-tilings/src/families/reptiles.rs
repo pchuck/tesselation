@@ -14,6 +14,7 @@ pub mod armchair;
 pub mod chair;
 pub mod sphinx;
 pub mod p_pentomino;
+pub mod pregnant_chair;
 
 /// The family's registry slice, in within-tab order.
 pub fn register(mut r: Registry) -> Registry {
@@ -21,6 +22,7 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(chair::ChairTiling);
         r = r.register(sphinx::SphinxTiling);
         r = r.register(p_pentomino::PentPentominoTiling);
+        r = r.register(pregnant_chair::PregnantChairTiling);
     r
 }
 
@@ -35,6 +37,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         "chair" => rep_tile("L-tromino"),
         "sphinx" => rep_tile("sphinx hexiamond"),
         "p-pentomino" => rep_tile("P-pentomino"),
+        "pregnant-chair" => rep_tile("pregnant chairs (large + small)"),
         _ => return None,
     })
 }
@@ -54,6 +57,7 @@ mod census {
         "chair",
         "sphinx",
         "p-pentomino",
+        "pregnant-chair",
     ];
 
     #[test]
@@ -61,7 +65,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            4,
+            5,
             "reptiles family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();

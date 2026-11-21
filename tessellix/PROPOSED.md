@@ -1453,6 +1453,8 @@ of these; each is a substitution or cut-and-project table.
 
 - **Pregnant chairs**, **Armchair** — chair-family rep-tiles; effort
   S each (chair machinery exists). **Armchair** ✅ landed M128.
+  **Pregnant chairs** ✅ landed M136 (λ = √3 two-prototile rule,
+  salvage-pinned).
 - **Domino/table tiling (+variants)** and **half-hex family** —
   limit-periodic, cut-and-project; half-hex also closes the #17
   substitution-hierarchy gap; effort M each.

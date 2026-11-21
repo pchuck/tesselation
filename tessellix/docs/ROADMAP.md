@@ -109,7 +109,7 @@ the "mixed floret/cairo/prismatic" patterns.
   Andritz), [fibonacci-product](briefs/fibonacci-product.md) (product
   substitution, τ²), [tangram](briefs/tangram.md) (§23d rep-tile
   dissection, Z[√2]); [pregnant-chairs](briefs/pregnant-chairs.md)
-  (§23d, √3 / Z[√3]) is in flight.
+  (§23d, √3 / Z[√3]) ✅ landed M136.
 - 🔭 **Andritz Bowtie–Hexagon family (§23f)** — four 5-fold FLC
   substitution entries (small/large bowtie, hexagon variants) built
   on the now-shipped M131–M134 girih primitive tables;
