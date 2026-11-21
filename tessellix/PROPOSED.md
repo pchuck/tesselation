@@ -42,7 +42,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 14 | Hankin polygons-in-contact strapwork engine | Wallpaper | rendering/generator | XL | P2 |
 | 15 | Random/statistical tilings (Truchet et al.) | — | needs determinism policy | M each | P2 |
 | 16 | Hyperbolic {p,q} tilings | new category | geometry-core arc | XL | P2 |
-| 17 | Socolar–Taylor monotile ✅ DONE (M86, decorated-hexagon port of the forced 529-site patch; half-hex substitution hierarchy not reproduced) | Aperiodic | substitution + stripes | L–XL | P2 |
+| 17 | Socolar–Taylor monotile ✅ DONE (M86, decorated-hexagon port of the forced 529-site patch; the half-hex substitution hierarchy itself landed separately as M135) | Aperiodic | substitution + stripes | L–XL | P2 |
 | 18 | n-fold rhomb family (7-fold GS/Harriss, CAST) | Quasiperiodic | degree-3 arithmetic | L+ | P2 |
 | 19 | Second measured ornamental panel | Wallpaper | M35 pipeline | M–L | P2 |
 | 20 | Fractalizing k-uniform (2+√3 dodecagon) ✅ DONE (M110, same-plane limit-periodic family over 3.12.12 — not a substitution) | Quasiperiodic | substitution on uniform basis | M | P2 |

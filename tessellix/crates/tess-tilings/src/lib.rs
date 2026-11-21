@@ -231,7 +231,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134). 126 built-ins — 63 before
+// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135). 127 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -240,8 +240,8 @@ mod tests {
         //   M121) + 3 regular secondaries), Wallpaper 17 (the group
         //   catalog — one card per represented group; M85 completed it),
 //   PentagonTypes 15, Islamic 25, Arrangements 8,
-//   Quasiperiodic 12, Aperiodic 6, Nonperiodic 5.
-// Membership census 140 = 126 primaries + 14 secondaries (3 Laves
+//   Quasiperiodic 12, Aperiodic 7, Nonperiodic 5.
+// Membership census 141 = 127 primaries + 14 secondaries (3 Laves
         // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5) join the Pentagon tab as
         // typed secondary members, M122).
@@ -394,11 +394,11 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 17, 24, 17, 15, 25, 8, 12, 6, 5],
+vec![11, 17, 24, 17, 15, 25, 8, 12, 7, 5],
             "per-tab census (update when adding tilings)"
         );
-assert_eq!(r.len(), 126, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 140, "membership census (update when adding tilings)");
+assert_eq!(r.len(), 127, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 141, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely

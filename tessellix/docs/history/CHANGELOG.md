@@ -2041,3 +2041,28 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   Girih-primitive cluster complete (M131–M134): all five classical
   primitives now ship as periodic tables beside the quasiperiodic
   girih-qc entry.
+- 2026-11-21 — M135: Half-hex tiling (limit-periodic substitution) ✅:
+  Socolar's half-hexagon substitution (Bielefeld "half-hex"; cited
+  Fre02 cut-and-project, GS87 Ex. 10.1.3) — one achiral prototile P1
+  (trapezoid half of a unit hexagon, edges {2,1,1,1}), six rotation
+  classes and no reflection class (mirror = translated rotation);
+  λ = 2 into 4 children (orientation offsets {0,2,3,4}), substitution
+  matrix S[j][i] = 1 iff (j−i) mod 6 ∈ {0,2,3,4}, PF eigenvalue
+  4 = λ², char poly (x−4)(x−2)(x−1)²(x+1)² pinned by an exact
+  720-permutation i128 expansion — which caught and fixed a real
+  next_perm off-by-one (scan from i=4 visited 48/720;
+  regression-guarded). Exact √3-field (u,v) integer-pair arithmetic
+  end to end, f64 only at the emission boundary; depth d = 5..8
+  picked by the view diagonal (4⁸ = 65 536 ≤ MAX_TILES), patch
+  recentered by the presentation shift (2^d, 2^{d−2}). Battery: rule
+  line green in all 6 orientations; depth counts 4^g with vectors
+  [1,0,1,1,1,0]/[4,2,3,2,3,2]/[12,9,12,10,12,9]/[46,40,45,40,45,40];
+  0 overlaps over 12/116/653/3017 tested nearby pairs; fine-grid
+  coverage 52/200/784/3104 exact; nested d = 7 views bit-identical on
+  intersections (containments B5⊂B1, B1⊂B2, B4⊂B2). Limit-periodicity
+  measured: minimal x-period p = (3/2)·2^g = 6, 12, 24, 48, 96 at
+  g = 2..6, strictly doubling per level (offset from the naive
+  2^{g+1} by the depth-0 atomic tiling's pure-x period 3/2).
+  Registry 126 → 127 built-ins, memberships 140 → 141, per-tab
+  [11,17,24,17,15,25,8,12,7,5]; aperiodic family 5 → 6. Not a lattice
+  table — no culling line.

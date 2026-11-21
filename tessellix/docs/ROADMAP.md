@@ -97,10 +97,11 @@ the "mixed floret/cairo/prismatic" patterns.
   Research entry below.*
 - 🔭 **Ammann sets A1–A4** — the rest of Ammann's aperiodic families;
   moderate each once the AB machinery exists.
-- 🔭 **§23d limit-periodic substitutions** — [half-hex](briefs/half-hex.md)
+- 🔭 **§23d limit-periodic substitutions** — ✅ **half-hex landed (M135)**
   (Socolar's half-hexagon substitution; closes the #17
-  substitution-hierarchy gap; dispatched), then domino/table
-  (+variants) in the same family once half-hex lands.
+  substitution-hierarchy gap; measured period hierarchy
+  p = (3/2)·2^g = 6, 12, 24, 48, 96); next: domino/table
+  (+variants) in the same family.
 - 🔭 **§23 Bielefeld salvage wave** — four briefs revived from the
   lost pre-rework §23 session (rules pinned in the briefs; prototype
   batteries archived in `.scratch/salvage-20261120/`):

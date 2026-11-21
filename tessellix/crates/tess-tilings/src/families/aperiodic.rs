@@ -1,27 +1,29 @@
 //! Aperiodic family: aperiodic monotiles and forcing sets: hat, turtle, spectre,
-//! Taylor-Socolar, Jeandel-Rao
+//! Taylor-Socolar, Jeandel-Rao, half-hex
 //!
 //! Owned here: module declarations, `register` (the family's registry
 //! slice, in within-tab order), `classification` arms, the family's
 //! lattice-culling entries and the family census pin. The family doc is
 //! `docs/families/aperiodic.md`.
 
-use tess_core::Registry;
 use tess_core::classify::TilingClass;
+use tess_core::Registry;
 
+pub mod half_hex;
 pub mod hat;
-pub mod turtle;
+pub mod jr_aperiodic;
 pub mod spectre;
 pub mod taylor_socolar;
-pub mod jr_aperiodic;
+pub mod turtle;
 
 /// The family's registry slice, in within-tab order.
 pub fn register(mut r: Registry) -> Registry {
-        r = r.register(hat::HatTiling);
-        r = r.register(turtle::TurtleTiling);
-        r = r.register(spectre::SpectreTiling);
-        r = r.register(taylor_socolar::TaylorSocolarTiling);
-        r = r.register(jr_aperiodic::JeandelRaoTiling);
+    r = r.register(hat::HatTiling);
+    r = r.register(turtle::TurtleTiling);
+    r = r.register(spectre::SpectreTiling);
+    r = r.register(taylor_socolar::TaylorSocolarTiling);
+    r = r.register(jr_aperiodic::JeandelRaoTiling);
+    r = r.register(half_hex::HalfHexTiling);
     r
 }
 
@@ -88,6 +90,16 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             translational: Some("aperiodic"),
             ..TilingClass::EMPTY
         },
+        "half-hex" => TilingClass {
+            families: &["Aperiodic"],
+            method: Some("substitution"),
+            prototiles: Some(1),
+            source: Some("Grünbaum & Shephard; Frettlöh"),
+            year: Some("1987"),
+            aperiodic_status: Some("limit-periodic"),
+            translational: Some("limit-periodic"),
+            ..TilingClass::EMPTY
+        },
         _ => return None,
     })
 }
@@ -108,6 +120,7 @@ mod census {
         "spectre",
         "taylor-socolar",
         "jeandel-rao",
+        "half-hex",
     ];
 
     #[test]
@@ -115,7 +128,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            5,
+            6,
             "aperiodic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
@@ -135,8 +148,8 @@ mod census {
 
 #[cfg(test)]
 mod hat_tests {
-    use crate::tests::{check_coverage, check_det, check_rotated};
     use crate::hat;
+    use crate::tests::{check_coverage, check_det, check_rotated};
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::{ParamSet, ParamValue};
     use tess_core::tiling::Tiling;
@@ -265,8 +278,8 @@ mod turtle_tests {
 
 #[cfg(test)]
 mod spectre_tests {
-    use crate::tests::{check_coverage, check_det, check_rotated};
     use crate::spectre;
+    use crate::tests::{check_coverage, check_det, check_rotated};
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::{ParamSet, ParamValue};
     use tess_core::tiling::Tiling;
@@ -328,3 +341,67 @@ mod spectre_tests {
     }
 }
 
+#[cfg(test)]
+mod half_hex_tests {
+    use super::half_hex;
+    use crate::tests::{check_coverage, check_det, check_rotated};
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn half_hex_covers_region() {
+        let t = half_hex::HalfHexTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(&t, "half-hex", &p, BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)));
+    }
+
+    /// The finite covered patch (2^d-scaled half-hexagon, d picked from
+    /// the view diagonal) is view-anchored, so distant views are in-
+    /// domain when their picked depth's patch contains them: three far
+    /// windows (d = 7 / 8 / 8 respectively) verify the depth rule, the
+    /// recentering and the clip-area accounting away from the origin.
+    #[test]
+    fn half_hex_covers_large_and_distant_views() {
+        let t = half_hex::HalfHexTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        for (cx, cy, w, h) in [
+            (45.0, -12.0, 0.3, 0.2),
+            (-85.0, 15.0, 0.15, 0.1),
+            (150.0, 40.0, 0.06, 0.04),
+        ] {
+            check_coverage(
+                &t,
+                "half-hex",
+                &p,
+                BBox::new(v2(cx - w, cy - h), v2(cx + w, cy + h)),
+            );
+        }
+    }
+
+    #[test]
+    fn half_hex_rotated_scaled() {
+        check_rotated(
+            &half_hex::HalfHexTiling,
+            "half-hex(rot25,scale0.6)",
+            BBox::new(v2(-3.0, -3.0), v2(3.0, 3.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn half_hex_deterministic() {
+        check_det(
+            &half_hex::HalfHexTiling,
+            "half-hex",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+}
