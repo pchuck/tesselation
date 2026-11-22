@@ -45,6 +45,7 @@ use tess_core::browse::{self, CardMeta, Tab};
 use tess_core::category::TilingCategory;
 use tess_core::paint;
 use tess_core::params::ParamSet;
+use tess_core::view::ColorMode;
 
 use crate::raster;
 use crate::thumb;
@@ -91,6 +92,9 @@ struct Tui {
     /// Params overlay open in Render mode.
     params_open: bool,
     palette256: Vec<u8>,
+    /// xterm-256 indices of the gray ramp (`paint::GRAY_PALETTE`),
+    /// selected when the color mode is `Gray`.
+    palette256_gray: Vec<u8>,
     border256: u8,
     gap256: u8,
     /// Last rendered canvas size; pans scale with it.
@@ -126,6 +130,10 @@ impl Tui {
             .iter()
             .map(|&c| paint::rgb_to_256(c))
             .collect();
+        let palette256_gray: Vec<u8> = paint::GRAY_PALETTE
+            .iter()
+            .map(|&c| paint::rgb_to_256(c))
+            .collect();
         Self {
             app: App::new(registry, 8.0),
             tabs,
@@ -136,6 +144,7 @@ impl Tui {
             search: String::new(),
             params_open: false,
             palette256,
+            palette256_gray,
             border256: paint::rgb_to_256(paint::BORDER),
             gap256: 124,
             canvas_size: (0, 0),
@@ -972,13 +981,18 @@ fn render_render_view(frame: &mut Frame, tui: &mut Tui, area: Rect) {
             );
         } else {
             let bbox = tui.app.viewport.world_bbox(w, h);
+            let palette256: &[u8] = if tui.app.color_mode == ColorMode::Gray {
+                &tui.palette256_gray
+            } else {
+                &tui.palette256
+            };
             let r = raster::raster(
                 &result.tiles,
                 &bbox,
                 w,
                 h,
                 tui.app.color_mode,
-                &tui.palette256,
+                palette256,
             );
             let buf = frame.buffer_mut();
             for sy in 0..h {

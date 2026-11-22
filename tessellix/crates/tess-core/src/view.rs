@@ -11,18 +11,28 @@ pub enum ColorMode {
     Pattern,
     /// Color by prototile index.
     Proto,
+    /// Monochrome variant of `Proto`: the same prototile-class indices
+    /// drawn from a gray lightness ramp instead of the color palette —
+    /// the print/e-ink mode (structure without hue).
+    Gray,
 }
 
 impl ColorMode {
-    pub const ALL: [ColorMode; 3] = [ColorMode::Single, ColorMode::Pattern, ColorMode::Proto];
+    pub const ALL: [ColorMode; 4] = [
+        ColorMode::Single,
+        ColorMode::Pattern,
+        ColorMode::Proto,
+        ColorMode::Gray,
+    ];
 
     pub fn next(self) -> ColorMode {
         let idx = match self {
             ColorMode::Single => 0,
             ColorMode::Pattern => 1,
             ColorMode::Proto => 2,
+            ColorMode::Gray => 3,
         };
-        ColorMode::ALL[(idx + 1) % 3]
+        ColorMode::ALL[(idx + 1) % 4]
     }
 
     pub fn label(self) -> &'static str {
@@ -30,6 +40,7 @@ impl ColorMode {
             ColorMode::Single => "single",
             ColorMode::Pattern => "pattern",
             ColorMode::Proto => "proto",
+            ColorMode::Gray => "gray",
         }
     }
 
@@ -38,6 +49,7 @@ impl ColorMode {
             "single" => Some(ColorMode::Single),
             "pattern" => Some(ColorMode::Pattern),
             "proto" => Some(ColorMode::Proto),
+            "gray" => Some(ColorMode::Gray),
             _ => None,
         }
     }
@@ -45,7 +57,8 @@ impl ColorMode {
     /// The mode a small thumbnail should render in. `Single` colors
     /// every tile alike, which makes a thumbnail a featureless slab —
     /// previews fall back to `Proto` (prototile classes), the mode that
-    /// reveals structure at thumbnail scale.
+    /// reveals structure at thumbnail scale. `Gray` is self-sufficient
+    /// (structure without hue) and previews as itself.
     pub fn preview_mode(self) -> ColorMode {
         match self {
             ColorMode::Single => ColorMode::Proto,
@@ -63,7 +76,10 @@ pub struct Viewport {
 
 impl Viewport {
     pub fn new(zoom: f64) -> Self {
-        Self { center: Vec2::ZERO, zoom }
+        Self {
+            center: Vec2::ZERO,
+            zoom,
+        }
     }
 
     /// World-space box covered by a viewport of `w` x `h` pixels.
@@ -127,5 +143,17 @@ mod tests {
         let q = before(&v);
         assert!((p.x - q.x).abs() < 1e-9);
         assert!((p.y - q.y).abs() < 1e-9);
+    }
+
+    #[test]
+    fn color_mode_cycle_parse_label_preview() {
+        assert_eq!(ColorMode::Single.next(), ColorMode::Pattern);
+        assert_eq!(ColorMode::Pattern.next(), ColorMode::Proto);
+        assert_eq!(ColorMode::Proto.next(), ColorMode::Gray);
+        assert_eq!(ColorMode::Gray.next(), ColorMode::Single);
+        assert_eq!(ColorMode::parse("gray"), Some(ColorMode::Gray));
+        assert_eq!(ColorMode::parse("nope"), None);
+        assert_eq!(ColorMode::Gray.label(), "gray");
+        assert_eq!(ColorMode::Gray.preview_mode(), ColorMode::Gray);
     }
 }

@@ -4,7 +4,7 @@ A Rust tiling generator with two front ends: an interactive terminal UI
 (TUI) and a desktop GUI. It generates 2D tilings of the plane on demand —
 uniform/Archimedean, wallpaper, Penrose, Pythagorean, and monohedral
 nonperiodic families — and renders them live, with pan/zoom, tunable
-parameters, three color modes, and SVG export.
+parameters, four color modes, and SVG export.
 
 - **License:** MIT
 - **Rust:** edition 2021, MSRV 1.85
@@ -43,7 +43,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--width` / `--height` | 1200 / 800 | SVG canvas size in px |
 | `--scale` | 1.0 | uniform scale (1.0 → ~20 world units tall) |
 | `--rotation` | 0 | rotation in degrees |
-| `--mode` | pattern | `single` \| `pattern` \| `proto` |
+| `--mode` | pattern | `single` \| `pattern` \| `proto` \| `gray` |
 | `--strapwork DEG` | off | overlay the Hankin PIC strapwork walls at contact angle DEG (measured from each tile edge) on any tiling — layer mode of the polygons-in-contact engine (`tess-core::strapwork`) |
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
@@ -125,7 +125,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
   **Escape** and `← back` both return to
   Browse exactly as left (same tab + selection). A collapsible bottom
   panel (expanded by default on entry) holds the parameter editors,
-  the color-mode selector (single / pattern / proto), and the
+  the color-mode selector (single / pattern / proto / gray), and the
   symmetry readout (wallpaper group, lattice kind, basis vectors,
   notes) — the readout is cached per tiling + parameter values and
   refreshed through a tiny fixed probe region, so panel rendering
@@ -641,7 +641,10 @@ the shared `tess-core::raster` (the TUI to character cells over its
 ### Rendering
 
 - **Color modes** — `single` (one flat color), `pattern` (color by tile
-  `seed`, the generator's choice), `proto` (color by prototile index).
+  `seed`, the generator's choice), `proto` (color by prototile index),
+  `gray` (monochrome: the proto index space drawn from an 8-step
+  lightness ramp — the print/e-ink mode; browse thumbnails keep their
+  color previews).
   Shared 8-color palette; the TUI maps it to the nearest xterm-256
   indices and rasterizes to character cells, the GUI draws convex
   polygons directly, and the CLI writes SVG paths (y-axis flipped to

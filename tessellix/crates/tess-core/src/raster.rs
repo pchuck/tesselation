@@ -85,7 +85,9 @@ fn color_index(mode: ColorMode, tile: &Tile) -> usize {
     match mode {
         ColorMode::Single => 0,
         ColorMode::Pattern => (tile.seed as usize) % 8,
-        ColorMode::Proto => (tile.proto as usize) % 8,
+        // `Gray` shares `Proto`'s index space; the front end picks the
+        // gray ramp (`paint::GRAY_PALETTE`) instead of the color palette.
+        ColorMode::Proto | ColorMode::Gray => (tile.proto as usize) % 8,
     }
 }
 
@@ -113,7 +115,14 @@ fn thinness(tile: &Tile) -> f64 {
     area(&tile.poly.pts) / diag
 }
 
-pub fn raster(tiles: &[Tile], bbox: &BBox, w: u32, h: u32, mode: ColorMode, palette: &[u8]) -> Raster {
+pub fn raster(
+    tiles: &[Tile],
+    bbox: &BBox,
+    w: u32,
+    h: u32,
+    mode: ColorMode,
+    palette: &[u8],
+) -> Raster {
     let n = (w * h) as usize;
     let sx = bbox.size().x / w as f64;
     let sy = bbox.size().y / h as f64;
@@ -185,8 +194,9 @@ pub fn raster(tiles: &[Tile], bbox: &BBox, w: u32, h: u32, mode: ColorMode, pale
             }
             // Foreground claim: the thinnest covering piece wins the
             // cell when it is in a thinness class of its own.
-            let mut order: Vec<usize> =
-                (0..bucket.len()).filter(|&bi| counts[bi] >= FG_MIN).collect();
+            let mut order: Vec<usize> = (0..bucket.len())
+                .filter(|&bi| counts[bi] >= FG_MIN)
+                .collect();
             order.sort_by(|&a, &b| thin[bucket[a] as usize].total_cmp(&thin[bucket[b] as usize]));
             if order.len() >= 2 {
                 let t1 = thin[bucket[order[0]] as usize];
@@ -267,7 +277,11 @@ mod tests {
         Tile {
             proto,
             seed,
-            poly: Polygon::from_slice(&pts.iter().map(|p| Vec2::new(p[0], p[1])).collect::<Vec<_>>()),
+            poly: Polygon::from_slice(
+                &pts.iter()
+                    .map(|p| Vec2::new(p[0], p[1]))
+                    .collect::<Vec<_>>(),
+            ),
         }
     }
 
@@ -338,5 +352,19 @@ mod tests {
         let r1 = raster(&tiles, &bbox, 23, 17, ColorMode::Pattern, &PAL);
         let r2 = raster(&tiles, &bbox, 23, 17, ColorMode::Pattern, &PAL);
         assert_eq!(r1.pixels, r2.pixels);
+    }
+
+    #[test]
+    fn gray_mode_shares_proto_index_space() {
+        // Gray must produce byte-identical rasters to Proto through one
+        // palette: same index space, only the ramp differs (the front
+        // end's choice).
+        let a = tile(0, 0, &[[0.0, 0.0], [4.0, 0.0], [4.0, 4.0], [0.0, 4.0]]);
+        let b = tile(3, 9, &[[0.0, 1.9], [4.0, 1.9], [4.0, 2.1], [0.0, 2.1]]);
+        let bbox = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(4.0, 4.0));
+        assert_eq!(
+            raster(&[a.clone(), b.clone()], &bbox, 20, 20, ColorMode::Gray, &PAL).pixels,
+            raster(&[a, b], &bbox, 20, 20, ColorMode::Proto, &PAL).pixels
+        );
     }
 }

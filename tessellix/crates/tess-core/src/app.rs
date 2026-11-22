@@ -396,5 +396,6 @@ mod tests {
         assert_eq!(ColorMode::Single.preview_mode(), ColorMode::Proto);
         assert_eq!(ColorMode::Proto.preview_mode(), ColorMode::Proto);
         assert_eq!(ColorMode::Pattern.preview_mode(), ColorMode::Pattern);
+        assert_eq!(ColorMode::Gray.preview_mode(), ColorMode::Gray);
     }
 }

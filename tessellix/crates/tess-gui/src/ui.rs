@@ -749,7 +749,12 @@ impl GuiApp {
                 ui.separator();
                 ui.label("Color mode");
                 ui.horizontal(|ui| {
-                    for m in [ColorMode::Single, ColorMode::Pattern, ColorMode::Proto] {
+                    for m in [
+                        ColorMode::Single,
+                        ColorMode::Pattern,
+                        ColorMode::Proto,
+                        ColorMode::Gray,
+                    ] {
                         if ui
                             .selectable_label(self.app.color_mode == m, m.label())
                             .clicked()
