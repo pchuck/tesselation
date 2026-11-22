@@ -1,5 +1,11 @@
 # Brief: period-doubling-2d — §23d limit-periodic product substitution
 
+> **Errata (post-landing, M141):** the Goal line's "category
+> `Nonperiodic`" was factually wrong — `domino.rs` and `half_hex.rs`
+> both declare `TilingCategory::Aperiodic`; period-doubling landed
+> mirror-domino (Aperiodic tab 8 → 9). The worker's STOP branch caught
+> it before coding.
+
 **Family:** `aperiodic` · **Candidate:** PROPOSED.md §23d "Period
 doubling / period tripling / Thue–Morse 2D / Squiral — marginal
 supersubstitutions; effort S–M each" (**this brief covers ONLY period

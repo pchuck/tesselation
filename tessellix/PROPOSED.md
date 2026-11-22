@@ -1469,9 +1469,14 @@ of these; each is a substitution or cut-and-project table.
   g = 1..6, ratio 2; no proper within-patch period — "full-block"
   manifest, kind-different from half-hex).
 - **Period doubling / period tripling / Thue–Morse 2D / Squiral** —
-  marginal supersubstitutions; Squiral was parked pending rule-table
-  verification (see Parked) — the Bielefeld page provides it; effort
-  S–M each.
+  marginal supersubstitutions; effort S–M each. **Period doubling** ✅
+  landed M141 (the 2D product σ⊗σ of the 1D a→ab, b→aa rule — 4 label
+  classes on unit squares, PF 4, char poly x⁴−x³−12x²−4x+16, measured
+  (2^g, 2^g) full-block manifest g = 1..6, the ratio-1 signature vs
+  domino's ratio-2). Squiral stays parked for a second reason beyond
+  the rule-image-only source: its prototile has infinitely many
+  straight edges (a depth-truncation design problem). Thue–Morse 2D
+  and period tripling remain queued.
 - **Tangram** — rep-tile dissection; effort S–M.
 - **Pentiamond / small rep-tile set** — effort S each.
 

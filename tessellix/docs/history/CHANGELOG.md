@@ -2197,3 +2197,34 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   brute-force guard runs n17. Census: TwoUniform tab 17 → 18;
   kuniform family 30 → 31; built-ins 129 → 130; memberships
   143 → 144. Still missing from the closed 20-list: n6, n7.
+- 2026-11-21 — M141: Period doubling (2D) `period-doubling` ✅
+  (§23d, the marginal-supersubstitution cluster): the 2D product of
+  the 1D period-doubling substitution a → ab, b → aa (Bielefeld entry
+  pinned live — 1D-only, internal space the 2-adic integers,
+  Frettlöh–Sing). σ⊗σ on Z² unit squares: 4 prototile label classes
+  (aa/ab/ba/bb, class = 2·w[col] + w[row], seeds 0–3) over ONE square
+  prototile; λ = 2 into a 2×2 frame, child (c,r) label =
+  (σ(x)_c, σ(y)_r); substitution matrix
+  S = [[1,2,2,4],[1,0,2,0],[1,2,0,0],[1,0,0,0]] (column sums all 4 =
+  λ²), PF eigenvalue 4, char poly x⁴−x³−12x²−4x+16 (eigenvalues
+  {4, 1, −2, −2}) pinned by exact i64 24-permutation determinants
+  (permutation count asserted — the M135 certification-guard lesson).
+  Limit-periodic via approximating periodic tilings: the depth-g patch
+  is the fundamental cell of the period-(2^g, 2^g) approximant,
+  measured (2,2) … (64,64) at g = 1..6 — the ratio-1 square manifest
+  that distinguishes it from domino's ratio-2 (2^g, 2^(g+1)); no
+  proper within-patch period. Exact integer arithmetic on Z² end to
+  end; depth rule = octave quantization of the view extent with
+  patch-stability (nested-view bit-identity) tested. Battery: stdlib
+  spike (substitution consistency g = 1..5, 0-overlap +
+  irrational-shift coverage g = 1..4, label censuses S^g·e_aa =
+  [1,1,1,1] → [9,3,3,1] → [25,15,15,9] → [121,55,55,25]) + 15/15 Rust
+  tests. Classification mirrors domino (Aperiodic tab, method
+  substitution, "limit-periodic"); the dispatch brief's draft
+  "Nonperiodic" category was wrong — the worker's STOP branch caught
+  it against the domino.rs/half_hex.rs precedent before coding. Spike
+  checkpointed at .scratch/period-doubling-2d/. Census: Aperiodic tab
+  8 → 9; aperiodic family 7 → 8; built-ins 130 → 131; memberships
+  144 → 145. Remaining in the cluster: Thue–Morse 2D, period tripling
+  (queued); Squiral (parked — rule-image-only source AND an
+  infinite-edge prototile).

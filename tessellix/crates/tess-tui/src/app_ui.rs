@@ -1098,11 +1098,11 @@ mod tests {
         assert_eq!(tui.tabs.len(), 10, "one tab per TilingCategory::ALL entry");
         // Multi-tab membership (M76): a tiling appears in its primary
         // tab plus every secondary tab, so the tab sizes sum to the
-        // 144 memberships of the 130 registered tilings, not to 130.
+        // 145 memberships of the 131 registered tilings, not to 131.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 144, "130 tilings carry 144 tab memberships");
+        assert_eq!(total, 145, "131 tilings carry 145 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 18, 24, 17, 15, 25, 8, 12, 8, 6]);
+        assert_eq!(counts, vec![11, 18, 24, 17, 15, 25, 8, 12, 9, 6]);
     }
 
     #[test]
@@ -1177,7 +1177,7 @@ mod tests {
 ("Islamic", 25),
             ("Arrangements", 8),
             ("Quasiperiodic", 12),
-            ("Aperiodic", 8),
+            ("Aperiodic", 9),
             ("Nonperiodic", 6),
         ] {
             assert!(
