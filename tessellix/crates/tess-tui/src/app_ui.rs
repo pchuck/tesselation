@@ -1112,11 +1112,11 @@ mod tests {
         assert_eq!(tui.tabs.len(), 10, "one tab per TilingCategory::ALL entry");
         // Multi-tab membership (M76): a tiling appears in its primary
         // tab plus every secondary tab, so the tab sizes sum to the
-        // 153 memberships of the 139 registered tilings, not to 139.
+        // 155 memberships of the 141 registered tilings, not to 141.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 153, "139 tilings carry 153 tab memberships");
+        assert_eq!(total, 155, "141 tilings carry 155 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 18, 28, 17, 15, 25, 8, 13, 11, 7]);
+        assert_eq!(counts, vec![11, 20, 28, 17, 15, 25, 8, 13, 11, 7]);
     }
 
     #[test]
@@ -1184,7 +1184,7 @@ mod tests {
         let row0 = text.lines().next().unwrap();
         for (label, n) in [
             ("Uniform", 11),
-("Two-Uniform", 18),
+("Two-Uniform", 20),
             ("Laves (Catalan duals)", 28),
             ("Wallpaper", 17),
 ("Pentagon Types", 15),
@@ -1822,7 +1822,7 @@ mod tests {
             .iter()
             .position(|t| t.category == TilingCategory::TwoUniform)
             .unwrap()];
-        assert_eq!(tu.cards.len(), 18);
+        assert_eq!(tu.cards.len(), 20);
         let configs: Vec<Option<&'static str>> =
             tu.cards.iter().map(|c| c.class.vertex_config).collect();
         assert!(

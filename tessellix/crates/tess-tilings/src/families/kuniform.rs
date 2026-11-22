@@ -1,4 +1,4 @@
-//! Kuniform family: the 2-uniform program: 18 k-uniform primal tables + 17 face-centroid
+//! Kuniform family: the 2-uniform program: 20 k-uniform primal tables + 17 face-centroid
 //! duals (the duals are Laves-tab primaries)
 //!
 //! Owned here: module declarations, `register` (the family's registry
@@ -51,6 +51,8 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(dual::kuniform_dual_n3());
         r = r.register(dual::kuniform_dual_n14());
         r = r.register(dual::kuniform_dual_n15());
+        r = r.register(kuniform::kuniform_n7());
+        r = r.register(kuniform::kuniform_n6());
     r
 }
 
@@ -79,6 +81,8 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         "kuniform-n2" => two_uniform(&["Two-Uniform"], "(3.12.12; 3.4.3.12)"),
         "kuniform-n16" => two_uniform(&["Two-Uniform"], "(3³.4²; 3².4.3.4)"),
         "kuniform-n17" => two_uniform(&["Two-Uniform"], "(3³.4²; 3².4.3.4)₂"),
+        "kuniform-n7" => two_uniform(&["Two-Uniform"], "(3.4².6; 3.6.3.6)₁"),
+        "kuniform-n6" => two_uniform(&["Two-Uniform"], "(3.4².6; 3.6.3.6)₂"),
         "kuniform-dual-p6m" => kuniform_dual("V3⁶; V3².6²", "(3⁶; 3².6²)"),
         "kuniform-dual-n18" => kuniform_dual("V3⁶; V3².4.3.4", "(3⁶; 3².4.3.4)"),
         "kuniform-dual-n9" => kuniform_dual("V3.4.6.4; V3².4.3.4", "(3.4.6.4; 3².4.3.4)"),
@@ -116,6 +120,8 @@ pub(crate) fn lattice_tilings() -> Vec<(&'static str, crate::lattice::LatticeTil
             ("kuniform-n2", kuniform::kuniform_n2()),
             ("kuniform-n16", kuniform::kuniform_n16()),
             ("kuniform-n17", kuniform::kuniform_n17()),
+            ("kuniform-n7", kuniform::kuniform_n7()),
+            ("kuniform-n6", kuniform::kuniform_n6()),
             ("kuniform-dual-p6m", dual::kuniform_dual_p6m()),
             ("kuniform-dual-n18", dual::kuniform_dual_n18()),
             ("kuniform-dual-n9", dual::kuniform_dual_n9()),
@@ -165,6 +171,8 @@ mod census {
         "kuniform-n2",
         "kuniform-n16",
         "kuniform-n17",
+        "kuniform-n7",
+        "kuniform-n6",
         "kuniform-dual-p6m",
         "kuniform-dual-n18",
         "kuniform-dual-n9",
@@ -189,7 +197,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            35,
+            37,
             "kuniform family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
@@ -1590,6 +1598,128 @@ fn kuniform_n12_deterministic() {
                     figure: "33434",
                     count: 136,
                     orbits: &[(-2065, 967), (-2065, 1967), (-65, 967), (-65, 1967)],
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn kuniform_n7_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n7(),
+            "kuniform-n7",
+            BBox::new(v2(-4.0, -4.0), v2(9.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n7_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n7(),
+            "kuniform-n7(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(4.0, 4.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n7_deterministic() {
+        check_det(
+            &kuniform::kuniform_n7(),
+            "kuniform-n7",
+            BBox::new(v2(-3.0, -3.0), v2(6.0, 6.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch: the 3.6.3.6
+    /// orbit ("3636", 1 translation class — the hexagon touch
+    /// points, 42 interior points) and the 3.4².6 orbit, which
+    /// carries two cyclic orderings under the lex-min rotation
+    /// convention ("3446": 2 classes, 85 interior points; "3644":
+    /// 2 classes, 84 interior points). Counts and reps match the
+    /// Python exact battery (orbit_reps.py), which mirrors the same
+    /// right-handed basis b1 = (2, 0), b2 = (0, 1+√3) as the table.
+    #[test]
+    fn kuniform_n7_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n7(),
+            &[
+                Figure {
+                    figure: "3446",
+                    count: 85,
+                    orbits: &[(500, 1732), (1500, 0)],
+                },
+                Figure {
+                    figure: "3636",
+                    count: 42,
+                    orbits: &[(1000, 866)],
+                },
+                Figure {
+                    figure: "3644",
+                    count: 84,
+                    orbits: &[(500, 0), (1500, 1732)],
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn kuniform_n6_covers_region() {
+        check_covers(
+            &kuniform::kuniform_n6(),
+            "kuniform-n6",
+            BBox::new(v2(-4.0, -4.0), v2(9.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_n6_rotated_scaled() {
+        check_rotated(
+            &kuniform::kuniform_n6(),
+            "kuniform-n6(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(4.0, 4.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_n6_deterministic() {
+        check_det(
+            &kuniform::kuniform_n6(),
+            "kuniform-n6",
+            BBox::new(v2(-3.0, -3.0), v2(6.0, 6.0)),
+        );
+    }
+
+    /// Interior vertex figures over the ±3×±3 patch: the 3.6.3.6
+    /// orbit ("3636", 1 translation class — the hexagon touch
+    /// points, 42 interior points) and the 3.4².6 orbit, which
+    /// carries two cyclic orderings under the lex-min rotation
+    /// convention ("3446": 2 classes, 91 interior points; "3644":
+    /// 2 classes, 78 interior points). Counts and reps match the
+    /// Python exact battery (orbit_reps.py), which mirrors the same
+    /// right-handed basis b1 = (2, 0), b2 = (1, 1+√3) as the table.
+    #[test]
+    fn kuniform_n6_vertex_figures() {
+        check_vertex_figures(
+            &kuniform::kuniform_n6(),
+            &[
+                Figure {
+                    figure: "3446",
+                    count: 91,
+                    orbits: &[(1000, 0), (2000, 1732)],
+                },
+                Figure {
+                    figure: "3636",
+                    count: 42,
+                    orbits: &[(500, 866)],
+                },
+                Figure {
+                    figure: "3644",
+                    count: 78,
+                    orbits: &[(0, 0), (1000, 1732)],
                 },
             ],
         );

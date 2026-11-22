@@ -232,17 +232,17 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147). 139 built-ins — 63 before
+// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148). 141 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
-        //   TwoUniform 18, Laves 28 (25 primary: 8 incl. cairo-pentagonal
+        //   TwoUniform 20, Laves 28 (25 primary: 8 incl. cairo-pentagonal
         //   + 17 machine-dualized k-uniform duals (M98, M102, M106, M120,
         //   M121, M145, M147) + 3 regular secondaries), Wallpaper 17 (the group
         //   catalog — one card per represented group; M85 completed it),
 //   PentagonTypes 15, Islamic 25, Arrangements 8,
 //   Quasiperiodic 13, Aperiodic 11, Nonperiodic 7.
-// Membership census 153 = 139 primaries + 14 secondaries (3 Laves
+// Membership census 155 = 141 primaries + 14 secondaries (3 Laves
         // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5) join the Pentagon tab as
         // typed secondary members, M122).
@@ -395,11 +395,11 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 18, 28, 17, 15, 25, 8, 13, 11, 7],
+vec![11, 20, 28, 17, 15, 25, 8, 13, 11, 7],
             "per-tab census (update when adding tilings)"
         );
-assert_eq!(r.len(), 139, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 153, "membership census (update when adding tilings)");
+assert_eq!(r.len(), 141, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 155, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely

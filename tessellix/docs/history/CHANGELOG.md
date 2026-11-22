@@ -2426,3 +2426,39 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   Laves tab 26 → 28 (duals are Laves-tab primaries); kuniform family
   33 → 35; built-ins 137 → 139; memberships 151 → 153. §23k is now
   closed; the 2-uniform 20-list gap is down to the n6/n7 primals.
+- 2026-11-22 — M148: 2-uniform primals n6/n7 `kuniform-n6` +
+  `kuniform-n7` ✅ (the two [3.4².6; 3.6.3.6] forms — the LAST gap in
+  the closed 2-uniform 20-list; the list is now COMPLETE in-repo):
+  exact Q(√3) LatticeTiling data tables, one cell each, det 2+2√3.
+  n6 (the ₂ form, Wikipedia `2-uniform n6`): point-touching flat-top
+  unit-hexagon rows alternating with full unit-square rows, each
+  inter-hexagon gap holding a counterposed up/down unit-triangle pair
+  sharing the hexagon touch point as apex; CENTERED-rectangular
+  lattice ⟨(2,0),(1,1+√3)⟩ (conventional cell 2×(2+2√3), centering
+  vector (1,1+√3)); 5 tiles/cell (1 hex + 2 squares + 2 triangles,
+  seeds 0–4); measured cmm — 2 two-folds/cell, one OFF the mirror
+  lines at (0,1/2+√3) (the cmm-vs-pmm discriminator), true glides
+  both axes. n7 (the ₁ form): the same 5-tile set with OPPOSITE
+  triangle orientations — re-derived from the wiki SVG (a pure x-shift
+  of n6 was tried and produced wrong vertex figures — the dead end is
+  documented in the scratch NOTES); PRIMITIVE rectangular lattice
+  ⟨(2,0),(0,1+√3)⟩, b1 ⊥ b2; measured pmm — 4 two-folds/cell all ON
+  the mirror intersections, no true glides. Both forms: vertex figures
+  3.6.3.6 (1 class) + 3.4².6 in two cyclic orderings ("3446"/"3644");
+  exact enumeration gives 5 tile orbits per form vs the wiki's
+  t = 3 (n6) / t = 4 (n7) — reported as a deviation per the n20
+  precedent (e = 4 quoted, not re-enumerated). GUARD VALIDATION: the
+  first n6 draft declared LatticeKind::Oblique and
+  `declared_symmetry_is_legal_and_matches_the_measured_lattice`
+  correctly rejected it ("cmm does not permit lattice kind oblique")
+  — fixed to CenteredRectangular (n3 precedent); the legality guard
+  bites. Battery: stdlib spike (Σ = |det| residual 0.0, edge-parity
+  map 855 edges = 90 boundary + 765 shared, fine-grid coverage
+  43560/82000 pts exactly once, orbit census 5/form, closure 10/10,
+  exact group audit 2.1 s, pinned vertex-figure censuses) + 6 Rust
+  tests (one trio per form) + exact Rust-tuple-vs-spike cross-check.
+  Both entries landed in the family `lattice_tilings()` list (culling
+  genuine). Census: TwoUniform tab 18 → 20 (the latent app_ui pins
+  fired as predicted); kuniform family 35 → 37; built-ins 139 → 141;
+  memberships 153 → 155. The 2-uniform 20-list is complete: the
+  kuniform family's primal arc closes with 20 primals + 17 duals.

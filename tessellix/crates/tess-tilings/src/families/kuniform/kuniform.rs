@@ -1,11 +1,11 @@
 //! 2-uniform (k-uniform) tilings, expressed as [`LatticeTiling`] data
 //! tables.
 //!
-//! Eighteen entries are from the closed list of 20 two-vertex-orbit
+//! All twenty entries are from the closed list of 20 two-vertex-orbit
 //! tilings by regular polygons (Krotenheerdt; see the Wikipedia
 //! "k-uniform tilings" article — `2-uniform n10`, `n11`, `n18`, `n9`,
 //! `n8`, `n5`, `n1`, `n13`, `n20`, `n12`, `n19`, `n4`, `n14`, `n3`,
-//! `n15`, `n2`, `n16`, `n17`). The
+//! `n15`, `n2`, `n16`, `n17`, `n6`, `n7`). The
 //! list's entries have no individual proper names, so these are named by
 //! their vertex configurations, following that convention:
 //!
@@ -89,6 +89,26 @@
 //!   ⟨(1/2, 1+√3/2), (−2−√3, 1)⟩ (b1 ⊥ b2, |b2| = 2|b1|), with four
 //!   2-fold centers per cell in two group orbits, one glide per axis
 //!   and no reflections; the origin is a 3².4.3.4 vertex.
+//! * `kuniform-n6` — vertex figures 3.4².6 ; 3.6.3.6, group cmm
+//!   (2*22), t = 3, e = 4 (quoted; the exact enumeration gives 5 tile
+//!   orbits, reported as a deviation). The (3.4².6; 3.6.3.6)₂ form:
+//!   flat-top unit hexagons in rows of width-2 hexagon pairs kissing
+//!   point-to-point, a full row of unit squares between the hexagon
+//!   rows, and the inter-hexagon gaps filled by up/down unit
+//!   triangles sharing the hex touch point; centered-rectangular
+//!   lattice, primitive basis ⟨(2, 0), (1, 1+√3)⟩ (conventional
+//!   cell 2 × (2+2√3)), |det| = 2 + 2√3; the origin is a 3.4².6
+//!   vertex.
+//! * `kuniform-n7` — vertex figures 3.4².6 ; 3.6.3.6, group pmm
+//!   (*2222), t = 4, e = 4 (quoted; the exact enumeration gives
+//!   5 tile orbits, reported as a deviation). The
+//!   (3.4².6; 3.6.3.6)₁ form — the pmm sibling of n6: point-
+//!   touching flat-top unit hexagon rows (hexagon centers on
+//!   x ≡ 0 mod 2) with a full unit-square row between them and
+//!   the inter-hexagon gaps filled by counterposed up/down unit
+//!   triangles sharing the hex touch point; rectangular P lattice
+//!   ⟨(2, 0), (0, 1+√3)⟩, |det| = 2 + 2√3; the origin is a 3.4².6
+//!   vertex.
 //!
 //! All coordinates lie in Z + (√3/2)·Q, stored through [`H`].
 
@@ -2440,6 +2460,238 @@ pub fn kuniform_n17() -> LatticeTiling {
         ],
         offset: Vec2::ZERO,
         group: WallpaperGroup::Pgg,
+        lattice_kind: LatticeKind::Rectangular,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3.4².6; 3.6.3.6)₂, wallpaper group cmm.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n6`
+/// (Krotenheerdt's closed list of 20 two-uniform tilings by regular
+/// polygons): `[3.4².6; 3.6.3.6]₂ (t = 3, e = 4)`, group cmm (2*22).
+///
+/// The file-index ↔ caption mapping was re-verified anchor-first
+/// against the saved wiki page before porting (caption follows the
+/// image inside the same table cell): the SVG named 2-uniform n6.svg
+/// carries the (3, 4) parenthetical, and the caption links to the
+/// rhombitrihexagonal-tiling article's related-tilings section.
+/// Construction: rows of flat-top unit hexagons (width 2, height √3)
+/// touching point-to-point — H(i,j) x ∈ [2i+1/2+j, 2i+5/2+j] —
+/// alternating with full rows of unit squares (the square row
+/// y ∈ [jB+√3, (j+1)B], B = 1+√3, spans all of x); each inter-hexagon
+/// gap holds a pair of counterposed unit triangles sharing the
+/// hexagon touch point as their common apex — the up-pointing
+/// triangle's base on the hexagon-row bottom line, the down-pointing
+/// triangle's base on the square-row bottom line. The primitive cell
+/// holds 1 hexagon + 2 squares + 2 triangles (area 3H + 2 + H =
+/// 2 + 4H = 2 + 2√3 = 5.464101616).
+///
+/// The translation lattice is b1 = (2, 0), b2 = (1, 1+√3),
+/// |det| = 2 + 2√3 = cell area (right-handed). As with
+/// `kuniform-n3` the lattice is centered-rectangular: the
+/// orthogonal index-2 pair (2, 0), (0, 2+2√3) generates a
+/// sublattice whose centering vector b2 = (1, 1+√3) it lacks. The
+/// hexagon centers form exactly the coset (3/2, H) +
+/// ⟨b1, b2⟩ (hexagon H(i,j)'s center = (3/2, H) + i·b1 + j·b2), and
+/// all 10 tile-shift closure checks (5 tiles × both basis vectors)
+/// map the emission cell onto itself — the period lattice is exactly
+/// L, so the emission cell is the primitive cell (no index-2
+/// superlattice).
+///
+/// The Wikipedia parenthetical says t = 3; the exact enumeration
+/// gives 5 tile orbits (hexagon, both squares, both triangles — all
+/// distinct, 1 per cell; that annotation is unreliable in this entry
+/// — reported as a deviation, cf. `kuniform-n20`). e = 4 is quoted,
+/// not re-enumerated.
+///
+/// Symmetry (exact audit over the ±3×±3 emission patch): two
+/// 2-fold centers per cell — (1/2, H) on a mirror intersection and
+/// (0, 1/2+2H) OFF the mirror lines, the cmm-vs-pmm discriminator;
+/// h-mirrors y = H and y = 1+3H; v-mirrors x = 1/2 and x = 3/2;
+/// true h-glides s = ±1 at y = 1/2+2H and y = 3/2+4H; true
+/// v-glides s = ±(1+2H) at x = 0 and x = 1 — the cmm (2*22)
+/// signature.
+///
+/// Seeds by tile orbit: seed 0 = the hexagon, seed 1 = the square
+/// on the hexagon top edge, seed 2 = the square over the
+/// inter-hexagon gap, seed 3 = the up-pointing triangle (base on the
+/// hexagon-row bottom line), seed 4 = the down-pointing triangle
+/// (base on the square-row bottom line).
+pub fn kuniform_n6() -> LatticeTiling {
+    // Flat-top unit hexagon (width 2, height √3; x = 1/2..5/2,
+    // touching its neighbors at (1/2, H) and (5/2, H)), seed 0.
+    let hex = Polygon::from_slice(&[
+        Vec2::new(0.5, H),
+        Vec2::new(1.0, 0.0),
+        Vec2::new(2.0, 0.0),
+        Vec2::new(2.5, H),
+        Vec2::new(2.0, S3),
+        Vec2::new(1.0, S3),
+    ]);
+    // Full square row y = √3..1+√3: seed 1 on the hexagon's top edge
+    // (x = 1..2), seed 2 over the inter-hexagon gap (x = 2..3).
+    let sq_a = Polygon::from_slice(&[
+        Vec2::new(1.0, S3),
+        Vec2::new(2.0, S3),
+        Vec2::new(2.0, 1.0 + S3),
+        Vec2::new(1.0, 1.0 + S3),
+    ]);
+    let sq_b = Polygon::from_slice(&[
+        Vec2::new(2.0, S3),
+        Vec2::new(3.0, S3),
+        Vec2::new(3.0, 1.0 + S3),
+        Vec2::new(2.0, 1.0 + S3),
+    ]);
+    // Inter-hexagon gap triangles, each with its apex at a hexagon
+    // touch point: seed 3 up-pointing (base on the hexagon-row
+    // bottom line, apex at (1/2, H)); seed 4 down-pointing (base on
+    // the square-row bottom line, apex at (5/2, H)).
+    let tri_up = Polygon::from_slice(&[
+        Vec2::new(0.0, 0.0),
+        Vec2::new(1.0, 0.0),
+        Vec2::new(0.5, H),
+    ]);
+    let tri_dn = Polygon::from_slice(&[
+        Vec2::new(2.0, S3),
+        Vec2::new(2.5, H),
+        Vec2::new(3.0, S3),
+    ]);
+    LatticeTiling {
+        id: "kuniform-n6",
+        name: "2-uniform (3.4².6; 3.6.3.6)₂",
+        description: "2-uniform tiling (3.4².6; 3.6.3.6)₂ — point-touching flat-top hexagon rows alternating with full square rows, inter-hexagon gaps filled by counterposed triangle pairs, on the centered-rectangular period lattice (cmm).",
+        lattice: [Vec2::new(2.0, 0.0), Vec2::new(1.0, 1.0 + S3)],
+        cells: vec![
+            Cell { poly: hex, seed: 0 },
+            Cell { poly: sq_a, seed: 1 },
+            Cell { poly: sq_b, seed: 2 },
+            Cell { poly: tri_up, seed: 3 },
+            Cell { poly: tri_dn, seed: 4 },
+        ],
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::Cmm,
+        lattice_kind: LatticeKind::CenteredRectangular,
+        category: TilingCategory::TwoUniform,
+        secondary: &[],
+        seed_pattern: SeedPattern::Uniform,
+        params: &SIMILARITY_PARAMS,
+        make_map: similarity_map,
+        color_mode: ColorMode::Pattern,
+    }
+}
+
+/// 2-uniform tiling (3.4².6; 3.6.3.6)₁, wallpaper group pmm.
+///
+/// Wikipedia "k-uniform tilings" list entry `2-uniform n7`
+/// (Krotenheerdt's closed list of 20 two-uniform tilings by regular
+/// polygons): `[3.4².6; 3.6.3.6]₁ (t = 4, e = 4)`, group pmm
+/// (*2222).
+///
+/// The file-index ↔ caption mapping was re-verified anchor-first
+/// against the saved wiki page before porting (caption follows the
+/// image inside the same table cell): the SVG named 2-uniform n7.svg
+/// carries the (4, 4) parenthetical. Construction: rows of flat-top
+/// unit hexagons (width 2, height √3) touching point-to-point —
+/// H(i,j) x ∈ [2i−1+j, 2i+1+j], band j y ∈ [jB, (j+1)B], B = 1+√3 —
+/// alternating with full rows of unit squares (the square row
+/// y ∈ [jB+√3, (j+1)B] spans all of x: S_A on the hexagon's top
+/// edge, S_B over the inter-hexagon gap); each inter-hexagon gap
+/// holds a pair of counterposed unit triangles sharing the hexagon
+/// touch point (2i+1, jB+H) as their common apex — the up-pointing
+/// triangle's base on the hexagon-row bottom line, the down-pointing
+/// triangle's base on the square-row bottom line (= the hexagon-row
+/// top line). The primitive cell holds 1 hexagon + 2 squares +
+/// 2 triangles (area 3H + 2 + H = 2 + 4H = 2 + 2√3 =
+/// 5.464101616).
+///
+/// The translation lattice is b1 = (2, 0), b2 = (0, 1+√3),
+/// |det| = 2 + 2√3 = cell area (right-handed, b1 ⊥ b2 — a
+/// rectangular P lattice, no centering). The hexagon centers form
+/// exactly the coset (0, H) + ⟨b1, b2⟩ (hexagon H(i,j)'s center
+/// = (0, H) + i·b1 + j·b2), and all 10 tile-shift closure checks
+/// (5 tiles × both basis vectors) map the emission cell onto
+/// itself — the period lattice is exactly L, so the emission cell
+/// is the primitive cell (no index-2 superlattice).
+///
+/// The Wikipedia parenthetical says t = 4; the exact enumeration
+/// gives 5 tile orbits (hexagon, both squares, both triangles —
+/// all distinct, 1 per cell; that annotation is unreliable in this
+/// entry — reported as a deviation, cf. `kuniform-n20`). e = 4 is
+/// quoted, not re-enumerated.
+///
+/// Symmetry (exact audit over the ±3×±3 emission patch): four
+/// 2-fold centers per cell — (0, H), (0, 1/2+2H), (1, H),
+/// (1, 1/2+2H) — all on mirror intersections, no off-mirror
+/// 2-folds (the pmm-vs-cmm discriminator); h-mirrors y = H and
+/// y = 1/2+2H; v-mirrors x = 0 and x = 1; no true glides — the
+/// pmm (*2222) signature.
+///
+/// Seeds by tile orbit: seed 0 = the hexagon, seed 1 = the square
+/// on the hexagon top edge, seed 2 = the square over the
+/// inter-hexagon gap, seed 3 = the up-pointing triangle (base on
+/// the hexagon-row bottom line), seed 4 = the down-pointing
+/// triangle (base on the square-row bottom line).
+pub fn kuniform_n7() -> LatticeTiling {
+    // Flat-top unit hexagon (width 2, height √3; x = -1..1,
+    // touching its neighbor at (1, H); the cell reaches past the
+    // origin in x, as with `kuniform-n17`), seed 0.
+    let hex = Polygon::from_slice(&[
+        Vec2::new(-1.0, H),
+        Vec2::new(-0.5, 0.0),
+        Vec2::new(0.5, 0.0),
+        Vec2::new(1.0, H),
+        Vec2::new(0.5, S3),
+        Vec2::new(-0.5, S3),
+    ]);
+    // Full square row y = √3..1+√3: seed 1 on the hexagon's top
+    // edge (x = -1/2..1/2), seed 2 over the inter-hexagon gap
+    // (x = 1/2..3/2).
+    let sq_a = Polygon::from_slice(&[
+        Vec2::new(-0.5, S3),
+        Vec2::new(0.5, S3),
+        Vec2::new(0.5, 1.0 + S3),
+        Vec2::new(-0.5, 1.0 + S3),
+    ]);
+    let sq_b = Polygon::from_slice(&[
+        Vec2::new(0.5, S3),
+        Vec2::new(1.5, S3),
+        Vec2::new(1.5, 1.0 + S3),
+        Vec2::new(0.5, 1.0 + S3),
+    ]);
+    // Inter-hexagon gap triangles, each with its apex at the
+    // hexagon touch point (1, H): seed 3 up-pointing (base on the
+    // hexagon-row bottom line); seed 4 down-pointing (base on the
+    // square-row bottom line).
+    let tri_up = Polygon::from_slice(&[
+        Vec2::new(0.5, 0.0),
+        Vec2::new(1.5, 0.0),
+        Vec2::new(1.0, H),
+    ]);
+    let tri_dn = Polygon::from_slice(&[
+        Vec2::new(0.5, S3),
+        Vec2::new(1.0, H),
+        Vec2::new(1.5, S3),
+    ]);
+    LatticeTiling {
+        id: "kuniform-n7",
+        name: "2-uniform (3.4².6; 3.6.3.6)₁",
+        description: "2-uniform tiling (3.4².6; 3.6.3.6)₁ — point-touching flat-top hexagon rows alternating with full square rows, inter-hexagon gaps filled by counterposed triangle pairs, on the rectangular period lattice (pmm).",
+        lattice: [Vec2::new(2.0, 0.0), Vec2::new(0.0, 1.0 + S3)],
+        cells: vec![
+            Cell { poly: hex, seed: 0 },
+            Cell { poly: sq_a, seed: 1 },
+            Cell { poly: sq_b, seed: 2 },
+            Cell { poly: tri_up, seed: 3 },
+            Cell { poly: tri_dn, seed: 4 },
+        ],
+        offset: Vec2::ZERO,
+        group: WallpaperGroup::Pmm,
         lattice_kind: LatticeKind::Rectangular,
         category: TilingCategory::TwoUniform,
         secondary: &[],

@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (18)   Laves (28)   Wallpaper (17)   Pentagon
+counts (`Uniform (11)   Two-Uniform (20)   Laves (28)   Wallpaper (17)   Pentagon
 Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (13)   Aperiodic (11)
 Nonperiodic (7)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -136,13 +136,13 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-139 built-in tilings (153 tab memberships), all discoverable in both UIs
+141 built-in tilings (155 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 ten tabs:
-**Uniform** (11), **Two-Uniform** (18), **Laves / Catalan duals** (28,
+**Uniform** (11), **Two-Uniform** (20), **Laves / Catalan duals** (28,
 25 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
@@ -256,6 +256,8 @@ grouping is honest about what the mathematics distinguishes; see
 | `kuniform-dual-n3` | Dual of 2-uniform (4⁴; 3³.4²)₂ | face-centroid dual of `kuniform-n3` (cmm, det 3+√3/2, same centered-rectangular lattice ⟨(1,0),(1/2,3+√3/2)⟩ as the primal): 2 congruent pentagons (same shape as dual-n4) + 2 unit squares (over the two 4⁴ vertex orbits) per cell — 4 faces over the primal's 4 vertex orbits; Σ = 3+√3/2 = \|det\|, edge-to-edge; cmm inherited with the same off-mirror 2-fold signature at (1/4,3+√3/4), (3/4,3+√3/4) (M145) | cmm | centered |
 | `kuniform-dual-n14` | Dual of 2-uniform (3⁶; 3³.4²)₁ | face-centroid dual of `kuniform-n14` (pmm, det 1+√3, same primitive rectangular lattice ⟨(1,0),(0,1+√3)⟩ as the primal): 2 congruent pentagons (over the two 3³.4² vertex orbits; sides 1/√3 ×2, (3+√3)/6 ×2, 1 in cyclic order; area 1/2+√3/4) + 1 regular hexagon (over the 3⁶ vertex orbit; side 1/√3, area √3/2) per cell — 3 faces over the primal's 3 vertex orbits; Σ = 1+√3 = \|det\|, edge-to-edge; pmm inherited — all four 2-folds on the mirror intersections, no off-mirror 2-folds, no true glides (M147) | pmm | rectangular |
 | `kuniform-dual-n15` | Dual of 2-uniform (3⁶; 3³.4²)₂ | face-centroid dual of `kuniform-n15` (cmm, det 1+3√3/2, same centered-rectangular lattice ⟨(1,0),(1/2,1+3√3/2)⟩ as the primal): 2 pentagons (same shape as dual-n14) + 2 regular hexagons (side 1/√3, area √3/2) per cell — 4 faces over the primal's 4 vertex orbits; Σ = 1+3√3/2 = \|det\|, edge-to-edge; cmm inherited with the off-mirror 2-fold discriminator at (1/4,1+3√3/4), (3/4,1+3√3/4), genuine h/v glides (M147) | cmm | centered |
+| `kuniform-n6` | 2-uniform (3.4².6; 3.6.3.6)₂ | point-touching flat-top unit-hexagon rows (width 2) alternating with full unit-square rows, each inter-hexagon gap holding a counterposed up/down unit-triangle pair sharing the hexagon touch point as apex (cmm, centered-rectangular lattice ⟨(2,0),(1,1+√3)⟩, conventional cell 2×(2+2√3), det 2+2√3): 5 tiles/cell — 1 hexagon + 2 squares + 2 triangles; cmm measured with the off-mirror 2-fold at (0,1/2+√3) as the discriminator, true glides both axes; exact enumeration gives 5 tile orbits vs wiki t = 3 (reported deviation, cf. n20) (M148) | cmm | centered |
+| `kuniform-n7` | 2-uniform (3.4².6; 3.6.3.6)₁ | the ₁ form: same 5-tile set as n6 with opposite triangle orientations — re-derived from the wiki SVG, not a pure x-shift of n6 (pmm, primitive rectangular lattice ⟨(2,0),(0,1+√3)⟩, b1 ⊥ b2, det 2+2√3): 5 tiles/cell — 1 hexagon + 2 squares + 2 triangles; pmm measured — 4 two-folds/cell all on the mirror intersections, no true glides; vertex figures 3.6.3.6 (1 class) + 3.4².6 in two cyclic orderings; exact enumeration gives 5 tile orbits vs wiki t = 4 (reported deviation, cf. n20) (M148) | pmm | rectangular |
 | `pentagon-9` | Pentagon type 9 (Rice) | pentagonal (Rice 1977): A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; 2-isohedral, 8 tiles per rectangular cell, two perpendicular glide families squaring to the primitive translations | pgg | rectangular |
 | `pentagon-10` | Pentagon type 10 (James) | pentagonal (James 1975): A = 90°, B + E = 180°, a = b = c + e, d² = c² + e² (reference instance B = 90°, c = 1: A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2); 3-isohedral, 6 tiles per cell, non-edge-to-edge (each length-2 side split at its exact midpoint), mirrors y = x and y = −x, half-turn at the origin, genuine glide (axis x + y = 3/2), centered rectangular lattice | cmm | centered |
 | `pentagon-11` | Pentagon type 11 (Rice) | pentagonal (Rice 1977): A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, 2a + c = d = e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side carries one c-side and two a-sides), two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |
