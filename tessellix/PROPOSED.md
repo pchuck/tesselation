@@ -1520,6 +1520,9 @@ rotations + rhomb tiles, identical to the classical binary at n = 5.
 in Q(2cos(π/7,9)) (degree 3), n = 15 in degree 4 — i.e. it needs a
 cubic/quartic cyclotomic field layer we do not ship yet. Frame as its
 own milestone with a field-layer design doc first; effort L+.
+✅ **n = 7 landed (M149 `glb-binary-n7`)** — the K₇ field layer was
+already shipped (M137/M139), so no new layer was needed; the n = 9
+and n = 15 siblings remain queued (K₉ shipped M139; K₁₅ shipped M139).
 
 ### 23f. Girih / Islamic clusters (relevant to the paused girih fork)
 

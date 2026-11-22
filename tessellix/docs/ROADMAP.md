@@ -150,9 +150,10 @@ the "mixed floret/cairo/prismatic" patterns.
   (minpolies x³−3x+1, x⁴−x³−4x²+4x+1) + L₁₀ (the girih quartic) with
   the permanent regression anchor: all 20 shipped girih ROTM matrices
   rebuilt through the generic kmul/RED_L10 path at /64, bit-for-bit;
-  BISECT_CAP tightened 10→4 with the i128-envelope derivation. Next:
-  the first consumer family (§7 step 3 — GLB binary n = 7, the
-  cheapest XL).
+  BISECT_CAP tightened 10→4 with the i128-envelope derivation.
+  ✅ **First consumer landed (M149)** — GLB binary n = 7 (§23e
+  re-scope): the K₇ slice (fields.rs) consumed directly by the
+  certified DFS generator; depth cap 5 = deepest certified level.
 - ❓ **Wheel tiling (Nissen)** — **parked (M61)** with a proven
   negative: the edge-orthogonal dual of the shield substitution is
   exact but admits no substitution at any inflation (algebraic killer

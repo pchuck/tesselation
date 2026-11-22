@@ -52,11 +52,9 @@
 //! conjugate), bisecting on undecided. Termination is continuity, not a
 //! separation constant: x(b) ≠ 0 and width → 0 forces a strict sign.
 
-#![allow(dead_code)] // no consumer family yet (doc §7 step 3 is a later
-                     // brief); every item is part of the intended API for
-                     // K₉/K₁₅ and the first Kₙ family (girih_qc carries the
-                     // same per-item allowances for unconsumed tables).
-
+// Unconsumed items below carry per-item `#[allow(dead_code)]` — the
+// generic Kₙ layer and the K₉/K₁₅/L₁₀ cores (doc §7) are intended
+// API for later briefs; glb_binary_n7 consumes the K₇ slice today.
 use std::cmp::Ordering;
 
 // =====================================================================
@@ -108,12 +106,14 @@ pub fn ksub<const D: usize>(x: [i64; D], y: [i64; D]) -> [i64; D] {
 
 /// Coefficient-wise negation.
 #[inline]
+#[allow(dead_code)]
 pub fn kneg<const D: usize>(x: [i64; D]) -> [i64; D] {
     x.map(|c| -c)
 }
 
 /// Coefficient-wise scaling by an integer (exact).
 #[inline]
+#[allow(dead_code)]
 pub fn kscale<const D: usize>(x: [i64; D], c: i64) -> [i64; D] {
     x.map(|k| k * c)
 }
@@ -121,6 +121,7 @@ pub fn kscale<const D: usize>(x: [i64; D], c: i64) -> [i64; D] {
 /// Exact coefficient-wise halving; panics when any coefficient is odd
 /// (the half leaves Z[b] and the D = 1 core cannot represent it — use
 /// the factor-2 form of the quantity instead, e.g. [`P7::dot2`]).
+#[allow(dead_code)]
 fn khalf<const D: usize>(x: [i64; D]) -> [i64; D] {
     assert!(
         x.iter().all(|&c| c % 2 == 0),
@@ -286,6 +287,7 @@ fn mid_num(lo: i64, hi: i64, s: i32) -> (i64, i32) {
 /// (spike `sylvester_det`, L246–267; porting note in doc §9). N(x) = 0
 /// ⟺ x = 0, and N(x) is a nonzero integer otherwise — the certificate
 /// behind the sign engine's termination argument (doc §5.3).
+#[allow(dead_code)]
 pub fn knorm(m: &[i64], x: &[i64]) -> i128 {
     let n1 = m.len() - 1;
     let n2 = (0..x.len()).rev().find(|&i| x[i] != 0); // deg f after trimming
@@ -311,6 +313,7 @@ pub fn knorm(m: &[i64], x: &[i64]) -> i128 {
 
 /// Fraction-free (Bareiss) exact determinant in i128; every division is
 /// exact by the Bareiss identity.
+#[allow(dead_code)]
 fn det_bareiss(rows: &mut [Vec<i128>]) -> i128 {
     let n = rows.len();
     let mut sign = 1i128;
@@ -343,6 +346,7 @@ fn det_bareiss(rows: &mut [Vec<i128>]) -> i128 {
 
 /// The basis element b^`i` as a one-hot tuple (0 ≤ i < D).
 #[inline]
+#[allow(dead_code)]
 pub fn kbasis<const D: usize>(i: usize) -> [i64; D] {
     std::array::from_fn(|j| if j == i { 1 } else { 0 })
 }
@@ -351,6 +355,7 @@ pub fn kbasis<const D: usize>(i: usize) -> [i64; D] {
 /// field's oblique frame (doc §4.1 [P], the bilinear-form expansion:
 /// U₀·U₁ = b/2, |U₀| = |U₁| = 1).
 #[inline]
+#[allow(dead_code)]
 pub fn koblique_norm2<const D: usize>(a: [i64; D], b: [i64; D], red: &[[i64; D]]) -> [i64; D] {
     let ab = kmul(a, b, red);
     kadd(
@@ -364,6 +369,7 @@ pub fn koblique_norm2<const D: usize>(a: [i64; D], b: [i64; D], red: &[[i64; D]]
 /// (U₀·U₁ = b/2), so the always-exact form carries the factor 2 (doc
 /// §4.1; the halved [`P7::dot`]-style form is a thin `khalf` wrapper).
 #[inline]
+#[allow(dead_code)]
 pub fn koblique_dot2<const D: usize>(
     a: [i64; D],
     b: [i64; D],
@@ -383,6 +389,7 @@ pub fn koblique_dot2<const D: usize>(
 /// element is the orientation sign for every n, since sin(2π/n) > 0 for
 /// n ≥ 3).
 #[inline]
+#[allow(dead_code)]
 pub fn koblique_cross<const D: usize>(
     a: [i64; D],
     b: [i64; D],
@@ -397,6 +404,7 @@ pub fn koblique_cross<const D: usize>(
 /// point by 2π/n about the origin (doc §4.2 [P]: det R = 1, trace R = b,
 /// and R^k is an exact K^{2×2} rotation for every k).
 #[inline]
+#[allow(dead_code)]
 pub fn koblique_rot<const D: usize>(
     a: [i64; D],
     b: [i64; D],
@@ -414,6 +422,7 @@ pub fn koblique_rot<const D: usize>(
 const B_F: f64 = 1.246979603717467;
 /// Float value of sin(2π/7) — the global positive factor that the
 /// cross-sign trick divides out (cross-check/emission use only).
+#[allow(dead_code)]
 const SIN_F: f64 = 0.7818314824680298;
 
 /// An element of K₇ = Q(b), b = 2cos(2π/7): the tuple `K7([c0, c1, c2])`
@@ -457,6 +466,7 @@ pub fn kval7(x: [i64; 3]) -> f64 {
     x[0] as f64 + x[1] as f64 * B_F + x[2] as f64 * (B_F * B_F)
 }
 
+#[allow(dead_code)]
 impl K7 {
     /// The zero element.
     pub const ZERO: K7 = K7([0, 0, 0]);
@@ -530,8 +540,10 @@ impl K7 {
 /// numbers by the *global positive* factor sin(2π/7) > 0 — the
 /// sine-free cross-sign trick that makes the missing sine harmless.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub struct P7(pub K7, pub K7);
 
+#[allow(dead_code)]
 impl P7 {
     /// The origin.
     pub const ORIGIN: P7 = P7(K7::ZERO, K7::ZERO);
@@ -620,9 +632,11 @@ impl P7 {
 
 /// Float value of the generator: b = 2cos(2π/9) (cross-check/emission
 /// use only — the exact path never reads a float).
+#[allow(dead_code)]
 const B9_F: f64 = 1.532088886237956;
 /// Float value of sin(2π/9) — the global positive factor that the
 /// cross-sign trick divides out (cross-check/emission use only).
+#[allow(dead_code)]
 const SIN9_F: f64 = 0.6427876096865393;
 
 /// An element of K₉ = Q(b), b = 2cos(2π/9): the tuple `K9([c0, c1, c2])`
@@ -633,13 +647,16 @@ const SIN9_F: f64 = 0.6427876096865393;
 /// Minpoly (Sturm-certified, doc §2.1): m(x) = x³ − 3x + 1, whence the
 /// reduction rows [`RED9`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub struct K9(pub [i64; 3]);
 
 /// Minpoly of b, low→high: x³ − 3x + 1.
+#[allow(dead_code)]
 pub const M9: [i64; 4] = [1, -3, 0, 1];
 
 /// Reduction rows (doc §2.1 table, Sturm-certified Python-side):
 /// basis coordinates of b³ = −1 + 3b and b⁴ = −b + 3b².
+#[allow(dead_code)]
 pub const RED9: [[i64; 3]; 2] = [[-1, 3, 0], [0, -1, 3]];
 
 /// Isolating interval of b (the rightmost conjugate): the consecutive
@@ -652,6 +669,7 @@ pub const RED9: [[i64; 3]; 2] = [[-1, 3, 0], [0, -1, 3]];
 /// interval — the fact [`ksign`]'s bisection consumes; and
 /// m(lo) < 0 < m(hi) exactly. The bracket and the float cross-checks
 /// are re-asserted by the Rust tests.
+#[allow(dead_code)]
 pub const ISO9: Iso = Iso {
     lo_num: 3290135830,
     hi_num: 3290135831,
@@ -661,10 +679,12 @@ pub const ISO9: Iso = Iso {
 
 /// Float value of a K9 element (cross-check/emission use only).
 #[inline]
+#[allow(dead_code)]
 pub fn kval9(x: [i64; 3]) -> f64 {
     x[0] as f64 + x[1] as f64 * B9_F + x[2] as f64 * (B9_F * B9_F)
 }
 
+#[allow(dead_code)]
 impl K9 {
     /// The zero element.
     pub const ZERO: K9 = K9([0, 0, 0]);
@@ -732,8 +752,10 @@ impl K9 {
 /// machinery as [`P7`], delegated to the generic frame functions over
 /// [`RED9`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub struct P9(pub K9, pub K9);
 
+#[allow(dead_code)]
 impl P9 {
     /// The origin.
     pub const ORIGIN: P9 = P9(K9::ZERO, K9::ZERO);
@@ -814,9 +836,11 @@ impl P9 {
 
 /// Float value of the generator: b = 2cos(2π/15) (cross-check/emission
 /// use only — the exact path never reads a float).
+#[allow(dead_code)]
 const B15_F: f64 = 1.8270909152852017;
 /// Float value of sin(2π/15) — the global positive factor that the
 /// cross-sign trick divides out (cross-check/emission use only).
+#[allow(dead_code)]
 const SIN15_F: f64 = 0.40673664307580015;
 
 /// An element of K₁₅ = Q(b), b = 2cos(2π/15): the tuple
@@ -828,14 +852,17 @@ const SIN15_F: f64 = 0.40673664307580015;
 /// Minpoly (Sturm-certified, doc §2.1): m(x) = x⁴ − x³ − 4x² + 4x + 1,
 /// whence the reduction rows [`RED15`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub struct K15(pub [i64; 4]);
 
 /// Minpoly of b, low→high: x⁴ − x³ − 4x² + 4x + 1.
+#[allow(dead_code)]
 pub const M15: [i64; 5] = [1, 4, -4, -1, 1];
 
 /// Reduction rows (doc §2.1 table, Sturm-certified Python-side):
 /// basis coordinates of b⁴ = −1 − 4b + 4b² + b³, b⁵ = −1 − 5b + 5b³ and
 /// b⁶ = −5 − 21b + 15b² + 5b³.
+#[allow(dead_code)]
 pub const RED15: [[i64; 4]; 3] = [[-1, -4, 4, 1], [-1, -5, 0, 5], [-5, -21, 15, 5]];
 
 /// Isolating interval of b (the rightmost conjugate): the consecutive
@@ -849,6 +876,7 @@ pub const RED15: [[i64; 4]; 3] = [[-1, -4, 4, 1], [-1, -5, 0, 5], [-5, -21, 15, 
 /// m(lo) < 0 < m(hi) exactly. The s₀ = 26 start is the i128 envelope of
 /// the deg-4 fields (see [`BISECT_CAP`]). The bracket and the float
 /// cross-checks are re-asserted by the Rust tests.
+#[allow(dead_code)]
 pub const ISO15: Iso = Iso {
     lo_num: 122613995,
     hi_num: 122613996,
@@ -858,6 +886,7 @@ pub const ISO15: Iso = Iso {
 
 /// Float value of a K15 element (cross-check/emission use only).
 #[inline]
+#[allow(dead_code)]
 pub fn kval15(x: [i64; 4]) -> f64 {
     x[0] as f64
         + x[1] as f64 * B15_F
@@ -865,6 +894,7 @@ pub fn kval15(x: [i64; 4]) -> f64 {
         + x[3] as f64 * (B15_F * B15_F * B15_F)
 }
 
+#[allow(dead_code)]
 impl K15 {
     /// The zero element.
     pub const ZERO: K15 = K15([0, 0, 0, 0]);
@@ -932,8 +962,10 @@ impl K15 {
 /// machinery as [`P7`], delegated to the generic frame functions over
 /// [`RED15`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub struct P15(pub K15, pub K15);
 
+#[allow(dead_code)]
 impl P15 {
     /// The origin.
     pub const ORIGIN: P15 = P15(K15::ZERO, K15::ZERO);
@@ -1018,6 +1050,7 @@ impl P15 {
 
 /// Float value of the generator: a = 2cos(π/10) (girih_qc's `A`;
 /// cross-check/emission use only).
+#[allow(dead_code)]
 const A10_F: f64 = 1.902113032590307;
 
 /// An element of L₁₀ = Q(a), a = 2cos(π/10): the tuple
@@ -1030,14 +1063,17 @@ const A10_F: f64 = 1.902113032590307;
 /// m(x) = x⁴ − 5x² + 5, whence the reduction rows [`RED_L10`] — exactly
 /// the shipped girih_qc `kmul` rule.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub struct L10(pub [i64; 4]);
 
 /// Minpoly of a, low→high: x⁴ − 5x² + 5.
+#[allow(dead_code)]
 pub const ML10: [i64; 5] = [5, 0, -5, 0, 1];
 
 /// Reduction rows — the shipped girih_qc kmul rule (doc §2.1 **[C]**,
 /// bit-verified by the anchor test below): basis coordinates of
 /// a⁴ = 5a² − 5, a⁵ = 5a³ − 5a and a⁶ = 20a² − 25.
+#[allow(dead_code)]
 pub const RED_L10: [[i64; 4]; 3] = [[-5, 0, 5, 0], [0, -5, 0, 5], [-25, 0, 20, 0]];
 
 /// Isolating interval of a (the rightmost conjugate): the consecutive
@@ -1050,6 +1086,7 @@ pub const RED_L10: [[i64; 4]; 3] = [[-5, 0, 5, 0], [0, -5, 0, 5], [-25, 0, 20, 0
 /// whole interval; and m(lo) < 0 < m(hi) exactly. Same s₀ = 26 i128
 /// envelope as [`ISO15`] (see [`BISECT_CAP`]); the anchor tests
 /// re-assert the bracket.
+#[allow(dead_code)]
 pub const ISO_L10: Iso = Iso {
     lo_num: 127648644,
     hi_num: 127648645,
@@ -1059,6 +1096,7 @@ pub const ISO_L10: Iso = Iso {
 
 /// Float value of an L10 element (cross-check/emission use only).
 #[inline]
+#[allow(dead_code)]
 pub fn kval10(x: [i64; 4]) -> f64 {
     x[0] as f64
         + x[1] as f64 * A10_F
@@ -1066,6 +1104,7 @@ pub fn kval10(x: [i64; 4]) -> f64 {
         + x[3] as f64 * (A10_F * A10_F * A10_F)
 }
 
+#[allow(dead_code)]
 impl L10 {
     /// The zero element.
     pub const ZERO: L10 = L10([0, 0, 0, 0]);

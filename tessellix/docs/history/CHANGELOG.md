@@ -2462,3 +2462,55 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   fired as predicted); kuniform family 35 → 37; built-ins 139 → 141;
   memberships 153 → 155. The 2-uniform 20-list is complete: the
   kuniform family's primal arc closes with 20 primals + 17 duals.
+- 2026-11-22 — M149: GLB binary n = 7 `glb-binary-n7` ✅ (Pautze's
+  generalized binary family at n = 7 — Hibma 2015 arXiv:1509.02053 /
+  Pautze 2017 Symmetry 9(2) doi.org/10.3390/sym9020019; Bielefeld
+  "generalized_binary"; ROADMAP §23e re-scope landed — the K₇
+  cyclotomic layer's FIRST consumer, M137/M139 fields):
+  three 7-fold rhombi (acute angles π/7, 2π/7, 3π/7; odd n gives
+  (n−1)/2 = 3 prototiles), inflation λ = √(2+2cos(π/7)) =
+  2cos(π/14) ≈ 1.9499, non-Pisot. Refinement law: per-parent
+  refinement is a TWO-CHOICE pool (shape 1 → {1,6}, 2 → {5,2},
+  3 → {3,4}) forced by compatible meshing at depth ≥ 2 — the pools
+  are a derivation result beyond the published one-rule scheme, and
+  eps-complementarity cascades through arbitrarily long adjacency
+  chains, so NO local (shape, class) map drives refinement (probed
+  and refuted, d_hier 6/7 key conflicts); certified generator =
+  deterministic per-level DFS, all-pairs interior disjointness +
+  eps-complementary bend bits on shared parent edges (compat
+  ε_A + ε_B = 1), with the unculled parity battery pinning that
+  spatial culling of the refinement frontier is UNSOUND. Arithmetic:
+  K₇-twist pairs — every vertex (k₁, s₁k₂) ∈ K₇², K₇ = Q(b),
+  b = 2cos(2π/7), dyadic denominators D = 2 (depth-stable), float
+  emission only, all 6 488 certificate vertices on the even π/7
+  class grid (0 odd at the depth-4 certificate); fan-area law: total
+  twist area 2λ^{2d} exact per valid assembly; unculled growth
+  3/10/35/126/462 (M^d row sums, M = [[2,1,0],[1,2,1],[0,1,3]],
+  PF eigenpair λ²·v with v = (1, b²+b−1, b+1)). DEPTH CAP 5 — the
+  deepest level constructed AND certified: σ²…σ⁵ pass the full
+  staircase boundary certificate (single boundary cycle of 4·2^d
+  even unit segments, consecutive pairings, closure on φ^{d−1}(B₀),
+  exact area), while at depth 6 the candidate search exhausts — a
+  legal patch need not admit a legal refinement. Deviation from the
+  brief's depth-9 window policy, evidence-backed: tiles are
+  unit-edge at every level over the fixed cell domain B₀ = φ(V)
+  (bbox ≈ 3.43 × 1.65 cell units, presented bbox-centered), so depth
+  sets fineness only — d = 5 resolves ≈ 13 tiles/cell-unit, finer
+  than any view the area pre-guard admits; the cap also cut the
+  module suite 5 min → 41 s. σ² census per fan pick: 16 two-choice
+  combos, 9 disjoint-only, 4 meshed — disjointness alone NOT
+  sufficient, eps-compatibility load-bearing. Tags: finite rotations
+  + polytopal rhomb tiles; Pautze notes no Dₙ-symmetric patches; no
+  pure-point claim. Pipeline: the rule was CERTIFIED in a prepass
+  before implementation (λ = 2cos(π/14), 4-sector fan placement law
+  = Pautze eq 78, even rules required for meshing, K₇-twist
+  certificate 8816 vertices / 160 patches — the "module ≠ certified
+  chain" divergence seen mid-development was a twist→poly conversion
+  bug, fixed e-aware; the assembly tree provably branches, 8 valid
+  σ³ per σ² set). Hygiene: fields.rs blanket allow(dead_code) → 41
+  per-item allows as the module consumes the K₇ slice (fields tests
+  35/35 unchanged). Battery: 12 module tests (σ⁵ pins: 462 tiles +
+  area law + even grid + e ≤ 1; view bands preview 0.5570 /
+  CLI 0.6238 ±0.02) + standard registration surfaces. Census:
+  Quasiperiodic tab 13 → 14; quasiperiodic family 12 → 13; built-ins
+  141 → 142; memberships 155 → 156.
