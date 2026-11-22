@@ -1,4 +1,4 @@
-//! Kuniform family: the 2-uniform program: 18 k-uniform primal tables + 15 face-centroid
+//! Kuniform family: the 2-uniform program: 18 k-uniform primal tables + 17 face-centroid
 //! duals (the duals are Laves-tab primaries)
 //!
 //! Owned here: module declarations, `register` (the family's registry
@@ -49,6 +49,8 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(dual::kuniform_dual_n16());
         r = r.register(dual::kuniform_dual_n4());
         r = r.register(dual::kuniform_dual_n3());
+        r = r.register(dual::kuniform_dual_n14());
+        r = r.register(dual::kuniform_dual_n15());
     r
 }
 
@@ -92,6 +94,8 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         "kuniform-dual-n16" => kuniform_dual("V3².4.3.4; V3³.4²", "(3³.4²; 3².4.3.4)"),
         "kuniform-dual-n4" => kuniform_dual("V4⁴; V3³.4²", "(4⁴; 3³.4²)₁"),
         "kuniform-dual-n3" => kuniform_dual("V4⁴; V3³.4²", "(4⁴; 3³.4²)₂"),
+        "kuniform-dual-n14" => kuniform_dual("V3⁶; V3³.4²", "(3⁶; 3³.4²)₁"),
+        "kuniform-dual-n15" => kuniform_dual("V3⁶; V3³.4²", "(3⁶; 3³.4²)₂"),
         _ => return None,
     })
 }
@@ -127,6 +131,8 @@ pub(crate) fn lattice_tilings() -> Vec<(&'static str, crate::lattice::LatticeTil
             ("kuniform-dual-n16", dual::kuniform_dual_n16()),
             ("kuniform-dual-n4", dual::kuniform_dual_n4()),
             ("kuniform-dual-n3", dual::kuniform_dual_n3()),
+            ("kuniform-dual-n14", dual::kuniform_dual_n14()),
+            ("kuniform-dual-n15", dual::kuniform_dual_n15()),
     ]
 }
 
@@ -174,6 +180,8 @@ mod census {
         "kuniform-dual-n16",
         "kuniform-dual-n4",
         "kuniform-dual-n3",
+        "kuniform-dual-n14",
+        "kuniform-dual-n15",
     ];
 
     #[test]
@@ -181,7 +189,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            33,
+            35,
             "kuniform family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();

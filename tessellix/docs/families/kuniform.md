@@ -8,7 +8,7 @@ Adding a tiling here touches only this family: `families/kuniform.rs`
 `lattice_tilings` entries) plus the new module and its doc row below.
 Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 
-## Implemented (33 tilings)
+## Implemented (35 tilings)
 
 Vertex-2-uniform tilings as `LatticeTiling` data tables; ids are the
 Wikipedia 2-uniform numbers (`n*`), plus the two named classic forms
@@ -43,7 +43,7 @@ achiral p6m form (index-9 flowers, both mirror classes pass exactly).
 Face-centroid duals of the tables above, constructed by the `dual()`
 helper (first batch M98, second batch M102, rectangular/cmm batch
 M106, square-lattice batch M120–M121, (4⁴; 3³.4²)₁/₂ cmm dual pair
-M145). Every dual is a Laves-tab primary entry.
+M145, (3⁶; 3³.4²)₁/₂ pmm/cmm dual pair M147). Every dual is a Laves-tab primary entry.
 | id | motif | group | notes |
 |---|---|---|---|
 | `kuniform-dual-p6m` | dual of 2-uniform (3⁶; 3².6²) | p6m | face-centroid dual of `kuniform-p6m`, constructed by the `dual()` helper (M98); 7 faces/cell — 1 regular hexagon (side 1/√3, area √3/2) + 6 congruent quadrilaterals (sides 1/√3, 2√3/3, 2√3/3, √3; angles 60°/60°/120°/120°; area 2√3/3); Σ = 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (M98) |
@@ -61,6 +61,8 @@ M145). Every dual is a Laves-tab primary entry.
 | `kuniform-dual-n16` | dual of 2-uniform (3³.4²; 3².4.3.4) | p4g | face-centroid dual of `kuniform-n16` — same 45°-rotated square lattice ⟨(h,−h),(h,h)⟩, h = (3+√3)/2, det 6+3√3, inherited — the key-lock tiling; 12 faces/cell over the primal's 12 vertex orbits — 8 congruent pentagons (the 3².4.3.4 orbit; sides (3+√3)/6 ×4, 1/√3; angles 120°/90°/120°/120°/90°) + 4 congruent pentagons (the 3³.4² orbit; sides (3+√3)/6, 1, (3+√3)/6, 1/√3, 1/√3 — the unit side crossing two squares' shared edge; angles 120°/90°/90°/120°/120°), both areas 1/2+√3/4; Σ = 6+3√3 = \|det\|, edge-to-edge; p4g — axis mirrors pure (meeting at the corner-2 point), both diagonal cosets true half-period glides, 4-fold centers at ((√3−1)/4,(5+√3)/4) + partners with no mirror through any of them; tile/vertex/edge orbits 2 (8+4) / 4 / 5 (M121) |
 | `kuniform-dual-n4` | dual of 2-uniform (4⁴; 3³.4²)₁ | cmm | face-centroid dual of `kuniform-n4` — same centered-rectangular lattice ⟨(1,0),(1/2,2+√3/2)⟩, det 2+√3/2, inherited; 3 faces/cell over the primal's 3 vertex orbits — 2 congruent pentagons (over the two 3³.4² vertex orbits; sides 1/√3 ×2, (3+√3)/6 ×2, 1 in cyclic order; area 1/2+√3/4) + 1 square (over the 4⁴ vertex orbit; side 1, area 1); Σ = 2+√3/2 = \|det\|, edge-to-edge; cmm — 2-folds at (0,1) and (1/2,1) on the mirror intersections plus off-mirror 2-folds at (1/4,2+√3/4) and (3/4,2+√3/4) (the cmm-vs-pmm discriminator), h-mirrors y = 1+m(2+√3/2), v-mirrors x = k/2, h-glides y = 2+√3/4+m(2+√3/2), v-glides x = 1/4,3/4 (M145) |
 | `kuniform-dual-n3` | dual of 2-uniform (4⁴; 3³.4²)₂ | cmm | face-centroid dual of `kuniform-n3` — same centered-rectangular lattice ⟨(1,0),(1/2,3+√3/2)⟩, det 3+√3/2, inherited; 4 faces/cell over the primal's 4 vertex orbits — 2 congruent pentagons (over the two 3³.4² vertex orbits; sides 1/√3 ×2, (3+√3)/6 ×2, 1 in cyclic order; area 1/2+√3/4) + 2 squares (over the two 4⁴ vertex orbits; side 1, area 1); Σ = 3+√3/2 = \|det\|, edge-to-edge; cmm — 2-folds at (0,3/2) and (1/2,3/2) on the mirror intersections plus off-mirror 2-folds at (1/4,3+√3/4) and (3/4,3+√3/4) (the cmm-vs-pmm discriminator), h-mirrors y = 3/2+m(3+√3/2), v-mirrors x = k/2, h-glides y = 3+√3/4+m(3+√3/2), v-glides x = 1/4,3/4 (M145) |
+| `kuniform-dual-n14` | dual of 2-uniform (3⁶; 3³.4²)₁ | pmm | face-centroid dual of `kuniform-n14` — same rectangular lattice ⟨(1,0),(0,1+√3)⟩, det 1+√3, inherited; 3 faces/cell over the primal's 3 vertex orbits — 2 congruent pentagons (over the two 3³.4² vertex orbits; sides 1/√3 ×2, (3+√3)/6 ×2, 1 in cyclic order; area 1/2+√3/4) + 1 regular hexagon (over the 3⁶ vertex orbit; side 1/√3, area √3/2); Σ = 1+√3 = \|det\|, edge-to-edge; pmm — 2-folds at (0,√3/2), (0,1/2+√3), (1/2,√3/2), (1/2,1/2+√3) all on the mirror intersections (no off-mirror 2-folds), h-mirrors y = √3/2+m(1+√3) and y = 1/2+√3+m(1+√3), v-mirrors x = k/2, no true glides (M147) |
+| `kuniform-dual-n15` | dual of 2-uniform (3⁶; 3³.4²)₂ | cmm | face-centroid dual of `kuniform-n15` — same centered-rectangular lattice ⟨(1,0),(1/2,1+3√3/2)⟩, det 1+3√3/2, inherited; 4 faces/cell over the primal's 4 vertex orbits — 2 pentagons (over the two 3³.4² vertex orbits; sides 1/√3 ×2, (3+√3)/6 ×2, 1 in cyclic order; area 1/2+√3/4) + 2 regular hexagons (over the two 3⁶ vertex orbits; side 1/√3, area √3/2); Σ = 1+3√3/2 = \|det\|, edge-to-edge; cmm — 2-folds at (0,1/2) and (1/2,1/2) on the mirror intersections plus off-mirror 2-folds at (1/4,1+3√3/4) and (3/4,1+3√3/4) (the cmm-vs-pmm discriminator), h-mirrors y = 1/2+m(1+3√3/2), v-mirrors x = k/2, h-glides y = 1+3√3/4+m(1+3√3/2), v-glides x = 1/4,3/4 (M147) |
 
 ## Build arcs
 

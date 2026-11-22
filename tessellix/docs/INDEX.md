@@ -13,7 +13,7 @@ cross-cutting reference docs, and frozen history.
 | arrangements | [docs/families/arrangements.md](families/arrangements.md) | 3 | 1 |
 | pentagons | [docs/families/pentagons.md](families/pentagons.md) | 14 | 12 |
 | laves | [docs/families/laves.md](families/laves.md) | 8 | 1 |
-| kuniform | [docs/families/kuniform.md](families/kuniform.md) | 33 | 14 |
+| kuniform | [docs/families/kuniform.md](families/kuniform.md) | 35 | 14 |
 | reptiles | [docs/families/reptiles.md](families/reptiles.md) | 6 | 2 |
 | aperiodic | [docs/families/aperiodic.md](families/aperiodic.md) | 10 | 5 |
 | pavers | [docs/families/pavers.md](families/pavers.md) | 14 | 8 |

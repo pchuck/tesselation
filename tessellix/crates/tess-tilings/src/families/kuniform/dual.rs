@@ -712,6 +712,89 @@ pub fn kuniform_dual_n3() -> LatticeTiling {
     )
 }
 
+/// Face-centroid dual of `kuniform-n14` (2-uniform (3⁶; 3³.4²)₁, pmm).
+///
+/// Same lattice as the primal, a1 = (1, 0), a2 = (0, 1+√3),
+/// |det| = 1+√3 (rectangular). The cell holds the 3 dual faces of
+/// the primal's 3 vertex orbits: two congruent pentagons (over the
+/// two 3³.4² vertex orbits; sides 1/√3 ×2, (3+√3)/6 ×2, 1 in cyclic
+/// order; area 1/2+√3/4) and one regular hexagon (over the 3⁶
+/// vertex orbit; side 1/√3, area √3/2). The three areas sum to
+/// 1+√3 = |det|. Measured symmetry pmm (the dual keeps the primal's
+/// group): 2-fold centers at (0, √3/2), (0, 1/2+√3), (1/2, √3/2)
+/// and (1/2, 1/2+√3) all on the mirror intersections — no
+/// off-mirror 2-folds; horizontal mirrors y = √3/2 + m(1+√3) and
+/// y = 1/2+√3 + m(1+√3), vertical mirrors x = k/2, no true glides
+/// (the would-be h-glide coset is mirror + lattice: a1y + a2y =
+/// 1+√3 ∈ L).
+///
+/// Every dual face is edge-adjacent to one of its own (±1, 0)
+/// lattice translates (shared-edge census: pentagon self at (±1, 0),
+/// hexagon self at (±1, 0), pentagon–pentagon at (0, ±1),
+/// pentagon–hexagon at (0, 0) and (±1, 0)), so a `Uniform` pattern
+/// color (one seed per face) would paint two edge-adjacent copies
+/// identically. `SeedPattern::Checker` offsets the seed by the
+/// (i + j) lattice parity, and the per-face seeds [0, 0, 2] — in the
+/// `dual_cells` orbit-key cell order [pentagon (0,0), pentagon
+/// (0,633975), hexagon (500000,316987)] — are a proper 4-coloring
+/// on top of that base: self-adjacent (1, 0) copies differ by one
+/// color and every cross-face adjacency lands on a distinct color
+/// (colors {0, 1, 2, 3}; same scheme as `prismatic-pentagonal` in
+/// the Laves family; seed values exhaustive-searched and pinned by
+/// `dual_pattern_mode_is_proper_coloring`).
+pub fn kuniform_dual_n14() -> LatticeTiling {
+    with_checker_seeds(
+        build(
+            &kuniform::kuniform_n14(),
+            "kuniform-dual-n14",
+            "Dual of 2-uniform (3⁶; 3³.4²)₁",
+            "Face-centroid dual of the 2-uniform (3⁶; 3³.4²)₁ tiling (pmm) — two pentagons plus one hexagon per cell.",
+        )
+        .expect("kuniform-n14 dual: non-degenerate lattice"),
+        &[0, 0, 2],
+    )
+}
+
+/// Face-centroid dual of `kuniform-n15` (2-uniform (3⁶; 3³.4²)₂, cmm).
+///
+/// Same lattice as the primal, a1 = (1, 0), a2 = (1/2, 1+3√3/2),
+/// |det| = 1+3√3/2 (centered-rectangular). The cell holds the 4 dual
+/// faces of the primal's 4 vertex orbits: two pentagons (over the two
+/// 3³.4² vertex orbits; sides 1/√3 ×2, (3+√3)/6 ×2, 1 in cyclic
+/// order; area 1/2+√3/4) and two regular hexagons (over the two 3⁶
+/// vertex orbits; side 1/√3, area √3/2). The four areas sum to
+/// 1+3√3/2 = |det|. Measured symmetry cmm (the dual keeps the
+/// primal's group): 2-fold centers at (0, 1/2) and (1/2, 1/2) on
+/// the mirror intersections plus the glide-only off-mirror centers
+/// at (1/4, 1+3√3/4) and (3/4, 1+3√3/4) — the cmm-vs-pmm
+/// discriminator; horizontal mirrors y = 1/2 + m(1+3√3/2), vertical
+/// mirrors x = k/2, horizontal glides y = 1+3√3/4 + m(1+3√3/2)
+/// (vector (±1/2, 0)) and vertical glides x = 1/4, 3/4 (vector
+/// (0, ±(1+3√3/2))).
+///
+/// Same pattern-coloring scheme as [`kuniform_dual_n14`]: every dual
+/// face is edge-adjacent to one of its own (±1, 0) lattice
+/// translates, so the `Uniform` seeds are infeasible; the checker
+/// base with per-face seeds [0, 0, 2, 2] — in the `dual_cells`
+/// orbit-key cell order [hexagon (120346,759309), pentagon
+/// (361037,277926), pentagon (500000,0), hexagon
+/// (740691,518618)] — is a proper 4-coloring on top of that base
+/// (colors {0, 1, 2, 3}; same scheme as `prismatic-pentagonal` in
+/// the Laves family; seed values exhaustive-searched and pinned by
+/// `dual_pattern_mode_is_proper_coloring`).
+pub fn kuniform_dual_n15() -> LatticeTiling {
+    with_checker_seeds(
+        build(
+            &kuniform::kuniform_n15(),
+            "kuniform-dual-n15",
+            "Dual of 2-uniform (3⁶; 3³.4²)₂",
+            "Face-centroid dual of the 2-uniform (3⁶; 3³.4²)₂ tiling (cmm) — two pentagons plus two hexagons per cell.",
+        )
+        .expect("kuniform-n15 dual: non-degenerate lattice"),
+        &[0, 0, 2, 2],
+    )
+}
+
 #[cfg(test)]
 mod dual_tests {
     use super::*;
@@ -995,6 +1078,40 @@ mod dual_tests {
                 group: WallpaperGroup::Cmm,
                 // Measured 2-fold on the horizontal mirror (cmm).
                 center: v2(0.5, 1.5),
+                lattice_kind: LatticeKind::CenteredRectangular,
+                mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
+            },
+            Case {
+                id: "kuniform-dual-n14",
+                make: kuniform_dual_n14,
+                primal: kuniform::kuniform_n14,
+                classes: [
+                    // Pentagons over the two 3³.4² vertex orbits.
+                    (5, 2, 0.5 + H / 2.0),
+                    // Regular hexagon over the 3⁶ vertex orbit.
+                    (6, 1, H),
+                ],
+                group: WallpaperGroup::Pmm,
+                // Measured 2-fold on the horizontal mirror (pmm).
+                center: v2(0.5, H),
+                lattice_kind: LatticeKind::Rectangular,
+                mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
+            },
+            Case {
+                id: "kuniform-dual-n15",
+                make: kuniform_dual_n15,
+                primal: kuniform::kuniform_n15,
+                classes: [
+                    // Pentagons over the two 3³.4² vertex orbits.
+                    (5, 2, 0.5 + H / 2.0),
+                    // Regular hexagons over the two 3⁶ vertex orbits.
+                    (6, 2, H),
+                ],
+                group: WallpaperGroup::Cmm,
+                // Measured 2-fold on the horizontal mirror (cmm).
+                center: v2(0.5, 0.5),
                 lattice_kind: LatticeKind::CenteredRectangular,
                 mirror_dirs: axis_mirrors,
                 axis_pt: Vec2::ZERO,
@@ -1527,6 +1644,64 @@ mod dual_tests {
         check_det(
             &kuniform_dual_n3(),
             "kuniform-dual-n3",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n14_covers_region() {
+        check_covers(
+            &kuniform_dual_n14(),
+            "kuniform-dual-n14",
+            BBox::new(v2(-5.0, -4.0), v2(9.0, 8.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n14_rotated_scaled() {
+        check_rotated(
+            &kuniform_dual_n14(),
+            "kuniform-dual-n14(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n14_deterministic() {
+        check_det(
+            &kuniform_dual_n14(),
+            "kuniform-dual-n14",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n15_covers_region() {
+        check_covers(
+            &kuniform_dual_n15(),
+            "kuniform-dual-n15",
+            BBox::new(v2(-5.0, -4.0), v2(9.0, 8.0)),
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n15_rotated_scaled() {
+        check_rotated(
+            &kuniform_dual_n15(),
+            "kuniform-dual-n15(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+
+    #[test]
+    fn kuniform_dual_n15_deterministic() {
+        check_det(
+            &kuniform_dual_n15(),
+            "kuniform-dual-n15",
             BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
         );
     }

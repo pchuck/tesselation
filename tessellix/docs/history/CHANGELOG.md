@@ -2399,3 +2399,30 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   9 → 10; built-ins 136 → 137; memberships 150 → 151. The §23d
   marginal-supersubstitution cluster is now complete except Squiral
   (parked: rule-image-only source AND infinite-edge prototile).
+- 2026-11-22 — M147: 2-uniform duals n14/n15 `kuniform-dual-n14` +
+  `kuniform-dual-n15` ✅ (§23k COMPLETE — the (3⁶; 3³.4²)₁/₂ pmm/cmm
+  pair, the second and final missing subscripted pair; §23k's
+  audit-discovered duals all landed with M145+M147): face-centroid
+  duals of the in-repo exact primals via the oracle-validated `dual()`
+  helper, Q(√3) exact end to end. dual-n14: same primitive rectangular
+  lattice ⟨(1,0),(0,1+√3)⟩ as the primal, det 1+√3; 3 faces/cell over
+  the primal's 3 vertex orbits — 2 congruent pentagons (sides 1/√3 ×2,
+  (3+√3)/6 ×2, 1; area 1/2+√3/4) over the two 3³.4² orbits + 1 regular
+  hexagon (side 1/√3, area √3/2) over the 3⁶ orbit; Σ = |det| exact,
+  edge-to-edge. Measured group pmm — all four 2-folds ON the mirror
+  intersections, no off-mirror 2-folds, no true glides (the pmm
+  signature; the new M145 glide-closure probe in
+  `duals_match_measured_groups` verifies the negative). dual-n15: same
+  centered-rectangular lattice ⟨(1,0),(1/2,1+3√3/2)⟩, det 1+3√3/2; 4
+  faces/cell — 2 pentagons (same shape) + 2 regular hexagons; Σ =
+  |det| exact, edge-to-edge. Measured group cmm — off-mirror 2-folds
+  at (1/4,1+3√3/4) and (3/4,1+3√3/4) (the cmm-vs-pmm discriminator)
+  plus genuine h/v glide families. Seeds [0,0,2] (n14) / [0,0,2,2]
+  (n15) pinned by `dual_pattern_mode_is_proper_coloring`; case-driven
+  batteries (convexity, edge-to-edge, area, primal-vertex-orbit
+  correspondence, group matching) auto-cover both new cases. Battery:
+  stdlib spike (face censuses, exact areas, Σ = |det|, group audit on
+  both, seed search) + 6 Rust tests (one trio per dual). Census:
+  Laves tab 26 → 28 (duals are Laves-tab primaries); kuniform family
+  33 → 35; built-ins 137 → 139; memberships 151 → 153. §23k is now
+  closed; the 2-uniform 20-list gap is down to the n6/n7 primals.
