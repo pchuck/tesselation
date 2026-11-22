@@ -1,6 +1,6 @@
 //! Aperiodic family: aperiodic monotiles and forcing sets: hat, turtle,
 //! spectre, Taylor-Socolar, Jeandel-Rao, half-hex, domino,
-//! period-doubling, thue-morse
+//! period-doubling, thue-morse, period-tripling
 //!
 //! Owned here: module declarations, `register` (the family's registry
 //! slice, in within-tab order), `classification` arms, the family's
@@ -15,6 +15,7 @@ pub mod half_hex;
 pub mod hat;
 pub mod jr_aperiodic;
 pub mod period_doubling;
+pub mod period_tripling;
 pub mod spectre;
 pub mod taylor_socolar;
 pub mod thue_morse;
@@ -31,6 +32,7 @@ pub fn register(mut r: Registry) -> Registry {
     r = r.register(domino::DominoTiling);
     r = r.register(period_doubling::PeriodDoublingTiling);
     r = r.register(thue_morse::ThueMorseTiling);
+    r = r.register(period_tripling::PeriodTriplingTiling);
     r
 }
 
@@ -134,6 +136,17 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             translational: Some("aperiodic"),
             ..TilingClass::EMPTY
         },
+        // The Bielefeld entry "Period Tripling 2D" has an EMPTY Info
+        // section — no references, nothing citable: source None.
+        "period-tripling" => TilingClass {
+            families: &["Aperiodic"],
+            method: Some("substitution"),
+            prototiles: Some(1),
+            source: None,
+            aperiodic_status: Some("limit-periodic"),
+            translational: Some("limit-periodic"),
+            ..TilingClass::EMPTY
+        },
         _ => return None,
     })
 }
@@ -158,6 +171,7 @@ mod census {
         "domino",
         "period-doubling",
         "thue-morse",
+        "period-tripling",
     ];
 
     #[test]
@@ -165,7 +179,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            9,
+            10,
             "aperiodic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
@@ -648,6 +662,80 @@ mod thue_morse_tests {
         check_det(
             &thue_morse::ThueMorseTiling,
             "thue-morse",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+}
+
+#[cfg(test)]
+mod period_tripling_tests {
+    use super::period_tripling;
+    use crate::tests::{check_coverage, check_det, check_rotated};
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn period_tripling_covers_region() {
+        let t = period_tripling::PeriodTriplingTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(
+            &t,
+            "period-tripling",
+            &p,
+            BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)),
+        );
+    }
+
+    /// The finite covered patch (the 3^d × 3^d block, d = 5 at every
+    /// view size — 9^5 ≤ MAX_TILES < 9^6 leaves a single band —
+    /// recentered on the origin) covers [−121, 122)²: the three M141
+    /// far windows (14.5, 14.5), (12, 24), (24, 48) are all well
+    /// inside it and verify the recentering and the clip-area
+    /// accounting away from the origin. (M141's own far-view
+    /// coordinate (100, 100) is also inside this domain — the
+    /// module-level `far_view_is_background` test uses (150, 150)
+    /// instead.)
+    #[test]
+    fn period_tripling_covers_large_and_distant_views() {
+        let t = period_tripling::PeriodTriplingTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        for (cx, cy, w, h) in [
+            (14.5, 14.5, 0.5, 0.5),
+            (12.0, 24.0, 0.3, 0.3),
+            (24.0, 48.0, 0.1, 0.1),
+        ] {
+            check_coverage(
+                &t,
+                "period-tripling",
+                &p,
+                BBox::new(v2(cx - w, cy - w), v2(cx + w, cy + h)),
+            );
+        }
+    }
+
+    #[test]
+    fn period_tripling_rotated_scaled() {
+        check_rotated(
+            &period_tripling::PeriodTriplingTiling,
+            "period-tripling(rot25,scale0.6)",
+            BBox::new(v2(-3.0, -3.0), v2(3.0, 3.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn period_tripling_deterministic() {
+        check_det(
+            &period_tripling::PeriodTriplingTiling,
+            "period-tripling",
             BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
         );
     }

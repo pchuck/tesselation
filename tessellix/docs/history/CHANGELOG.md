@@ -2357,3 +2357,45 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   family 31 → 33; built-ins 134 → 136; memberships 148 → 150.
   Remaining §23k: the (3⁶; 3³.4²)₁/₂ pair (duals of kuniform-n14/
   kuniform-n15) — brief next; n6/n7 primals (the other 20-list gap).
+- 2026-11-22 — M146: Period tripling (2D) `period-tripling` ✅ (§23d,
+  the marginal-supersubstitution cluster's third landing — completing
+  the ratio ladder 1/2/3): the rule was RECONSTRUCTED from the
+  Bielefeld rule image ("period-tripling-2d", Info section empty — no
+  tags, no references, nothing citable; a two-stage worker job: rule
+  reconstruction from the image, then implementation from the pinned
+  brief). The reconstruction was proven programmatically: the entry's
+  patch image matches the simulated depth-4 tiling at exactly the
+  predicted period-lattice offsets (81 offsets on the main diagonal =
+  {(Δx,Δy): Δx ≡ Δy mod 81}; the depth-5 tiling at the two predicted
+  cosets; the color-swapped reading at zero). Pinned rule: ONE unit-
+  square prototile, 2 label classes (A gray, B blue), λ = 3 into 9
+  children — A → 3×3 with B on the main diagonal (6A+3B), B → 3×3 all
+  A; S = [[6,9],[3,0]], column sums 9 = λ², PF 9 = λ², char poly
+  x²−6x−27 = (x−9)(x+3), second eigenvalue −3 = −λ — the MARGINAL
+  case, pinned by exact 2-permutation determinant. NOT a σ⊗σ product:
+  the 1D shadow σ: A → ABA, B → AAA (matrix [[2,3],[1,0]], char poly
+  (x−3)(x+1)) is pulled back along x+y — the 3-adic cousin of
+  period-doubling's A → AB, B → AA. Limit-periodic via approximating
+  periodic tilings: period lattice exactly ⟨(1,−1), (3^g, 0)⟩
+  (measured g = 1..5, sizes 3/9/27/81/243, no other periods) —
+  period-1 along (1,−1) at every depth, axis-aligned (3^g, 3^g)
+  strictly tripling per level (the ratio-3 signature completing
+  domino's ratio-2 and period-doubling's ratio-1); the marginal second
+  eigenvalue leaves exactly one ambiguous line — x+y = 0 carries B at
+  odd depth / A at even depth, two limit tilings up to translation.
+  Closed form: world cell (x,y) is B ⟺ v₃((x+y) mod 3^d) odd
+  (v₃(0) := d). d = 5 single depth band (9^5 = 59049 ≤ MAX_TILES);
+  emission x0 = c−121, y0 = 121−r; exact Z² arithmetic end to end,
+  floats only at emission. Classification: Aperiodic tab (the
+  category-trap from M141 pre-empted — all 9 prior family members
+  verified Aperiodic before dispatch), method substitution,
+  translational status limit-periodic, source None (image-derived).
+  Battery: 14/14 Rust tests (10 module + 4 family block — char-poly
+  pins x = 0..9, period manifest g = 1..5 strictly 3×, full-lattice
+  census g = 1..4, g = 5 1D reduction with transverse period exactly
+  243, defect-line parity, preview census A = 84/B = 36 over 120
+  cells, nested-view bit-identity 5 windows) + the recon spike's
+  measured pins. Census: Aperiodic tab 10 → 11; aperiodic family
+  9 → 10; built-ins 136 → 137; memberships 150 → 151. The §23d
+  marginal-supersubstitution cluster is now complete except Squiral
+  (parked: rule-image-only source AND infinite-edge prototile).

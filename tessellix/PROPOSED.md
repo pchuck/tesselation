@@ -1486,10 +1486,17 @@ of these; each is a substitution or cut-and-project table.
   singular continuous diffraction, JS99). Squiral stays parked for a
   second reason beyond the rule-image-only source: its prototile has
   infinitely many straight edges (a depth-truncation design problem).
-  Period tripling remains queued — its Bielefeld entry
-  ("period-tripling-2d") has an EMPTY Info section (rule image only,
-  no symbolic rule), so the rule must be reconstructed from the image
-  + literature before a brief is writable.
+  **Period tripling** ✅ landed M146 — the rule was reconstructed from
+  the rule image alone (the entry's Info section is empty; literature
+  search came up empty, so no source is citable) and pinned by an
+  81-offset window match of the entry's patch image against the
+  simulated depth-4 tiling: one square prototile, 2 label classes,
+  λ = 3, S = [[6,9],[3,0]], PF 9, second eigenvalue −3 = −λ (the
+  marginal case); period lattice ⟨(1,−1), (3^g, 0)⟩, axis-aligned
+  (3^g, 3^g) strictly tripling per level — the ratio-3 signature;
+  closed form B ⟺ v₃(x+y mod 3^d) odd; the ambiguous x+y = 0 line
+  (B odd depth / A even depth) is the marginal two-orbit limit
+  structure.
 - **Tangram** ✅ landed M142 — rep-tile dissection (λ = √2
   substitution S→{M}; M→{L}; L→{M,Q,P,S,S}; Q→{M,S,S}; P→{M,S,S},
   area-conserving, no L child); det=2 two-S seed pinned (all-5-prototile
