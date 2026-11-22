@@ -113,7 +113,7 @@ the "mixed floret/cairo/prismatic" patterns.
   [golden-rhomboid](briefs/golden-rhomboid.md) (Y/O/R φ-substitution,
   Andritz), [fibonacci-product](briefs/fibonacci-product.md) (product
   substitution, τ²), [tangram](briefs/tangram.md) (§23d rep-tile
-  dissection, Z[√2]); [pregnant-chairs](briefs/pregnant-chairs.md)
+  dissection, Z[√2]) ✅ landed M142; [pregnant-chairs](briefs/pregnant-chairs.md)
   (§23d, √3 / Z[√3]) ✅ landed M136.
 - 🔭 **Andritz Bowtie–Hexagon family (§23f)** — four 5-fold FLC
   substitution entries (small/large bowtie, hexagon variants) built

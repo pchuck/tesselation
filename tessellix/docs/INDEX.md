@@ -14,7 +14,7 @@ cross-cutting reference docs, and frozen history.
 | pentagons | [docs/families/pentagons.md](families/pentagons.md) | 14 | 12 |
 | laves | [docs/families/laves.md](families/laves.md) | 8 | 1 |
 | kuniform | [docs/families/kuniform.md](families/kuniform.md) | 31 | 14 |
-| reptiles | [docs/families/reptiles.md](families/reptiles.md) | 5 | 2 |
+| reptiles | [docs/families/reptiles.md](families/reptiles.md) | 6 | 2 |
 | aperiodic | [docs/families/aperiodic.md](families/aperiodic.md) | 8 | 5 |
 | pavers | [docs/families/pavers.md](families/pavers.md) | 14 | 8 |
 | islamic | [docs/families/islamic.md](families/islamic.md) | 26 | 12 |

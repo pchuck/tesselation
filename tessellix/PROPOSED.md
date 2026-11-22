@@ -1477,7 +1477,13 @@ of these; each is a substitution or cut-and-project table.
   the rule-image-only source: its prototile has infinitely many
   straight edges (a depth-truncation design problem). Thue–Morse 2D
   and period tripling remain queued.
-- **Tangram** — rep-tile dissection; effort S–M.
+- **Tangram** ✅ landed M142 — rep-tile dissection (λ = √2
+  substitution S→{M}; M→{L}; L→{M,Q,P,S,S}; Q→{M,S,S}; P→{M,S,S},
+  area-conserving, no L child); det=2 two-S seed pinned (all-5-prototile
+  seed search negative for det ≤ 40 — first L at g=4, all five
+  prototiles at g=5); homochiral P+ (rotation-only rows); non-edge-to-edge
+  (measured T-junctions 0,0,0,6,10,18 over g=0..5); limit-periodic on
+  the √2^(g+1) block lattice; exact Z[√2] arithmetic.
 - **Pentiamond / small rep-tile set** — effort S each.
 
 ### 23e. Generalized Godrèche–Lançon–Billard binary — the §9 re-scope candidate

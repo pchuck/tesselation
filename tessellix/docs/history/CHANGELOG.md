@@ -2228,3 +2228,31 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   144 → 145. Remaining in the cluster: Thue–Morse 2D, period tripling
   (queued); Squiral (parked — rule-image-only source AND an
   infinite-edge prototile).
+- 2026-11-21 — M142: Tangram `tangram` ✅ (§23d rep-tile dissection,
+  the salvage wave's fourth landing): the classic five-prototile
+  tangram (S M L Q P, u²-areas 1/2/4/2/2) as an area-conserving λ=√2
+  substitution — S→{M}; M→{L}; L→{M,Q,P,S,S}; Q→{M,S,S}; P→{M,S,S}
+  (sum of child areas = parent, no L child); A-matrix
+  rows (S,M,L,Q,P): S (0,0,2,2,2), M (1,0,1,1,1), L (0,1,0,0,0),
+  Q (0,0,1,0,0), P (0,0,1,0,0). Seed pinned by determinant search:
+  two S triangles tile the √2×√2 square (S twist 0 at (0,0), S twist
+  4 at (√2,√2), det=2) — the all-5-prototile seed search was negative
+  for det ≤ 40; first L at g=4, all five prototiles at g=5.
+  Homochiral P+: every substitution row is rotation-only and the seed
+  has no P, so the P− mirror class is unreachable from the seed
+  (P+ census = c_g[P] at every depth, P− = 0). Non-edge-to-edge with
+  inherent T-junctions measured 0,0,0,6,10,18 over g=0..5; growth
+  census g=0..19 = 2,2,2,10,18,26,66,138,242,506,1058,2026,4050,8282,
+  16386,32586,65714,131258,261602,524458. Coordinates run on exact
+  Z[√2] u-pairs end to end (√2·(a,b) = (2b,a)); floats only at
+  emission; octave depth quantization from view extent with AABB
+  culling sound because children ⊂ parent. Battery: Python spike +
+  battery (zero-overlap exact Sutherland–Hodgman, 1521-point period
+  spot-check g=2..5, chirality census, dissect-rule table pinned vs
+  dump) + 12/12 Rust tests (9 exact-arithmetic module tests incl.
+  substitution census over all proto×twist + the standard trio).
+  Worktree landed on a stale base (M138: TwoUniform 17, built-ins
+  129) — deltas re-derived against current main at integration:
+  reptiles family 5 → 6; Nonperiodic tab 6 → 7; built-ins 131 → 132;
+  memberships 145 → 146. Category stays Nonperiodic (limit-periodic;
+  no Aperiodic evidence). Spike checkpointed at .scratch/tangram/.

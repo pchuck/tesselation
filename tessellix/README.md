@@ -50,7 +50,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 **Browse mode** — the tab bar lists the ten display categories with card
 counts (`Uniform (11)   Two-Uniform (18)   Laves (24)   Wallpaper (17)   Pentagon
 Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (12)   Aperiodic (9)
-Nonperiodic (6)`); below it a responsive card grid shows the active tab's
+Nonperiodic (7)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
 fragment, and `params: n` when the tiling has adjustable parameters. A
@@ -136,7 +136,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-131 built-in tilings (145 tab memberships), all discoverable in both UIs
+132 built-in tilings (146 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -153,8 +153,8 @@ Stampfli, shield, golden bee, golden triangle, fractalizing 3.12.12,
 girih Darb-i Imam), **Aperiodic** (9: einstein family, pinwheel,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
 (table), period-doubling), and
-**Nonperiodic** (6: limit-periodic rep-tiles, Hirschhorn,
-pregnant-chair). Categories
+**Nonperiodic** (7: limit-periodic rep-tiles, Hirschhorn,
+pregnant-chair, tangram). Categories
 are declared on the tiling (never derived from its symmetry), so the
 grouping is honest about what the mathematics distinguishes; see
 `tess-core/src/category.rs`.
@@ -289,6 +289,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `chair` | Chair (L-tromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge | — | — |
 | `armchair` | Armchair (L-tetromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge (T-junctions intrinsic at every scale) (M128) | — | — |
 | `sphinx` | Sphinx (pentagonal hexiamond) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 12 orientations; non-edge-to-edge | — | — |
+| `tangram` | Tangram | the classic five-prototile dissection (S M L Q P, u²-areas 1/2/4/2/2) as an area-conserving λ=√2 substitution S→{M}; M→{L}; L→{M,Q,P,S,S}; Q→{M,S,S}; P→{M,S,S}; det=2 two-S seed (all-5-prototile seed negative for det ≤ 40, first L at g=4, all five prototiles at g=5); exact Z[√2] u-pair arithmetic end to end; homochiral P+ (every substitution row rotation-only, so the P− mirror class is unreachable from the seed); non-edge-to-edge (T-junctions 0,0,0,6,10,18 over g=0..5); limit-periodic on the √2^(g+1) block lattice (M142) | — | — |
 | `p-pentomino` | P-pentomino (rep-4 reptile, limit-periodic) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 8 chiral orientation classes; non-edge-to-edge | — | — |
 | `pregnant-chair` | Pregnant chair (rep-tile) | λ = √3 two-prototile rep-tile (Bielefeld substitution index, E. Amezcua): the √3-inflated large chair tiles as 1 large + 6 small, the inflated small chair is exactly one large chair (area-conservative); exact Z[√3] integer-pair arithmetic; finite-depth approximant with view-quantized depth, patch-stable under panning/zooming; chiral — 4 of 8 dihedral orientation classes | — | — |
 | `girih-quasiperiodic` | Girih star-and-cross (quasiperiodic, {10/3}) | quasiperiodic girih via the Darb-i Imam 3-prototile substitution (Lu & Steinhardt 2007), IF = 2φ³; exact 10-fold seed rosette | — | — |

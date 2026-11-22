@@ -5,24 +5,26 @@
 //! lattice-culling entries and the family census pin. The family doc is
 //! `docs/families/reptiles.md`.
 
-use tess_core::Registry;
 use tess_core::classify::TilingClass;
+use tess_core::Registry;
 
-use crate::classify::{rep_tile};
+use crate::classify::rep_tile;
 
 pub mod armchair;
 pub mod chair;
-pub mod sphinx;
 pub mod p_pentomino;
 pub mod pregnant_chair;
+pub mod sphinx;
+pub mod tangram;
 
 /// The family's registry slice, in within-tab order.
 pub fn register(mut r: Registry) -> Registry {
-        r = r.register(armchair::ArmchairTiling);
-        r = r.register(chair::ChairTiling);
-        r = r.register(sphinx::SphinxTiling);
-        r = r.register(p_pentomino::PentPentominoTiling);
-        r = r.register(pregnant_chair::PregnantChairTiling);
+    r = r.register(armchair::ArmchairTiling);
+    r = r.register(chair::ChairTiling);
+    r = r.register(sphinx::SphinxTiling);
+    r = r.register(p_pentomino::PentPentominoTiling);
+    r = r.register(pregnant_chair::PregnantChairTiling);
+    r = r.register(tangram::TangramTiling);
     r
 }
 
@@ -38,6 +40,19 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         "sphinx" => rep_tile("sphinx hexiamond"),
         "p-pentomino" => rep_tile("P-pentomino"),
         "pregnant-chair" => rep_tile("pregnant chairs (large + small)"),
+        "tangram" => TilingClass {
+            families: &["Nonperiodic"],
+            method: Some("substitution"),
+            inflation: Some("√2"),
+            prototiles: Some(5),
+            tile_set: Some(
+                "tangram: five pieces (two small triangles, medium triangle, large triangle, square, parallelogram)",
+            ),
+            translational: Some("limit-periodic"),
+            chirality: Some("homochiral"),
+            source: Some("Bielefeld substitution index"),
+            ..TilingClass::EMPTY
+        },
         _ => return None,
     })
 }
@@ -58,6 +73,7 @@ mod census {
         "sphinx",
         "p-pentomino",
         "pregnant-chair",
+        "tangram",
     ];
 
     #[test]
@@ -65,7 +81,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            5,
+            6,
             "reptiles family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
@@ -85,8 +101,8 @@ mod census {
 
 #[cfg(test)]
 mod armchair_tests {
-    use crate::tests::{check_coverage, check_det, check_rotated};
     use crate::armchair;
+    use crate::tests::{check_coverage, check_det, check_rotated};
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::{ParamSet, ParamValue};
     use tess_core::tiling::Tiling;
@@ -126,8 +142,8 @@ mod armchair_tests {
 
 #[cfg(test)]
 mod chair_tests {
-    use crate::tests::{check_coverage, check_det, check_rotated};
     use crate::chair;
+    use crate::tests::{check_coverage, check_det, check_rotated};
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::{ParamSet, ParamValue};
     use tess_core::tiling::Tiling;
@@ -167,8 +183,8 @@ mod chair_tests {
 
 #[cfg(test)]
 mod sphinx_tests {
-    use crate::tests::{check_coverage, check_det, check_rotated};
     use crate::sphinx;
+    use crate::tests::{check_coverage, check_det, check_rotated};
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::{ParamSet, ParamValue};
     use tess_core::tiling::Tiling;
@@ -208,8 +224,8 @@ mod sphinx_tests {
 
 #[cfg(test)]
 mod p_pentomino_tests {
-    use crate::tests::{check_coverage, check_det, check_rotated};
     use crate::p_pentomino;
+    use crate::tests::{check_coverage, check_det, check_rotated};
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::{ParamSet, ParamValue};
     use tess_core::tiling::Tiling;
@@ -223,7 +239,12 @@ mod p_pentomino_tests {
         let t = p_pentomino::PentPentominoTiling;
         let mut p = ParamSet::default_for(t.params());
         p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
-        check_coverage(&t, "p-pentomino", &p, BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)));
+        check_coverage(
+            &t,
+            "p-pentomino",
+            &p,
+            BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)),
+        );
     }
 
     #[test]
@@ -247,3 +268,43 @@ mod p_pentomino_tests {
     }
 }
 
+#[cfg(test)]
+mod tangram_tests {
+    use super::tangram;
+    use crate::tests::{check_coverage, check_det, check_rotated};
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn tangram_covers_region() {
+        let t = tangram::TangramTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(&t, "tangram", &p, BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)));
+    }
+
+    #[test]
+    fn tangram_rotated_scaled() {
+        check_rotated(
+            &tangram::TangramTiling,
+            "tangram(rot25,scale0.6)",
+            BBox::new(v2(-7.0, -7.0), v2(7.0, 7.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn tangram_deterministic() {
+        check_det(
+            &tangram::TangramTiling,
+            "tangram",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+}
