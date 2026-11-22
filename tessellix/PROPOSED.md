@@ -1473,10 +1473,19 @@ of these; each is a substitution or cut-and-project table.
   landed M141 (the 2D product σ⊗σ of the 1D a→ab, b→aa rule — 4 label
   classes on unit squares, PF 4, char poly x⁴−x³−12x²−4x+16, measured
   (2^g, 2^g) full-block manifest g = 1..6, the ratio-1 signature vs
-  domino's ratio-2). Squiral stays parked for a second reason beyond
-  the rule-image-only source: its prototile has infinitely many
-  straight edges (a depth-truncation design problem). Thue–Morse 2D
-  and period tripling remain queued.
+  domino's ratio-2). **Thue–Morse 2D** ✅ landed M143 (the τ⊗τ product
+  of the classic 0 → 01, 1 → 10 morphism — all-ones substitution
+  matrix, the Steinhaus property; PF 4, char poly x⁴−4x³; measured NO
+  translation period at any depth g = 1..6, all (g+1)²−1 proper
+  candidate shifts rejected with zero survivors — the aperiodic
+  signature vs period-doubling's ratio-1 and domino's ratio-2;
+  singular continuous diffraction, JS99). Squiral stays parked for a
+  second reason beyond the rule-image-only source: its prototile has
+  infinitely many straight edges (a depth-truncation design problem).
+  Period tripling remains queued — its Bielefeld entry
+  ("period-tripling-2d") has an EMPTY Info section (rule image only,
+  no symbolic rule), so the rule must be reconstructed from the image
+  + literature before a brief is writable.
 - **Tangram** ✅ landed M142 — rep-tile dissection (λ = √2
   substitution S→{M}; M→{L}; L→{M,Q,P,S,S}; Q→{M,S,S}; P→{M,S,S},
   area-conserving, no L child); det=2 two-S seed pinned (all-5-prototile

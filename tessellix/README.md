@@ -49,7 +49,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 **Browse mode** — the tab bar lists the ten display categories with card
 counts (`Uniform (11)   Two-Uniform (18)   Laves (24)   Wallpaper (17)   Pentagon
-Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (12)   Aperiodic (9)
+Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (12)   Aperiodic (10)
 Nonperiodic (7)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
@@ -136,7 +136,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-132 built-in tilings (146 tab memberships), all discoverable in both UIs
+133 built-in tilings (147 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -150,9 +150,9 @@ cairo-pentagonal (type 4) and floret-pentagonal (type 5) as typed
 secondary members), **Islamic** (25), **Arrangements** (8),
 **Quasiperiodic** (12: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, fractalizing 3.12.12,
-girih Darb-i Imam), **Aperiodic** (9: einstein family, pinwheel,
+girih Darb-i Imam), **Aperiodic** (10: einstein family, pinwheel,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
-(table), period-doubling), and
+(table), period-doubling, thue-morse), and
 **Nonperiodic** (7: limit-periodic rep-tiles, Hirschhorn,
 pregnant-chair, tangram). Categories
 are declared on the tiling (never derived from its symmetry), so the
@@ -284,6 +284,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `jeandel-rao` | Jeandel-Rao 11-tile Wang tiles | aperiodic 11-tile edge-colored Wang set (Jeandel-Rao, arXiv:1506.06492); the author's canonical 100x100 patch, each unit cell partitioned into 5 sub-polygons whose edge bands carry the Wang edge colors (H 0/9900, V 0/9900, exact 9-color ids, re-derived in tests); finite covered patch, no period \|t\|<=30 | — | — |
 | `half-hex` | Half-hex (limit-periodic substitution) | achiral half-hexagon prototile (trapezoid half of a unit hexagon, edges {2,1,1,1}), λ = 2 into 4 children (S[j][i] = 1 iff (j−i) mod 6 ∈ {0,2,3,4}); PF eigenvalue 4 = λ², char poly (x−4)(x−2)(x−1)²(x+1)²; limit-periodic — measured minimal x-period p = (3/2)·2^g = 6, 12, 24, 48, 96 at g = 2..6; exact √3-field (u,v) integer-pair arithmetic | — | — |
 | `period-doubling` | Period doubling (2D) | limit-periodic product substitution: the 1D period-doubling rule a → ab, b → aa (Bielefeld entry "period doubling", Frettlöh–Sing; internal space the 2-adic integers, "in some sense the simplest cut and project tiling") squared as σ⊗σ on Z² unit squares — 4 prototile label classes (aa/ab/ba/bb, class = 2·w[col] + w[row], seeds 0–3) over one square prototile, λ = 2 into a 2×2 frame, child (c,r) label = (σ(x)_c, σ(y)_r); S = [[1,2,2,4],[1,0,2,0],[1,2,0,0],[1,0,0,0]] (column sums all 4 = λ²), PF eigenvalue 4, char poly x⁴−x³−12x²−4x+16 (eigenvalues {4, 1, −2, −2}, exact i64 permutation-expansion determinants); limit-periodic via approximating periodic tilings — the depth-g patch is the fundamental cell of the period-(2^g, 2^g) approximant, measured (2,2) … (64,64) at g = 1..6, no proper within-patch period (the ratio-1 manifest vs domino's ratio-2 (2^g, 2^(g+1))); exact integer arithmetic on Z² (M141) | — | — |
+| `thue-morse` | Thue–Morse (2D) | aperiodic product substitution: the classic 1D Thue–Morse morphism 0 → 01, 1 → 10 (Bielefeld entry "Thue Morse" — 1D-only; the 2D rule pinned against JS99, Allouche & Shallit) squared as τ⊗τ on Z² unit squares — 4 prototile label classes (00/01/10/11, class = 2·(x⊕c) + (y⊕r), seeds 0–3) over one square prototile, λ = 2 into a 2×2 frame; S = the all-ones 4×4 (Steinhaus property — every parent block contains each child class exactly once), PF eigenvalue 4, char poly x⁴−4x³ (eigenvalues {4, 0, 0, 0}, rank 1, pinned by exact 24-permutation determinants at x = 0..6: [0, −3, −16, −27, 0, 125, 432]); aperiodic at every depth — NO proper translation period at any depth g = 1..6 (all (g+1)²−1 proper candidate shifts rejected per depth, 133 cumulative, zero survivors; singular continuous diffraction, not pure point) — unlike the limit-periodic period-doubling cousin; exact integer arithmetic on Z² (M143) | — | — |
 | `domino` | Domino (table) substitution | Lançon's limit-periodic domino substitution (Bielefeld entry "domino" — "Also known as 'table tiling.'", one entry); A = vertical 1×2, B = horizontal 2×1 on Z², λ = 2 orientation-preserving into 4 children; S = [[2,2],[2,2]], PF eigenvalue 4 = λ², char poly x²−4x; limit-periodic via approximating periodic tilings — the depth-g patch is itself the fundamental cell of the period-(2^g, 2^(g+1)) approximant, measured (2,4), (4,8), (8,16), (16,32), (32,64), (64,128) at g = 1..6, no proper within-patch period; not cut-and-project (continuous spectral component — Solomyak 1997, Robinson 1999); exact integer arithmetic on Z² (M138) | — | — |
 | `hirschhorn` | Hirschhorn pentagon | nonperiodic monohedral (Hirschhorn–Hunt 1985) | — | — |
 | `chair` | Chair (L-tromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge | — | — |

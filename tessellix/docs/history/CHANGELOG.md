@@ -2256,3 +2256,38 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   reptiles family 5 → 6; Nonperiodic tab 6 → 7; built-ins 131 → 132;
   memberships 145 → 146. Category stays Nonperiodic (limit-periodic;
   no Aperiodic evidence). Spike checkpointed at .scratch/tangram/.
+- 2026-11-21 — M143: Thue–Morse (2D) `thue-morse` ✅ (§23d, the
+  marginal-supersubstitution cluster's second landing): the 2D product
+  of the classic 1D Thue–Morse morphism τ: 0 → 01, 1 → 10 (Bielefeld
+  entry "Thue Morse" pinned live — 1D-only, 2 prototiles, Thue/
+  Prouhet/Morse; the 2D rule pinned against JS99 = Allouche & Shallit,
+  *The ubiquitous Prouhet-Thue-Morse sequence*, Springer 1999).
+  τ⊗τ on Z² unit squares: 4 prototile label classes (00/01/10/11,
+  child (c,r) of parent p = 2x+y gets class 2·(x⊕c) + (y⊕r), seeds
+  0–3) over ONE square prototile; λ = 2 into a 2×2 frame. Substitution
+  matrix S = the all-ones 4×4 — the Steinhaus property: every parent
+  block contains each child class exactly once; column sums all 4 =
+  λ², PF eigenvalue 4, char poly x⁴ − 4x³ (eigenvalues {4, 0, 0, 0},
+  rank 1) pinned by exact i64 24-permutation determinants at
+  x = 0..6 = [0, −3, −16, −27, 0, 125, 432]. THE distinguishing
+  signature vs domino (M138, ratio-2 manifest) and period-doubling
+  (M141, ratio-1 manifest): aperiodic at every depth — the depth-g
+  patch carries NO proper translation period, measured g = 1..6 with
+  all (g+1)²−1 proper candidate shifts rejected (3/8/15/24/35/48 per
+  depth, 133 cumulative, zero survivors; each killed by the class-0
+  (0,0) cell since w[2^k] = 1); singular continuous diffraction (JS99),
+  not pure point. Classification: Aperiodic tab, method substitution,
+  translational status "aperiodic", source "Allouche & Shallit".
+  Exact integer arithmetic on Z² end to end; depth rule = octave
+  quantization of the view extent copied from period-doubling;
+  nested-view bit-identity tested. Battery: stdlib spike (word
+  popcount closed forms g = 0..6, all-ones matrix by enumeration,
+  pinned rule tuples, char-poly pins, consistency g = 1..5,
+  0-overlap + coverage fine-grid/irrational-offset, no-period
+  manifest, band simulation) + 15/15 Rust tests (11 in-module + the
+  standard trio). Spike checkpointed at .scratch/thue-morse-2d/.
+  Census: Aperiodic tab 9 → 10; aperiodic family 8 → 9; built-ins
+  132 → 133; memberships 146 → 147. Remaining in the cluster: period
+  tripling (queued — its Bielefeld entry has an empty Info section;
+  rule must be reconstructed from the image + literature);
+  Squiral (parked).
