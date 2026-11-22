@@ -2291,3 +2291,37 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   tripling (queued — its Bielefeld entry has an empty Info section;
   rule must be reconstructed from the image + literature);
   Squiral (parked).
+- 2026-11-22 — M144: Golden rhomboid `golden-rhomboid` ✅ (§23a, the
+  Q(√φ) golden family; Andritz cluster; Bielefeld entry
+  "golden-rhomboid-triangle" pinned live): the third Andritz-family
+  φ-substitution — equilateral triangles side 1 (Y) and side φ (O)
+  plus the 60/120 rhombus 1×φ (R); rules Y → O, O → O+Y+R, R → R+2O
+  (areas 1 : φ² : 2φ in √3/4 units, all identities exact). Count
+  matrix [[1,1,0],[2,1,1],[0,1,0]] in (R,O,Y) order, char poly
+  λ³−2λ²−2λ+1, PF eigenvalue φ² pinned as an exact Q(√5) root
+  (φ² = (1,1)). Exact 4-tuple Q(√5) arithmetic end to end (x =
+  (a₀+a₁φ)/2, y = (b₀+b₁φ)·√3/2, φ·(a₀,a₁) = (a₁,a₀+a₁); floats only
+  at emission). 18 anchored orientation classes (Y_k 0–5, O_k 6–11,
+  R_A/B_k 12–17) collapsing to 10 unanchored sets under the
+  authorized 120°-rotation quotient — used only as dissection
+  distinctness keys; SHAPES/RULES stay anchored; live classes
+  {0,1,6,7,12,14,15,16} pinned by d4/d12 censuses (13, 17
+  unreachable). Single-seed unbounded growth: depth d covers
+  φ^d·R₀ exactly, union = the 60° wedge {y ≥ 0, y ≤ √3·x} (views
+  outside the wedge are background, no message); MAX_DEPTH 12
+  (N₁₂ = 134 209 ≤ 250 000). T-junctions intrinsic to the
+  substitution (first at depth 2: 2 points / 5 incidences; every
+  T-point closes to exactly π on both sides in π/3 units) — a valid
+  gap-free/overlap-free partition, NOT face-to-edge. Battery: stdlib
+  spike (18/18 exact rule dissections — area sum, child-in-parent, no
+  proper crossing/partial overlap/strict-inside vertex, co-oriented
+  sequential boundary edges; depth count vectors (R,O,Y) d0..d12
+  pinned; area law (0,4)·φ²ᵈ exact every depth; T-closure d2/d3/d4/
+  d12; region-edge boundary partition d4/d12; Bielefeld patch
+  cross-check 1525 Y : 4012 O : 2477 R, report-only) + 12/12 Rust
+  tests (3-test trio + 9-test battery); battery's durable copy at
+  tests/golden_rhomboid_battery_reference.py; spike checkpointed at
+  .scratch/golden-rhomboid/. Census: Quasiperiodic tab 12 → 13;
+  quasiperiodic family 11 → 12; built-ins 133 → 134; memberships
+  147 → 148. Remaining in the Andritz cluster: Bowtie–Hexagon family
+  (§23f, 4 entries, unblocked by the M131–M134 girih tables).

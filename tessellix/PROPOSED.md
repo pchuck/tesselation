@@ -1421,7 +1421,11 @@ of these; each is a substitution or cut-and-project table.
   effort S–M.
 - **Cromwell Kite–Rhombus–Trapezium** — mld to Penrose, φ² inflation;
   effort M.
-- **Golden Rhomboid–Triangle** — effort S–M.
+- **Golden Rhomboid–Triangle** — effort S–M. ✅ landed M144 as
+  `golden-rhomboid` (Y/O/R φ-substitution: Y→O, O→O+Y+R, R→R+2O;
+  PF φ² exact Q(√5); 18 anchored orientation classes → 10 unanchored
+  sets under the 120°-rotation quotient; T-junctions intrinsic from
+  depth 2, every T-point closing to exactly π; unbounded wedge growth).
 
 ### 23b. 8-fold Q(√2) family — next to Ammann–Beenker
 

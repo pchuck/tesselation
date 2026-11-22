@@ -49,7 +49,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 **Browse mode** — the tab bar lists the ten display categories with card
 counts (`Uniform (11)   Two-Uniform (18)   Laves (24)   Wallpaper (17)   Pentagon
-Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (12)   Aperiodic (10)
+Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (13)   Aperiodic (10)
 Nonperiodic (7)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
@@ -136,7 +136,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-133 built-in tilings (147 tab memberships), all discoverable in both UIs
+134 built-in tilings (148 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -148,9 +148,9 @@ wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
 cairo-pentagonal (type 4) and floret-pentagonal (type 5) as typed
 secondary members), **Islamic** (25), **Arrangements** (8),
-**Quasiperiodic** (12: Penrose family, Ammann–Beenker (both variants),
-Stampfli, shield, golden bee, golden triangle, fractalizing 3.12.12,
-girih Darb-i Imam), **Aperiodic** (10: einstein family, pinwheel,
+**Quasiperiodic** (13: Penrose family, Ammann–Beenker (both variants),
+Stampfli, shield, golden bee, golden triangle, golden rhomboid,
+fractalizing 3.12.12, girih Darb-i Imam), **Aperiodic** (10: einstein family, pinwheel,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
 (table), period-doubling, thue-morse), and
 **Nonperiodic** (7: limit-periodic rep-tiles, Hirschhorn,
@@ -276,6 +276,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `shield` | Gähler shield (12-fold) | quasiperiodic shield-hexagon+square+triangle substitution (Gähler; inflation √(2+√3), kinked supertiles, 4 protos / 8 labelled kinds); dodecagonal frame, Bragg 12-fold, no local 30° center | — | — |
 | `golden-bee` | Golden bee (Ammann A2 chair) | quasiperiodic irreptile (first in the registry): concave hexagon with five right angles and one reflex, edge lengths {s⁻⁴…s} (s = √φ), dissecting into two similar copies of unequal size (scales φ^−1/2 and φ^−1, area law s⁻² + s⁻⁴ = 1); √φ-inflation substitution, 8 orientation classes, exact Q(√φ), T-junctions intrinsic at the s^−4 edge ratio; finite covered patch (Vince 2014; Durand–Shen–Vereshchagin 2020) | — | — |
 | `golden-triangle` | Golden triangle (√−τ reptile) | quasiperiodic: the right triangle (legs 1, √τ; hypotenuse τ) dissecting by its altitude into two similar children (scales τ^−1 and τ^−1/2, area law τ^−2 + τ^−1 = 1); √(−τ)-inflation substitution (λ = i√τ, λ² = −τ, λL = L ∪ S, λS = L), both mirror chiralities, dense rotations, T-junctions intrinsic at the τ^−2 hypotenuse ratio; finite covered patch — the seed triangle itself (Danzer–van Ophuysen 2000) (M127) | — | — |
+| `golden-rhomboid` | Golden rhomboid (Andritz φ-substitution) | quasiperiodic: equilateral triangles side 1 (Y) and side φ (O) plus the 60/120 rhombus 1×φ (R), the Andritz family's third member (Bielefeld "golden-rhomboid-triangle", Andritz 5-fold cluster); rules Y → O, O → O+Y+R, R → R+2O (areas 1 : φ² : 2φ in √3/4 units, all identities exact); count matrix [[1,1,0],[2,1,1],[0,1,0]] in (R,O,Y) order, char poly λ³−2λ²−2λ+1, PF eigenvalue φ² pinned as an exact Q(√5) root (φ² = (1,1)); exact 4-tuple Q(√5) arithmetic end to end (x = (a₀+a₁φ)/2, y = (b₀+b₁φ)·√3/2, φ·(a₀,a₁) = (a₁,a₀+a₁); floats only at emission); 18 anchored orientation classes collapsing to 10 unanchored sets under the authorized 120°-rotation quotient (SHAPES/RULES stay anchored); single-seed unbounded growth — depth d covers φ^d·R₀ exactly, union = the 60° wedge {y ≥ 0, y ≤ √3·x} (views outside the wedge are background), depth cap 12 (N₁₂ = 134 209 ≤ 250 000); T-junctions intrinsic to the substitution (first at depth 2: 2 points / 5 incidences), every T-point closing to exactly π on both sides in π/3 units — a gap-free/overlap-free partition, not face-to-edge; depth count vectors and 18/18 exact rule dissections pinned (M144) | — | — |
 | `pinwheel` | Pinwheel (1–2–√5) | aperiodic Pythagorean; tiles in infinitely many orientations | — | — |
 | `hat` | Hat (aperiodic monotile) | aperiodic einstein (SMKG 2023); H/T/P/F metatile substitution; tiles only with its mirror image; non-edge-to-edge | — | — |
 | `turtle` | Turtle (hats in turtles) | aperiodic einstein family (SMKG 2023); chiral hats-in-turtles: turtle + hat prototiles, 9-label substitution, homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge hex-lattice geometry | — | — |

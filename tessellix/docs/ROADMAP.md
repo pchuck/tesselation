@@ -111,7 +111,7 @@ the "mixed floret/cairo/prismatic" patterns.
   lost pre-rework §23 session (rules pinned in the briefs; prototype
   batteries archived in `.scratch/salvage-20261120/`):
   [golden-rhomboid](briefs/golden-rhomboid.md) (Y/O/R φ-substitution,
-  Andritz), [fibonacci-product](briefs/fibonacci-product.md) (product
+  Andritz) ✅ landed M144; [fibonacci-product](briefs/fibonacci-product.md) (product
   substitution, τ²), [tangram](briefs/tangram.md) (§23d rep-tile
   dissection, Z[√2]) ✅ landed M142; [pregnant-chairs](briefs/pregnant-chairs.md)
   (§23d, √3 / Z[√3]) ✅ landed M136.

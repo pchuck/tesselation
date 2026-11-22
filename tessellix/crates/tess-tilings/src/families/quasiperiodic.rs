@@ -1,6 +1,6 @@
 //! Quasiperiodic family: substitution-based quasiperiodic sets: Penrose (P3/P1/P2/pentagons),
-//! Ammann-Beenker (+rhomb-triangle), shield, stampfli, fractalizing, golden bee
-//! and golden triangle
+//! Ammann-Beenker (+rhomb-triangle), shield, stampfli, fractalizing, golden bee,
+//! golden triangle and golden rhomboid
 //!
 //! Owned here: module declarations, `register` (the family's registry
 //! slice, in within-tab order), `classification` arms, the family's
@@ -16,6 +16,7 @@ pub mod shield;
 pub mod stampfli;
 pub mod golden_bee;
 pub mod golden_triangle;
+pub mod golden_rhomboid;
 pub mod fractalizing;
 pub mod penrose;
 pub mod penrose_p1;
@@ -30,6 +31,7 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(stampfli::StampfliTiling);
         r = r.register(golden_bee::GoldenBeeTiling);
         r = r.register(golden_triangle::GoldenTriangleTiling);
+        r = r.register(golden_rhomboid::GoldenRhomboidTiling);
         r = r.register(fractalizing::FractalizingTiling);
         r = r.register(penrose::PenroseTiling);
         r = r.register(penrose_p1::PenroseP1Tiling);
@@ -106,6 +108,15 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
+        "golden-rhomboid" => TilingClass {
+            families: &["Quasiperiodic"],
+            method: Some("substitution"),
+            inflation: Some("φ"),
+            point_order: Some(6),
+            source: Some("Andritz"),
+            translational: Some("quasiperiodic"),
+            ..TilingClass::EMPTY
+        },
         "fractalizing-3-12-12" => TilingClass {
             families: &["Quasiperiodic"],
             method: Some("fractalizing substitution"),
@@ -176,6 +187,7 @@ mod census {
         "stampfli",
         "golden-bee",
         "golden-triangle",
+        "golden-rhomboid",
         "fractalizing-3-12-12",
         "penrose",
         "penrose-p1",
@@ -188,7 +200,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            11,
+            12,
             "quasiperiodic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
