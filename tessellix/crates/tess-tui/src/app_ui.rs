@@ -1112,11 +1112,11 @@ mod tests {
         assert_eq!(tui.tabs.len(), 10, "one tab per TilingCategory::ALL entry");
         // Multi-tab membership (M76): a tiling appears in its primary
         // tab plus every secondary tab, so the tab sizes sum to the
-        // 148 memberships of the 134 registered tilings, not to 134.
+        // 150 memberships of the 136 registered tilings, not to 136.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 148, "134 tilings carry 148 tab memberships");
+        assert_eq!(total, 150, "136 tilings carry 150 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 18, 24, 17, 15, 25, 8, 13, 10, 7]);
+        assert_eq!(counts, vec![11, 18, 26, 17, 15, 25, 8, 13, 10, 7]);
     }
 
     #[test]
@@ -1185,7 +1185,7 @@ mod tests {
         for (label, n) in [
             ("Uniform", 11),
 ("Two-Uniform", 18),
-            ("Laves (Catalan duals)", 24),
+            ("Laves (Catalan duals)", 26),
             ("Wallpaper", 17),
 ("Pentagon Types", 15),
 ("Islamic", 25),
@@ -1855,7 +1855,7 @@ mod tests {
             .iter()
             .position(|t| t.category == TilingCategory::Laves)
             .unwrap()];
-        assert_eq!(lv.cards.len(), 24);
+        assert_eq!(lv.cards.len(), 26);
         let ranks: Vec<Option<u8>> = lv.cards.iter().map(|c| c.class.laves_rank).collect();
         let sorted = ranks.windows(2).all(|w| w[0] <= w[1]);
         assert!(sorted, "laves_rank must be non-decreasing: {ranks:?}");

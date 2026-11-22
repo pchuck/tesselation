@@ -48,7 +48,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card
-counts (`Uniform (11)   Two-Uniform (18)   Laves (24)   Wallpaper (17)   Pentagon
+counts (`Uniform (11)   Two-Uniform (18)   Laves (26)   Wallpaper (17)   Pentagon
 Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (13)   Aperiodic (10)
 Nonperiodic (7)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
@@ -136,14 +136,14 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-134 built-in tilings (148 tab memberships), all discoverable in both UIs
+136 built-in tilings (150 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 ten tabs:
-**Uniform** (11), **Two-Uniform** (18), **Laves / Catalan duals** (24,
-21 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
+**Uniform** (11), **Two-Uniform** (18), **Laves / Catalan duals** (26,
+23 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
 cairo-pentagonal (type 4) and floret-pentagonal (type 5) as typed
@@ -252,6 +252,8 @@ grouping is honest about what the mathematics distinguishes; see
 | `kuniform-dual-n19` | Dual of 2-uniform (3⁶; 3⁴.6) | face-centroid dual of `kuniform-n19` (p6m, det 9√3/2): 6 congruent pentagons (sides 1/√3 ×3, 2/√3 ×2; angles 60°/120°/120°/120°/120°; area 7√3/12) + 2 regular hexagons (side 1/√3, area √3/2) per cell, sum 9√3/2 = \|det\|, edge-to-edge, 6-fold center at the origin (the six pentagons meet there), 2-fold centers additionally at (3/2,0), (3/4,3√3/4), (9/4,3√3/4) (M106) | p6m | hexagonal |
 | `kuniform-dual-n2` | Dual of 2-uniform (3.12.12; 3.4.3.12) | face-centroid dual of `kuniform-n2` (p4m, det 7+4√3, same square lattice ⟨(2+√3,0),(0,2+√3)⟩ as the primal): 4 congruent kites (the 3.4.3.12 orbit; sides (3+√3)/6, (2+√3)/√3, (2+√3)/√3, (3+√3)/6; angles 90°/120°/30°/120°; area 3/4+5√3/12) + 4 congruent isosceles triangles (the 3.12.12 orbit; sides (2+√3)/√3 ×2 over base 2+√3; angles 120°/30°/30°) per cell, sum 7+4√3 = \|det\|, edge-to-edge, 4-fold center at the origin (M120) | p4m | square |
 | `kuniform-dual-n16` | Dual of 2-uniform (3³.4²; 3².4.3.4) | face-centroid dual of `kuniform-n16` (p4g, det 6+3√3, same 45°-rotated square lattice as the primal): 8 congruent pentagons (the 3².4.3.4 orbit) + 4 congruent pentagons (the 3³.4² orbit) per cell — 12 faces over the primal's 12 vertex orbits, the key-lock tiling; the p4g signature carries over (pure axis mirrors, true diagonal glides) (M121) | p4g | square |
+| `kuniform-dual-n4` | Dual of 2-uniform (4⁴; 3³.4²)₁ | face-centroid dual of `kuniform-n4` (cmm, det 2+√3/2, same centered-rectangular lattice ⟨(1,0),(1/2,2+√3/2)⟩ as the primal): 2 congruent pentagons (over the two 3³.4² vertex orbits; sides 1/√3 ×2, (3+√3)/6 ×2, 1 in cyclic order; area 1/2+√3/4) + 1 unit square (over the 4⁴ vertex orbit; area 1) per cell — 3 faces over the primal's 3 vertex orbits; Σ = 2+√3/2 = \|det\|, edge-to-edge; cmm inherited — off-mirror 2-folds at (1/4,2+√3/4) and (3/4,2+√3/4), the cmm-vs-pmm discriminator (M145) | cmm | centered |
+| `kuniform-dual-n3` | Dual of 2-uniform (4⁴; 3³.4²)₂ | face-centroid dual of `kuniform-n3` (cmm, det 3+√3/2, same centered-rectangular lattice ⟨(1,0),(1/2,3+√3/2)⟩ as the primal): 2 congruent pentagons (same shape as dual-n4) + 2 unit squares (over the two 4⁴ vertex orbits) per cell — 4 faces over the primal's 4 vertex orbits; Σ = 3+√3/2 = \|det\|, edge-to-edge; cmm inherited with the same off-mirror 2-fold signature at (1/4,3+√3/4), (3/4,3+√3/4) (M145) | cmm | centered |
 | `pentagon-9` | Pentagon type 9 (Rice) | pentagonal (Rice 1977): A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; 2-isohedral, 8 tiles per rectangular cell, two perpendicular glide families squaring to the primitive translations | pgg | rectangular |
 | `pentagon-10` | Pentagon type 10 (James) | pentagonal (James 1975): A = 90°, B + E = 180°, a = b = c + e, d² = c² + e² (reference instance B = 90°, c = 1: A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2); 3-isohedral, 6 tiles per cell, non-edge-to-edge (each length-2 side split at its exact midpoint), mirrors y = x and y = −x, half-turn at the origin, genuine glide (axis x + y = 3/2), centered rectangular lattice | cmm | centered |
 | `pentagon-11` | Pentagon type 11 (Rice) | pentagonal (Rice 1977): A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, 2a + c = d = e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side carries one c-side and two a-sides), two perpendicular glide families squaring to w1 and −w2 | pgg | rectangular |

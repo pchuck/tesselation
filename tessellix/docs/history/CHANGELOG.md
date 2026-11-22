@@ -2325,3 +2325,35 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   quasiperiodic family 11 → 12; built-ins 133 → 134; memberships
   147 → 148. Remaining in the Andritz cluster: Bowtie–Hexagon family
   (§23f, 4 entries, unblocked by the M131–M134 girih tables).
+- 2026-11-22 — M145: 2-uniform duals n4/n3 `kuniform-dual-n4` +
+  `kuniform-dual-n3` ✅ (§23k, the (4⁴; 3³.4²)₁/₂ cmm dual pair — the
+  first of the two missing subscripted pairs the audit flagged; the
+  (3⁶; 3³.4²)₁/₂ pair n14/n15 queues next): face-centroid duals of
+  the in-repo exact primals via the oracle-validated `dual()` helper
+  (M98/M102/M106/M120/M121 precedent), Q(√3/2) exact end to end.
+  dual-n4: same centered-rectangular lattice ⟨(1,0),(1/2,2+√3/2)⟩ as
+  the primal, det 2+√3/2; 3 faces/cell over the primal's 3 vertex
+  orbits — 2 congruent pentagons (sides 1/√3 ×2, (3+√3)/6 ×2, 1;
+  area 1/2+√3/4) over the two 3³.4² orbits + 1 unit square over the
+  4⁴ orbit; Σ = |det| exact, edge-to-edge. dual-n3: det 3+√3/2; 4
+  faces/cell — 2 pentagons (same shape) + 2 unit squares; Σ = |det|
+  exact, edge-to-edge. Measured group cmm on BOTH — inherited from
+  the registered Cmm primals, pinned by the exact S(g) audit with the
+  cmm-vs-pmm discriminator (off-mirror 2-folds at (1/4,·) and
+  (3/4,·)) and genuine h/v glide families; the primals' Cmm pins
+  independently re-confirmed by the same audit. Spike journey
+  documented with 5 programmatic retractions (an interim pmm/Pmm
+  verdict was a buggy-lattice-reconstruction artifact — the fixed
+  exact audit killed it; a coverage "failure" was an audit-range
+  artifact, 0 bad points at the corrected bounds). Battery: stdlib
+  spike (face censuses, exact areas, Σ = |det|, side²-class congruence
+  with orbit-key margins ~2e-07, group audit run3 EXIT=0,
+  coverage diagnostics) + 6 Rust tests (one trio per dual) +
+  HARDENING: the shared Pmm/Cmm arm of `duals_match_measured_groups`
+  gains a glide-closure probe (R180∘mirror at the cell-center 2-fold)
+  — all 4 pmm/cmm cases pass, zero existing-test flips. Seeds [0,2,0]
+  (n4) / [0,2,0,2] (n3) pinned by `dual_pattern_mode_is_proper_coloring`.
+  Census: Laves tab 24 → 26 (duals are Laves-tab primaries); kuniform
+  family 31 → 33; built-ins 134 → 136; memberships 148 → 150.
+  Remaining §23k: the (3⁶; 3³.4²)₁/₂ pair (duals of kuniform-n14/
+  kuniform-n15) — brief next; n6/n7 primals (the other 20-list gap).
