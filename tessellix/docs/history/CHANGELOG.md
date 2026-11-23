@@ -2667,3 +2667,42 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   cargo test --workspace 1090 passed / 0 failed. Census:
   Quasiperiodic tab 16 → 17; islamic family 28 → 29; built-ins
   145 → 146; memberships 159 → 160.
+- 2026-11-23 — M154: Fibonacci × Fibonacci
+  `fibonacci-fibonacci` ✅ (Bielefeld "fibonacci-fibonacci" entry —
+  the LAST §23 salvage item; siblings pregnant-chairs M136, tangram
+  M142, golden-rhomboid M144; quasiperiodic family): the 1-D Fibonacci
+  substitution taken as a product with itself — 4 orientation classes
+  (LL, LS, SL, SS) on 3 prototile shapes (φ×φ square, φ×1/1×φ
+  rectangle, unit square; LS/SL one shape at two rotations). Linear
+  inflation λ = τ² = φ²; module rule = TWO product steps (children
+  tile the INFLATED parent, anchors scaled by λ — the naive sum
+  misplaces every non-origin parent, spike-caught). Count matrix
+  B = A₄² = [[4,2,2,1],[2,2,1,1],[2,1,2,1],[1,1,1,1]], the square of
+  the 1-D product matrix A₄ = [[1,1,1,1],[1,0,1,0],[1,1,0,0],[1,0,0,0]]
+  pinned from the entry's rule figure; char poly
+  (x−1)²(x²−7x+1), PF eigenvalue τ⁴ = λ²; per-parent area laws
+  (5,8),(3,5),(3,5),(2,3) = area·τ⁴ exact; exact dissection verified
+  for BOTH the figure rule (φ) and the module rule (φ²). Battery:
+  strict PIP + proper-crossing + T-junction checks at every growth
+  step (none at any depth); growth totals F_{2d+2}² = 1, 9, 64, 441,
+  3025 (d = 0..4), 20 736 (d 5), 142 129 (d 6) ≤ MAX_TILES 250 000
+  (d 7 would exceed); exact patch bbox [0, φ^{2d+1}]²; Python↔Rust
+  table diff: all 8 parent rows of both rule tables decode
+  ordered-identical to the product derivation; tr(B^k) = 9, 49, 324,
+  2209 exact (Newton). Exact Q(√5) integer pairs end to end, floats
+  at emission only; finite patch recentered −φ⁷/2 (RECENTRE pin
+  −14.517220926874318); depth cap 6; 4-fold point symmetry (LL rule
+  verified 90°-symmetric); diffraction cited, not proven
+  (golden-family convention). Presentation: scale default 1.0 (NOT
+  the pre-spike 0.5 — at 0.5 the CLI pane exceeds the depth-3 patch
+  and side-bands the background; pin_view.py f64 mirror produced all
+  pins): probe ±10 → d = 3, 225 tiles; preview 143 tiles; CLI pane
+  ±13.333×±10 → 315 tiles, check_coverage passing; rotated
+  ±0.6 @ 0.6/25° → 9 tiles. Battery: 12 module tests + standard
+  trio. Verification: cargo check --workspace zero warnings; cargo
+  test --workspace measured at integration. Census: Quasiperiodic tab
+  17 → 18; quasiperiodic family 13 → 14; built-ins 146 → 147;
+  memberships 160 → 161. Orchestrator pin updates folded in (lib.rs
+  census comment + per-tab vec + registry/membership asserts, tess-tui
+  tab pins, README count/tabs/prose/catalog row, INDEX family size,
+  CHANGELOG entry).

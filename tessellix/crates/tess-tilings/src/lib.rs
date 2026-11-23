@@ -232,7 +232,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153). 146 built-ins — 63 before
+// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154). 147 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the 10 tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -241,8 +241,8 @@ mod tests {
         //   M121, M145, M147) + 3 regular secondaries), Wallpaper 17 (the group
         //   catalog — one card per represented group; M85 completed it),
 //   PentagonTypes 15, Islamic 25, Arrangements 8,
-//   Quasiperiodic 17, Aperiodic 11, Nonperiodic 8.
-// Membership census 160 = 146 primaries + 14 secondaries (3 Laves
+//   Quasiperiodic 18, Aperiodic 11, Nonperiodic 8.
+// Membership census 161 = 147 primaries + 14 secondaries (3 Laves
         // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5) join the Pentagon tab as
         // typed secondary members, M122).
@@ -395,11 +395,11 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 20, 28, 17, 15, 25, 8, 17, 11, 8],
+vec![11, 20, 28, 17, 15, 25, 8, 18, 11, 8],
             "per-tab census (update when adding tilings)"
         );
-assert_eq!(r.len(), 146, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 160, "membership census (update when adding tilings)");
+assert_eq!(r.len(), 147, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 161, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely

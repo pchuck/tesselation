@@ -49,7 +49,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 **Browse mode** — the tab bar lists the ten display categories with card
 counts (`Uniform (11)   Two-Uniform (20)   Laves (28)   Wallpaper (17)   Pentagon
-Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (17)   Aperiodic (11)
+Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (18)   Aperiodic (11)
 Nonperiodic (8)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
@@ -136,7 +136,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-146 built-in tilings (160 tab memberships), all discoverable in both UIs
+147 built-in tilings (161 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -148,10 +148,10 @@ wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
 cairo-pentagonal (type 4) and floret-pentagonal (type 5) as typed
 secondary members), **Islamic** (25), **Arrangements** (8),
-**Quasiperiodic** (17: Penrose family, Ammann–Beenker (both variants),
+**Quasiperiodic** (18: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, golden rhomboid,
 fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7, Andritz
-bowtie-hexagon, Andritz 10gon-1, Andritz 10gon-2), **Aperiodic** (11: einstein family, pinwheel,
+bowtie-hexagon, Andritz 10gon-1, Andritz 10gon-2, fibonacci-fibonacci), **Aperiodic** (11: einstein family, pinwheel,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
 (table), period-doubling, thue-morse, period-tripling), and
 **Nonperiodic** (8: limit-periodic rep-tiles, Hirschhorn,
@@ -288,6 +288,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `golden-triangle` | Golden triangle (√−τ reptile) | quasiperiodic: the right triangle (legs 1, √τ; hypotenuse τ) dissecting by its altitude into two similar children (scales τ^−1 and τ^−1/2, area law τ^−2 + τ^−1 = 1); √(−τ)-inflation substitution (λ = i√τ, λ² = −τ, λL = L ∪ S, λS = L), both mirror chiralities, dense rotations, T-junctions intrinsic at the τ^−2 hypotenuse ratio; finite covered patch — the seed triangle itself (Danzer–van Ophuysen 2000) (M127) | — | — |
 | `golden-rhomboid` | Golden rhomboid (Andritz φ-substitution) | quasiperiodic: equilateral triangles side 1 (Y) and side φ (O) plus the 60/120 rhombus 1×φ (R), the Andritz family's third member (Bielefeld "golden-rhomboid-triangle", Andritz 5-fold cluster); rules Y → O, O → O+Y+R, R → R+2O (areas 1 : φ² : 2φ in √3/4 units, all identities exact); count matrix [[1,1,0],[2,1,1],[0,1,0]] in (R,O,Y) order, char poly λ³−2λ²−2λ+1, PF eigenvalue φ² pinned as an exact Q(√5) root (φ² = (1,1)); exact 4-tuple Q(√5) arithmetic end to end (x = (a₀+a₁φ)/2, y = (b₀+b₁φ)·√3/2, φ·(a₀,a₁) = (a₁,a₀+a₁); floats only at emission); 18 anchored orientation classes collapsing to 10 unanchored sets under the authorized 120°-rotation quotient (SHAPES/RULES stay anchored); single-seed unbounded growth — depth d covers φ^d·R₀ exactly, union = the 60° wedge {y ≥ 0, y ≤ √3·x} (views outside the wedge are background), depth cap 12 (N₁₂ = 134 209 ≤ 250 000); T-junctions intrinsic to the substitution (first at depth 2: 2 points / 5 incidences), every T-point closing to exactly π on both sides in π/3 units — a gap-free/overlap-free partition, not face-to-edge; depth count vectors and 18/18 exact rule dissections pinned (M144) | — | — |
 | `glb-binary-n7` | Generalized GLB binary tiling, n = 7 | Pautze's generalized binary family at n = 7 (Hibma 2015 / Pautze 2017), the K₇ field layer's first consumer: three 7-fold rhombi (acute angles π/7, 2π/7, 3π/7), inflation λ = √(2+2cos(π/7)) = 2cos(π/14) ≈ 1.9499, non-Pisot; per-parent refinement is a TWO-CHOICE pool (shape 1 → {1,6}, 2 → {5,2}, 3 → {3,4}) forced by compatible meshing at depth ≥ 2 — eps-complementarity cascades through arbitrarily long adjacency chains, so no local (shape, class) map drives refinement (probed and refuted); certified generator = deterministic per-level DFS, all-pairs interior disjointness + eps-complementary bend bits on shared parent edges (compat ε_A + ε_B = 1), with the unculled parity battery pinning that spatial culling of the refinement frontier is UNSOUND; K₇-twist exact arithmetic — every vertex a twist pair (k₁, s₁k₂) ∈ K₇², K₇ = Q(b), b = 2cos(2π/7), dyadic denominators D = 2 (depth-stable), float emission only, all certificate vertices on the even π/7 class grid (6 488 vertices, 0 odd at the depth-4 certificate); fan-area law: every valid assembly carries total twist area 2λ^{2d} exact; unculled growth 3/10/35/126/462 (M^d row sums, M = [[2,1,0],[1,2,1],[0,1,3]], PF eigenpair λ²·v with v = (1, b²+b−1, b+1)); depth cap 5 = the deepest level constructed AND certified — σ²…σ⁵ pass the full staircase boundary certificate (single boundary cycle of 4·2^d even unit segments, consecutive pairings, closure on φ^{d−1}(B₀), exact area), while at depth 6 the candidate search exhausts: a legal patch need not admit a legal refinement; fixed cell domain = the seed big tile B₀ = φ(V) (bbox ≈ 3.43 × 1.65 cell units, presented bbox-centered), tiles unit-edge at every level so depth sets fineness only; σ² census per fan pick: 16 two-choice combos, 9 disjoint-only, 4 meshed — disjointness alone NOT sufficient, eps-compatibility load-bearing; finite rotations + polytopal rhomb tiles, Pautze notes no Dₙ-symmetric patches, no pure-point claim (M149) | — | — |
+| `fibonacci-fibonacci` | Fibonacci × Fibonacci (product substitution) | quasiperiodic Bielefeld "fibonacci-fibonacci" entry: the 1-D Fibonacci substitution taken as a product with itself — 4 orientation classes (LL, LS, SL, SS) on 3 prototile shapes (LS/SL one shape at two rotations); linear inflation λ = τ² = φ², module rule = two product steps (children tile the INFLATED parent, anchors scaled by λ); count matrix B = A₄² = [[4,2,2,1],[2,2,1,1],[2,1,2,1],[1,1,1,1]], the square of the product matrix A₄ = [[1,1,1,1],[1,0,1,0],[1,1,0,0],[1,0,0,0]] pinned from the entry's rule figure; char poly (x−1)²(x²−7x+1), PF eigenvalue τ⁴ = λ², per-parent area law child = parent·τ⁴ exact; strict PIP + proper-crossing + T-junction checks at every growth step; exact Q(√5) integer pairs end to end, floats only at emission; finite patch recentered −φ⁷/2 (depth-3 floor origin-symmetric), depth cap 6 (totals F_{2d+2}²: 1, 9, 64, 441, 3025, 20 736, 142 129 ≤ MAX_TILES 250 000); 4-fold point symmetry; diffraction cited, not proven (golden-family convention) (M154) | — | — |
 | `pinwheel` | Pinwheel (1–2–√5) | aperiodic Pythagorean; tiles in infinitely many orientations | — | — |
 | `hat` | Hat (aperiodic monotile) | aperiodic einstein (SMKG 2023); H/T/P/F metatile substitution; tiles only with its mirror image; non-edge-to-edge | — | — |
 | `turtle` | Turtle (hats in turtles) | aperiodic einstein family (SMKG 2023); chiral hats-in-turtles: turtle + hat prototiles, 9-label substitution, homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge hex-lattice geometry | — | — |
