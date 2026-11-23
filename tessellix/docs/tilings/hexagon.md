@@ -1,0 +1,17 @@
+# Hexagonal
+
+`hexagon` · family [Uniform](../families/uniform.md) (`uniform`) · wallpaper group `p6m` · hexagonal lattice
+
+Uniform tiling 6.6.6 — regular hexagons (p6m).
+
+Catalog type: uniform.
+
+## See also
+
+- Family doc (catalog table + build arcs): [docs/families/uniform.md](../families/uniform.md)
+- Mathematical background: [docs/2D_Tilings_Reference.md](../2D_Tilings_Reference.md)
+- Render it: `cargo run -p tess-tui -- export --tiling hexagon --mode proto --out hexagon.svg`
+
+---
+
+*Per-tiling document of the [tessellix](../../README.md) registry · [documentation index](../INDEX.md)*

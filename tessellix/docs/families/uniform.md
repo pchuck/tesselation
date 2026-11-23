@@ -32,6 +32,22 @@ Archimedean work is possible (or needed).
 Numbered arcs keep their PATTERNS.MD §numbers — code comments and
 briefs cite them as `§N`.
 
+## Per-tiling documents
+
+Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
+
+- [`square`](../tilings/square.md) — Square grid
+- [`hexagon`](../tilings/hexagon.md) — Hexagonal
+- [`triangle`](../tilings/triangle.md) — Triangular
+- [`truncated-square`](../tilings/truncated-square.md) — Truncated Square (4.8.8)
+- [`trihexagonal`](../tilings/trihexagonal.md) — Trihexagonal (3.6.3.6)
+- [`snub-trihexagonal`](../tilings/snub-trihexagonal.md) — Snub Trihexagonal (3.3.3.3.6)
+- [`elongated-triangular`](../tilings/elongated-triangular.md) — Elongated Triangular (3.3.3.4.4)
+- [`rhombitrihexagonal`](../tilings/rhombitrihexagonal.md) — Rhombitrihexagonal (3.4.6.4)
+- [`truncated-trihexagonal`](../tilings/truncated-trihexagonal.md) — Truncated Trihexagonal (4.6.12)
+- [`truncated-hexagonal`](../tilings/truncated-hexagonal.md) — Truncated Hexagonal (3.12.12)
+- [`snub-square`](../tilings/snub-square.md) — Snub Square (3.3.4.3.4)
+
 ---
 
 *Map: [docs/INDEX.md](../INDEX.md) · Changelog: [docs/history/CHANGELOG.md](../history/CHANGELOG.md) · Queue: [docs/ROADMAP.md](../ROADMAP.md)*

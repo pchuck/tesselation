@@ -338,6 +338,21 @@ briefs cite them as `§N`.
   79 tilings, 91 memberships, 571 tests at this step (landed on the
   post-M90-M92 base).
 
+## Per-tiling documents
+
+Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
+
+- [`hat`](../tilings/hat.md) — Hat (aperiodic monotile)
+- [`turtle`](../tilings/turtle.md) — Turtle (hats in turtles, einstein family)
+- [`spectre`](../tilings/spectre.md) — Spectre (chiral einstein, Tile(1,1))
+- [`taylor-socolar`](../tilings/taylor-socolar.md) — Taylor-Socolar striped hexagons
+- [`jeandel-rao`](../tilings/jeandel-rao.md) — Jeandel-Rao 11-tile Wang tiles
+- [`half-hex`](../tilings/half-hex.md) — Half-hex (Socolar, limit-periodic)
+- [`domino`](../tilings/domino.md) — Domino (table) substitution
+- [`period-doubling`](../tilings/period-doubling.md) — Period-doubling (2D product) substitution
+- [`thue-morse`](../tilings/thue-morse.md) — Thue-Morse (2D product) substitution
+- [`period-tripling`](../tilings/period-tripling.md) — Period-tripling (2D) substitution
+
 ---
 
 *Map: [docs/INDEX.md](../INDEX.md) · Changelog: [docs/history/CHANGELOG.md](../history/CHANGELOG.md) · Queue: [docs/ROADMAP.md](../ROADMAP.md)*

@@ -922,6 +922,24 @@ briefs cite them as `§N`.
   dependency).
 - **Status:** committed (M74). 63 tilings, 497 tests at the commit.
 
+## Per-tiling documents
+
+Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
+
+- [`pentagon-13`](../tilings/pentagon-13.md) — Pentagon type 13 (Rice, 1977)
+- [`pentagon-14`](../tilings/pentagon-14.md) — Pentagon type 14 (Stein)
+- [`pentagon-15`](../tilings/pentagon-15.md) — Pentagon type 15 (Mann)
+- [`pentagon-9`](../tilings/pentagon-9.md) — Pentagon type 9 (Rice)
+- [`pentagon-11`](../tilings/pentagon-11.md) — Pentagon type 11 (Rice)
+- [`pentagon-12`](../tilings/pentagon-12.md) — Pentagon type 12 (Rice)
+- [`pentagon-10`](../tilings/pentagon-10.md) — Pentagon type 10 (James)
+- [`pentagon-3`](../tilings/pentagon-3.md) — Pentagon type 3 (Reinhardt)
+- [`pentagon-6`](../tilings/pentagon-6.md) — Pentagon type 6 (Kershner)
+- [`pentagon-8`](../tilings/pentagon-8.md) — Pentagon type 8 (Kershner)
+- [`pentagon-1`](../tilings/pentagon-1.md) — Pentagon type 1 (Reinhardt)
+- [`pentagon-2`](../tilings/pentagon-2.md) — Pentagon type 2 (Reinhardt)
+- [`pentagon-7`](../tilings/pentagon-7.md) — Pentagon type 7 (Kershner)
+- [`hirschhorn`](../tilings/hirschhorn.md) — Hirschhorn pentagon
 
 ---
 

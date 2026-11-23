@@ -63,6 +63,13 @@ briefs cite them as `§N`.
   aperiodic 1-D cross sections (Klotz construction); default ratio φ
   gives Fibonacci-word cross sections.
 
+## Per-tiling documents
+
+Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
+
+- [`pythagorean`](../tilings/pythagorean.md) — Pythagorean (two squares)
+- [`windmill`](../tilings/windmill.md) — Periodic pinwheel arrangement (p4)
+- [`pinwheel`](../tilings/pinwheel.md) — Pinwheel (1-2-√5)
 
 ---
 

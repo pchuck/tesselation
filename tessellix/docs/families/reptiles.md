@@ -148,6 +148,20 @@ briefs cite them as `§N`.
   view-stability, unit-scale emission, and the standard battery.
 - **Status:** committed (M32). 32 tilings, 176 tests.
 
+## Per-tiling documents
+
+Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
+
+- [`chair`](../tilings/chair.md) — Chair (L-tromino)
+- [`armchair`](../tilings/armchair.md) — Armchair (L-tetromino)
+- [`sphinx`](../tilings/sphinx.md) — Sphinx (pentagonal hexiamond)
+- [`p-pentomino`](../tilings/p-pentomino.md) — P-pentomino (rep-4 reptile, limit-periodic)
+- [`pregnant-chair`](../tilings/pregnant-chair.md) — Pregnant Chairs
+- [`tangram`](../tilings/tangram.md) — Tangram
+- [`octiamond-reptile`](../tilings/octiamond-reptile.md) — Octiamond reptile (trapezoidal 8-triomino)
+- [`pentiamond-ac-factor-2`](../tilings/pentiamond-ac-factor-2.md) — Pentiamond AC factor 2 (A + C rep-4)
+- [`pentiamond-ac-factor-3`](../tilings/pentiamond-ac-factor-3.md) — Pentiamond AC factor 3 (A + C rep-9)
+- [`pentiamond-ad-factor-2`](../tilings/pentiamond-ad-factor-2.md) — Pentiamond AD factor 2 (A + D rep-4)
 
 ---
 

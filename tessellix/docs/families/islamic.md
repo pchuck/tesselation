@@ -907,6 +907,39 @@ briefs cite them as `§N`.
   (both target sets) zero warnings, cargo test --workspace
   --all-features 735/735.
 
+## Per-tiling documents
+
+Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
+
+- [`star-cross`](../tilings/star-cross.md) — Star and Cross ({8/3})
+- [`hexagram`](../tilings/hexagram.md) — Hexagram and Hexagon ({6/2})
+- [`girih-shesh-band`](../tilings/girih-shesh-band.md) — Girih Shesh-Band (6.6.6)
+- [`girih-star-cross`](../tilings/girih-star-cross.md) — Girih Star-and-Cross (periodic)
+- [`girih-w85`](../tilings/girih-w85.md) — Girih 12-pointed star interlace (W85)
+- [`pic-4-8-8`](../tilings/pic-4-8-8.md) — Hankin PIC fourfold khatam
+- [`pic-3-6-3-6`](../tilings/pic-3-6-3-6.md) — Hankin PIC sixfold khatam
+- [`pic-3-12-12`](../tilings/pic-3-12-12.md) — Hankin PIC twelvefold khatam
+- [`hankin-4-8-8-rosette`](../tilings/hankin-4-8-8-rosette.md) — Hankin rosette khatam (4.8.8)
+- [`hankin-4-6-12`](../tilings/hankin-4-6-12.md) — Hankin dodecagonal rosette (4.6.12)
+- [`hankin-hex-two-point`](../tilings/hankin-hex-two-point.md) — Hankin two-point hex weave (6³)
+- [`hankin-3-12-12`](../tilings/hankin-3-12-12.md) — Hankin twelvefold khatam (3.12.12)
+- [`hankin-3-6-3-6`](../tilings/hankin-3-6-3-6.md) — Hankin sixfold hexagram (3.6.3.6)
+- [`hankin-3-4-6-4`](../tilings/hankin-3-4-6-4.md) — Hankin sixfold rhombitrihex motif (3.4.6.4)
+- [`hankin-square-two-point`](../tilings/hankin-square-two-point.md) — Hankin two-point square weave (4.4.4.4)
+- [`hankin-4-8-8-rosette-transform`](../tilings/hankin-4-8-8-rosette-transform.md) — Hankin rosette-transform khatam (4.8.8)
+- [`hankin-3-3-3-4-4`](../tilings/hankin-3-3-3-4-4.md) — Hankin elongated-triangular motif (3.3.3.4.4)
+- [`hankin-3-3-4-3-4`](../tilings/hankin-3-3-4-3-4.md) — Hankin snub-square motif (3.3.4.3.4)
+- [`khatam-girih`](../tilings/khatam-girih.md) — Khatam Girih Decomposition (8-point)
+- [`najm-63-2e-0-3e-ac`](../tilings/najm-63-2e-0-3e-ac.md) — Najm template (6,3)
+- [`najm-44-3e-0-0-a`](../tilings/najm-44-3e-0-0-a.md) — Najm template (4,4)
+- [`girih-bowtie`](../tilings/girih-bowtie.md) — Girih Bowtie (72.72.216)
+- [`girih-decagon`](../tilings/girih-decagon.md) — Girih Decagon (10.6.10)
+- [`girih-pentagon`](../tilings/girih-pentagon.md) — Girih Pentagon (5.5.4.4)
+- [`girih-rhombus`](../tilings/girih-rhombus.md) — Girih Rhombus (72.72.108.108)
+- [`girih-quasiperiodic`](../tilings/girih-quasiperiodic.md) — Girih Star-and-Cross (quasiperiodic)
+- [`andritz-bowtie-hexagon`](../tilings/andritz-bowtie-hexagon.md) — Andritz Bowtie-and-Hexagon (quasiperiodic)
+- [`andritz-bowtie-hexagon-10gon-1`](../tilings/andritz-bowtie-hexagon-10gon-1.md) — Andritz 10gon-1 (quasiperiodic)
+- [`andritz-bowtie-hexagon-10gon-2`](../tilings/andritz-bowtie-hexagon-10gon-2.md) — Andritz 10gon-2 (quasiperiodic)
 
 ---
 

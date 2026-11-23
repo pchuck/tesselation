@@ -401,6 +401,25 @@ briefs cite them as `§N`.
   sets) zero warnings, cargo test --workspace --all-features
   730/730.
 
+## Per-tiling documents
+
+Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
+
+- [`penrose`](../tilings/penrose.md) — Penrose P3 (rhombs)
+- [`penrose-p1`](../tilings/penrose-p1.md) — Penrose P1 (pentagon, star, boat, diamond)
+- [`penrose_p2`](../tilings/penrose_p2.md) — Penrose P2 (kite and dart)
+- [`penrose-pentagon`](../tilings/penrose-pentagon.md) — Penrose pentagons (5-tile φ-substitution)
+- [`ammann-beenker`](../tilings/ammann-beenker.md) — Ammann-Beenker (A5)
+- [`ammann-beenker-tri`](../tilings/ammann-beenker-tri.md) — Ammann-Beenker rhomb-triangle
+- [`stampfli`](../tilings/stampfli.md) — Stampfli (12-fold)
+- [`fractalizing-3-12-12`](../tilings/fractalizing-3-12-12.md) — Fractalizing 3.12.12
+- [`shield`](../tilings/shield.md) — Gähler shield
+- [`golden-bee`](../tilings/golden-bee.md) — Golden bee (Ammann A2 chair)
+- [`golden-triangle`](../tilings/golden-triangle.md) — Golden triangle (√−τ reptile)
+- [`golden-rhomboid`](../tilings/golden-rhomboid.md) — Golden rhomboid-triangle (Andritz φ-substitution)
+- [`glb-binary-n7`](../tilings/glb-binary-n7.md) — GLB binary, generalized (n = 7)
+- [`fibonacci-fibonacci`](../tilings/fibonacci-fibonacci.md) — Fibonacci × Fibonacci (product substitution)
+
 ---
 
 *Map: [docs/INDEX.md](../INDEX.md) · Changelog: [docs/history/CHANGELOG.md](../history/CHANGELOG.md) · Queue: [docs/ROADMAP.md](../ROADMAP.md)*

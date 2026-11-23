@@ -193,10 +193,9 @@ mod tests {
     /// primary tab plus every tab from its
     /// [`Tiling::secondary_categories`]. The per-tab census pins today's
     /// taxonomy — extend it when adding a tiling (and the README's
-    /// count; the doc-sync guards
-    /// `readme_catalog_matches_registry` and
-    /// `family_docs_match_registrations` below fail the suite if
-    /// the docs are not updated).
+    /// count; the doc-sync guards `readme_matches_registry`,
+    /// `family_docs_match_registrations` and `tiling_docs_match_registry`
+    /// below fail the suite if the docs are not updated).
     #[test]
     fn registry_groups_are_complete_and_canonically_ordered() {
         let r = super::registry();
@@ -428,15 +427,50 @@ assert_eq!(r.len(), 150, "built-in tiling count (update when adding tilings)");
         assert_eq!(groups, expected, "represented groups = 17 - gaps");
     }
 
-    /// Doc-sync guard: the README's "Supported tilings" section must
-    /// mirror the registry — the census sentence ("N built-in tilings
-    /// (M tab memberships)"), the per-tab counts in "The ten tabs:"
-    /// prose, and the catalog table (every registry id, exactly once,
-    /// no stale rows). Without this guard the README drifted to
-    /// 119/133 while the registry moved to 122/136 (11 rows never
-    /// landed); this test fails the suite until the docs catch up.
+    /// Which family docs are guarded, and against which register slice.
+    /// Shared by the doc-sync guards below (cfg'd per family feature).
+    fn family_cases()
+    -> Vec<(&'static str, fn(tess_core::Registry) -> tess_core::Registry)> {
+        let mut cases: Vec<(&'static str, fn(tess_core::Registry) -> tess_core::Registry)> =
+            Vec::new();
+        #[cfg(feature = "uniform")]
+        cases.push(("uniform", crate::families::uniform::register));
+        #[cfg(feature = "quasiperiodic")]
+        cases.push(("quasiperiodic", crate::families::quasiperiodic::register));
+        #[cfg(feature = "arrangements")]
+        cases.push(("arrangements", crate::families::arrangements::register));
+        #[cfg(feature = "pentagons")]
+        cases.push(("pentagons", crate::families::pentagons::register));
+        #[cfg(feature = "laves")]
+        cases.push(("laves", crate::families::laves::register));
+        #[cfg(feature = "kuniform")]
+        cases.push(("kuniform", crate::families::kuniform::register));
+        #[cfg(feature = "reptiles")]
+        cases.push(("reptiles", crate::families::reptiles::register));
+        #[cfg(feature = "aperiodic")]
+        cases.push(("aperiodic", crate::families::aperiodic::register));
+        #[cfg(feature = "pavers")]
+        cases.push(("pavers", crate::families::pavers::register));
+        #[cfg(feature = "islamic")]
+        cases.push(("islamic", crate::families::islamic::register));
+        cases
+    }
+
+    /// Doc-sync guard, README tier: the README must mirror the registry —
+    /// the census sentence ("N built-in tilings (M tab memberships)"),
+    /// the per-tab counts in "The ten tabs:" prose, and the per-family
+    /// table (exactly one doc link per family, stating the family's
+    /// registered size). Per-tiling specifications live in
+    /// `docs/tilings/<id>.md` (guard: `tiling_docs_match_registry`) and
+    /// per-family tables in `docs/families/<family>.md` (guard:
+    /// `family_docs_match_registrations`). (History: this guard began
+    /// life as `readme_catalog_matches_registry`, checking the README's
+    /// inline catalog table; the 2026-11 docs restructure moved the
+    /// per-tiling detail into `docs/tilings/` and left the README as the
+    /// overview. Without such a guard the README once drifted to 119/133
+    /// while the registry moved to 122/136 — 11 rows never landed.)
     #[test]
-    fn readme_catalog_matches_registry() {
+    fn readme_matches_registry() {
         /// The number immediately preceding `phrase` (digits only).
         fn phrase_number(text: &str, phrase: &str, what: &str) -> usize {
             let i = text
@@ -501,29 +535,102 @@ assert_eq!(r.len(), 150, "built-in tiling count (update when adding tilings)");
             assert_eq!(n, tab.cards.len(), "README per-tab count for {alias}");
         }
 
-        // Catalog table: header row, then `| `id` | ...` data rows.
-        let table_start = readme
-            .find("| id | name | type |")
-            .expect("README catalog table header row");
-        let mut ids: Vec<&str> = readme[table_start..]
-            .lines()
-            .skip(2) // header + separator
-            .take_while(|l| l.starts_with("| `"))
-            .map(|l| {
-                let rest = &l["| `".len()..];
-                rest.split('`')
-                    .next()
-                    .expect("catalog row id has a closing backtick")
-            })
-            .collect();
-        ids.sort_unstable();
-        let mut expected: Vec<&str> = r.iter().map(|t| t.id()).collect();
-        expected.sort_unstable();
+        // Family table: exactly one doc link per family, and the count
+        // cell must equal that family's registered size. (The README no
+        // longer carries a per-tiling catalog table; per-tiling detail
+        // lives in docs/tilings/<id>.md, guarded by
+        // tiling_docs_match_registry.)
         assert_eq!(
-            ids, expected,
-            "README catalog table must list every registry id exactly once (missing, \
-             stale, or duplicated rows)"
+            family_cases().len(),
+            10,
+            "README family table covers all ten families"
         );
+        for (fam, register) in family_cases() {
+            let marker = format!("](docs/families/{fam}.md)");
+            let rows: Vec<&str> =
+                readme.lines().filter(|l| l.contains(&marker)).collect();
+            assert_eq!(
+                rows.len(),
+                1,
+                "README family table: exactly one row linking docs/families/{fam}.md"
+            );
+            let after = rows[0]
+                .split(&marker)
+                .nth(1)
+                .expect("row contains its own marker");
+            let digits: String = after
+                .trim_start_matches([' ', '|'])
+                .chars()
+                .take_while(|c| c.is_ascii_digit())
+                .collect();
+            let n: usize = digits
+                .parse()
+                .unwrap_or_else(|_| panic!("README family-table count not parseable for {fam}"));
+            let fr = register(tess_core::Registry::new());
+            assert_eq!(n, fr.len(), "README family-table count for {fam}");
+        }
+    }
+
+    /// Doc-sync guard, per-tiling tier: every registered tiling must own
+    /// `docs/tilings/<id>.md`, titled with its registry name, and every
+    /// family doc's "Per-tiling documents" section must link exactly its
+    /// family's registered ids (section-scoped, so prose cross-links
+    /// elsewhere in the family doc are tolerated). This is the third
+    /// tier of the doc-sync guards: README overview (readme_matches_
+    /// registry) → family docs (family_docs_match_registrations) →
+    /// per-tiling documents.
+    #[test]
+    fn tiling_docs_match_registry() {
+        let docs_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/tilings");
+        let r = super::registry();
+        for t in r.iter() {
+            let path = docs_dir.join(format!("{}.md", t.id()));
+            let doc = std::fs::read_to_string(&path)
+                .unwrap_or_else(|e| panic!("docs/tilings/{}.md readable: {e}", t.id()));
+            let h1 = doc
+                .lines()
+                .next()
+                .unwrap_or_else(|| panic!("docs/tilings/{}.md empty", t.id()));
+            assert_eq!(
+                h1,
+                format!("# {}", t.name()),
+                "docs/tilings/{}.md title must match the registry name",
+                t.id()
+            );
+        }
+
+        for (fam, register) in family_cases() {
+            let doc = std::fs::read_to_string(
+                std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join(format!("../../docs/families/{fam}.md")),
+            )
+            .unwrap_or_else(|e| panic!("docs/families/{fam}.md readable: {e}"));
+            let r = register(tess_core::Registry::new());
+            let s = doc
+                .find("## Per-tiling documents")
+                .unwrap_or_else(|| panic!("docs/families/{fam}.md '## Per-tiling documents' section"));
+            let section_end = doc[s + 1..]
+                .find("\n## ")
+                .map_or(doc.len(), |i| s + 1 + i);
+            let mut ids: Vec<&str> = doc[s..section_end]
+                .lines()
+                .filter_map(|l| l.strip_prefix("- [`"))
+                .map(|rest| {
+                    rest.split('`')
+                        .next()
+                        .expect("Per-tiling-documents link id has a closing backtick")
+                })
+                .collect();
+            ids.sort_unstable();
+            let mut expected: Vec<&str> = r.iter().map(|t| t.id()).collect();
+            expected.sort_unstable();
+            assert_eq!(
+                ids, expected,
+                "docs/families/{fam}.md Per-tiling-documents section must link every \
+                 registered id of the family exactly once (missing, stale, or duplicated)"
+            );
+        }
     }
 
     /// Doc-sync guard for the per-family docs: each
@@ -537,27 +644,7 @@ assert_eq!(r.len(), 150, "built-in tiling count (update when adding tilings)");
     /// family so a failure names the one file to fix).
     #[test]
     fn family_docs_match_registrations() {
-        let mut cases: Vec<(&str, fn(tess_core::Registry) -> tess_core::Registry)> = Vec::new();
-        #[cfg(feature = "uniform")]
-        cases.push(("uniform", crate::families::uniform::register));
-        #[cfg(feature = "quasiperiodic")]
-        cases.push(("quasiperiodic", crate::families::quasiperiodic::register));
-        #[cfg(feature = "arrangements")]
-        cases.push(("arrangements", crate::families::arrangements::register));
-        #[cfg(feature = "pentagons")]
-        cases.push(("pentagons", crate::families::pentagons::register));
-        #[cfg(feature = "laves")]
-        cases.push(("laves", crate::families::laves::register));
-        #[cfg(feature = "kuniform")]
-        cases.push(("kuniform", crate::families::kuniform::register));
-        #[cfg(feature = "reptiles")]
-        cases.push(("reptiles", crate::families::reptiles::register));
-        #[cfg(feature = "aperiodic")]
-        cases.push(("aperiodic", crate::families::aperiodic::register));
-        #[cfg(feature = "pavers")]
-        cases.push(("pavers", crate::families::pavers::register));
-        #[cfg(feature = "islamic")]
-        cases.push(("islamic", crate::families::islamic::register));
+        let cases = family_cases();
         assert!(!cases.is_empty(), "at least one family doc is guarded");
 
         for (fam, register) in cases {

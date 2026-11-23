@@ -957,6 +957,47 @@ briefs cite them as `§N`.
   ⟨((3+√3)/2, (3+√3)/2), (−(3+√3)/2, (3+√3)/2)⟩, area 6+3√3,
   8 vertices/cell; combinatorial derivation open).
 
+## Per-tiling documents
+
+Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
+
+- [`kuniform-p6m`](../tilings/kuniform-p6m.md) — 2-uniform (3⁶; 3².6²)
+- [`kuniform-pmm`](../tilings/kuniform-pmm.md) — 2-uniform (3.6.3.6; 3².6²)
+- [`kuniform-n18`](../tilings/kuniform-n18.md) — 2-uniform (3⁶; 3².4.3.4)
+- [`kuniform-n9`](../tilings/kuniform-n9.md) — 2-uniform (3.4.6.4; 3².4.3.4)
+- [`kuniform-n8`](../tilings/kuniform-n8.md) — 2-uniform (3.4.6.4; 3³.4²)
+- [`kuniform-n5`](../tilings/kuniform-n5.md) — 2-uniform (3.4.6.4; 3.4².6)
+- [`kuniform-n1`](../tilings/kuniform-n1.md) — 2-uniform (4.6.12; 3.4.6.4)
+- [`kuniform-n13`](../tilings/kuniform-n13.md) — 2-uniform (3⁶; 3².4.12)
+- [`kuniform-n20`](../tilings/kuniform-n20.md) — 2-uniform (3⁶; 3⁴.6)₁
+- [`kuniform-n12`](../tilings/kuniform-n12.md) — 2-uniform (3².6²; 3⁴.6)
+- [`kuniform-n19`](../tilings/kuniform-n19.md) — 2-uniform (3⁶; 3⁴.6)₂
+- [`kuniform-n4`](../tilings/kuniform-n4.md) — 2-uniform (4⁴; 3³.4²)₁
+- [`kuniform-n14`](../tilings/kuniform-n14.md) — 2-uniform (3⁶; 3³.4²)₁
+- [`kuniform-n3`](../tilings/kuniform-n3.md) — 2-uniform (4⁴; 3³.4²)₂
+- [`kuniform-n15`](../tilings/kuniform-n15.md) — 2-uniform (3⁶; 3³.4²)₂
+- [`kuniform-n2`](../tilings/kuniform-n2.md) — 2-uniform (3.12.12; 3.4.3.12)
+- [`kuniform-n16`](../tilings/kuniform-n16.md) — 2-uniform (3³.4²; 3².4.3.4)
+- [`kuniform-n17`](../tilings/kuniform-n17.md) — 2-uniform (3³.4²; 3².4.3.4)₂
+- [`kuniform-n6`](../tilings/kuniform-n6.md) — 2-uniform (3.4².6; 3.6.3.6)₂
+- [`kuniform-n7`](../tilings/kuniform-n7.md) — 2-uniform (3.4².6; 3.6.3.6)₁
+- [`kuniform-dual-p6m`](../tilings/kuniform-dual-p6m.md) — Dual of 2-uniform (V3⁶; V3².6²)
+- [`kuniform-dual-n18`](../tilings/kuniform-dual-n18.md) — Dual of 2-uniform (V3⁶; V3².4.3.4)
+- [`kuniform-dual-n9`](../tilings/kuniform-dual-n9.md) — Dual of 2-uniform (V3.4.6.4; V3².4.3.4)
+- [`kuniform-dual-n8`](../tilings/kuniform-dual-n8.md) — Dual of 2-uniform (V3.4.6.4; V3³.4²)
+- [`kuniform-dual-n5`](../tilings/kuniform-dual-n5.md) — Dual of 2-uniform (V3.4.6.4; V3.4².6)
+- [`kuniform-dual-n1`](../tilings/kuniform-dual-n1.md) — Dual of 2-uniform (V4.6.12; V3.4.6.4)
+- [`kuniform-dual-n13`](../tilings/kuniform-dual-n13.md) — Dual of 2-uniform (V3⁶; V3².4.12)
+- [`kuniform-dual-n20`](../tilings/kuniform-dual-n20.md) — Dual of 2-uniform (V3⁶; V3⁴.6)₁
+- [`kuniform-dual-pmm`](../tilings/kuniform-dual-pmm.md) — Dual of 2-uniform (V3.6.3.6; V3².6²)
+- [`kuniform-dual-n12`](../tilings/kuniform-dual-n12.md) — Dual of 2-uniform (V3².6²; V3⁴.6)
+- [`kuniform-dual-n19`](../tilings/kuniform-dual-n19.md) — Dual of 2-uniform (V3⁶; V3⁴.6)₂
+- [`kuniform-dual-n2`](../tilings/kuniform-dual-n2.md) — Dual of 2-uniform (3.12.12; 3.4.3.12)
+- [`kuniform-dual-n16`](../tilings/kuniform-dual-n16.md) — Dual of 2-uniform (3³.4²; 3².4.3.4)
+- [`kuniform-dual-n4`](../tilings/kuniform-dual-n4.md) — Dual of 2-uniform (4⁴; 3³.4²)₁
+- [`kuniform-dual-n3`](../tilings/kuniform-dual-n3.md) — Dual of 2-uniform (4⁴; 3³.4²)₂
+- [`kuniform-dual-n14`](../tilings/kuniform-dual-n14.md) — Dual of 2-uniform (3⁶; 3³.4²)₁
+- [`kuniform-dual-n15`](../tilings/kuniform-dual-n15.md) — Dual of 2-uniform (3⁶; 3³.4²)₂
 
 ---
 

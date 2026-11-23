@@ -54,12 +54,19 @@ fundamental region.
   and **`tess-gui`** (eframe/egui 0.29) are both thin layers over
   `tess_core::App`. Parameters are self-describing (`ParamSpec`), so
   **adding a tiling never requires touching UI code**.
-- **`docs/`** — one doc per family (`docs/families/<family>.md`: the
-  family's catalog table + its numbered build arcs), guarded against
-  registry drift by `family_docs_match_registrations`. The candidate
-  queue and research areas live in `docs/ROADMAP.md`, the gallery
-  taxonomy in `docs/TAXONOMY.md`, the append-only milestone changelog
-  in `docs/history/CHANGELOG.md`; `docs/INDEX.md` is the map.
+- **`docs/`** — documentation in three guard-checked tiers: the
+  per-tiling documents (`docs/tilings/<id>.md`, one per registry
+  member: algorithm, exact geometry, verification, sources; guarded by
+  `tiling_docs_match_registry`), one doc per family
+  (`docs/families/<family>.md`: the family's catalog table, its
+  numbered build arcs, and its Per-tiling-documents link section;
+  guarded by `family_docs_match_registrations`), and the cross-cutting
+  reference docs `docs/DESIGN.md` (architecture; carries the full
+  Tests description) and `docs/USAGE.md` (TUI/CLI/GUI walkthrough).
+  The README is the guard-checked overview (`readme_matches_registry`).
+  The candidate queue and research areas live in `docs/ROADMAP.md`, the
+  gallery taxonomy in `docs/TAXONOMY.md`, the append-only milestone
+  changelog in `docs/history/CHANGELOG.md`; `docs/INDEX.md` is the map.
 
 ## Adding a periodic tiling (the common case)
 
@@ -96,10 +103,12 @@ fundamental region.
    lattice tables). Declare its category in the module
    (`TilingCategory`: Uniform / Laves / Wallpaper / Quasiperiodic /
    Aperiodic / Nonperiodic — see `tess-core/src/category.rs`; the UIs
-   group their lists by it), add the 3 standard tests, and add the
-   catalog row to `docs/families/<family>.md` (guard-checked) — plus a
-   numbered build arc when the build introduces a new technique or a
-   hard-won lesson (row-only is otherwise fine; M127–M129 precedent).
+   group their lists by it), add the 3 standard tests, add the catalog
+   row + Per-tiling-documents link to `docs/families/<family>.md`
+   (guard-checked), and write the per-tiling document
+   `docs/tilings/<id>.md` (guard-checked) — plus a numbered build arc
+   when the build introduces a new technique or a hard-won lesson
+   (row-only is otherwise fine; M127–M129 precedent).
 
 ## Fleet protocol (parallel agents)
 
@@ -115,7 +124,11 @@ same directory) and touches only its own surfaces.
 - `crates/tess-tilings/src/families/<family>.rs` — module decl,
   `register` slice, `classification` arms, census `IDS`,
   `lattice_tilings()` entries.
-- `docs/families/<family>.md` — the catalog row (and arc if arc-worthy).
+- `docs/families/<family>.md` — the catalog row (and arc if
+  arc-worthy) plus the Per-tiling-documents link line.
+- `docs/tilings/<id>.md` — the new tiling's per-tiling document
+  (`# <registry name>` H1, metadata line, specification / algorithm,
+  See-also; guarded by `tiling_docs_match_registry`).
 - Scratch under `/tmp/opencode/<brief-id>/` (Python spikes, batteries).
 
 **Orchestrator-only** (workers never edit):
@@ -126,7 +139,8 @@ same directory) and touches only its own surfaces.
   `lattice_culling_tests` `lattices.extend(...)` lines. A
   `LatticeTiling` brief therefore flags the new tiling in its report
   instead of wiring the culling test itself.
-- `README.md` (counts + catalog), `docs/INDEX.md` (family sizes).
+- `README.md` (census sentence + per-tab prose + family-table count),
+  `docs/INDEX.md` (family sizes).
 - `docs/history/CHANGELOG.md` — append-only, integrated by the
   orchestrator.
 - `docs/ROADMAP.md` (queue status flips) and `PROPOSED.md` (dossier
@@ -164,11 +178,12 @@ the commit-message body; the orchestrator writes the final
 2. `cargo check --workspace` zero warnings; `cargo test --workspace`
    green.
 3. Guards green (`family_docs_match_registrations`,
-   `readme_catalog_matches_registry`,
+   `tiling_docs_match_registry`, `readme_matches_registry`,
    `registry_groups_are_complete_and_canonically_ordered`); add the
    culling-test line first if the tiling is a lattice table.
-4. Shared-file updates: README count + catalog row, `docs/INDEX.md`
-   size, ROADMAP status flip, PROPOSED annotation, CHANGELOG append.
+4. Shared-file updates: README census + per-tab prose + family-table
+   count, `docs/INDEX.md` size, ROADMAP status flip, PROPOSED
+   annotation, CHANGELOG append.
 5. Assign `M<n>` and land **one commit per tiling** with the
    shared-file updates folded in — the M-commit is the unit of history.
 

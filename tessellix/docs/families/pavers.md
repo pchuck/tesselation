@@ -684,6 +684,24 @@ briefs cite them as `§N`.
   and the tess-tilings census pins Wallpaper 17.
 - **Status:** committed (M85). 71 tilings, 529 tests at the commit.
 
+## Per-tiling documents
+
+Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
+
+- [`basketweave`](../tilings/basketweave.md) — Basketweave (2:1 dominoes)
+- [`herringbone`](../tilings/herringbone.md) — Herringbone (2:1 dominoes)
+- [`running-bond`](../tilings/running-bond.md) — Running bond (2:1 dominoes)
+- [`stack-bond`](../tilings/stack-bond.md) — Stack bond (2:1 dominoes)
+- [`herringbone-45`](../tilings/herringbone-45.md) — Herringbone 45° (2:1 dominoes)
+- [`basketweave-3`](../tilings/basketweave-3.md) — Basketweave three-brick (2:1 dominoes)
+- [`stepped-hexominoes`](../tilings/stepped-hexominoes.md) — Stepped hexominoes
+- [`trapezoid-courses`](../tilings/trapezoid-courses.md) — Trapezoid courses
+- [`glide-hexagon-strips`](../tilings/glide-hexagon-strips.md) — Glide hexagon strips
+- [`shifted-trapezoid-courses`](../tilings/shifted-trapezoid-courses.md) — Shifted trapezoid courses
+- [`wavy-courses`](../tilings/wavy-courses.md) — Wavy courses
+- [`chiral-cut-honeycomb`](../tilings/chiral-cut-honeycomb.md) — Chiral-cut honeycomb
+- [`split-triangle-grid`](../tilings/split-triangle-grid.md) — Split-triangle grid
+- [`alcove-cut-grid`](../tilings/alcove-cut-grid.md) — Alcove-cut grid
 
 ---
 

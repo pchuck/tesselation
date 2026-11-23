@@ -1,8 +1,21 @@
 # Documentation index
 
 tessellix's documentation is organized for parallel contribution: one
-file per family (the collision-free unit of doc work), shared
-cross-cutting reference docs, and frozen history.
+file per family (the collision-free unit of doc work), one document per
+tiling, shared cross-cutting reference docs, and frozen history.
+
+## Tiers
+
+1. **[README.md](../README.md)** — the overview: what tessellix is,
+   build/run quickstart, the ten families with doc links, and pointers
+   into the tiers below.
+2. **Per-family docs** (`docs/families/<family>.md`) — each family's
+   catalog table + numbered build arcs + links to its members.
+3. **Per-tiling documents** (`docs/tilings/<id>.md`, 150 files) — each
+   tiling's full specification: algorithm, exact geometry, verification,
+   sources.
+4. **Cross-cutting reference** — DESIGN (architecture), USAGE (TUI/CLI/
+   GUI walkthrough), 2D_Tilings_Reference (math background).
 
 ## Per-family docs
 
@@ -21,10 +34,21 @@ cross-cutting reference docs, and frozen history.
 
 A family doc owns its catalog table (guarded:
 `family_docs_match_registrations` fails the suite on drift from the
-registry) and its numbered build arcs (§N — code comments cite these).
+registry), its numbered build arcs (§N — code comments cite these), and
+its Per-tiling-documents link section (guarded:
+`tiling_docs_match_registry`). Per-tiling documents are guarded too:
+every registered tiling must own `docs/tilings/<id>.md` titled with its
+registry name.
 
 ## Cross-cutting
 
+- [docs/DESIGN.md](DESIGN.md) — the architecture reference: crate
+  layout, the `Tiling` trait contract, self-describing parameters, the
+  `LatticeTiling` framework, generator design, UI state, rendering, and
+  the test-suite description
+- [docs/USAGE.md](USAGE.md) — the TUI/CLI and GUI walkthrough: Browse
+  mode, search, Render mode, keybindings, mouse behavior, all `export`
+  flags
 - [docs/ROADMAP.md](ROADMAP.md) — vetted-candidates queue + research areas
   (dossiers in [PROPOSED.md](../PROPOSED.md))
 - [docs/cyclotomic-field-layer.md](cyclotomic-field-layer.md) — exact
@@ -48,12 +72,11 @@ registry) and its numbered build arcs (§N — code comments cite these).
 
 - **New tiling in family F** → dispatch a brief
   ([docs/briefs/TEMPLATE.md](briefs/TEMPLATE.md); worked examples in
-  that directory), code in `families/F/` + row in
-  `docs/families/F.md`; the orchestrator integrates per the fleet
+  that directory), code in `families/F/`, row + Per-tiling-documents
+  link in `docs/families/F.md`, and the per-tiling document
+  `docs/tilings/<id>.md`; the orchestrator integrates per the fleet
   protocol in [AGENTS.md](../AGENTS.md)
 - **New milestone M<n>** → one changelog line in
   `docs/history/CHANGELOG.md` (appended at integration)
 - **New candidate** → queue entry in `docs/ROADMAP.md`, dossier in
   `PROPOSED.md`
-
-Family sizes at the split: uniform 11, quasiperiodic 11, arrangements 3, pentagons 14, laves 8, kuniform 30, reptiles 4, aperiodic 5, pavers 14, islamic 22.

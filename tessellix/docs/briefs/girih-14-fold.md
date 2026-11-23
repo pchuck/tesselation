@@ -322,8 +322,11 @@ quasiperiodic **13**. These are almost certainly stale at dispatch —
 for this landing: built-ins +1, memberships +1, quasiperiodic 13 → 14.
 `LatticeTiling`? No — this is a substitution family entry; no culling
 test line expected. Guards (`registry_groups_are_complete_and_canonically_ordered`,
-`family_docs_match_registrations`, `readme_catalog_matches_registry`)
-are orchestrator-owned: report verbatim, never fix.
+`family_docs_match_registrations`, `tiling_docs_match_registry`,
+`readme_matches_registry`)
+are orchestrator-owned: report verbatim, never fix. (README carries
+the overview only since the 2026-11 docs restructure; the per-tiling
+document `docs/tilings/girih-14-fold.md` is written at integration.)
 
 ### Files you own (implementation dispatch)
 
@@ -331,7 +334,10 @@ are orchestrator-owned: report verbatim, never fix.
   the new module.
 - `crates/tess-tilings/src/families/quasiperiodic.rs` — module decl,
   `register` slice, `classification` arm, census `IDS`.
-- `docs/families/quasiperiodic.md` — catalog row (guard-checked).
+- `docs/families/quasiperiodic.md` — catalog row + Per-tiling-documents
+  link line (guard-checked).
+- `docs/tilings/girih-14-fold.md` — the new tiling's per-tiling
+  document (guard-checked; H1 must match the registry name exactly).
 - `/tmp/opencode/girih14-recon/` — scratch (Python spikes, batteries).
 - This brief + `docs/briefs/girih-14-fold-rule.json` are committed
   prepass artifacts — treat the JSON as **certified read-only input**;

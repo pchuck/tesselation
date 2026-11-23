@@ -59,6 +59,18 @@ pattern coloring on generated patches. The verification script lives
 at `/tmp/opencode/laves_dual.py` (exact Q(√d) arithmetic, per-dual
 battery) with Rust-ready literal emission (`--rust` flag).
 
+## Per-tiling documents
+
+Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
+
+- [`cairo-pentagonal`](../tilings/cairo-pentagonal.md) — Cairo Pentagonal (V3.3.4.3.4)
+- [`tetrakis-square`](../tilings/tetrakis-square.md) — Tetrakis Square (V4.8.8)
+- [`rhombille`](../tilings/rhombille.md) — Rhombille (V3.6.3.6)
+- [`triakis-triangular`](../tilings/triakis-triangular.md) — Triakis Triangular (V3.12.12)
+- [`deltoidal-trihexagonal`](../tilings/deltoidal-trihexagonal.md) — Deltoidal Trihexagonal (V3.4.6.4)
+- [`kisrhombille`](../tilings/kisrhombille.md) — Kisrhombille (V4.6.12)
+- [`prismatic-pentagonal`](../tilings/prismatic-pentagonal.md) — Prismatic Pentagonal (V3.3.3.4.4)
+- [`floret-pentagonal`](../tilings/floret-pentagonal.md) — Floret Pentagonal (V3.3.3.3.6)
 
 ---
 

@@ -40,9 +40,14 @@ milestone noted a numbering trap, quote it here.>
 - `crates/tess-tilings/src/families/<family>.rs` — module decl +
   `register` slice + `classification` arm(s) + census `IDS`
   (+ `lattice_tilings()` entry if the tiling is a lattice table).
-- `docs/families/<family>.md` — the catalog row (guard-checked); a
-  numbered build arc only if the build introduces a new technique or
-  hard-won lesson.
+- `docs/families/<family>.md` — the catalog row (guard-checked) plus
+  the Per-tiling-documents link line; a numbered build arc only if the
+  build introduces a new technique or hard-won lesson.
+- `docs/tilings/<id>.md` — the new tiling's per-tiling document
+  (guard-checked): H1 `# <registry name>` (must match `t.name()`
+  exactly), metadata line (`` `<id>` · family link · wallpaper group ·
+  lattice ``), the specification/algorithm, and the See-also block —
+  copy the shape from any existing `docs/tilings/<id>.md`.
 - `/tmp/opencode/<brief-id>/` — scratch (Python spike, batteries).
 
 **Do not touch anything else.** Not README, not `lib.rs` (census pin,
@@ -96,9 +101,12 @@ Per the fleet protocol in `tessellix/AGENTS.md`:
 
 1. Diff-scope statement (exactly the owned files).
 2. Verification evidence with exact numbers and pass counts.
-3. Expected census deltas: family n → n+1; built-ins 122 → 123;
-   memberships 136 → 137 (`<adjust per brief>`); `LatticeTiling`?
-   → remind the orchestrator to add the culling-test line.
+3. Expected census deltas: family n → n+1; built-ins 150 → 151;
+   memberships 164 → 165 (`<adjust per brief>`); `LatticeTiling`?
+   → remind the orchestrator to add the culling-test line. Doc deltas
+   come with the owned files: the family-doc row + Per-tiling-documents
+   link and the new `docs/tilings/<id>.md`; the orchestrator updates
+   the README census/prose/family-table count.
 4. Proposed commit-message body (lattice, cell contents, verification).
 
 The orchestrator assigns `M<n>` at integration — do not put an M
