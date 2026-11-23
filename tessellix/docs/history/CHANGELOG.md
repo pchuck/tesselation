@@ -2706,3 +2706,35 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   census comment + per-tab vec + registry/membership asserts, tess-tui
   tab pins, README count/tabs/prose/catalog row, INDEX family size,
   CHANGELOG entry).
+- 2026-11-23 — M155: Pentiamond AC factor-2
+  `pentiamond-ac-factor-2` ✅ (Bielefeld substitution index entry
+  "Pentiamond AC factor 2", folklore, rule image sole source; reptiles
+  family, Nonperiodic category): λ = 2 two-prototile reptile on the
+  triangular lattice — A → 3A + 1C, C → 2A + 2C with the achiral C
+  double-labeled; M = [[3,2],[1,2]], char poly (x−1)(x−4), PF 4 = λ²,
+  primitive index 1, per-A-seed closed form A_d = (2·4^d+1)/3; 3×5
+  rectangular seed block (4 A poses + 2 C poses), whole-block
+  homothety on the block lattice; limit-periodic construction with
+  aperiodic limit — zero exact periods in the unit tiling (|v| ≤ 16,
+  top near-miss 0.6953); chiral A balanced 1:1 at every depth;
+  folkloric 9945-tile patch reproduced exactly by the pinned rule.
+  Implementation notes: mirror dissections T1 = 8·T0 + (0,6) under
+  pose pairs {g, g∘8}; canonical pin = table 0 for all poses (frame
+  probe 108/108 + label invariance 24/24). One module root-cause fix
+  during the battery: lam_scaled_keys must POSE each unit cell first
+  (per-cell lex-min-vertex pose correction is kind-dependent) before
+  scaling posed anchors — raw linear images of unit-cell anchors don't
+  share a common translation frame (port-validated in Python against
+  the spike ground truth before touching Rust: 168/168 key equality,
+  120/120 pose equivalence). BRIEF DEVIATION (documented, load-bearing):
+  brief item 6's cross-depth nesting claim ("each depth-(d−1) tile is
+  the exact union of λ² depth-d tiles") is unsatisfiable and
+  contradicted by the brief's own recon table (2→3 no-merges GENUINE);
+  the rewritten `refinement_property` pins the true substitution
+  refinement (per-tile λ² exact partition) plus the measured
+  cross-depth census {62 disjoint, 34 bit-identical} @ d2/d3.
+  Battery: 16 module tests incl. 3-test family trio.
+  Verification: cargo check --workspace zero warnings; cargo test
+  --workspace measured at integration. Census: Nonperiodic tab
+  8 → 9; reptiles family 7 → 8; built-ins 147 → 148; memberships
+  161 → 162.

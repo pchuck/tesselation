@@ -50,7 +50,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 **Browse mode** — the tab bar lists the ten display categories with card
 counts (`Uniform (11)   Two-Uniform (20)   Laves (28)   Wallpaper (17)   Pentagon
 Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (18)   Aperiodic (11)
-Nonperiodic (8)`); below it a responsive card grid shows the active tab's
+Nonperiodic (9)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
 fragment, and `params: n` when the tiling has adjustable parameters. A
@@ -136,7 +136,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-147 built-in tilings (161 tab memberships), all discoverable in both UIs
+148 built-in tilings (162 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -154,8 +154,8 @@ fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7, Andritz
 bowtie-hexagon, Andritz 10gon-1, Andritz 10gon-2, fibonacci-fibonacci), **Aperiodic** (11: einstein family, pinwheel,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
 (table), period-doubling, thue-morse, period-tripling), and
-**Nonperiodic** (8: limit-periodic rep-tiles, Hirschhorn,
-pregnant-chair, tangram, octiamond reptile). Categories
+**Nonperiodic** (9: limit-periodic rep-tiles, Hirschhorn,
+pregnant-chair, tangram, octiamond reptile, pentiamond AC factor-2). Categories
 are declared on the tiling (never derived from its symmetry), so the
 grouping is honest about what the mathematics distinguishes; see
 `tess-core/src/category.rs`.
@@ -305,6 +305,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `armchair` | Armchair (L-tetromino) | aperiodic limit-periodic λ=2 substitution; tiles in 4 orientations; non-edge-to-edge (T-junctions intrinsic at every scale) (M128) | — | — |
 | `sphinx` | Sphinx (pentagonal hexiamond) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 12 orientations; non-edge-to-edge | — | — |
 | `tangram` | Tangram | the classic five-prototile dissection (S M L Q P, u²-areas 1/2/4/2/2) as an area-conserving λ=√2 substitution S→{M}; M→{L}; L→{M,Q,P,S,S}; Q→{M,S,S}; P→{M,S,S}; det=2 two-S seed (all-5-prototile seed negative for det ≤ 40, first L at g=4, all five prototiles at g=5); exact Z[√2] u-pair arithmetic end to end; homochiral P+ (every substitution row rotation-only, so the P− mirror class is unreachable from the seed); non-edge-to-edge (T-junctions 0,0,0,6,10,18 over g=0..5); limit-periodic on the √2^(g+1) block lattice (M142) | — | — |
+| `pentiamond-ac-factor-2` | Pentiamonds A + C (2-prototile rep-4, triangular lattice) | Bielefeld substitution index entry "Pentiamond AC factor 2" (discovered: folklore; Info empty — rule image the sole source): λ = 2, A → 3A + 1C, C → 2A + 2C with the achiral C double-labeled (mirror dissections T1 = 8·T0 + (0,6) under pose pairs {g, g∘8}; canonical pin = table 0 for all poses, frame probe 108/108 + label invariance 24/24); M = [[3,2],[1,2]] char poly (x−1)(x−4), PF 4 = λ², primitive index 1, per-A-seed closed form A_d = (2·4^d+1)/3; 3×5 rectangular seed block (4 A poses 3/4/6/9 + 2 C poses 1/5), whole-block homothety on the (3·2^d, 0) × (0, 5·2^d) block lattice; limit-periodic construction, aperiodic limit — zero exact periods in the unit tiling (|v| ≤ 16, top near-miss 0.6953 < 1); chiral A balanced 1:1 at every depth; folkloric 9945-tile patch reproduced exactly by the pinned rule (recon E PASS, coverage 1.0); exact integer cell arithmetic, floats only at emission (M155) | — | — |
 | `p-pentomino` | P-pentomino (rep-4 reptile, limit-periodic) | aperiodic limit-periodic λ=2 rep-4 substitution; tiles in 8 chiral orientation classes; non-edge-to-edge | — | — |
 | `pregnant-chair` | Pregnant chair (rep-tile) | λ = √3 two-prototile rep-tile (Bielefeld substitution index, E. Amezcua): the √3-inflated large chair tiles as 1 large + 6 small, the inflated small chair is exactly one large chair (area-conservative); exact Z[√3] integer-pair arithmetic; finite-depth approximant with view-quantized depth, patch-stable under panning/zooming; chiral — 4 of 8 dihedral orientation classes | — | — |
 | `octiamond-reptile` | Octiamond reptile (trapezoidal 8-triomino) | aperiodic λ = 3 rep-9 substitution on the triangular lattice (Bielefeld substitution index entry, folklore — rule reconstructed from the rule image and pinned by a UNIQUE exhaustive partition of the 3×-inflated 72-cell seed trapezoid TRAP3Q into 9 unit octiamonds, cross-confirmed per-component against the rule image, scores 0.911–0.991 vs runners-up ≤ 0.892; blue-marked child I+(2,2)); 1 prototile Q (8 unit triangles), supertile TRAP3Q (72 cells), substitution matrix [9] → 9^n tiles, PF 9 = λ², all 12 orientation classes reachable (class matrix rows and columns sum to 9); non-edge-to-edge — T-junctions inherent (measured census 8 (edge, foreign-corner) incidences in the depth-1 dissection, machinery validated on the sphinx ladder 0/2/16/78/344; seed-block ladder 18/226/2202/20286/183974 over generations 0–4); 12×6 parallelogram seed block (18 tiles, 144 cells) tiles the plane under ⟨(12,0),(0,6)⟩; L2 nesting verified under the λ-scaled framing (0 overlaps, 648/648, 81 distinct grandchildren); aperiodic — no lattice period in any of the 4 patch crops; exact ℤ-lattice arithmetic, tri-section-anchored depth quantization, unit-scale emission (M150) | — | — |
