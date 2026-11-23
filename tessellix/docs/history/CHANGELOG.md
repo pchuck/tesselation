@@ -2766,3 +2766,23 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   Verification: cargo check --workspace zero warnings; guard subset
   green at integration. Census: Nonperiodic tab 9 → 10; reptiles
   family 8 → 9; built-ins 148 → 149; memberships 162 → 163.
+- 2026-11-23 — M157: Pentiamond AD factor-2
+  `pentiamond-ad-factor-2` ✅ (Bielefeld substitution index entry
+  "Pentiamond AD factor 2", folklore, rule image sole source; reptiles
+  family, Nonperiodic category): λ = 2 reptile — A → 2A + 2D,
+  D → 2A + 2D (D dissection SELF-MIRROR — single table under both
+  achiral labels); M = [[2,2],[2,2]] = rank-1 (x²−4x), PF 4 = λ²,
+  primitive index 1, per-seed (2·4^{d−1}, 2·4^{d−1}); UNIQUE 1×5 seed
+  block (2 D tiles, poses 2 and 8); whole-block homothety on the block
+  lattice; limit-periodic construction, aperiodic limit — zero exact
+  periods (|v| ≤ 10, top near-miss 0.6270); A balanced 1:1 at every
+  depth; folkloric 9969-tile patch reproduced exactly (recon E PASS,
+  coverage 1.0; the entry is depth-3 nested — the only one of the
+  three, so its refinement_property carries the genuine cross-depth
+  partition). Shares the M155 root-cause fix (posed-then-scaled
+  lam_scaled_keys; measured cross-depth census {32, 0} @ d2/d3,
+  {128, 0} @ d3/d4 — clean structure, never a split).
+  Battery: 16 module tests incl. 3-test family trio.
+  Verification: cargo check --workspace zero warnings; guard subset
+  green at integration. Census: Nonperiodic tab 10 → 11; reptiles
+  family 9 → 10; built-ins 149 → 150; memberships 163 → 164.
