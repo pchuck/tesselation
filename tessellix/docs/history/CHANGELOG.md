@@ -2600,3 +2600,39 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   zero warnings; cargo test --workspace 1077 passed / 0 failed.
   Census: Quasiperiodic tab 15 → 16; islamic family 27 → 28; built-ins
   144 → 145; memberships 158 → 159.
+- 2026-11-23 — glb-binary-n7 plane-filling presentation (M149
+  follow-up, no new tiling — non-M): `generate()` upgraded from the
+  certified single-domain B₀ core (island, ~0.3% default-view
+  coverage) to a PLANE-FILLING presentation matching the
+  Penrose/Ammann–Beenker class: the parent patch is the seed-rhombus
+  lattice (m,n) = V + m·a + n·b (exact `Tw` offsets, cls [0,2,14,16])
+  over φ⁻¹(W + C₀) with SAT margin 0.05 float-safety culling (the
+  V-lattice tiles the plane, so coverage is structural, not
+  probabilistic), then refined d ∈ [3,5] levels by the SAME certified
+  per-level DFS over the whole parent set — the eps-complementarity
+  cascade meshes the lattice-cell seams, so the patch is ONE mesh, not
+  per-cell islands (M149 probed and refuted any local (shape, class)
+  map; cross-boundary meshing therefore runs the full compat
+  predicate across shared parent edges). Certification: a 6-cascade
+  `plane_mesh_audit` refines level-by-level and audits every level —
+  edge parity (0 multi-edges), one simple closed rim walk, interior
+  vertex links, shared-edge class agreement (0 bend-bit mismatches),
+  bucketed all-pairs interior disjointness, and the exact fan-area law
+  Σkids = λ²·Σparents (rel ≤ 3.3e-13); every audited patch spans
+  multiple lattice cells, so the audit proves gap- and
+  overlap-freedom ACROSS seed boundaries. Depth = largest d with
+  area·λ^{2(d−1)}/0.75 ≤ VIEW_BUDGET (2500, floored at D_MIN = 3 —
+  floor proven in-test); culling at emission only. Coverage census on
+  the standard trio + a ±20 world-unit box: 0 holes / 0 multi / 0
+  boundary-undecided AND continuous clipped-area identity
+  Σarea(tile∩W) = area(W) to ≤ 2.4e-14 rel, all views; emitted tiles
+  60–34 520 by view, all ≪ MAX_TILES 250 000; preview flow
+  1241→974→982→281 count-stable, CLI pane 796 @ d=4. All 12 M149
+  tests survive (10 untouched; default-view bands re-measured and
+  re-pinned; `empty_view_outside_patch` → `far_view_covered` — its
+  finite-domain premise is gone by design); σ²…σ⁵ staircase intact;
+  standard trio bboxes unchanged. Module tests 12 → 15. Diff: the
+  module + the quasiperiodic.md row note only; zero census deltas
+  (registry id unchanged; family 13, built-ins, memberships untouched).
+  Verification: cargo check --workspace zero warnings; cargo test
+  --workspace 1080 passed / 0 failed.
