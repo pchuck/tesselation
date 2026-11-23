@@ -49,7 +49,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 
 **Browse mode** — the tab bar lists the ten display categories with card
 counts (`Uniform (11)   Two-Uniform (20)   Laves (28)   Wallpaper (17)   Pentagon
-Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (14)   Aperiodic (11)
+Types (15)   Islamic (25)   Arrangements (8)   Quasiperiodic (15)   Aperiodic (11)
 Nonperiodic (8)`); below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
@@ -136,7 +136,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 
 ## Supported tilings
 
-143 built-in tilings (157 tab memberships), all discoverable in both UIs
+144 built-in tilings (158 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -148,9 +148,10 @@ wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
 cairo-pentagonal (type 4) and floret-pentagonal (type 5) as typed
 secondary members), **Islamic** (25), **Arrangements** (8),
-**Quasiperiodic** (14: Penrose family, Ammann–Beenker (both variants),
+**Quasiperiodic** (15: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, golden rhomboid,
-fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7), **Aperiodic** (11: einstein family, pinwheel,
+fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7, Andritz
+bowtie-hexagon), **Aperiodic** (11: einstein family, pinwheel,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
 (table), period-doubling, thue-morse, period-tripling), and
 **Nonperiodic** (8: limit-periodic rep-tiles, Hirschhorn,
@@ -188,6 +189,7 @@ grouping is honest about what the mathematics distinguishes; see
 | `girih-bowtie` | Girih bowtie (72.72.216) | classical concave girih hexagon (papillon, unit edges on the 36° frame) tessellating the plane alone; one tile per cell | cmm | centered |
 | `girih-rhombus` | Girih rhombus (72.72.108.108) | classical thin girih rhombus (72°/108°, unit edges) tessellating the plane alone; one tile per cell | cmm | centered |
 | `girih-decagon` | Girih decagon (10.6.10) | classical regular decagon with bowtie infill per cell (144°+72°+144° closes every vertex); exact K = Q(2cos 18°) table | cmm | centered |
+| `andritz-bowtie-hexagon` | Andritz bowtie-and-hexagon (fivefold girih) | quasiperiodic Andritz 2016 fivefold substitution (Tilings Encyclopedia, Feb 2016): two unit-edge girih prototiles (bow-tie + elongated hexagon), inflation φ², substitution matrix [[2,3],[3,5]], PF = φ⁴; exact ℤ[ζ₅] σ-frame walk from a 27-tile seed core — reproduces the decoded Bielefeld reference patch pose-for-pose (646 tiles, 1383 ring-exact vertices, exact 253-pose inner patch matched as sets both directions), level growth 27→168→1160, edge census: every interior edge shared by exactly 2 tiles out to radius 8 (level 1) / 20 (level 2); region-filtered wavefront BFS via the inverse-image σ⁻¹ box chain, work linear in view area; edge-to-edge at every level (M151) | — | — |
 | `girih-pentagon` | Girih pentagon (5.5.4.4) | classical regular pentagon pairs (108° alone leaves 36° gaps): 2 PENT + 2 HEX + 3 RHOMB per cell; exact K table | cm | centered |
 | `pic-4-8-8` | Hankin PIC fourfold khatam | Hankin polygons-in-contact strapwork on the 4.8.8 substrate (contact angle δ = 45°): midpoint-chord walls — {8/2} octagram in each octagon — partitioning the plane into octagon + small square + 4 house pentagons + 8 star tips per cell, exact Q(√2) | p4m | square |
 | `pic-3-6-3-6` | Hankin PIC sixfold khatam | Hankin polygons-in-contact strapwork on the trihexagonal (3.6.3.6) substrate (contact angle δ = 60°): midpoint-chord walls — {6/2} hexagram in each hexagon, midsegments in each triangle — partitioning the plane into 4 hexagram-core hexagons + 6 hexagram tips + 2 midsegment triangles per cell (a half-scale 3.6.3.6), exact Q(√3) | p6m | hexagonal |

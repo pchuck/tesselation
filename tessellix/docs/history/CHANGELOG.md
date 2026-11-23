@@ -2557,3 +2557,21 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   Verification: cargo check --workspace zero warnings; cargo test
   --workspace 1059 passed / 0 failed. Census: Nonperiodic tab 7 → 8;
   reptiles family 6 → 7; built-ins 142 → 143; memberships 156 → 157.
+- 2026-11-22 — M151: Andritz bowtie-and-hexagon `andritz-bowtie-hexagon`
+  ✅ (Tilings Encyclopedia "Andritz bowtie and hexagon", Feb 2016 —
+  Andritz 2016 fivefold substitution; islamic family, Quasiperiodic
+  category): two unit-edge girih prototiles (bow-tie + elongated
+  hexagon), inflation φ², substitution matrix [[2,3],[3,5]] with PF =
+  φ⁴. Exact ℤ[ζ₅] σ-frame walk: the rule was derived in an exact Python
+  prototype against the decoded Bielefeld reference patch (646 tiles,
+  1383 ring-exact vertices) and re-verified in Rust — ring-exact unit
+  edges and areas, the exact 253-pose inner patch reproduced
+  pose-for-pose (both directions), level growth 27 → 168 → 1160, exact
+  edge census (every interior edge shared by exactly 2 tiles) out to
+  radius 8 at level 1 and 20 at level 2; edge-to-edge at every level.
+  generate() runs a region-filtered wavefront BFS whose work stays
+  linear in the view area via the inverse-image σ⁻¹ box chain. Battery:
+  5 structural module tests + standard trio. Verification: cargo check
+  --workspace zero warnings; cargo test --workspace 1068 passed / 0
+  failed. Census: Quasiperiodic tab 14 → 15; islamic family 26 → 27;
+  built-ins 143 → 144; memberships 157 → 158.
