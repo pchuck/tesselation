@@ -2636,3 +2636,34 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   (registry id unchanged; family 13, built-ins, memberships untouched).
   Verification: cargo check --workspace zero warnings; cargo test
   --workspace 1080 passed / 0 failed.
+- 2026-11-23 — M153: Andritz 10gon-2 `andritz-bowtie-hexagon-10gon-2`
+  ✅ (Tilings Encyclopedia "Andritz bowtie and hexagon 10gon-2", Feb
+  2016 — third member of the bowtie-hexagon fivefold family; islamic
+  family, Quasiperiodic category): σ-frame map z ↦ τ − λz with
+  λ = 3 + 2φ, μ = −(3+2φ), τ = (−3,0,20,0,12,0,24,0); three unit-edge
+  girih prototiles (bow-tie, elongated hexagon, regular decagon).
+  Exact ℤ[ζ₂₀] σ-frame walk with a FITTED per-slot orientation law:
+  frames Ψ_D = 1, Ψ_K(r) = 2r + b_K + 10·[(2r mod 5) ≥ 3] (b_B = 5,
+  b_H = 0); child r = (r+δ_j) mod 5 for B/H parents, absolute for DEC
+  parents, 0 for DEC children; slot tables 27/38/96; D-row
+  t⁴-symmetric, B/H trivial stabilizers (checked 1..19). KEY
+  STRUCTURAL FINDING (documented, load-bearing): the clusters form a
+  SHARED COVERING, not a disjoint inflation — PF(M) = 43.151 ≠ λ² =
+  38.889, row areas exceed λ²·A by 7–17 %, 13 % of walk tiles
+  double-claimed consistently; the module/tests therefore treat M as
+  verified frame-claim tables (census rows [[11,14,2],[12,22,4],
+  [35,35,26]] pinned, growth 41.758 vs PF within 4 %) and MEAN_AREA
+  from the empirical patch census (3.0218392). The walk reproduces
+  the decoded Bielefeld reference patch pose-for-pose both
+  directions; edge census 50 @ r<4.5 / 187 @ r<8, every edge used
+  exactly twice; coverage radii measured by ray-fire 3.2 / 20.15 /
+  57.9 → COVERED = [3,20,57,160,460], MAX_LEVEL 4; region-filtered
+  chain stays axis-aligned (μ real). One landing-2 template fix: the
+  prototile ring test asserted e·ē = 1 but the canon rings here store
+  doubled rings 2·(v−c), so unit edges have norm 4 — corrected to 4
+  with the reasoning documented (the doubling is intentional and
+  matches verts_exact/kv2 emission). Battery: 10 module tests +
+  standard trio. Verification: cargo check --workspace zero warnings;
+  cargo test --workspace 1090 passed / 0 failed. Census:
+  Quasiperiodic tab 16 → 17; islamic family 28 → 29; built-ins
+  145 → 146; memberships 159 → 160.
