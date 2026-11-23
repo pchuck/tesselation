@@ -2575,3 +2575,28 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   --workspace zero warnings; cargo test --workspace 1068 passed / 0
   failed. Census: Quasiperiodic tab 14 → 15; islamic family 26 → 27;
   built-ins 143 → 144; memberships 157 → 158.
+- 2026-11-22 — M152: Andritz 10gon-1 `andritz-bowtie-hexagon-10gon-1`
+  ✅ (Tilings Encyclopedia "Andritz bowtie and hexagon 10gon-1", Feb
+  2016 — the decagon-bearing member of the bowtie-hexagon fivefold
+  family; islamic family, Quasiperiodic category): three unit-edge
+  girih prototiles (bow-tie, elongated hexagon, regular decagon),
+  inflation φ², substitution matrix [[2,3,0],[2,2,1],[5,0,6]] with PF
+  = φ⁴. Exact ℤ[ζ₂₀] σ-frame walk: the rule was derived from the girih
+  edge graph of the decoded Bielefeld reference patch (edge-BFS over
+  ℤ[ζ₂₀], 3280/3280 shared-edge label agreement, zero conflicts) and
+  cross-checked by per-instance tuple equality of every slot offset
+  (26/26 bow-tie rows, 10/10 hexagon rows, 16/16 decagon flowers,
+  22/22 identical taus). The frame rotates with the parent (ψ_B(r) =
+  2r+3+10((r+1)%2), ψ_H(r) = 2r+8+10(r%2)); the decagon row is
+  absolute (center + five edge-sharing petals at 2·apothem + five gap
+  bow-ties), and decagon children carry no rotation; edge-to-edge at
+  every level. Rust ring arithmetic validated against the Python
+  Z[ζ₂₀] reference (kmul over t⁰…t¹⁹); the frame fixed point o is a
+  walk invariant. Battery: structural module tests (unit edges +
+  areas + C₂ symmetry, PF = φ⁴ + row-area identities < 1e-12, walk
+  sizes [14, 86, 604], 54-pose decoded inner disk matched as sets both
+  directions, exact edge census at levels ≤1 and ≤2, far-view graceful
+  failure) + standard trio. Verification: cargo check --workspace
+  zero warnings; cargo test --workspace 1077 passed / 0 failed.
+  Census: Quasiperiodic tab 15 → 16; islamic family 27 → 28; built-ins
+  144 → 145; memberships 158 → 159.

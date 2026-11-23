@@ -8,7 +8,7 @@ Adding a tiling here touches only this family: `families/islamic.rs`
 `lattice_tilings` entries) plus the new module and its doc row below.
 Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 
-## Implemented (27 tilings)
+## Implemented (28 tilings)
 
 ### Periodic decorative families
 
@@ -46,6 +46,7 @@ Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 |---|---|---|
 | `girih-quasiperiodic` | girih star-and-cross {10/3} (quasiperiodic) | quasiperiodic; Darb-i Imam 3-prototile substitution (Lu & Steinhardt 2007, IF = 2φ³); exact 10-fold seed rosette, edge-to-edge at every generation |
 | `andritz-bowtie-hexagon` | bow-tie + elongated-hexagon girih (quasiperiodic) | quasiperiodic; Andritz 2016 fivefold substitution (Tilings Encyclopedia, Feb 2016), IF = φ², matrix [[2,3],[3,5]] with PF = φ⁴; exact Z[ζ₅] σ-frame walk from a 27-tile seed core, walk reproduces the decoded Bielefeld reference patch pose-for-pose, edge-to-edge at every level |
+| `andritz-bowtie-hexagon-10gon-1` | bow-tie + elongated-hexagon + regular-decagon girih (quasiperiodic) | quasiperiodic; Andritz 2016 fivefold substitution 10gon-1 (Tilings Encyclopedia, Feb 2016), IF = φ², matrix [[2,3,0],[2,2,1],[5,0,6]] with PF = φ⁴; exact Z[ζ₂₀] σ-frame walk (rotating Ψ(r) frames, absolute decagon flower) from a 14-tile seed core, walk reproduces the decoded Bielefeld reference patch pose-for-pose, edge-to-edge at every level |
 
 ## Build arcs
 
