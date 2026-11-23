@@ -12,6 +12,7 @@ use crate::classify::rep_tile;
 
 pub mod armchair;
 pub mod chair;
+pub mod octiamond_reptile;
 pub mod p_pentomino;
 pub mod pregnant_chair;
 pub mod sphinx;
@@ -21,6 +22,7 @@ pub mod tangram;
 pub fn register(mut r: Registry) -> Registry {
     r = r.register(armchair::ArmchairTiling);
     r = r.register(chair::ChairTiling);
+    r = r.register(octiamond_reptile::OctiamondReptileTiling);
     r = r.register(sphinx::SphinxTiling);
     r = r.register(p_pentomino::PentPentominoTiling);
     r = r.register(pregnant_chair::PregnantChairTiling);
@@ -53,6 +55,18 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             source: Some("Bielefeld substitution index"),
             ..TilingClass::EMPTY
         },
+        "octiamond-reptile" => TilingClass {
+            families: &["Nonperiodic"],
+            method: Some("substitution"),
+            inflation: Some("λ = 3"),
+            prototiles: Some(1),
+            tile_set: Some("octiamond reptile (trapezoidal 8-triomino of the triangular lattice)"),
+            reflections: Some(true),
+            chirality: Some("mixed"),
+            translational: Some("aperiodic"),
+            source: Some("Bielefeld substitution index"),
+            ..TilingClass::EMPTY
+        },
         _ => return None,
     })
 }
@@ -70,6 +84,7 @@ mod census {
     const IDS: &[&str] = &[
         "armchair",
         "chair",
+        "octiamond-reptile",
         "sphinx",
         "p-pentomino",
         "pregnant-chair",
@@ -81,7 +96,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            6,
+            7,
             "reptiles family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
@@ -176,6 +191,52 @@ mod chair_tests {
         check_det(
             &chair::ChairTiling,
             "chair",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+}
+
+#[cfg(test)]
+mod octiamond_reptile_tests {
+    use super::octiamond_reptile;
+    use crate::tests::{check_coverage, check_det, check_rotated};
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn octiamond_reptile_covers_region() {
+        let t = octiamond_reptile::OctiamondReptileTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(
+            &t,
+            "octiamond-reptile",
+            &p,
+            BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)),
+        );
+    }
+
+    #[test]
+    fn octiamond_reptile_rotated_scaled() {
+        check_rotated(
+            &octiamond_reptile::OctiamondReptileTiling,
+            "octiamond-reptile(rot25,scale0.6)",
+            BBox::new(v2(-7.0, -7.0), v2(7.0, 7.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn octiamond_reptile_deterministic() {
+        check_det(
+            &octiamond_reptile::OctiamondReptileTiling,
+            "octiamond-reptile",
             BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
         );
     }

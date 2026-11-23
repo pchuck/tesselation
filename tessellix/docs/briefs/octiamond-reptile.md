@@ -154,12 +154,20 @@ the seed), aperiodic.
      descendant structure, not to label tiles.
   7. **s25/s25b:** no lattice period in any patch crop → aperiodic
      (see errata block at top).
-  8. **T-junctions:** the rule's own L1 dissection has **0** T-junction
-     incidences (no child corner strictly interior to a sibling edge,
-     measured over all 9 child corner/edge pairs, recon s36) — the
-     depth-1 subdivision is edge-to-edge; the battery must pin the
-     per-generation census as measured (expect gen-0 = 0, report
-     deeper values).
+  8. **T-junctions:** **ERRATUM (integration adjudication 2026-11-22):**
+     the original "0 incidences, edge-to-edge" pin was WRONG — the
+     recon s36 measurement ran on a unit-step boundary cycle (every
+     edge pre-split to length 1, so no corner can be strictly interior:
+     a vacuous metric that reads 0 for ANY patch, including sphinx
+     gen-1, contradicting the repo-pinned sphinx value 2). Hand-checked
+     counterexample: (4,2) is a corner of R180+(4,2) and I+(4,0) and
+     lies strictly interior to I+(2,2)'s bottom edge (2,2)→(5,2).
+     MEASURED truth (machinery validated on the sphinx ladder
+     0/2/16/78/344, two independent machineries agreeing): the rule's
+     own L1 dissection has **8** distinct T-points / **16**
+     (corner, edge) incidence pairs — non-edge-to-edge like the sphinx;
+     the battery pins the per-generation census as measured
+     (gen-0 = 8; seed-block ladder 18/226/2202/20286/183974).
 - **Closed form:** one prototile → substitution matrix **[9]**; a
   supertile at depth n yields **9^n** tiles; PF eigenvalue 9 = λ² with
   **λ = 3**. (The 12×12 orientation-class matrix M has every row and
@@ -305,8 +313,11 @@ sphinx test names annotated):
    `M_i·TRAP3Q + 3·t_i` (λ = 3 scale on the child translations —
    mandatory; the unscaled 1·t_i variant is defective and must not be
    used): **0 overlaps, union 648/648, 0 holes, 0 spills**;
-   grandchildren `(M_i∘M_j, M_i·t_j + 3·t_j)`: **81 entries, 81
-   distinct, 0 exact-dup pairs** (s33/s36). The framing was
+   grandchildren `(M_i∘M_j, M_i·t_j + 3·t_i)`: **81 entries, 81
+   distinct, 0 exact-dup pairs** (s33/s36; ERRATUM 2026-11-22: the
+   original `3·t_j` was an index error — it collapses to 54 distinct
+   grandchildren; the correct λ-scaled composition carries the OUTER
+   child's anchor at scale 3, derived independently at integration). The framing was
    cross-validated on the sphinx λ = 2 rule (clean 0/96/0/0 with
    λ·t_i; 45/63/96 without) — if this audit fails while the sphinx
    control passes, STOP and report.
@@ -314,8 +325,11 @@ sphinx test names annotated):
    — the 12×6 block `TRAP3Q ∪ R180-about-(6,3)(TRAP3Q)`: 144 cells,
    disjoint union, tiles the plane exactly once under
    ⟨(12,0), (0,6)⟩ (0 missing / 0 dups over a 48×36 lattice window —
-   s36). Seed class multiset pin (18 tiles):
-   I×5, R180×2, R240×2, R300×2, M1×1, M4×1, R60×1, R120×1.
+   s36). Seed class multiset pin (18 tiles; ERRATUM 2026-11-22 — the
+   original list summed to 15 ≠ 18; corrected to the measured,
+   census-verified multiset, op-index: count):
+   {1:2, 2:5, 4:1, 5:1, 6:1, 7:1, 9:5, 10:2} — i.e. R240×2, R180×5,
+   M4×1, R60×1, R120×1, M1×1, I×5, R300×2.
 6. `growth_battery` (mirror sphinx `refined_growth_battery`) —
    generations 0–4 from the seed at a fixed scale (sphinx uses 2^4;
    for λ = 3 use 3^k with k large enough that the final tiles are

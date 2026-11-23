@@ -2511,6 +2511,49 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   per-item allows as the module consumes the K₇ slice (fields tests
   35/35 unchanged). Battery: 12 module tests (σ⁵ pins: 462 tiles +
   area law + even grid + e ≤ 1; view bands preview 0.5570 /
-  CLI 0.6238 ±0.02) + standard registration surfaces. Census:
+  CLI 0.6238 ± 0.02) + standard registration surfaces. Census:
   Quasiperiodic tab 13 → 14; quasiperiodic family 12 → 13; built-ins
   141 → 142; memberships 155 → 156.
+- 2026-11-22 — M150: Octiamond reptile `octiamond-reptile` ✅ (Bielefeld
+  substitution index entry "Octiamond Reptile" — Folklore, Info section
+  empty; rule reconstructed from the rule image and pinned by a UNIQUE
+  exhaustive partition of the 3×-inflated 72-cell seed trapezoid TRAP3Q
+  into 9 unit octiamonds, cross-confirmed per-component against the
+  Bielefeld rule image, scores 0.911–0.991 vs runners-up ≤ 0.892; the
+  blue-marked child is I+(2,2)): one trapezoidal 8-triomino prototile Q
+  (8 unit triangles) on the triangular lattice, rep-9 with λ = 3,
+  substitution matrix [9] → 9^n tiles, PF 9 = λ², all 12 orientation
+  classes reachable (12×12 class matrix, rows AND columns sum to 9).
+  Non-edge-to-edge — T-junctions INHERENT: measured census **8** (edge,
+  foreign-corner) incidences in the rule's own depth-1 dissection
+  (16 corner/edge pairs), seed-block ladder 18/226/2202/20286/183974
+  over generations 0–4. The recon brief's 0-pin was a VACUOUS-metric
+  artifact (unit-step boundary cycle — reads 0 for any patch, sphinx
+  gen-1 included), adjudicated at integration with a hand-checked
+  counterexample ((4,2) is a corner of R180+(4,2) and I+(4,0) strictly
+  interior to I+(2,2)'s bottom edge) and machinery validated by
+  reproducing the repo-pinned sphinx ladder 0/2/16/78/344 exactly;
+  STOP protocol applied, measured pins landed. 12×6 parallelogram seed
+  block = TRAP3Q ∪ R180 image (18 tiles, 144 cells, census-verified
+  class multiset {1:2, 2:5, 4:1, 5:1, 6:1, 7:1, 9:5, 10:2}) tiles the
+  plane exactly once under ⟨(12,0),(0,6)⟩; L2 nesting verified under
+  the λ-scaled framing (0 overlaps, union 648/648, 81 distinct
+  grandchildren — the brief's `3·t_j` grandchild formula was an index
+  error, corrected to `3·t_i`); the Bielefeld patch's 1142 nine-tiled
+  trapezoid panels form 6 table types (frequencies 259/196/186/183/
+  162/156, one per conjugacy orbit of 12), all L1+L2-clean — iterable
+  substitution structure in the patch. Aperiodic: no lattice period in
+  any of the 4 patch crops (recon s25/s25b) →
+  `TilingCategory::Nonperiodic`, translational "aperiodic" (NOT
+  limit-periodic; the tile set admits periodic tilings, no einstein
+  claim). Exact ℤ-lattice arithmetic end to end (H = √3/2 at emission
+  only), tri-section-anchored depth quantization (EXTENT_UNIT 5.0,
+  band (15,45] → depth 2), MAX_TILES 250_000 with pre/post guards.
+  Battery: 11 in-module tests (L1 partition 72/72 max-cov 1 + rule
+  uniqueness, L2 audit 81 distinct/0 overlaps, orientation closure 12,
+  class matrix doubly-stochastic ×9, conjugation over all 12 parents,
+  seed block 144/144 + plane tiling 0 missing/0 dups, T-junction +
+  ladder census pins, growth battery) + 3 standard trio tests.
+  Verification: cargo check --workspace zero warnings; cargo test
+  --workspace 1059 passed / 0 failed. Census: Nonperiodic tab 7 → 8;
+  reptiles family 6 → 7; built-ins 142 → 143; memberships 156 → 157.
