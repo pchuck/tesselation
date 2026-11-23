@@ -14,6 +14,7 @@ pub mod armchair;
 pub mod chair;
 pub mod octiamond_reptile;
 pub mod pentiamond_ac2;
+pub mod pentiamond_ac3;
 pub mod p_pentomino;
 pub mod pregnant_chair;
 pub mod sphinx;
@@ -29,6 +30,7 @@ pub fn register(mut r: Registry) -> Registry {
     r = r.register(pregnant_chair::PregnantChairTiling);
     r = r.register(tangram::TangramTiling);
     r = r.register(pentiamond_ac2::PentiamondAcFactor2Tiling);
+    r = r.register(pentiamond_ac3::PentiamondAcFactor3Tiling);
     r
 }
 
@@ -83,6 +85,20 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             source: Some("Bielefeld substitution index"),
             ..TilingClass::EMPTY
         },
+        "pentiamond-ac-factor-3" => TilingClass {
+            families: &["Nonperiodic"],
+            method: Some("substitution"),
+            inflation: Some("λ = 3"),
+            prototiles: Some(2),
+            tile_set: Some(
+                "pentiamonds A + C (5-triangle polyiamonds of the triangular lattice; chiral A, achiral C; the header's third prototile D is a blocker — its rule row is absent from the rule image and the patch)",
+            ),
+            reflections: Some(true),
+            chirality: Some("mixed"),
+            translational: Some("aperiodic"),
+            source: Some("Bielefeld substitution index"),
+            ..TilingClass::EMPTY
+        },
         _ => return None,
     })
 }
@@ -106,6 +122,7 @@ mod census {
         "pregnant-chair",
         "tangram",
         "pentiamond-ac-factor-2",
+        "pentiamond-ac-factor-3",
     ];
 
     #[test]
@@ -113,7 +130,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            8,
+            9,
             "reptiles family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
@@ -428,6 +445,52 @@ mod pentiamond_ac2_tests {
         check_det(
             &pentiamond_ac2::PentiamondAcFactor2Tiling,
             "pentiamond-ac-factor-2",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+}
+
+#[cfg(test)]
+mod pentiamond_ac3_tests {
+    use super::pentiamond_ac3;
+    use crate::tests::{check_coverage, check_det, check_rotated};
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn pentiamond_ac3_covers_region() {
+        let t = pentiamond_ac3::PentiamondAcFactor3Tiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(
+            &t,
+            "pentiamond-ac-factor-3",
+            &p,
+            BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)),
+        );
+    }
+
+    #[test]
+    fn pentiamond_ac3_rotated_scaled() {
+        check_rotated(
+            &pentiamond_ac3::PentiamondAcFactor3Tiling,
+            "pentiamond-ac-factor-3(rot25,scale0.6)",
+            BBox::new(v2(-7.0, -7.0), v2(7.0, 7.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn pentiamond_ac3_deterministic() {
+        check_det(
+            &pentiamond_ac3::PentiamondAcFactor3Tiling,
+            "pentiamond-ac-factor-3",
             BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
         );
     }

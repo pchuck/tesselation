@@ -2738,3 +2738,31 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   --workspace measured at integration. Census: Nonperiodic tab
   8 → 9; reptiles family 7 → 8; built-ins 147 → 148; memberships
   161 → 162.
+- 2026-11-23 — M156: Pentiamond AC factor-3
+  `pentiamond-ac-factor-3` ✅ (Bielefeld substitution index entry
+  "Pentiamond AC factor 3", folklore, rule image sole source; reptiles
+  family, Nonperiodic category): λ = 3 reptile — A → 6A + 3C,
+  C → 5A + 4C (achiral C double-labeled, mirror pair via (8, (0,9)));
+  A/C block [[6,5],[3,4]], char poly (x−9)(x−1), PF 9 = λ², primitive
+  index 1, per-A-seed closed form A_d = (5·9^d+3)/8; 2×5 seed block
+  (block charge −2 — the folklore patch's P2-heavy 617:1899 depth-2
+  census, decaying to 1:1 in the limit, measured 0.9999 by d = 20);
+  whole-block homothety on the block lattice; limit-periodic
+  construction, aperiodic limit — zero exact periods (|v| ≤ 12, top
+  near-miss 0.5712); folkloric 4024-tile patch reproduced exactly.
+  D-ROW BLOCKER (flagged, never guessed): the entry header says 3
+  prototiles but the D rule row is absent from the rule image AND the
+  patch — implemented as A + C (2 prototiles), flagged in module
+  header/description/registry classification/doc row; the A/C block
+  is closed and the seed D-free, so the limit tiling is D-free at
+  every depth regardless of the missing row (no sum-9 D column makes
+  the 3×3 primitive — 55-candidate scan). Micro-deviation: λ = 3
+  depth cap .min(37) (3⁴⁰ overflows i64), commented in code. Shares
+  the M155 root-cause fix (posed-then-scaled lam_scaled_keys) and the
+  documented refinement_property deviation (measured cross-depth
+  census {235, 89} @ d2/d3); per-entry spike pins recalibrated
+  108/108/972 (the prepass CHECK-5 numbers were cumulative).
+  Battery: 16 module tests incl. 3-test family trio.
+  Verification: cargo check --workspace zero warnings; guard subset
+  green at integration. Census: Nonperiodic tab 9 → 10; reptiles
+  family 8 → 9; built-ins 148 → 149; memberships 162 → 163.
