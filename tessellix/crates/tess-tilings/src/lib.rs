@@ -56,7 +56,7 @@ pub use families::pavers::{basketweave, herringbone, running_bond, stepped_hexom
 pub use families::islamic::{hexagram, zellige, girih, girih_qc, girih_sc, girih_w85, pic_4_8_8, pic_3_6_3_6, pic_3_12_12, hankin, hankin_4_8_8, hankin_4_6_12, hankin_4_8_8_rosette_transform, hankin_hex, hankin_3_12_12, hankin_square_two_point, hankin_3_6_3_6, hankin_3_4_6_4, hankin_3_3_3_4_4, hankin_3_3_4_3_4, khatam_girih, najm, rosette_transform};
 
 // ---------------------------------------------------------------------------
-// Registry composition. The ten families register in chain order
+// Registry composition. The eleven families register in chain order
 // (`families::chain`); within a tab, cards appear in family-chain order
 // and then in the family's registration order. Adding a tiling to an
 // existing family never edits this file.
@@ -453,6 +453,8 @@ assert_eq!(r.len(), 153, "built-in tiling count (update when adding tilings)");
         cases.push(("pavers", crate::families::pavers::register));
         #[cfg(feature = "islamic")]
         cases.push(("islamic", crate::families::islamic::register));
+        #[cfg(feature = "isohedral")]
+        cases.push(("isohedral", crate::families::isohedral::register));
         cases
     }
 
@@ -542,8 +544,8 @@ assert_eq!(r.len(), 153, "built-in tiling count (update when adding tilings)");
         // tiling_docs_match_registry.)
         assert_eq!(
             family_cases().len(),
-            10,
-            "README family table covers all ten families"
+            11,
+            "README family table covers all eleven families"
         );
         for (fam, register) in family_cases() {
             let marker = format!("](docs/families/{fam}.md)");

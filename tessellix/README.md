@@ -98,7 +98,7 @@ gapped layouts to the kissing hexagram-and-hexagon case; and the
 Pythagorean two-square family takes the **square ratio** b/a
 (0.2–10, default φ).
 
-### The ten families
+### The eleven families
 
 | Family (tab) | Tilings | Doc |
 |---|---|---|
@@ -112,6 +112,7 @@ Pythagorean two-square family takes the **square ratio** b/a
 | [Quasiperiodic](docs/families/quasiperiodic.md) | 16 | Penrose family, Ammann–Beenker, Stampfli, shield, golden A2 members, GLB binary n = 7, fibonacci product, WIS 12-fold, girih 14-fold |
 | [Aperiodic](docs/families/aperiodic.md) | 10 | einstein family (hat, turtle, spectre), Wang tiles, Taylor-Socolar, limit-periodic substitution set |
 | [Nonperiodic](docs/families/reptiles.md) | 10 | rep-tiles (chair, armchair, sphinx, P-pentomino, tangram, octiamond + pentiamonds), pregnant-chair |
+| [Isohedral types](docs/families/isohedral.md) | 0 | parameterized isohedral (IH) types — incidence symbols over their topologies with exact per-orbit shaped edges (the Escher arc; design doc docs/isohedral-generator-design.md) |
 
 Tab counts above include secondary memberships; the **Tilings** column
 counts a family's registered members, whose primary tab may belong to
@@ -130,7 +131,7 @@ gallery taxonomy: [docs/TAXONOMY.md](docs/TAXONOMY.md).
 Four crates: `tess-core` holds the `Tiling` trait — generate exactly the
 tiles intersecting a query bbox, no gaps/overlaps/outside tiles — plus
 self-describing parameters, the browse model, and software rendering;
-`tess-tilings` holds the 150 built-ins in ten families (periodic tilings
+`tess-tilings` holds the 153 built-ins in eleven families (periodic tilings
 are `LatticeTiling` **data tables**, aperiodic/nonperiodic ones direct
 substitution generators with exact-arithmetic anchors); `tess-tui`
 (ratatui) and `tess-gui` (egui) are thin front ends over the shared

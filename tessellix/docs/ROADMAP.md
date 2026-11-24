@@ -189,9 +189,15 @@ the "mixed floret/cairo/prismatic" patterns.
   policy: would need a seeded-RNG parameter (`ParamSpec::Int`) and a
   stated rule for `check_deterministic` (seeded, stateless ⇒ still
   deterministic per parameter set).
-- ❓ **Isohedral (IH) tile families** — parameterized generators for
+- 🚧 **Isohedral (IH) tile families** — parameterized generators for
   some of the 93 isohedral types (e.g. IH7-like interlocking
   variants); needs a shape-parameterization design.
+  Brief: [isohedral-generator](briefs/isohedral-generator.md);
+  dispatched (frontier tier) on the new empty `isohedral` family
+  (family scaffold = orchestrator edit per `families/mod.rs` doctrine).
+  NOTE: PROPOSED §13's "Category Wallpaper" is corrected by the brief —
+  the Wallpaper tab is a pinned 17-card group catalog; IH instances
+  take Laves (Laves-topology types) or Pentagon Types.
 - ❓ **Polyomino/polyiamond rep-tile zoo** — L-tromino ✅ (chair,
   M30); P-pentomino ✅ (implemented on branch `reptiles`, pending
   integration, M47 — exactly two dissections of the inflated P,

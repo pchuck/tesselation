@@ -850,6 +850,15 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
 
 ### 13. Isohedral (IH) parameterized generator — the Escher arc
 
+> **Correction (2026-11-24, pre-dispatch):** instances cannot take
+> `Category::Wallpaper` as sketched below — the Wallpaper tab is a
+> pinned 17-card group catalog (`lib.rs` asserts `groups.len() ==
+> wall.cards.len() == 17`; any new Wallpaper membership, primary or
+> secondary, adds an 18th card and fails the guard). Instances take
+> `Laves` (Laves-topology types) or `PentagonTypes`; family scaffold =
+> the new empty `isohedral` family. Brief:
+> [isohedral-generator](briefs/isohedral-generator.md).
+
 - **Motif:** the 93 isohedral tiling types IH1–IH93 (Grünbaum–Shephard;
   81 unmarked + 12 marked-only): every periodic monohedral tiling
   type, parameterized — the machinery behind "Escher-style" interlock-
@@ -1432,7 +1441,13 @@ of these; each is a substitution or cut-and-project table.
 - **Ammann A3** and **Ammann A4** — the missing rungs of the owner's
   A1–A4 request (A2 = golden bee ✅, A1 parked: no substitution
   structure, see Parked list). A3/A4 have substitution structure;
-  effort M each.
+  effort M each. **Correction (2026-11-24, TE entries + orchestrator
+  recon):** A3 is **φ-inflation** (TE: "uses the golden ratio as
+  inflation factor"; three rectilinear Z-chairs, window uncomputed),
+  NOT a Q(√2) member — this section's Q(√2) framing holds for A4 only
+  (mld to Ammann–Beenker, λ = 2 chair + outlined second prototile).
+  Brief: [ammann-a3-a4](briefs/ammann-a3-a4.md); dispatched (worker
+  tier, two landings).
 - **AB rhomb–triangle** — Ammann–Beenker with the triangle shown;
   effort S. ✅ landed M129 as `ammann-beenker-tri`.
 - **Octagonal 1225 tile** — single octagonal prototile, 8-fold;

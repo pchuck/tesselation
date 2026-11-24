@@ -7,7 +7,7 @@ tiling, shared cross-cutting reference docs, and frozen history.
 ## Tiers
 
 1. **[README.md](../README.md)** — the overview: what tessellix is,
-   build/run quickstart, the ten families with doc links, and pointers
+   build/run quickstart, the eleven families with doc links, and pointers
    into the tiers below.
 2. **Per-family docs** (`docs/families/<family>.md`) — each family's
    catalog table + numbered build arcs + links to its members.
@@ -31,6 +31,7 @@ tiling, shared cross-cutting reference docs, and frozen history.
 | aperiodic | [docs/families/aperiodic.md](families/aperiodic.md) | 10 | 5 |
 | pavers | [docs/families/pavers.md](families/pavers.md) | 14 | 8 |
 | islamic | [docs/families/islamic.md](families/islamic.md) | 30 | 12 |
+| isohedral | [docs/families/isohedral.md](families/isohedral.md) | 0 | 0 |
 
 A family doc owns its catalog table (guarded:
 `family_docs_match_registrations` fails the suite on drift from the

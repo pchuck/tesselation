@@ -9,7 +9,7 @@ tessellix/
 ├── Cargo.toml              # workspace (resolver 2, edition 2021, MIT)
 └── crates/
     ├── tess-core/          # core abstractions — no external deps
-    ├── tess-tilings/       # built-in generators, ten family features
+    ├── tess-tilings/       # built-in generators, eleven family features
     ├── tess-tui/           # ratatui TUI + CLI (list / export)
     └── tess-gui/           # eframe/egui desktop app
 ```

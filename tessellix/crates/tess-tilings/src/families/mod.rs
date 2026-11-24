@@ -1,4 +1,4 @@
-//! The ten tiling families — the unit of parallel work in this crate.
+//! The eleven tiling families — the unit of parallel work in this crate.
 //!
 //! Every tiling belongs to exactly one family; a family owns its tiling
 //! modules, its `register` slice, its classification arms, its share of
@@ -33,6 +33,8 @@ pub mod aperiodic;
 pub mod pavers;
 #[cfg(feature = "islamic")]
 pub mod islamic;
+#[cfg(feature = "isohedral")]
+pub mod isohedral;
 
 use tess_core::Registry;
 use tess_core::classify::TilingClass;
@@ -103,6 +105,12 @@ pub fn classify_into(id: &str) -> Option<TilingClass> {
             return Some(c);
         }
     }
+    #[cfg(feature = "isohedral")]
+    {
+        if let Some(c) = isohedral::classification(id) {
+            return Some(c);
+        }
+    }
     None
 }
 
@@ -150,6 +158,10 @@ pub fn chain(mut r: Registry) -> Registry {
     #[cfg(feature = "islamic")]
     {
         r = islamic::register(r);
+    }
+    #[cfg(feature = "isohedral")]
+    {
+        r = isohedral::register(r);
     }
     r
 }
