@@ -1467,15 +1467,17 @@ impl Tiling for Girih14FoldTiling {
             return fail("too many tiles for this view — zoom in");
         }
 
-        // Presentation recentering p₀ (the tile-space bbox center):
-        // substitution runs around the origin (the seed 14-gon is
-        // centered there); emission shifts back by p₀ before the world
-        // map.
-        let p0 = Vec2::new((rmin.x + rmax.x) / 2.0, (rmin.y + rmax.y) / 2.0);
-        let rbox = BBox::new(
-            Vec2::new(rmin.x - p0.x, rmin.y - p0.y),
-            Vec2::new(rmax.x - p0.x, rmax.y - p0.y),
-        );
+        // Anchor: the hierarchy is anchored at the tile-space origin
+        // (the seed 14-gon's ring center sits there) and the world map
+        // depends only on the params — so the pattern is FIXED in world
+        // space and panning culls a moving window out of one stable
+        // pattern. (Earlier builds re-centered the seed on the query
+        // bbox per call, which glued the rosette to the viewport:
+        // click-drag panning produced no relative motion in either
+        // UI.) The fit below therefore tests the raw region corners;
+        // views outside the reachable neighborhood of the origin refuse
+        // with a message — the finite-patch convention of WIS 12-fold.
+        let rbox = region;
 
         // Seed fit: the minimal level N ≥ 1 whose centered G14 polygon
         // λ^N·(CV[G14] − CG) contains the shifted region bbox. G14 is
@@ -1499,7 +1501,12 @@ impl Tiling for Girih14FoldTiling {
         }
         let n = match n_fit {
             Some(n) => n,
-            None => return fail("view too large — zoom in"),
+            None => {
+                return fail(
+                    "view outside the pattern — the girih 14-fold hierarchy \
+                     fills a finite region around the origin; pan back or zoom in",
+                )
+            }
         };
 
         // Substitution cascade: the single centered seed G14 at level N
@@ -1545,7 +1552,7 @@ impl Tiling for Girih14FoldTiling {
                 .iter()
                 .map(|w| {
                     let v = w.vec2();
-                    map.transform(Vec2::new(v.x + p0.x, v.y + p0.y))
+                    map.transform(v)
                 })
                 .collect();
             let poly = Polygon::from_slice(&pts);
@@ -2797,6 +2804,52 @@ mod tests {
             &t,
             "girih-14-fold",
             BBox::new(Vec2::new(0.0, 0.0), Vec2::new(8.0, 8.0)),
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Pan stability — the pattern is anchored independently of the query
+    // (regression: the seed used to re-center on the view bbox per call,
+    // gluing the rosette to the viewport — drag-panning moved nothing in
+    // either UI; user-reported 2026-11-24)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn panning_keeps_the_pattern_fixed() {
+        let t = Girih14FoldTiling;
+        let p = ParamSet::default_for(t.params());
+        // Two overlapping world windows, offset by a pan vector.
+        let ra = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(10.0, 10.0));
+        let rb = BBox::new(Vec2::new(2.5, 2.5), Vec2::new(12.5, 12.5));
+        let a = t.generate(&p, &Query { region: ra });
+        let b = t.generate(&p, &Query { region: rb });
+        assert!(a.message.is_none(), "window A must generate: {:?}", a.message);
+        assert!(b.message.is_none(), "window B must generate: {:?}", b.message);
+
+        // Tiles strictly inside the overlap [2.5,10]² must be
+        // bit-identical in both runs: the emission arithmetic is
+        // query-independent (fixed anchor), so the same tile rounds to
+        // the same f64 vertices in both.
+        let overlap = BBox::new(Vec2::new(2.5, 2.5), Vec2::new(10.0, 10.0));
+        let inside = |pl: &Polygon| {
+            pl.pts.iter().all(|v| {
+                v.x >= overlap.min.x
+                    && v.x <= overlap.max.x
+                    && v.y >= overlap.min.y
+                    && v.y <= overlap.max.y
+            })
+        };
+        let key = |pl: &Polygon| -> Vec<(u64, u64)> {
+            pl.pts.iter().map(|v| (v.x.to_bits(), v.y.to_bits())).collect()
+        };
+        let a_keys: std::collections::HashSet<_> =
+            a.tiles.iter().filter(|tl| inside(&tl.poly)).map(|tl| key(&tl.poly)).collect();
+        let b_keys: std::collections::HashSet<_> =
+            b.tiles.iter().filter(|tl| inside(&tl.poly)).map(|tl| key(&tl.poly)).collect();
+        assert!(!a_keys.is_empty(), "overlap must contain emitted tiles");
+        assert_eq!(
+            a_keys, b_keys,
+            "panned window must show the identical pattern in the overlap"
         );
     }
 }
