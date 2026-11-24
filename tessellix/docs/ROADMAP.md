@@ -115,11 +115,19 @@ the "mixed floret/cairo/prismatic" patterns.
   substitution, τ²), [tangram](briefs/tangram.md) (§23d rep-tile
   dissection, Z[√2]) ✅ landed M142; [pregnant-chairs](briefs/pregnant-chairs.md)
   (§23d, √3 / Z[√3]) ✅ landed M136.
-- 🔭 **Andritz Bowtie–Hexagon family (§23f)** — four 5-fold FLC
-  substitution entries (small/large bowtie, hexagon variants) built
-  on the now-shipped M131–M134 girih primitive tables;
-  [andritz-bowtie-hexagon](briefs/andritz-bowtie-hexagon.md);
-  dispatched (strong tier, per-landing commits).
+- ✅ **Andritz Bowtie–Hexagon family (§23f).** *Arc complete — four
+  5-fold FLC substitution entries landed on the M131–M134 girih
+  primitive tables: `andritz-bowtie-hexagon` (M151),
+  `andritz-bowtie-hexagon-10gon-1` (M152),
+  `andritz-bowtie-hexagon-10gon-2` (M153),
+  `andritz-bowtie-hexagon-10gon-3` (M160). Arc-closing finding
+  (SESSION 19, programmatic): "bowtie-hexagon-12gon-3" — sometimes
+  seen as a fifth name in the wild — is the image-directory alias of
+  entry 10gon-3, not a separate Bielefeld entry (md5-identical
+  patch/rule images; zero `12gon-*` substitution-index slugs; Pautze
+  CAST Table 8 lists exactly three Bowtie-Hexagon-Decagon rows,
+  matching landings 2/3/4). Brief:
+  [andritz-bowtie-hexagon](briefs/andritz-bowtie-hexagon.md).*
 
 ### Finite verified patches (patch-style entries)
 

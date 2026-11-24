@@ -1526,10 +1526,13 @@ and n = 15 siblings remain queued (K₉ shipped M139; K₁₅ shipped M139).
 
 ### 23f. Girih / Islamic clusters (relevant to the paused girih fork)
 
-- **Andritz Bowtie–Hexagon family** (4 entries: small/large bowtie,
-  hexagon variants) — 5-fold FLC model sets with documented
-  substitutions; effort M each.
-- **Girih-inspired 14-fold** — effort L.
+- **Andritz Bowtie–Hexagon family** ✅ (landed M151/M152/M153/M160:
+  bowtie-hexagon, 10gon-1, 10gon-2, 10gon-3; "12gon-3" in the wild is
+  an image-directory alias of 10gon-3, not a separate entry —
+  verified md5-identical source images, M160 arc close-out) —
+  5-fold FLC model sets with documented substitutions; effort M each.
+- **Girih-inspired 14-fold** — ✅ landed M159 (Pautze 2017; see the
+  quasiperiodic family doc and `docs/tilings/girih-14-fold.md`).
 - Note: the paused `girih-primitive` fork (§ pending owner decision)
   was revived as a brief and **landed M131–M134** (bowtie, rhombus,
   decagon, pentagon as periodic K-exact data tables beside
