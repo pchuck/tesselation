@@ -106,10 +106,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
 /// This family's entries for the global lattice-culling cross-check
 /// (`lattice_culling_tests` in `lib.rs`).
 #[cfg(test)]
-pub(crate) fn lattice_tilings() -> Vec<(&'static str, crate::lattice::LatticeTiling)> {
-    vec![]
-}
-
 #[cfg(test)]
 mod census {
     use super::*;

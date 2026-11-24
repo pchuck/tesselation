@@ -300,7 +300,11 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
 }
 
 /// This family's entries for the global lattice-culling cross-check
-/// (`lattice_culling_tests` in `lib.rs`).
+/// (`lattice_culling_tests` in `lib.rs`), one per islamic-family tiling
+/// that carries a `LatticeTiling` table. Dedicated tiling types with no
+/// table (e.g. hexagram, zellige star-cross, girih-quasiperiodic,
+/// girih-decagon-patch, the andritz bowtie-hexagon set) are out
+/// of scope by construction.
 #[cfg(test)]
 pub(crate) fn lattice_tilings() -> Vec<(&'static str, crate::lattice::LatticeTiling)> {
     vec![
@@ -315,6 +319,21 @@ pub(crate) fn lattice_tilings() -> Vec<(&'static str, crate::lattice::LatticeTil
             ("pic-3-6-3-6", pic_3_6_3_6::pic_3_6_3_6()),
             ("pic-3-12-12", pic_3_12_12::pic_3_12_12()),
             ("khatam-girih", khatam_girih::khatam_girih()),
+            ("hankin-4-8-8-rosette", hankin_4_8_8::hankin_4_8_8_rosette()),
+            ("hankin-4-6-12", hankin_4_6_12::hankin_4_6_12()),
+            ("hankin-hex-two-point", hankin_hex::hankin_hex_two_point()),
+            ("hankin-3-12-12", hankin_3_12_12::hankin_3_12_12()),
+            ("hankin-square-two-point", hankin_square_two_point::hankin_square_two_point()),
+            ("hankin-4-8-8-rosette-transform", hankin_4_8_8_rosette_transform::hankin_4_8_8_rosette_transform()),
+            ("hankin-3-6-3-6", hankin_3_6_3_6::hankin_3_6_3_6()),
+            ("hankin-3-4-6-4", hankin_3_4_6_4::hankin_3_4_6_4()),
+            ("hankin-3-3-3-4-4", hankin_3_3_3_4_4::hankin_3_3_3_4_4()),
+            ("hankin-3-3-4-3-4", hankin_3_3_4_3_4::hankin_3_3_4_3_4()),
+            ("hankin-4-8-8-motifs", hankin_4_8_8_motifs::hankin_4_8_8_motifs()),
+            ("hankin-hex-motifs", hankin_hex_motifs::hankin_hex_motifs()),
+            ("najm-63-motifs", najm_63_motifs::najm_63_motifs()),
+            ("najm-63-2e-0-3e-ac", najm::najm_63_2e_0_3e_ac()),
+            ("najm-44-3e-0-0-a", najm::najm_44_3e_0_0_a()),
     ]
 }
 
