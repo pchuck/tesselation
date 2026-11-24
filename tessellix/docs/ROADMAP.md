@@ -31,15 +31,17 @@ the "mixed floret/cairo/prismatic" patterns.
 
 ### Islamic star-pattern extensions (Kaplan dissertation Ch. 3, PROPOSED.md §22)
 
-- 🔭 **22a Design-element motif library** — parameterized
-  d_n-symmetric motifs for regular polygons in any substrate:
-  stars (n, r, s, θ) with {n/d}s ↔ θ = πd/n (s = 2 when n > 6 and
-  θ > 2π/n), rosettes (n, r, s, θ, h, φ) with Lee's ideal at
-  (π/n, 1, 0), and the extension operator
-  (θ′ = θ/2, r′ = r[1/cos(π/n) − sinθ·tan(π/n)·cos(π/n − θ)]).
-  Generalizes the M94 fixed configs to per-tile motif assignment.
-  Brief: [kaplan-22a-motifs](briefs/kaplan-22a-motifs.md); queued
-  (islamic family — dispatches after the girih decagon patch lands).
+- ✅ **22a Design-element motif library (M163).** *Landed:
+  `hankin_motifs.rs` — `Motif::Star` / `Rosette` (Lee's ideal pinned
+  at (π/n, 1, 0)) / `ExtendedStar` / `ExtendedRosette` with per-tile
+  motif assignment via `build_cells_with_motifs`; additive hooks in
+  `hankin.rs` (regression-proven byte-identical on the ten existing
+  engine-built hankin tilings). Erratum: the dissertation prints the
+  extension child angle as θ/2 — the battery-pinned reading is
+  θ′ = θ − π/n with r′ = r·cos θ/cos(π/n − θ) (coincident only at
+  θ = 2π/n). Three showcase instances: hankin-4-8-8-motifs (p4m),
+  hankin-hex-motifs (pmm), najm-63-motifs (p6m); Islamic 26 → 29.*
+  Brief: [kaplan-22a-motifs](briefs/kaplan-22a-motifs.md).
 - ✅ **22b Najm template-tiling generator (M99).** *Landed:
   `najm.rs` with `najm-63-2e-0-3e-ac` (Fig. 3.21, p6m) and
   `najm-44-3e-0-0-a` (Fig. 3.22, p4m); radii cases 1–4 implemented;

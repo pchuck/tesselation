@@ -46,7 +46,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 18 | n-fold rhomb family (7-fold GS/Harriss, CAST) | Quasiperiodic | degree-3 arithmetic | L+ | P2 |
 | 19 | Second measured ornamental panel | Wallpaper | M35 pipeline | M–L | P2 |
 | 20 | Fractalizing k-uniform (2+√3 dodecagon) ✅ DONE (M110, same-plane limit-periodic family over 3.12.12 — not a substitution) | Quasiperiodic | substitution on uniform basis | M | P2 |
-| 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements; 22b Najm template-tiling generator; 22c rosette transform ✅(M99); 22d parquet deformations; 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite; 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
+| 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements ✅(M163); 22b Najm template-tiling generator ✅(M99); 22c rosette transform ✅(M99); 22d parquet deformations; 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite; 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
 | 23 | Bielefeld Tilings Encyclopedia survey — candidate clusters (golden-family Q(√φ), 8-fold Q(√2), 12-fold Q(√3), rep-tile/limit-periodic, generalized GLB binary §9-rescope, girih-family, pinwheel family, cubic/quartic field tiers) | mixed | see §23 | S–XL | P1/P2 |
 
 \* golden-bee tilings are nonperiodic and (canonical form) quasiperiodic;
@@ -1685,6 +1685,15 @@ can be adopted independently through the standard checklist.
     (star / rosette / extended rosette / inferred) on any substrate
     with regular polygons, instead of three hand-built configs.
   - **Effort** M–L, **tier** P1.
+  - **Status:** landed (M163) — `hankin_motifs.rs` with per-tile
+    motif assignment (`build_cells_with_motifs`), additive hooks in
+    `hankin.rs` (regression-proven byte-identical on the ten existing
+    engine-built hankin tilings), three showcase instances
+    (`hankin-4-8-8-motifs` p4m, `hankin-hex-motifs` pmm,
+    `najm-63-motifs` p6m). Erratum: the extension operator above
+    prints the dissertation's θ′ = θ/2 — the battery-pinned reading
+    is θ′ = θ − π/n with r′ = r·cos θ/cos(π/n − θ) (coincident only
+    at θ = 2π/n; Lee's ideal rosette unchanged).
 - **22b. Najm template-tiling generator** — diss. §3.6.1. A
   *parameterized* family of substrate tilings from the [p, q]
   generating triangle, replacing hand-coded templates:

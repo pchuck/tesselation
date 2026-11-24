@@ -8,7 +8,7 @@ Adding a tiling here touches only this family: `families/islamic.rs`
 `lattice_tilings` entries) plus the new module and its doc row below.
 Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 
-## Implemented (31 tilings)
+## Implemented (34 tilings)
 
 ### Periodic decorative families
 
@@ -32,8 +32,11 @@ Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 | `hankin-4-8-8-rosette-transform` | Hankin rosette-transform khatam | p4m | Kaplan rosette transform (diss. §3.8) on the 4.8.8 substrate at θK = 45°, δ = 0: each octagon → concentric inner octagon (r′ = r·cos(π/8)/(1+sin(π/8)), rotated π/8, spokes = half the inner side) + 8 pentagons; each square → 4 half-squares of side 1/2 (all four bisectors pass through the centre — Kaplan's cluster heuristic fires: 4 of the 6 bisector-pair intersections, one cluster) — 93-tile transformed table per ⟨(1+√2,0),(0,1+√2)⟩ cell (16 triangles, 36 quads, 32 pentagons, 8 hexagons, one 16-gon), edge-to-edge (0 unpaired, 0 T-junctions, w = 4), area census |det| = 3+2√2, exact Q(√2); then M94 inference at θE = 45°; transformed table p4m-exact to 6.5e-16 (M99) |
 | `hankin-3-3-3-4-4` | Hankin elongated-triangular motif (3.3.3.4.4) | cmm | M107 inference on the elongated-triangular 3.3.3.4.4 substrate (θK = 60°, δ = 0; all-CCW in-cell table — the CW down-triangle and CW square emit outward rays and pair with nothing at every probed angle): both triangle tiles in the side-1/2 4-subdivision limit (4 equilateral faces each), the square as four corner quadrilaterals + central octagon — 13 faces per cell ⟨(1,0),(1/2,1+√3/2)⟩ (det 1+√3/2), exact Q(√3); cmm verified exactly on a 551-face window (§63) |
 | `hankin-3-3-4-3-4` | Hankin snub-square motif (3.3.4.3.4) | p4g | M111 inference on the snub-square 3.3.4.3.4 substrate (θK = 60°, δ = 0; all twelve instances stored CCW in their in-cell positions): each square in its five-face motif (four corner quadrilaterals + central octagon), each triangle in the side-1/2 4-subdivision limit (4 equilateral faces each) — 52 faces per cell ⟨(1+√3,0),(0,1+√3)⟩ (det 4+2√3); tiles and lattice in Q(√3), all face vertices in (ℤ+ℤ√3)/4 (√2 and √6 coefficients identically zero in the full Q(√2,√3) audit; √2 only as the 45° glide-ray direction); p4g verified exactly on a 6292-face window: face-set translations the centered lattice Λ′ = ⟨(L/2,L/2),(L/2,−L/2)⟩ with L = 1+√3, 4-fold centers {(L/4,L/4+½),(L/4,3L/4+½),(3L/4,L/4+½),(3L/4,3L/4+½)}, 2-folds = those ∪ {(0,½),(0,(L+1)/2),(L/2,½),(L/2,(L+1)/2)}, glides on 45° lines y−x ≡ L/4+½, 3L/4+½ and 135° lines y+x ≡ L/4+½, 3L/4+½ with ¼-period shifts ±(L/4,∓L/4) — off the L/8 grid; no mirrors (§66, provisional) |
+| `hankin-4-8-8-motifs` | Hankin motif khatam (4.8.8) | p4m | Kaplan §3.5 design elements on the 4.8.8 substrate (hankin_motifs library, table reused from hankin-4-8-8-rosette): ideal rosette θ = π/8, h = 1, depth s = 3 on the octagon — 8 hexagonal petals + 32-gon core (32 segments); extension operator at realized outer angle 3π/8, s = 2 on the diamond — child angle π/8, fit factor F = cos θ/cos(π/n − θ), 4 quads + octagonal core (8 segments); every child arm line lands exactly on a parent-edge midpoint (spur identity −F·cos θ + cos(θ − π/n) = 0, pinned to 1e-13); 14 faces per ⟨(1+√2,0),(0,1+√2)⟩ cell, Σ areas = |det|; p4m exact on the torus segment multiset (rot90 at both centres, mirrors y = 0, y = x; rot45, half-translations, rot60 fail) |
+| `hankin-hex-motifs` | Hankin motif hex weave (6³) | pmm | Kaplan §3.5 design elements on the regular hexagonal substrate, rectangular 2-hex cell ⟨(√3,0),(0,3)⟩ (|det| = 3√3): rosetted hexagon (ideal θ = π/6, s = 2; 6 hexagonal petals + 24-gon core, 24 segments) at the origin + extended-star hexagon (realized outer angle π/3, s = 1; child angle π/6, 6 quads + 12-gon core, 12 spurs) at (√3/2, 3/2); the class assignment breaks the substrate's 6-fold symmetry — rot60 maps hexagon A onto class-B centres, swapping rosettes and stars — so the pattern group is pmm: mirrors x = 0, y = 0, x = √3/2, y = 3/2 and rot180 at the hexagon centre and the shared-edge midpoint, exact on the torus segment multiset (rot60/rot120, the 30° mirror, rot90 and half-diagonal translations all fail) |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `najm-63-2e-0-3e-ac` | Najm template ([6,3]; 2e, 0, 3e; AC) | p6m | najm-generator substrate (diss. §3.6.1 Fig. 3.21): dodecagons + enneagons sharing equal chords, x = 2/(cot 15° + cot 20°), concave equilateral bowties (70°/220°) at the 2-fold points; 6 tiles/cell, |det| = 3√3/2 (M99) |
+| `najm-63-motifs` | Najm motif plate ([6,3]; 2e, 0, 3e; AC) | p6m | Kaplan §3.5 design elements on the najm-63-2e-0-3e-ac substrate (six cell polygons reused verbatim): ideal rosette θ = π/12, depth s = 3 on the dodecagon — 12 hexagonal petals + 48-gon core (48 segments); star ring θ = 35°, s = 2 on each enneagon — 9 quads + 18-gon core (18 segments; chosen over the ideal 20° whose s ≤ 1 star is a 3–6 px rim band, 20°'s degenerate doubled chords and 40°'s measured collinear overlaps, 0.236-deep at 1e-16 perpendicular distance, which the engine rejects); bowties kept plain via Motif::None (single faces); 36 faces per ⟨(√3,0),(√3/2,3/2)⟩ cell, Σ areas = |det|; p6m exact on the torus segment multiset (rot60/rot120 and mirrors at 0°/30° through the dodecagon centre; rot60 at the enneagon centre and half-lattice translations fail) |
 | `najm-44-3e-0-0-a` | Najm template ([4,4]; 3e, 0, 0; A) | p4m | najm-generator substrate (diss. §3.6.1 Fig. 3.22): dodecagons r = √6−√2 on 2Z² sharing chords across odd grid lines + concave equilateral 4-pointed stars (side 4−2√3, 60° tips, 210° notches); exact Q(√2,√3) (M99) |
 | `girih-bowtie` | girih bowtie (papillon) prototile tiling | cmm | the concave equilateral girih hexagon (216°,72°,72°,216°,72°,72°, unit edges) tiles the plane by translation alone on the centered rectangular lattice ⟨(cos36°+cos72°, sin36°−sin72°), (1+cos36°, sin36°)⟩; det = tile area exact over Q(√5); vertex figure 72.72.216 at every interior vertex; tile mirrors along both rectangle axes give cmm |
 | `girih-decagon` | girih decagon prototile tiling | cmm | the regular girih decagon (144°, unit edges) cannot tile alone; its primitive periodic edge-to-edge arrangement is the two-tile cell of one decagon plus one forced bowtie infill on the centered rectangular lattice ⟨(0, −2(sin72°+sin36°)), (1/2+3cos36°, sin72°+2sin36°)⟩; det = decagon+bowtie area exact over Q(√5); vertex figure 10.6.10 (two decagons + one bowtie close 144+72+144); two perpendicular mirror families with interleaved glides give cmm |
@@ -914,6 +917,67 @@ briefs cite them as `§N`.
   (both target sets) zero warnings, cargo test --workspace
   --all-features 735/735.
 
+### 67. Kaplan §3.5 design-element motif library ✅ (M163)
+
+What landed:
+
+- `families/islamic/hankin_motifs.rs` — three §3.5 design elements generated
+  per substrate tile plus the per-tile motif-assignment entry point.
+  - `Motif::Star` (n, s, θ): one arm per edge contact leaving at angle θ,
+    replicated under d_n both chiralities, each arm path cut at its crossings,
+    first s subpaths kept.
+  - `Motif::Rosette` (n, s, θ, h, φ): arms bend at a knee G on the leg-1 line
+    at signed height h·(1−sin(π/n))·|A−M| above the contact radius and leave
+    along a ray turned φ from the inward radius; at the ideal angle θ = π/n,
+    h = 1, φ = 0 this is Lee's rosette (knee identities pinned to 1e-13,
+    Python mpmath 40-dps reference 1.7e-16).
+  - `Motif::ExtendedStar` / `ExtendedRosette`: the §3.5.4 extension operator.
+    The designer fixes the realized OUTER contact angle θ ∈ (π/n, π/2); the
+    child element is the standalone motif at θ′ = θ − π/n, circumradius
+    r′ = r·F, F = cos θ/cos(π/n − θ), rotated π/n. Identity
+    −F·cos θ + cos(θ − π/n) = 0 makes every child arm line pass exactly
+    through a parent edge midpoint (landing radius r·cos(π/n)) — the segment
+    child-contact → parent-midpoint is the extension spur. **Erratum**: the
+    dissertation prints the child angle as θ/2; that coincides with θ − π/n
+    only at θ = 2π/n (battery pins the corrected reading across n = 5..12 ×
+    3 angles × star/rosette: F-identity 0.0, landing/angle offsets ≤ 9e-16).
+  - Merged figure: the spur is collinear with the child leg-1 line, so the
+    emitted figure is spurs ∪ post-knee child rays — emitting the leg segments
+    too would hand `hankin::arrangement_faces` collinear overlaps (it panics).
+    Extended stars emit spurs only for any s (the leg line IS the spur).
+  - Motif circumradius is not free: r = tile circumradius (the §3.5 figures
+    all share it). `Motif::None` keeps a tile plain (one face).
+- Additive engine hooks in `hankin.rs` (non-breaking):
+  `build_cells_with_segments(tiles, segs_per_tile)` (feeds pre-built motif
+  figures through the same face-arrangement + seed-clustering tail, extracted
+  as `assemble_cells`) and `tile_faces_with_segments`. `build_cells` delegates
+  to the same tail; **regression proof**: the cell tables of all ten
+  engine-built hankin tilings dumped via a temporary test are byte-identical
+  before/after (`.scratch/kaplan22a/cells_before.txt` vs `cells_after.txt`,
+  292 lines, zero diff).
+- Three showcase instances (`hankin-4-8-8-motifs` p4m, `hankin-hex-motifs`
+  pmm, `najm-63-motifs` p6m — catalog rows + per-tiling docs landed).
+- **Census:** Islamic 26 → 29; built-ins 159 → 162; memberships 180 → 183.
+
+Hard-won lessons:
+
+- Collinear-overlap-free geometry is mandatory: for regular n-gons two star
+  arms are collinear iff 40Δ + (σ₁−σ₂)θ ≡ 0 (mod 180) (θ in degrees); use the
+  parity check plus a numerical overlap probe before shipping any (n, θ, s).
+  This killed θ = 40° on the enneagon (nine 0.236-deep overlaps) and forced
+  the 35° star ring.
+- The landing test for extended motifs must be tile-centre-relative —
+  origin-relative arithmetic silently passes for origin-centred tiles and
+  fails on offset ones.
+- Wallpaper verification via exact fold tests on the torus segment multiset
+  (±2-cell window folded to the lattice, multiset compared before/after):
+  a 2-colour motif assignment can drop the pattern group below the substrate's
+  (hex: p6m → pmm under rosette↔star class swap by rot60).
+- Expectation tables must be transcribed from the Rust build, not Python:
+  trig-evaluation ulps (4.4e-16 vs exact-literal tiles) would poison a
+  zero-tolerance pin (all tables here match Python to ≤ 4.5e-16 and ship the
+  Rust values at 1e-9 tolerance).
+
 ## Per-tiling documents
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
@@ -936,8 +1000,11 @@ Each member's full specification — algorithm, exact geometry, verification, so
 - [`hankin-4-8-8-rosette-transform`](../tilings/hankin-4-8-8-rosette-transform.md) — Hankin rosette-transform khatam (4.8.8)
 - [`hankin-3-3-3-4-4`](../tilings/hankin-3-3-3-4-4.md) — Hankin elongated-triangular motif (3.3.3.4.4)
 - [`hankin-3-3-4-3-4`](../tilings/hankin-3-3-4-3-4.md) — Hankin snub-square motif (3.3.4.3.4)
+- [`hankin-4-8-8-motifs`](../tilings/hankin-4-8-8-motifs.md) — Hankin motif khatam (4.8.8)
+- [`hankin-hex-motifs`](../tilings/hankin-hex-motifs.md) — Hankin motif hex weave (6³)
 - [`khatam-girih`](../tilings/khatam-girih.md) — Khatam Girih Decomposition (8-point)
 - [`najm-63-2e-0-3e-ac`](../tilings/najm-63-2e-0-3e-ac.md) — Najm template (6,3)
+- [`najm-63-motifs`](../tilings/najm-63-motifs.md) — Najm motif plate (6,3 rosette + stars)
 - [`najm-44-3e-0-0-a`](../tilings/najm-44-3e-0-0-a.md) — Najm template (4,4)
 - [`girih-bowtie`](../tilings/girih-bowtie.md) — Girih Bowtie (72.72.216)
 - [`girih-decagon`](../tilings/girih-decagon.md) — Girih Decagon (10.6.10)

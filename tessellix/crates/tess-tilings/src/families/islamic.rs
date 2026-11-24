@@ -30,6 +30,7 @@ pub mod pic_4_8_8;
 pub mod pic_3_6_3_6;
 pub mod pic_3_12_12;
 pub mod hankin;
+pub mod hankin_motifs;
 pub mod hankin_4_8_8;
 pub mod hankin_4_6_12;
 pub mod hankin_4_8_8_rosette_transform;
@@ -40,8 +41,11 @@ pub mod hankin_3_6_3_6;
 pub mod hankin_3_4_6_4;
 pub mod hankin_3_3_3_4_4;
 pub mod hankin_3_3_4_3_4;
+pub mod hankin_4_8_8_motifs;
+pub mod hankin_hex_motifs;
 pub mod khatam_girih;
 pub mod najm;
+pub mod najm_63_motifs;
 pub mod rosette_transform;
 
 /// The family's registry slice, in within-tab order.
@@ -70,8 +74,11 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(hankin_3_4_6_4::hankin_3_4_6_4());
         r = r.register(hankin_3_3_3_4_4::hankin_3_3_3_4_4());
         r = r.register(hankin_3_3_4_3_4::hankin_3_3_4_3_4());
+        r = r.register(hankin_4_8_8_motifs::hankin_4_8_8_motifs());
+        r = r.register(hankin_hex_motifs::hankin_hex_motifs());
         r = r.register(khatam_girih::khatam_girih());
         r = r.register(najm::najm_63_2e_0_3e_ac());
+        r = r.register(najm_63_motifs::najm_63_motifs());
         r = r.register(najm::najm_44_3e_0_0_a());
         r = r.register(girih_bowtie::girih_bowtie());
         r = r.register(girih_decagon::girih_decagon());
@@ -238,6 +245,20 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         "hankin-3-3-3-4-4" => hankin_greedy("3.3.3.4.4", "θK 60°", &[]),
         "hankin-3-3-4-3-4" => hankin_greedy("3.3.4.3.4", "θK 60°", &[]),
         "hankin-3-12-12" => hankin_greedy("3.12.12", "θK 45°", &[]),
+        "hankin-4-8-8-motifs" => TilingClass {
+            families: &["Islamic"],
+            method: Some("Kaplan §3.5 motif library"),
+            base_tiling: Some("4.8.8"),
+            contact_angle: Some("θE 22.5° s 3; extended 67.5° s 2"),
+            ..TilingClass::EMPTY
+        },
+        "hankin-hex-motifs" => TilingClass {
+            families: &["Islamic"],
+            method: Some("Kaplan §3.5 motif library"),
+            base_tiling: Some("6.6.6"),
+            contact_angle: Some("θE 30° s 2; extended 60° s 1"),
+            ..TilingClass::EMPTY
+        },
         "khatam-girih" => TilingClass {
             families: &["Islamic"],
             method: Some("girih decomposition"),
@@ -249,6 +270,14 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             families: &["Islamic"],
             method: Some("Najm template"),
             base_tiling: Some("[6,3]; 2e, 0, 3e (AC)"),
+            tile_set: Some("dodecagon + enneagon substrate"),
+            ..TilingClass::EMPTY
+        },
+        "najm-63-motifs" => TilingClass {
+            families: &["Islamic"],
+            method: Some("Kaplan §3.5 motif library"),
+            base_tiling: Some("[6,3]; 2e, 0, 3e (AC)"),
+            contact_angle: Some("rosette θE 15° s 3; star θE 35° s 2"),
             tile_set: Some("dodecagon + enneagon substrate"),
             ..TilingClass::EMPTY
         },
@@ -323,8 +352,11 @@ mod census {
         "hankin-3-3-3-4-4",
         "hankin-3-3-4-3-4",
         "hankin-3-12-12",
+        "hankin-4-8-8-motifs",
+        "hankin-hex-motifs",
         "khatam-girih",
         "najm-63-2e-0-3e-ac",
+        "najm-63-motifs",
         "najm-44-3e-0-0-a",
         "hexagram",
         "girih-bowtie",
@@ -338,7 +370,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            31,
+            34,
             "islamic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
@@ -4483,4 +4515,311 @@ mod najm_tests {
             );
         }
     }}
+
+
+
+/// kaplan-22a motif-instance tests: trio + cell-table census (machine-
+/// transcribed face tables), motif segment counts and symmetry metadata
+/// for `hankin-4-8-8-motifs`.
+#[cfg(test)]
+mod hankin_4_8_8_motifs_tests {
+    use super::hankin_4_8_8_motifs::{hankin_4_8_8_motifs, motifs, EXPECTED_CELL_LENS, EXPECTED_SEEDS, EXPECTED_VERTS};
+    use super::hankin_motifs::motif_segments;
+    use crate::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    #[test]
+    fn hankin_4_8_8_motifs_covers_region() {
+        check_covers(
+            &hankin_4_8_8_motifs(),
+            "hankin-4-8-8-motifs",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_4_8_8_motifs_rotated_scaled() {
+        check_rotated(
+            &hankin_4_8_8_motifs(),
+            "hankin-4-8-8-motifs(rot20,scale0.6)",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn hankin_4_8_8_motifs_deterministic() {
+        check_det(
+            &hankin_4_8_8_motifs(),
+            "hankin-4-8-8-motifs",
+            BBox::new(Vec2::new(-12.0, -9.0), Vec2::new(12.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_4_8_8_motifs_unit_structure() {
+        let t = hankin_4_8_8_motifs();
+        assert_eq!(t.cells.len(), 14);
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(seeds, EXPECTED_SEEDS.to_vec(), "seed layout");
+        let lens: Vec<usize> = t.cells.iter().map(|c| c.poly.pts.len()).collect();
+        assert_eq!(lens, EXPECTED_CELL_LENS.to_vec(), "cell vertex counts");
+        let flat: Vec<f64> = t
+            .cells
+            .iter()
+            .flat_map(|c| c.poly.pts.iter().flat_map(|p| [p.x, p.y]))
+            .collect();
+        assert_eq!(flat.len(), EXPECTED_VERTS.len());
+        for (a, e) in flat.iter().zip(EXPECTED_VERTS) {
+            assert!((a - e).abs() < 1e-9, "cell vertex {a} vs expected {e}");
+        }
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        let a1 = 1.0 + core::f64::consts::SQRT_2;
+        assert!((det - a1 * a1).abs() < 1e-9);
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-9, "Σ areas {sum} vs det {det}");
+    }
+
+    #[test]
+    fn hankin_4_8_8_motifs_face_census() {
+        // Ideal rosette (s = 3) on the octagon: 32 segments; extension
+        // rosette (s = 2) on the diamond: 8 segments (4 spurs + 4
+        // post-knee rays).
+        let tiles = super::hankin_4_8_8::tiles();
+        let ms = motifs();
+        let segs: Vec<usize> = tiles
+            .iter()
+            .zip(&ms)
+            .map(|(t, m)| m.as_ref().map_or(0, |m| motif_segments(t, m).len()))
+            .collect();
+        assert_eq!(segs, vec![32, 8], "motif segment counts");
+        let t = hankin_4_8_8_motifs();
+        let mut hist: std::collections::BTreeMap<usize, usize> = Default::default();
+        for c in &t.cells {
+            *hist.entry(c.poly.pts.len()).or_default() += 1;
+        }
+        assert_eq!(
+            hist.into_iter().collect::<Vec<_>>(),
+            vec![(4, 4), (6, 8), (8, 1), (32, 1)],
+            "face lens census: 8 hexagonal petals + 32-gon core (octagon), 4 quads + octagon core (diamond)"
+        );
+    }
+
+    #[test]
+    fn hankin_4_8_8_motifs_symmetry_metadata() {
+        let t = hankin_4_8_8_motifs();
+        assert_eq!(t.id, "hankin-4-8-8-motifs");
+        assert_eq!(t.group, WallpaperGroup::P4m);
+        assert_eq!(t.lattice_kind, LatticeKind::Square);
+        assert_eq!(t.category, TilingCategory::Islamic);
+        assert_eq!(t.secondary, &[]);
+    }
+}
+
+/// kaplan-22a motif-instance tests for `hankin-hex-motifs`.
+#[cfg(test)]
+mod hankin_hex_motifs_tests {
+    use super::hankin_hex_motifs::{hankin_hex_motifs, motifs, tiles, EXPECTED_CELL_LENS, EXPECTED_SEEDS, EXPECTED_VERTS};
+    use super::hankin_motifs::motif_segments;
+    use crate::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    #[test]
+    fn hankin_hex_motifs_covers_region() {
+        check_covers(
+            &hankin_hex_motifs(),
+            "hankin-hex-motifs",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_hex_motifs_rotated_scaled() {
+        check_rotated(
+            &hankin_hex_motifs(),
+            "hankin-hex-motifs(rot20,scale0.6)",
+            BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn hankin_hex_motifs_deterministic() {
+        check_det(
+            &hankin_hex_motifs(),
+            "hankin-hex-motifs",
+            BBox::new(Vec2::new(-12.0, -9.0), Vec2::new(12.0, 9.0)),
+        );
+    }
+
+    #[test]
+    fn hankin_hex_motifs_unit_structure() {
+        let t = hankin_hex_motifs();
+        assert_eq!(t.cells.len(), 14);
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(seeds, EXPECTED_SEEDS.to_vec(), "seed layout");
+        let lens: Vec<usize> = t.cells.iter().map(|c| c.poly.pts.len()).collect();
+        assert_eq!(lens, EXPECTED_CELL_LENS.to_vec(), "cell vertex counts");
+        let flat: Vec<f64> = t
+            .cells
+            .iter()
+            .flat_map(|c| c.poly.pts.iter().flat_map(|p| [p.x, p.y]))
+            .collect();
+        assert_eq!(flat.len(), EXPECTED_VERTS.len());
+        for (a, e) in flat.iter().zip(EXPECTED_VERTS) {
+            assert!((a - e).abs() < 1e-9, "cell vertex {a} vs expected {e}");
+        }
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        let rt3 = 1.7320508075688772;
+        assert!((det - 3.0 * rt3).abs() < 1e-9);
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-9, "Σ areas {sum} vs det {det}");
+    }
+
+    #[test]
+    fn hankin_hex_motifs_face_census() {
+        // Ideal rosette (s = 2) on hexagon A: 24 segments; extension
+        // star (s = 1) on hexagon B: 12 spurs (a star's leg line is
+        // already the spur — extended stars emit spurs only).
+        let ts = tiles();
+        let ms = motifs();
+        let segs: Vec<usize> = ts
+            .iter()
+            .zip(&ms)
+            .map(|(t, m)| m.as_ref().map_or(0, |m| motif_segments(t, m).len()))
+            .collect();
+        assert_eq!(segs, vec![24, 12], "motif segment counts");
+        let t = hankin_hex_motifs();
+        let mut hist: std::collections::BTreeMap<usize, usize> = Default::default();
+        for c in &t.cells {
+            *hist.entry(c.poly.pts.len()).or_default() += 1;
+        }
+        assert_eq!(
+            hist.into_iter().collect::<Vec<_>>(),
+            vec![(4, 6), (6, 6), (12, 1), (24, 1)],
+            "face lens census: 6 hexagonal petals + 24-gon core (A), 6 quads + 12-gon core (B)"
+        );
+    }
+
+    #[test]
+    fn hankin_hex_motifs_symmetry_metadata() {
+        let t = hankin_hex_motifs();
+        assert_eq!(t.id, "hankin-hex-motifs");
+        assert_eq!(t.group, WallpaperGroup::Pmm);
+        assert_eq!(t.lattice_kind, LatticeKind::Rectangular);
+        assert_eq!(t.category, TilingCategory::Islamic);
+        assert_eq!(t.secondary, &[]);
+    }
+}
+
+/// kaplan-22a motif-instance tests for `najm-63-motifs`.
+#[cfg(test)]
+mod najm_63_motifs_tests {
+    use super::hankin_motifs::motif_segments;
+    use super::najm_63_motifs::{motifs, substrate_tiles};
+    use crate::tests::{check_covers, check_det, check_rotated};
+    use tess_core::category::TilingCategory;
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::symmetry::{LatticeKind, WallpaperGroup};
+
+    #[test]
+    fn najm_63_motifs_covers_region() {
+        check_covers(
+            &super::najm_63_motifs::najm_63_motifs(),
+            "najm-63-motifs",
+            BBox::new(Vec2::new(-10.0, -10.0), Vec2::new(10.0, 10.0)),
+        );
+    }
+
+    #[test]
+    fn najm_63_motifs_rotated_scaled() {
+        check_rotated(
+            &super::najm_63_motifs::najm_63_motifs(),
+            "najm-63-motifs(rot20,scale0.6)",
+            BBox::new(Vec2::new(-10.0, -10.0), Vec2::new(10.0, 10.0)),
+            0.6,
+            20.0,
+        );
+    }
+
+    #[test]
+    fn najm_63_motifs_deterministic() {
+        check_det(
+            &super::najm_63_motifs::najm_63_motifs(),
+            "najm-63-motifs",
+            BBox::new(Vec2::new(-6.0, -6.0), Vec2::new(6.0, 6.0)),
+        );
+    }
+
+    #[test]
+    fn najm_63_motifs_unit_structure() {
+        use super::najm_63_motifs::{EXPECTED_CELL_LENS, EXPECTED_SEEDS, EXPECTED_VERTS};
+        let t = super::najm_63_motifs::najm_63_motifs();
+        assert_eq!(t.cells.len(), 36);
+        let seeds: Vec<u32> = t.cells.iter().map(|c| c.seed).collect();
+        assert_eq!(seeds, EXPECTED_SEEDS.to_vec(), "seed layout");
+        let lens: Vec<usize> = t.cells.iter().map(|c| c.poly.pts.len()).collect();
+        assert_eq!(lens, EXPECTED_CELL_LENS.to_vec(), "cell vertex counts");
+        let flat: Vec<f64> = t
+            .cells
+            .iter()
+            .flat_map(|c| c.poly.pts.iter().flat_map(|p| [p.x, p.y]))
+            .collect();
+        assert_eq!(flat.len(), EXPECTED_VERTS.len());
+        for (a, e) in flat.iter().zip(EXPECTED_VERTS) {
+            assert!((a - e).abs() < 1e-9, "cell vertex {a} vs expected {e}");
+        }
+        let det = t.lattice[0].x * t.lattice[1].y - t.lattice[0].y * t.lattice[1].x;
+        assert!((det - 2.598076211353316).abs() < 1e-9, "det = 3√3/2");
+        let sum: f64 = t.cells.iter().map(|c| c.poly.area()).sum();
+        assert!((sum - det).abs() < 1e-9, "Σ areas {sum} vs det {det}");
+        // The substrate table is reused verbatim: the motif-free
+        // substrate tiles are the registered Najm cells.
+        let base = super::najm::najm_63_2e_0_3e_ac();
+        let tiles = substrate_tiles(&base);
+        assert_eq!(tiles.len(), 6);
+    }
+
+    #[test]
+    fn najm_63_motifs_face_census() {
+        // Ideal rosette (s = 3) on the dodecagon: 48 segments; star
+        // (theta = 35 degrees, s = 2) on each enneagon: 18 segments;
+        // bowties Motif::None: 0 segments each.
+        let base = super::najm::najm_63_2e_0_3e_ac();
+        let tiles = substrate_tiles(&base);
+        let ms = motifs();
+        let segs: Vec<usize> = tiles
+            .iter()
+            .zip(&ms)
+            .map(|(t, m)| m.as_ref().map_or(0, |m| motif_segments(t, m).len()))
+            .collect();
+        assert_eq!(segs, vec![48, 18, 18, 0, 0, 0], "motif segment counts");
+        let t = super::najm_63_motifs::najm_63_motifs();
+        let mut hist: std::collections::BTreeMap<usize, usize> = Default::default();
+        for c in &t.cells {
+            *hist.entry(c.poly.pts.len()).or_default() += 1;
+        }
+        assert_eq!(
+            hist.into_iter().collect::<Vec<_>>(),
+            vec![(4, 18), (6, 15), (18, 2), (48, 1)],
+            "face lens census: 12 petals + 48-gon core (dodecagon), 2 × (9 quads + 18-gon core) (enneagons), 3 plain bowties"
+        );
+    }
+
+    #[test]
+    fn najm_63_motifs_symmetry_metadata() {
+        let t = super::najm_63_motifs::najm_63_motifs();
+        assert_eq!(t.id, "najm-63-motifs");
+        assert_eq!(t.group, WallpaperGroup::P6m);
+        assert_eq!(t.lattice_kind, LatticeKind::Hexagonal);
+        assert_eq!(t.category, TilingCategory::Islamic);
+        assert_eq!(t.secondary, &[]);
+    }
+}
 

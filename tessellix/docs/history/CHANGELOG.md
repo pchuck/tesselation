@@ -2958,3 +2958,34 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   17-card Wallpaper catalog untouched — the category rule held.
   isohedral family 0 → 5; Laves 28 → 33; Pentagon Types 15 → 17;
   built-ins 154 → 159; memberships 168 → 175.
+
+- 2026-11-24 — M163: Kaplan §3.5 design-element motif library + three
+  showcase instances
+  `hankin-4-8-8-motifs`, `hankin-hex-motifs`, `najm-63-motifs` ✅
+  (ROADMAP 22a; islamic family): `hankin_motifs.rs` — three
+  parameterized d_n-symmetric design elements generated per substrate
+  tile plus the per-tile motif-assignment entry point
+  (`build_cells_with_motifs`, `None` keeps a tile plain). `Motif::Star`
+  (n, s, θ) — one arm per edge contact, d_n both chiralities, cut at
+  crossings, first s subpaths kept; `Motif::Rosette` (n, s, θ, h, φ) —
+  knee at signed height h·(1−sin(π/n))·|A−M|, Lee's ideal at
+  (π/n, 1, 0) pinned to 1e-13 (mpmath 40-dps reference 1.7e-16);
+  `ExtendedStar`/`ExtendedRosette` — the §3.5.4 extension operator with
+  the dissertation's θ/2 erratum corrected to θ′ = θ − π/n,
+  r′ = r·cos θ/cos(π/n − θ) (battery-pinned across n = 5..12 × 3
+  angles × star/rosette: F-identity 0.0, landings ≤ 9e-16). Merged
+  figures are spurs ∪ post-knee rays — collinear-overlap-free for
+  `arrangement_faces` (the collinearity parity check
+  40Δ + (σ₁−σ₂)θ ≡ 0 (mod 180) killed θ = 40° on the enneagon).
+  Additive non-breaking hooks in `hankin.rs`
+  (`build_cells_with_segments` / `tile_faces_with_segments`, shared
+  tail extracted as `assemble_cells`): regression proof dumps all ten
+  engine-built hankin tilings' cell tables byte-identical before/after
+  (292 lines, zero diff). Instances: octagon Rosette 22.5° + diamond
+  ExtendedRosette 67.5° on the 4.8.8 substrate (14 cells, p4m); hex
+  Rosette 30° + ExtendedStar 60° on 6³ (14 cells, pmm — the 2-colour
+  assignment drops the substrate group, torus fold-test proven);
+  dodecagon Rosette 15° + enneagon Star 35° on najm-63 (36 cells, p6m).
+  Offset-tile spur-landing test (centre-relative, not origin-relative —
+  real bug caught). Islamic 26 → 29; built-ins 159 → 162; memberships
+  180 → 183.

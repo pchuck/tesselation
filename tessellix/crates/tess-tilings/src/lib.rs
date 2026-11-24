@@ -231,20 +231,23 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162). 159 built-ins — 63 before
+// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163). 162 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
-        // across the 10 tabs, in TilingCategory::ALL order:
+        // across the eleven tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
-        //   TwoUniform 20, Laves 28 (25 primary: 8 incl. cairo-pentagonal
+        //   TwoUniform 20, Laves 33 (25 primary: 8 incl. cairo-pentagonal
         //   + 17 machine-dualized k-uniform duals (M98, M102, M106, M120,
-        //   M121, M145, M147) + 3 regular secondaries), Wallpaper 17 (the group
+        //   M121, M145, M147) + 3 regular secondaries + 5 isohedral-type
+        //   secondaries), Wallpaper 17 (the group
         //   catalog — one card per represented group; M85 completed it),
-//   PentagonTypes 15, Islamic 25, Arrangements 8,
-//   Quasiperiodic 21, Aperiodic 11, Nonperiodic 11.
-// Membership census 167 = 153 primaries + 14 secondaries (3 Laves
-        // + 9 Wallpaper + 2 PentagonTypes: cairo-pentagonal (type 4)
-        // and floret-pentagonal (type 5) join the Pentagon tab as
-        // typed secondary members, M122).
+        //   Isohedral 5 (the Kaplan IH instances, primary since the
+        //   2026-11-24 tab chore), PentagonTypes 17, Islamic 29,
+        //   Arrangements 8, Quasiperiodic 21, Aperiodic 11, Nonperiodic 11.
+        // Membership census 183 = 162 primaries + 21 secondaries
+        // (3 regular Laves + 5 isohedral->Laves + 9 Wallpaper
+        // + 2 typed PentagonTypes: cairo-pentagonal (type 4)
+        // and floret-pentagonal (type 5), M122 + 2 untyped
+        // PentagonTypes: ih27/ih29).
         // History: M50 16 Wallpaper under default features -> M55 17
         // (pentagon-15) -> M59 20 (pentagon-9) -> M60 21 (pentagon-11)
         // -> M62 22 (pentagon-12) -> M63 23 (pentagon-10) -> M64 24
@@ -391,14 +394,24 @@ mod tests {
         // own tile class — 3 prototiles, rhombus + two mirror-image
         // half-squares — instead of being paired into squares; same
         // silver-mean deflation, H = 2P + U hypotenuse parity).
+        // -> M162 isohedral family 0 -> 5 (the Kaplan IH instances
+        // ih1/ih6/ih7 hexagons on the 6³ net, ih27/ih29 pentagons on
+        // the Cairo net; Laves 28 -> 33, PentagonTypes 15 -> 17).
+        // -> tab chore (2026-11-24, non-M): the Isohedral tab, the
+        // 11th category — the IH instances go primary-Isohedral with
+        // Laves / PentagonTypes secondaries; memberships 175 -> 180.
+        // -> M163 Islamic 26 -> 29 (hankin-4-8-8-motifs,
+        // hankin-hex-motifs, najm-63-motifs — the Kaplan §3.5
+        // design-element motif library; per-tile motif assignment;
+        // docs/families/islamic.md §67).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 20, 33, 17, 17, 5, 26, 8, 21, 11, 11],
+vec![11, 20, 33, 17, 17, 5, 29, 8, 21, 11, 11],
             "per-tab census (update when adding tilings)"
         );
-assert_eq!(r.len(), 159, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 180, "membership census (update when adding tilings)");
+assert_eq!(r.len(), 162, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 183, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely

@@ -491,22 +491,14 @@ fn tile_faces(tile: &[Vec2], theta_e_deg: f64, delta: f64) -> (Vec<Vec<Vec2>>, T
     )
 }
 
-/// Build the lattice cells of one fundamental domain: run the engine on
-/// every substrate tile (in-cell positions), canonicalize and sort the
-/// faces, and assign pattern seeds by congruence clustering (vertex
-/// count + area within 1e-9, first-appearance order).
-pub fn build_cells(
-    tiles: &[&[Vec2]],
-    theta_e_deg: f64,
-    delta: f64,
+/// Shared tail of [`build_cells`] and [`build_cells_with_segments`]:
+/// assign pattern seeds by congruence clustering (vertex count + area
+/// within 1e-9, first-appearance order) and assert the exact partition
+/// of every tile by its faces.
+fn assemble_cells(
+    all_faces: Vec<Vec<Vec<Vec2>>>,
+    per_tile: Vec<TileReport>,
 ) -> (Vec<Cell>, HankinReport) {
-    let mut all_faces: Vec<Vec<Vec<Vec2>>> = Vec::with_capacity(tiles.len());
-    let mut per_tile = Vec::with_capacity(tiles.len());
-    for tile in tiles {
-        let (faces, rep) = tile_faces(tile, theta_e_deg, delta);
-        all_faces.push(faces);
-        per_tile.push(rep);
-    }
     let mut seen: Vec<(usize, f64)> = Vec::new();
     let mut cells = Vec::new();
     for faces in &all_faces {
@@ -541,4 +533,79 @@ pub fn build_cells(
             per_tile,
         },
     )
+}
+
+/// Build the lattice cells of one fundamental domain: run the engine on
+/// every substrate tile (in-cell positions), canonicalize and sort the
+/// faces, and assign pattern seeds by congruence clustering (vertex
+/// count + area within 1e-9, first-appearance order).
+pub fn build_cells(
+    tiles: &[&[Vec2]],
+    theta_e_deg: f64,
+    delta: f64,
+) -> (Vec<Cell>, HankinReport) {
+    let mut all_faces: Vec<Vec<Vec<Vec2>>> = Vec::with_capacity(tiles.len());
+    let mut per_tile = Vec::with_capacity(tiles.len());
+    for tile in tiles {
+        let (faces, rep) = tile_faces(tile, theta_e_deg, delta);
+        all_faces.push(faces);
+        per_tile.push(rep);
+    }
+    assemble_cells(all_faces, per_tile)
+}
+
+/// Faces of one tile under designer-supplied motif segments: the same
+/// arrangement, snapping and canonicalization as [`tile_faces`], minus
+/// the ray inference.
+fn tile_faces_with_segments(
+    tile: &[Vec2],
+    segs: &[(Vec2, Vec2)],
+) -> (Vec<Vec<Vec2>>, TileReport) {
+    let faces_raw = arrangement_faces(tile, segs);
+    let mut faces: Vec<Vec<Vec2>> = faces_raw
+        .into_iter()
+        .map(canon_face)
+        .collect();
+    faces.sort_by(|a, b| face_cmp(a, b));
+    let area_sum: f64 = faces.iter().map(|f| shoelace(f).abs()).sum();
+    let n_faces = faces.len();
+    (
+        faces,
+        TileReport {
+            rays: segs.len(),
+            pairs: 0,
+            complete: true,
+            faces: n_faces,
+            area_sum,
+            tile_area: shoelace(tile).abs(),
+        },
+    )
+}
+
+/// [`build_cells`] with the motif segments supplied per tile instead of
+/// inferred from `(theta_e_deg, delta)` — the entry point for the design
+/// elements of [`super::hankin_motifs`] (Kaplan diss. §3.5). Arrangement,
+/// canonicalization, clustering and the exact-partition assertion are the
+/// shared, unchanged engine pipeline. In the report `rays` counts the
+/// supplied segments, `pairs` is 0 and `complete` is trivially true.
+///
+/// A tile with an empty segment list contributes one face: the tile
+/// itself (substrate tiles carrying no motif).
+pub fn build_cells_with_segments(
+    tiles: &[&[Vec2]],
+    segs_per_tile: &[Vec<(Vec2, Vec2)>],
+) -> (Vec<Cell>, HankinReport) {
+    assert_eq!(
+        tiles.len(),
+        segs_per_tile.len(),
+        "hankin: one segment list per substrate tile"
+    );
+    let mut all_faces: Vec<Vec<Vec<Vec2>>> = Vec::with_capacity(tiles.len());
+    let mut per_tile = Vec::with_capacity(tiles.len());
+    for (tile, segs) in tiles.iter().zip(segs_per_tile) {
+        let (faces, rep) = tile_faces_with_segments(tile, segs);
+        all_faces.push(faces);
+        per_tile.push(rep);
+    }
+    assemble_cells(all_faces, per_tile)
 }
