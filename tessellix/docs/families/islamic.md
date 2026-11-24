@@ -8,7 +8,7 @@ Adding a tiling here touches only this family: `families/islamic.rs`
 `lattice_tilings` entries) plus the new module and its doc row below.
 Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 
-## Implemented (29 tilings)
+## Implemented (30 tilings)
 
 ### Periodic decorative families
 
@@ -48,6 +48,7 @@ Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 | `andritz-bowtie-hexagon` | bow-tie + elongated-hexagon girih (quasiperiodic) | quasiperiodic; Andritz 2016 fivefold substitution (Tilings Encyclopedia, Feb 2016), IF = φ², matrix [[2,3],[3,5]] with PF = φ⁴; exact Z[ζ₅] σ-frame walk from a 27-tile seed core, walk reproduces the decoded Bielefeld reference patch pose-for-pose, edge-to-edge at every level |
 | `andritz-bowtie-hexagon-10gon-1` | bow-tie + elongated-hexagon + regular-decagon girih (quasiperiodic) | quasiperiodic; Andritz 2016 fivefold substitution 10gon-1 (Tilings Encyclopedia, Feb 2016), IF = φ², matrix [[2,3,0],[2,2,1],[5,0,6]] with PF = φ⁴; exact Z[ζ₂₀] σ-frame walk (rotating Ψ(r) frames, absolute decagon flower) from a 14-tile seed core, walk reproduces the decoded Bielefeld reference patch pose-for-pose, edge-to-edge at every level |
 | `andritz-bowtie-hexagon-10gon-2` | bow-tie + elongated-hexagon + regular-decagon girih (quasiperiodic) | quasiperiodic; Andritz 2016 fivefold substitution 10gon-2 (Tilings Encyclopedia, Feb 2016), σ-frame map z ↦ τ − λz with λ = 3 + 2φ, cluster census [[11,14,2],[12,22,4],[35,35,26]] with PF = 43.151 (a shared covering: clusters share boundary tiles, so generation is by the verified walk, not a disjoint inflation); exact Z[ζ₂₀] σ-frame walk with a fitted per-slot orientation law from a 13-tile seed core, walk reproduces the decoded Bielefeld reference patch pose-for-pose, edge-to-edge at every level |
+| `andritz-bowtie-hexagon-10gon-3` | bow-tie + elongated-hexagon + regular-decagon girih (quasiperiodic) | quasiperiodic; Andritz 2016 fivefold substitution 10gon-3 (Tilings Encyclopedia, Feb 2016), σ-frame map z ↦ μz + τ with μ = φ⁴·e^{72°i}, cluster census [[19,19,7],[26,29,9],[60,45,31]] mined from the decoded 957-tile patch by unanimous union votes, region-killed to slots landing inside the inflated parent (|w|/2 ≤ φ⁴·circ) and configuration-killed against far-field overlaps (a shared covering: 42.7 % of tiles are claimed by several parents, so generation is by the verified walk, not a disjoint inflation); exact Z[ζ₂₀] σ-frame walk with frames Ψ_HEX = (8 − 8r) and Ψ_BOW = (4 − 8r) mod 20 from a 21-tile seed core, walk reproduces all 957 reconstructed tiles pose-for-pose by level 2 with zero false claims, edge-to-edge at every level |
 
 ## Build arcs
 
@@ -940,6 +941,7 @@ Each member's full specification — algorithm, exact geometry, verification, so
 - [`andritz-bowtie-hexagon`](../tilings/andritz-bowtie-hexagon.md) — Andritz Bowtie-and-Hexagon (quasiperiodic)
 - [`andritz-bowtie-hexagon-10gon-1`](../tilings/andritz-bowtie-hexagon-10gon-1.md) — Andritz 10gon-1 (quasiperiodic)
 - [`andritz-bowtie-hexagon-10gon-2`](../tilings/andritz-bowtie-hexagon-10gon-2.md) — Andritz 10gon-2 (quasiperiodic)
+- [`andritz-bowtie-hexagon-10gon-3`](../tilings/andritz-bowtie-hexagon-10gon-3.md) — Andritz 10gon-3 (quasiperiodic)
 
 ---
 

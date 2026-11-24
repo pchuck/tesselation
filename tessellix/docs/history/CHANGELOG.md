@@ -2858,3 +2858,42 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   green at integration. Census: Quasiperiodic tab 19 → 20;
   quasiperiodic family 15 → 16; built-ins 151 → 152; memberships
   165 → 166.
+- 2026-11-24 — M160: Andritz 10gon-3
+  `andritz-bowtie-hexagon-10gon-3` ✅ (Tilings Encyclopedia "Andritz
+  bowtie and hexagon 10gon-3", Feb 2016 — fourth member of the
+  bowtie-hexagon fivefold family; islamic family, Quasiperiodic
+  category): σ-frame map z ↦ μz + τ with μ = φ⁴·e^{72°i}; three
+  unit-edge girih prototiles (bow-tie, elongated hexagon, regular
+  decagon). Exact ℤ[ζ₂₀] σ-frame walk with frames Ψ_HEX = (8 − 8r)
+  and Ψ_BOW = (4 − 8r) mod 20 from a 21-tile seed core; cluster
+  census [[19,19,7],[26,29,9],[60,45,31]] mined from the decoded
+  957-tile patch by unanimous union votes, then hardening pipeline
+  (the landing's KEY FIX): raw union-vote slot tables (462/340/238)
+  contained long-reach slots (|w|/2 up to 29.7) whose child claims
+  land outside σ(parent) and decoded as accidental support — fired
+  from far parents they became overlapping phantoms. Fix chain:
+  region filter (child in σ(parent): |w|/2 ≤ φ⁴·circ(kind)) →
+  45/66/136 rows, still 957/957 decoded at L2; then two
+  configuration kills at zero decoded cost — H slot
+  (13,0,-1,0,7,0,-9,0) (cleared the module test boxes, 233+46 → 0
+  pairs) and far-field H (6,0,6,0,7,0,2,0), attributed as the source
+  of all 12 remaining far-field H-in-D pairs against load-bearing
+  D slot (-2,0,0,0,-2,0,1,0) (killing the D slot would lose 5
+  decoded tiles) → final tables B 45 / H 64 / D 136; the frame law
+  itself was certified optimal (Ψ optimal for 953/957 decoded, zero
+  in-window violations for all 957).
+  Shared covering again (42.7 % of walk tiles multi-claimed), so
+  generation is by the verified walk. Battery (on the 1.76M-tile L3
+  walk, all programmatic): decoded 957/957 reproduced with 0
+  overlaps; walk r ≤ 16/30 → 0 pairs; window 683/683 exact decoded;
+  all 3 module boxes exact clipped area (diff 0.0000, 0 gaps, 0
+  overlaps); edge census exactly-2 to radius 13.1; conservative
+  covered radii 3.4/23.4/164.2 → COVERED = [3,23,160,900]; 30-box
+  far sweep at radii 45–450 → 0 phantom pairs (raw tables: 12 in
+  region2, 279 in rkill5). Includes covers_distant_views and
+  rotated_scaled (both failed on the stale tables — the fix's
+  motivation). Battery: 11 module tests (3-test family trio + 8-item
+  battery). Verification: cargo check --workspace zero warnings;
+  full suite green at integration. Census: Quasiperiodic tab 20 →
+  21; islamic family 29 → 30; built-ins 152 → 153; memberships
+  166 → 167.

@@ -30,7 +30,7 @@ tiling, shared cross-cutting reference docs, and frozen history.
 | reptiles | [docs/families/reptiles.md](families/reptiles.md) | 10 | 2 |
 | aperiodic | [docs/families/aperiodic.md](families/aperiodic.md) | 10 | 5 |
 | pavers | [docs/families/pavers.md](families/pavers.md) | 14 | 8 |
-| islamic | [docs/families/islamic.md](families/islamic.md) | 29 | 12 |
+| islamic | [docs/families/islamic.md](families/islamic.md) | 30 | 12 |
 
 A family doc owns its catalog table (guarded:
 `family_docs_match_registrations` fails the suite on drift from the

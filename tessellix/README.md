@@ -57,7 +57,7 @@ rendering, and a collapsible parameter panel. Details in
 
 ## Supported tilings
 
-152 built-in tilings (166 tab memberships), all discoverable in both UIs
+153 built-in tilings (167 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -69,10 +69,11 @@ wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
 cairo-pentagonal (type 4) and floret-pentagonal (type 5) as typed
 secondary members), **Islamic** (25), **Arrangements** (8),
-**Quasiperiodic** (20: Penrose family, Ammann–Beenker (both variants),
+**Quasiperiodic** (21: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, golden rhomboid,
 fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7, Andritz
-bowtie-hexagon, Andritz 10gon-1, Andritz 10gon-2, fibonacci-fibonacci,
+bowtie-hexagon, Andritz 10gon-1, Andritz 10gon-2, Andritz 10gon-3,
+fibonacci-fibonacci,
 wis 12-fold, girih 14-fold), **Aperiodic** (11: einstein family, pinwheel,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
 (table), period-doubling, thue-morse, period-tripling), and
@@ -106,7 +107,7 @@ Pythagorean two-square family takes the **square ratio** b/a
 | [Laves / Catalan duals](docs/families/laves.md) | 8 | the eight Laves (Catalan-dual) tilings — a closed set; hosts the two-uniform duals |
 | [Wallpaper](docs/families/pavers.md) | 14 | paver bonds + the wallpaper-catalog completers (first realizers of p1, pm, pg, pmg, cm, p3, p31m, p3m1) |
 | [Pentagon Types](docs/families/pentagons.md) | 14 | pentagonal types 1–15 (the 15-type census; types 4–5 dual-typed) |
-| [Islamic](docs/families/islamic.md) | 29 | girih strapwork panels, Hankin/PIC ornament, khatam + najm templates, Andritz fivefold substitutions |
+| [Islamic](docs/families/islamic.md) | 30 | girih strapwork panels, Hankin/PIC ornament, khatam + najm templates, Andritz fivefold substitutions |
 | [Arrangements](docs/families/arrangements.md) | 3 | Pythagorean two-square, periodic pinwheel spin, pinwheel substitution |
 | [Quasiperiodic](docs/families/quasiperiodic.md) | 16 | Penrose family, Ammann–Beenker, Stampfli, shield, golden A2 members, GLB binary n = 7, fibonacci product, WIS 12-fold, girih 14-fold |
 | [Aperiodic](docs/families/aperiodic.md) | 10 | einstein family (hat, turtle, spectre), Wang tiles, Taylor-Socolar, limit-periodic substitution set |

@@ -22,6 +22,7 @@ pub mod girih_qc;
 pub mod andritz_bowtie_hexagon;
 pub mod andritz_bowtie_hexagon_10gon_1;
 pub mod andritz_bowtie_hexagon_10gon_2;
+pub mod andritz_bowtie_hexagon_10gon_3;
 pub mod girih_sc;
 pub mod girih_w85;
 pub mod pic_4_8_8;
@@ -51,6 +52,7 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(andritz_bowtie_hexagon::AndritzBowtieHexagonTiling);
         r = r.register(andritz_bowtie_hexagon_10gon_1::AndritzBowtieHexagon10gon1Tiling);
         r = r.register(andritz_bowtie_hexagon_10gon_2::AndritzBowtieHexagon10gon2Tiling);
+        r = r.register(andritz_bowtie_hexagon_10gon_3::AndritzBowtieHexagon10gon3Tiling);
         r = r.register(girih_sc::girih_star_cross());
         r = r.register(girih_w85::girih_w85());
         r = r.register(pic_4_8_8::pic_4_8_8());
@@ -180,6 +182,17 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
+        "andritz-bowtie-hexagon-10gon-3" => TilingClass {
+            families: &["Islamic", "Quasiperiodic"],
+            method: Some("sigma-frame walk substitution"),
+            inflation: Some("φ⁴ (72° frame turn)"),
+            point_order: Some(10),
+            prototiles: Some(3),
+            source: Some("Andritz"),
+            year: Some("2016"),
+            translational: Some("quasiperiodic"),
+            ..TilingClass::EMPTY
+        },
         "pic-4-8-8" => hankin_pic("4.8.8", "θK 45°"),
         "pic-3-6-3-6" => hankin_pic("3.6.3.6", "θK 60°"),
         "pic-3-12-12" => hankin_pic("3.12.12", "θK 60°"),
@@ -281,6 +294,7 @@ mod census {
         "andritz-bowtie-hexagon",
         "andritz-bowtie-hexagon-10gon-1",
         "andritz-bowtie-hexagon-10gon-2",
+        "andritz-bowtie-hexagon-10gon-3",
         "pic-4-8-8",
         "pic-3-6-3-6",
         "pic-3-12-12",
@@ -309,7 +323,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            29,
+            30,
             "islamic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
@@ -1018,6 +1032,85 @@ mod andritz_bowtie_hexagon_10gon_2_tests {
             "andritz-bowtie-hexagon-10gon-2",
             &params1(),
             BBox::new(v2(-9.0, -12.0), v2(12.0, 22.0)),
+        );
+    }
+}
+
+#[cfg(test)]
+mod andritz_bowtie_hexagon_10gon_3_tests {
+    use crate::families::islamic::andritz_bowtie_hexagon_10gon_3::AndritzBowtieHexagon10gon3Tiling;
+    use crate::tests::{check_coverage, check_deterministic};
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    /// Unit scale (the walk geometry is defined at unit edges).
+    fn params1() -> ParamSet {
+        let t = AndritzBowtieHexagon10gon3Tiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        p
+    }
+
+    /// Standard coverage near the walk's fixed point (o ≈ (13.71,
+    /// −6.88), served at BFS level 1); `check_coverage` verifies
+    /// culling, point sampling and exact clipped-area equality — no
+    /// gaps, no overlaps.
+    #[test]
+    fn andritz_bowtie_hexagon_10gon_3_covers_region() {
+        let t = AndritzBowtieHexagon10gon3Tiling;
+        check_coverage(
+            &t,
+            "andritz-bowtie-hexagon-10gon-3",
+            &params1(),
+            BBox::new(v2(6.0, -14.0), v2(21.0, 1.0)),
+        );
+    }
+
+    /// Coverage generalizes across anchor regions: off-origin views
+    /// served at deeper BFS levels are covered exactly too (the sweep
+    /// is region-filtered through the σ⁻¹ preimage box chain).
+    #[test]
+    fn andritz_bowtie_hexagon_10gon_3_covers_distant_views() {
+        let t = AndritzBowtieHexagon10gon3Tiling;
+        let p = params1();
+        for (cx, cy, w, h) in [(80.0, 40.0, 8.0, 8.0), (150.0, 90.0, 6.0, 6.0)] {
+            check_coverage(
+                &t,
+                "andritz-bowtie-hexagon-10gon-3",
+                &p,
+                BBox::new(v2(cx - w, cy - h), v2(cx + w, cy + h)),
+            );
+        }
+    }
+
+    /// Coverage must survive a non-axis-aligned scale + rotation.
+    #[test]
+    fn andritz_bowtie_hexagon_10gon_3_rotated_scaled() {
+        let t = AndritzBowtieHexagon10gon3Tiling;
+        let mut p = params1();
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(0.7));
+        p.set(crate::lattice::ROTATION_ID, ParamValue::Angle(30.0));
+        check_coverage(
+            &t,
+            "andritz-bowtie-hexagon-10gon-3(rot30,scale0.7)",
+            &p,
+            BBox::new(v2(6.0, -14.0), v2(21.0, 1.0)),
+        );
+    }
+
+    #[test]
+    fn andritz_bowtie_hexagon_10gon_3_deterministic() {
+        let t = AndritzBowtieHexagon10gon3Tiling;
+        check_deterministic(
+            &t,
+            "andritz-bowtie-hexagon-10gon-3",
+            &params1(),
+            BBox::new(v2(3.0, -17.0), v2(24.0, 4.0)),
         );
     }
 }
