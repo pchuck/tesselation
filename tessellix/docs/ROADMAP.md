@@ -195,15 +195,18 @@ the "mixed floret/cairo/prismatic" patterns.
   policy: would need a seeded-RNG parameter (`ParamSpec::Int`) and a
   stated rule for `check_deterministic` (seeded, stateless ⇒ still
   deterministic per parameter set).
-- 🚧 **Isohedral (IH) tile families** — parameterized generators for
-  some of the 93 isohedral types (e.g. IH7-like interlocking
-  variants); needs a shape-parameterization design.
-  Brief: [isohedral-generator](briefs/isohedral-generator.md);
-  dispatched (frontier tier) on the new empty `isohedral` family
-  (family scaffold = orchestrator edit per `families/mod.rs` doctrine).
-  NOTE: PROPOSED §13's "Category Wallpaper" is corrected by the brief —
-  the Wallpaper tab is a pinned 17-card group catalog; IH instances
-  take Laves (Laves-topology types) or Pentagon Types.
+- ✅ **Isohedral (IH) tile families (M162).** *Landed:
+  `isohedral-generator` — incidence-symbol engine over the 11 Laves
+  topologies with exact per-orbit shaped edges, plus five showcase
+  instances (IH1 p1 / IH6 pgg / IH7 p3 hexagons on the 6³ net,
+  IH27 pgg / IH29 p4g pentagons on the Cairo net; design doc
+  [../isohedral-generator-design.md](../isohedral-generator-design.md)).
+  Exact Q(√3) field; adjacency symbols derived by exact geometric
+  edge matching (BFS-closure verified), never hand-written. Category
+  rule held: Laves primary, Pentagon Types secondary on the two
+  pentagons — the pinned 17-card Wallpaper catalog untouched.
+  isohedral family 0 → 5; Laves 28 → 33; Pentagon Types 15 → 17.*
+  Brief: [isohedral-generator](briefs/isohedral-generator.md).
 - ❓ **Polyomino/polyiamond rep-tile zoo** — L-tromino ✅ (chair,
   M30); P-pentomino ✅ (implemented on branch `reptiles`, pending
   integration, M47 — exactly two dissections of the inflated P,

@@ -858,6 +858,14 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
 > `Laves` (Laves-topology types) or `PentagonTypes`; family scaffold =
 > the new empty `isohedral` family. Brief:
 > [isohedral-generator](briefs/isohedral-generator.md).
+>
+> **LANDED (2026-11-24, M162):** five instances — IH1 (p1), IH6 (pgg),
+> IH7 (p3) hexagons on the 6³ net; IH27 (pgg), IH29 (p4g) pentagons on
+> the Cairo net — primary Laves, PentagonTypes secondary on the
+> pentagons; exact Q(√3) arithmetic; adjacency symbols derived by
+> exact edge matching, never hand-written. IH21 dropped (irreducible
+> decimal coefficients). Design doc:
+> [isohedral-generator-design.md](docs/isohedral-generator-design.md).
 
 - **Motif:** the 93 isohedral tiling types IH1–IH93 (Grünbaum–Shephard;
   81 unmarked + 12 marked-only): every periodic monohedral tiling

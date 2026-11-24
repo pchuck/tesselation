@@ -1112,11 +1112,11 @@ mod tests {
         assert_eq!(tui.tabs.len(), 10, "one tab per TilingCategory::ALL entry");
         // Multi-tab membership (M76): a tiling appears in its primary
         // tab plus every secondary tab, so the tab sizes sum to the
-        // 165 memberships of the 151 registered tilings, not to 151.
+        // 175 memberships of the 159 registered tilings, not to 159.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 168, "154 tilings carry 168 tab memberships");
+        assert_eq!(total, 175, "159 tilings carry 175 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 20, 28, 17, 15, 26, 8, 21, 11, 11]);
+        assert_eq!(counts, vec![11, 20, 33, 17, 17, 26, 8, 21, 11, 11]);
     }
 
     #[test]
@@ -1185,9 +1185,9 @@ mod tests {
         for (label, n) in [
             ("Uniform", 11),
 ("Two-Uniform", 20),
-            ("Laves (Catalan duals)", 28),
+            ("Laves (Catalan duals)", 33),
             ("Wallpaper", 17),
-("Pentagon Types", 15),
+("Pentagon Types", 17),
 ("Islamic", 26),
             ("Arrangements", 8),
             ("Quasiperiodic", 21),
@@ -1808,8 +1808,12 @@ mod tests {
             .position(|t| t.category == TilingCategory::PentagonTypes)
             .unwrap()];
         let types: Vec<Option<u8>> = pent.cards.iter().map(|c| c.class.pentagon_type).collect();
-        let expected: Vec<Option<u8>> = (1u8..=15).map(Some).collect();
-        assert_eq!(types, expected, "types 1..=15 in sequence");
+        // 1..=15 in sequence, then the two isohedral pentagon interlocks
+        // (M162: ih27/ih29 — classical type cross-reference unverified,
+        // pentagon_type None) sorted after the typed cards.
+        let expected: Vec<Option<u8>> =
+            (1u8..=15).map(Some).chain(std::iter::repeat(None).take(2)).collect();
+        assert_eq!(types, expected, "types 1..=15 in sequence, then the untyped isohedral pentagons");
     }
 
     /// The Two-Uniform tab sorts by vertex configuration: shared
@@ -1855,7 +1859,7 @@ mod tests {
             .iter()
             .position(|t| t.category == TilingCategory::Laves)
             .unwrap()];
-        assert_eq!(lv.cards.len(), 28);
+        assert_eq!(lv.cards.len(), 33);
         let ranks: Vec<Option<u8>> = lv.cards.iter().map(|c| c.class.laves_rank).collect();
         let sorted = ranks.windows(2).all(|w| w[0] <= w[1]);
         assert!(sorted, "laves_rank must be non-decreasing: {ranks:?}");

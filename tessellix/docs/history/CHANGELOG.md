@@ -2920,3 +2920,41 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   contract — reported per brief. Not a LatticeTiling → no culling
   lines. islamic family 30 → 31; Islamic tab 25 → 26; built-ins
   153 → 154; memberships 167 → 168.
+- 2026-11-24 — M162: isohedral (IH) type family — generator + five
+  showcase instances
+  `ih1-p1-hexagon`, `ih6-pgg-hexagon`, `ih7-p3-hexagon`,
+  `ih27-pgg-pentagon`, `ih29-p4g-pentagon` ✅ (PROPOSED §13 — the
+  Escher arc; isohedral family, Laves primary / PentagonTypes
+  secondary on the two pentagons): a Kaplan/Tactile incidence-symbol
+  engine over the 11 Laves topologies — vertex/translation/aspect
+  linear forms as engine data, per-edge (fl, ro) orientation flags,
+  adjacency symbol derived by exact geometric edge matching
+  (BFS-closure verified in the spike, never hand-written); placement
+  T_{a,i,j} = translate(i·t1 + j·t2) ∘ aspects[a] — a search-free
+  (i,j)-box × aspects emission. All geometry in an exact Q(√3) field
+  (canonical re + sq·√3, const-gcd i128 rationals): equal exact
+  values are equal (re, sq) pairs, so one canonical f64 rounding per
+  emitted coordinate makes every shared edge bit-identical; float
+  params quantize to the 2⁻²⁰ grid and are handled exactly there.
+  Five instances: IH1 p1 (3×J), IH6 pgg (2×U + 2×J), IH7 p3 (3×J —
+  the Q(√3) record) hexagons on the 6³ net; IH27 pgg, IH29 p4g
+  pentagons on the Cairo net (IH29's Klein-mixed straight edge;
+  D-census asserts ROT 2 + ROFL 2 literally). Batteries per instance:
+  coverage trio + irrational-offset exactly-once grid + shared-edge
+  f64 bit-identity over a ±2 window (every (aspect, edge) pairing
+  covered: 112 / 522 / 374 / 442 / 622 pairings) + exact pairing-D
+  census + aspect-symmetry + transcription spot-checks vs the Python
+  spike to 1e-9. The arc's hard-won fix (design doc §9.1): the engine
+  initially read Tactile's 2×3 aspect matrix transposed — p1/pgg's
+  symmetric linear parts hide a transposition (IH1/6/27 pass either
+  way); p3/p4g rotations exposed it (IH7/29 failed coverage,
+  aspect-symmetry, D-census, shared-edge); fixed against
+  spike2.build_exact + tiling.cpp, first surfaced by the
+  irrational-offset grid. Deviations: IH21 dropped (irreducible
+  decimal coefficients — cannot pin exactly); pentagon_type
+  cross-reference left None (classical 1–15 mapping unverified
+  offline); `isohedral: Some(1)` = one isohedral class (classify.rs
+  semantics), the IH type number lives in `method` text. The pinned
+  17-card Wallpaper catalog untouched — the category rule held.
+  isohedral family 0 → 5; Laves 28 → 33; Pentagon Types 15 → 17;
+  built-ins 154 → 159; memberships 168 → 175.

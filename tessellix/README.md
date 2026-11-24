@@ -57,17 +57,19 @@ rendering, and a collapsible parameter panel. Details in
 
 ## Supported tilings
 
-154 built-in tilings (168 tab memberships), all discoverable in both UIs
+159 built-in tilings (175 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 ten tabs:
-**Uniform** (11), **Two-Uniform** (20), **Laves / Catalan duals** (28,
-25 primary + 3 self-dual secondaries), **Wallpaper** (17: one card per
+**Uniform** (11), **Two-Uniform** (20), **Laves / Catalan duals** (33,
+25 primary + 3 self-dual secondaries + 5 isohedral-type realizations),
+**Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
-**Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
-cairo-pentagonal (type 4) and floret-pentagonal (type 5) as typed
+**Pentagon Types** (17: types 1–3 and 6–15 as primary entries, plus
+cairo-pentagonal (type 4), floret-pentagonal (type 5) and the isohedral
+pentagon interlocks ih27/ih29 as typed
 secondary members), **Islamic** (26), **Arrangements** (8),
 **Quasiperiodic** (21: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, golden rhomboid,
@@ -112,7 +114,7 @@ Pythagorean two-square family takes the **square ratio** b/a
 | [Quasiperiodic](docs/families/quasiperiodic.md) | 16 | Penrose family, Ammann–Beenker, Stampfli, shield, golden A2 members, GLB binary n = 7, fibonacci product, WIS 12-fold, girih 14-fold |
 | [Aperiodic](docs/families/aperiodic.md) | 10 | einstein family (hat, turtle, spectre), Wang tiles, Taylor-Socolar, limit-periodic substitution set |
 | [Nonperiodic](docs/families/reptiles.md) | 10 | rep-tiles (chair, armchair, sphinx, P-pentomino, tangram, octiamond + pentiamonds), pregnant-chair |
-| [Isohedral types](docs/families/isohedral.md) | 0 | parameterized isohedral (IH) types — incidence symbols over their topologies with exact per-orbit shaped edges (the Escher arc; design doc docs/isohedral-generator-design.md) |
+| [Isohedral types](docs/families/isohedral.md) | 5 | parameterized isohedral (IH) types — incidence symbols over their topologies with exact per-orbit shaped edges (the Escher arc; design doc docs/isohedral-generator-design.md) |
 
 Tab counts above include secondary memberships; the **Tilings** column
 counts a family's registered members, whose primary tab may belong to
@@ -131,7 +133,7 @@ gallery taxonomy: [docs/TAXONOMY.md](docs/TAXONOMY.md).
 Four crates: `tess-core` holds the `Tiling` trait — generate exactly the
 tiles intersecting a query bbox, no gaps/overlaps/outside tiles — plus
 self-describing parameters, the browse model, and software rendering;
-`tess-tilings` holds the 154 built-ins in eleven families (periodic tilings
+`tess-tilings` holds the 159 built-ins in eleven families (periodic tilings
 are `LatticeTiling` **data tables**, aperiodic/nonperiodic ones direct
 substitution generators with exact-arithmetic anchors); `tess-tui`
 (ratatui) and `tess-gui` (egui) are thin front ends over the shared
@@ -146,7 +148,7 @@ arithmetic layer is designed in
 
 ## Tests
 
-`cargo test --workspace` — currently 1151 tests, all green, zero
+`cargo test --workspace` — currently 1247 tests, all green, zero
 warnings. Every tiling ships the 3-test standard trio:
 `covers_region` (sample points inside ≥ 1 tile and total clipped tile
 area equal to the region area to 1e-6 relative — catching gaps *and*
