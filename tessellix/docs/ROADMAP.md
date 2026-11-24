@@ -38,12 +38,13 @@ the "mixed floret/cairo/prismatic" patterns.
   (π/n, 1, 0), and the extension operator
   (θ′ = θ/2, r′ = r[1/cos(π/n) − sinθ·tan(π/n)·cos(π/n − θ)]).
   Generalizes the M94 fixed configs to per-tile motif assignment.
-- 🔭 **22b Najm template-tiling generator** — the
-  ([p,q]; m_A o_A, m_B o_B, m_C o_C; inflation) notation: regular
-  polygons on a [p,q] group's rotational axes, inflated by the four
-  absolute-trig case equations (monotone binary search), bowtie
-  hole-fillers. A parameterized substrate family replacing
-  hand-coded templates (Euclidean [4,4]/[6,3] first).
+  Brief: [kaplan-22a-motifs](briefs/kaplan-22a-motifs.md); queued
+  (islamic family — dispatches after the girih decagon patch lands).
+- ✅ **22b Najm template-tiling generator (M99).** *Landed:
+  `najm.rs` with `najm-63-2e-0-3e-ac` (Fig. 3.21, p6m) and
+  `najm-44-3e-0-0-a` (Fig. 3.22, p4m); radii cases 1–4 implemented;
+  generic hole decomposition remains open (see PROPOSED §22b for the
+  full status incl. the re-derived case-3 factor).*
 - ✅ **22c Rosette transform (M99).** *Landed: `rosette_transform.rs`
   (hankin_ext) implements the diss. §3.8 bridge — inner n-gon radius
   r′ = r(cos(π/n) − sin(π/n)tan(π(n−2)/4n)) rotated π/n, spokes to edge
@@ -141,6 +142,8 @@ the "mixed floret/cairo/prismatic" patterns.
 - 🔭 **Full girih decagon patch** — the classic decagon-and-bowtie
   strapwork region with hexagon/bowtie/rhombus infill (Lu–Steinhardt
   figures), as a documentary overlay on the substitution entry.
+  Brief: [girih-decagon-patch](briefs/girih-decagon-patch.md);
+  dispatched (strong tier).
 - 🔭 **Penrose sun/star/cartwheel finite patches** — easy given P3
   machinery; mostly of documentary value.
 
