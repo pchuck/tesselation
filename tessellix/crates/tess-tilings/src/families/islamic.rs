@@ -19,6 +19,7 @@ pub mod girih_decagon;
 pub mod girih_pentagon;
 pub mod girih_rhombus;
 pub mod girih_qc;
+pub mod girih_decagon_patch;
 pub mod andritz_bowtie_hexagon;
 pub mod andritz_bowtie_hexagon_10gon_1;
 pub mod andritz_bowtie_hexagon_10gon_2;
@@ -49,6 +50,7 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(zellige::StarCrossTiling);
         r = r.register(girih::girih_shesh_band());
         r = r.register(girih_qc::GirihQuasiperiodicTiling);
+        r = r.register(girih_decagon_patch::GirihDecagonPatchTiling);
         r = r.register(andritz_bowtie_hexagon::AndritzBowtieHexagonTiling);
         r = r.register(andritz_bowtie_hexagon_10gon_1::AndritzBowtieHexagon10gon1Tiling);
         r = r.register(andritz_bowtie_hexagon_10gon_2::AndritzBowtieHexagon10gon2Tiling);
@@ -147,6 +149,18 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             source: Some("Lu & Steinhardt"),
             year: Some("2007"),
             translational: Some("quasiperiodic"),
+            ..TilingClass::EMPTY
+        },
+        "girih-decagon-patch" => TilingClass {
+            families: &["Islamic"],
+            method: Some("Darb-i Imam substitution (finite patch)"),
+            inflation: Some("2φ³"),
+            point_order: Some(10),
+            prototiles: Some(3),
+            tile_set: Some("girih decagon + bow-tie closed-cluster infill"),
+            source: Some("Lu & Steinhardt"),
+            year: Some("2007"),
+            translational: Some("finite patch"),
             ..TilingClass::EMPTY
         },
         "andritz-bowtie-hexagon" => TilingClass {
@@ -291,6 +305,7 @@ mod census {
         "girih-star-cross",
         "girih-w85",
         "girih-quasiperiodic",
+        "girih-decagon-patch",
         "andritz-bowtie-hexagon",
         "andritz-bowtie-hexagon-10gon-1",
         "andritz-bowtie-hexagon-10gon-2",
@@ -323,7 +338,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            30,
+            31,
             "islamic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();

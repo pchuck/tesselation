@@ -2897,3 +2897,26 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   full suite green at integration. Census: Quasiperiodic tab 20 →
   21; islamic family 29 → 30; built-ins 152 → 153; memberships
   166 → 167.
+- 2026-11-24 — M161: Girih decagon patch
+  `girih-decagon-patch` ✅ (ROADMAP "Full girih decagon patch" —
+  the classic two-level girih figure of LS07; islamic family,
+  Islamic category): a finite patch data table assembling one large
+  level-1 decagon plus its 10 edge-adjacent large bow-ties, each
+  large tile replaced by its closed Darb-i Imam cluster read from
+  `girih_qc`'s certified tables (real children + the edge-marker
+  trio on every unique large-tile edge — children-only leaves notch
+  gaps). 611 small tiles = 270 bobbin + 220 bow-tie + 121 decagon
+  (431 cluster children + 60 unique C-edges × 3 trios), 0 duplicate
+  keys. Certification (Python spike + 15-test in-module mirror, all
+  exact over Q(2cos 18°)): every tile edge unit; 4150 directed edges,
+  1810 interior pairs shared exactly 2, 530 boundary, 0 T-junctions;
+  1730 legal vertex fans; Euler χ = 2 (topological disk); exact
+  10-fold symmetry; per-tile shoelace == table area (< 1e-12), patch
+  total 1794.340677298660; DEC outline == IF²·A_DEC within 1e-9;
+  coverage 33976 samples each exactly once; 61625-sample bbox sweep
+  0 overlaps / 0 gaps; 467/611 tiles in the g2 lineage. Straps NOT
+  shipped (stretch goal): strap chords cross the seed decagon's
+  {10/3} star and planarizing the weave breaks the exact-partition
+  contract — reported per brief. Not a LatticeTiling → no culling
+  lines. islamic family 30 → 31; Islamic tab 25 → 26; built-ins
+  153 → 154; memberships 167 → 168.

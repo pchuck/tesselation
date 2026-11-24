@@ -137,13 +137,19 @@ the "mixed floret/cairo/prismatic" patterns.
   primitives (shesh-band hexagon, bowtie, rhombus, decagon, pentagon)
   ship as periodic translation tables — the "other periodic girih
   band orientations complementing shesh-band" this item queued.
-  Girih-band-adjacent remainder: the full girih decagon patch (still
-  🔭 below).*
-- 🔭 **Full girih decagon patch** — the classic decagon-and-bowtie
-  strapwork region with hexagon/bowtie/rhombus infill (Lu–Steinhardt
-  figures), as a documentary overlay on the substitution entry.
-  Brief: [girih-decagon-patch](briefs/girih-decagon-patch.md);
-  dispatched (strong tier).
+  Girih-band-adjacent remainder: the full girih decagon patch (landed
+  M161 below).*
+- ✅ **Full girih decagon patch (M161).** *Landed:
+  `girih_decagon_patch.rs` — the classic two-level girih figure as a
+  finite patch data table: 1 large decagon + its 10 edge-adjacent
+  large bow-ties (each large tile = its closed Darb-i Imam cluster
+  from `girih_qc`'s certified tables + the edge-marker trios on every
+  unique large edge) = 611 small tiles (270 bobbins + 220 bow-ties +
+  121 decagons), 0 duplicates, 0 T-junctions, Euler χ = 2, exact
+  10-fold symmetry, edge-to-edge unit edges throughout; straps NOT
+  shipped (the weave crosses the DEC {10/3} star and breaks the
+  exact-partition contract — reported per brief). islamic family
+  30 → 31; Islamic tab 25 → 26.*
 - 🔭 **Penrose sun/star/cartwheel finite patches** — easy given P3
   machinery; mostly of documentary value.
 
