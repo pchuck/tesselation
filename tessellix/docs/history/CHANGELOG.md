@@ -2827,3 +2827,34 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   green at integration. Census: Quasiperiodic tab 18 → 19;
   quasiperiodic family 14 → 15; built-ins 150 → 151; memberships
   164 → 165.
+- 2026-11-24 — M159: Girih-inspired 14-fold (Pautze)
+  `girih-14-fold` ✅ (Bielefeld "Girih 14-fold" entry, Pautze,
+  Symmetry 9(2):19, 2017; quasiperiodic family, Quasiperiodic
+  category): 11 prototiles (R2/R3 rhombi, H26/H44/H45 hexagons,
+  concave O29 + convex O36 octagons, concave D2 + D46/D56 decagons,
+  regular 14-gon G14), inflation λ = 2b²+3b ≈ 6.850855
+  (b = 2cos(2π/7), exact K₇ triple (0,3,2), Norm(λ) = −7),
+  λ² ≈ 46.934215 = (8,20,9). Exact 1/2 ℤ[ζ₁₄] twist-pair geometry
+  (dyadic K₇ pairs, sin(π/7) folded into shared exponents); certified
+  rule tables (11 classes, 763 rule entries); corner-14-gon +
+  edge-decagon + interior-kid panels (849 kids per full round);
+  exact vertex-set dedup for straddling kids; G14 convex-fit seed
+  generation with pad-expanded culling and MAX_TILES budget guards.
+  Errata pinned in the per-tiling doc: the Bielefeld unit claim is
+  false (Norm(λ) = −7); Pau2017 Table 7's λ = 5.801939 is
+  contradicted by its own Figs 7.4/7.5 (measured 6.8507).
+  Certified battery (9 items, ported in-module): rule-JSON rebuild of
+  all 849 kid rings pinned entry-by-entry against the const tables;
+  exact K₇ area law on all 11 effective-N′ rows; PF eigenvalue = λ²;
+  module (dyadic exp ≤ 1) + 14-class edge-direction census; two-level
+  R2@λ² patch (19 level-1 kids, 1813 pre-dedup → 1691 placements,
+  emission histogram {1:1597, 2:76, 3:10, 4:6, 5:2}, 6474 AABB
+  candidate pairs, zero overlapping pairs, dedup idempotence); O36
+  rare-class coverage; λ measured on all 11 panels within 1e-3;
+  panel render counts [19,17,26,45,43,51,66,67,87,105,323];
+  budget/guard discipline ([0,60]² default → 1355 tiles).
+  Battery: 12 module tests (3-test family trio + 9-item battery).
+  Verification: cargo check --workspace zero warnings; full suite
+  green at integration. Census: Quasiperiodic tab 19 → 20;
+  quasiperiodic family 15 → 16; built-ins 151 → 152; memberships
+  165 → 166.

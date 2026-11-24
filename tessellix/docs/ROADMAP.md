@@ -123,8 +123,13 @@ the "mixed floret/cairo/prismatic" patterns.
 
 ### Finite verified patches (patch-style entries)
 
-- 🔭 **Long/short girih bands (10-fold)** — the other periodic girih
-  band orientations complementing shesh-band.
+- ✅ **Long/short girih bands (10-fold).** *Covered by the
+  girih-primitive cluster M131–M134: all five classical girih
+  primitives (shesh-band hexagon, bowtie, rhombus, decagon, pentagon)
+  ship as periodic translation tables — the "other periodic girih
+  band orientations complementing shesh-band" this item queued.
+  Girih-band-adjacent remainder: the full girih decagon patch (still
+  🔭 below).*
 - 🔭 **Full girih decagon patch** — the classic decagon-and-bowtie
   strapwork region with hexagon/bowtie/rhombus infill (Lu–Steinhardt
   figures), as a documentary overlay on the substitution entry.

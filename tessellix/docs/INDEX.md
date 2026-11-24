@@ -22,7 +22,7 @@ tiling, shared cross-cutting reference docs, and frozen history.
 | Family | Doc | Tilings | Arcs |
 |---|---|---|---|
 | uniform | [docs/families/uniform.md](families/uniform.md) | 11 | 0 |
-| quasiperiodic | [docs/families/quasiperiodic.md](families/quasiperiodic.md) | 15 | 7 |
+| quasiperiodic | [docs/families/quasiperiodic.md](families/quasiperiodic.md) | 16 | 7 |
 | arrangements | [docs/families/arrangements.md](families/arrangements.md) | 3 | 1 |
 | pentagons | [docs/families/pentagons.md](families/pentagons.md) | 14 | 12 |
 | laves | [docs/families/laves.md](families/laves.md) | 8 | 1 |
