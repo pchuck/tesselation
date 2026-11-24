@@ -60,8 +60,8 @@ pub(crate) const TILING: IhTiling = IhTiling {
     specs: SPECS,
     group: WallpaperGroup::P4g,
     lattice: LatticeKind::Square,
-    category: TilingCategory::Laves,
-    secondary: &[TilingCategory::PentagonTypes],
+    category: TilingCategory::Isohedral,
+    secondary: &[TilingCategory::Laves, TilingCategory::PentagonTypes],
     symmetry_notes: "Kaplan IH29; p4g, straight base edge (Klein-paired orbit) + J orbit; \
                      Tactile incidence-symbol data",
 };

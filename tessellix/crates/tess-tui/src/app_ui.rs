@@ -1109,14 +1109,14 @@ mod tests {
     #[test]
     fn registry_tabs_classify_every_tiling_once() {
         let tui = Tui::new();
-        assert_eq!(tui.tabs.len(), 10, "one tab per TilingCategory::ALL entry");
+        assert_eq!(tui.tabs.len(), 11, "one tab per TilingCategory::ALL entry");
         // Multi-tab membership (M76): a tiling appears in its primary
         // tab plus every secondary tab, so the tab sizes sum to the
-        // 175 memberships of the 159 registered tilings, not to 159.
+        // 180 memberships of the 159 registered tilings, not to 159.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 175, "159 tilings carry 175 tab memberships");
+        assert_eq!(total, 180, "159 tilings carry 180 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 20, 33, 17, 17, 26, 8, 21, 11, 11]);
+        assert_eq!(counts, vec![11, 20, 33, 17, 17, 5, 26, 8, 21, 11, 11]);
     }
 
     #[test]
@@ -1188,6 +1188,7 @@ mod tests {
             ("Laves (Catalan duals)", 33),
             ("Wallpaper", 17),
 ("Pentagon Types", 17),
+("Isohedral", 5),
 ("Islamic", 26),
             ("Arrangements", 8),
             ("Quasiperiodic", 21),
@@ -1267,11 +1268,14 @@ mod tests {
         assert_eq!(tui.tab_idx, 5);
         key(&mut tui, KeyCode::Char('0'));
         assert_eq!(tui.tab_idx, 9);
-        // Wrap both ways.
+        // Wrap both ways (eleven tabs: Aperiodic is digit-jump '0' =
+        // index 9, Tab walks on to Nonperiodic at index 10, then wraps).
+        key(&mut tui, KeyCode::Tab);
+        assert_eq!(tui.tab_idx, 10);
         key(&mut tui, KeyCode::Tab);
         assert_eq!(tui.tab_idx, 0);
         key(&mut tui, KeyCode::BackTab);
-        assert_eq!(tui.tab_idx, 9);
+        assert_eq!(tui.tab_idx, 10);
     }
 
     #[test]

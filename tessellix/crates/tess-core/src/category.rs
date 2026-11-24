@@ -45,6 +45,11 @@ pub enum TilingCategory {
     /// James, Reynolds, Casey, Liben–Larson, ...), each with its own
     /// angle/side conditions.
     PentagonTypes,
+    /// Kaplan isohedral (IH) templates: parameterized incidence-symbol
+    /// realizations of the 93 isohedral types over the Laves topologies
+    /// (the Escher arc). Members also appear under their topology's tab
+    /// (Laves; the pentagon interlocks also under Pentagon Types).
+    Isohedral,
     /// Girih, star-and-cross and related Islamic geometric patterns.
     Islamic,
     /// Paver / brick-laying arrangements (basketweave, herringbone,
@@ -66,12 +71,13 @@ pub enum TilingCategory {
 
 impl TilingCategory {
     /// Canonical display order (most-ordered → least-ordered).
-    pub const ALL: [TilingCategory; 10] = [
+    pub const ALL: [TilingCategory; 11] = [
         TilingCategory::Uniform,
         TilingCategory::TwoUniform,
         TilingCategory::Laves,
         TilingCategory::Wallpaper,
         TilingCategory::PentagonTypes,
+        TilingCategory::Isohedral,
         TilingCategory::Islamic,
         TilingCategory::Arrangements,
         TilingCategory::Quasiperiodic,
@@ -88,6 +94,7 @@ impl TilingCategory {
             TilingCategory::Laves => "Laves (Catalan duals)",
             TilingCategory::Wallpaper => "Wallpaper",
             TilingCategory::PentagonTypes => "Pentagon Types",
+            TilingCategory::Isohedral => "Isohedral",
             TilingCategory::Islamic => "Islamic",
             TilingCategory::Arrangements => "Arrangements",
             TilingCategory::Quasiperiodic => "Quasiperiodic",
@@ -109,7 +116,7 @@ mod tests {
 
     #[test]
     fn all_is_complete_with_distinct_labels() {
-        assert_eq!(TilingCategory::ALL.len(), 10);
+        assert_eq!(TilingCategory::ALL.len(), 11);
         let mut labels: Vec<&'static str> =
             TilingCategory::ALL.iter().map(|c| c.label()).collect();
         labels.sort_unstable();

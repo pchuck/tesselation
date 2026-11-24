@@ -315,6 +315,7 @@ pub fn card_meta_with(t: &dyn Tiling, class: TilingClass) -> CardMeta {
             | TilingCategory::Laves
             | TilingCategory::Wallpaper
             | TilingCategory::PentagonTypes
+            | TilingCategory::Isohedral
             | TilingCategory::Islamic
             | TilingCategory::Arrangements
     );

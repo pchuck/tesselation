@@ -394,11 +394,11 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 20, 33, 17, 17, 26, 8, 21, 11, 11],
+vec![11, 20, 33, 17, 17, 5, 26, 8, 21, 11, 11],
             "per-tab census (update when adding tilings)"
         );
 assert_eq!(r.len(), 159, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 175, "membership census (update when adding tilings)");
+        assert_eq!(memberships, 180, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -460,7 +460,7 @@ assert_eq!(r.len(), 159, "built-in tiling count (update when adding tilings)");
 
     /// Doc-sync guard, README tier: the README must mirror the registry —
     /// the census sentence ("N built-in tilings (M tab memberships)"),
-    /// the per-tab counts in "The ten tabs:" prose, and the per-family
+    /// the per-tab counts in "The eleven tabs:" prose, and the per-family
     /// table (exactly one doc link per family, stating the family's
     /// registered size). Per-tiling specifications live in
     /// `docs/tilings/<id>.md` (guard: `tiling_docs_match_registry`) and
@@ -516,6 +516,7 @@ assert_eq!(r.len(), 159, "built-in tiling count (update when adding tilings)");
             "Laves / Catalan duals",
             "Wallpaper",
             "Pentagon Types",
+            "Isohedral",
             "Islamic",
             "Arrangements",
             "Quasiperiodic",

@@ -1,7 +1,8 @@
 # Gallery taxonomy
 
 M76 restructured the browse gallery into ten tabs
-(`TilingCategory::ALL`): **Uniform** (11) · **Two-Uniform** (11) ·
+(`TilingCategory::ALL`) — eleven since 2026-11-24, when the Isohedral
+tab was added for the Kaplan IH instances —: **Uniform** (11) · **Two-Uniform** (11) ·
 **Laves (Catalan duals)** (15) · **Wallpaper** (17) · **Pentagon
 Types** (12) · **Islamic** (16) · **Arrangements** (5) ·
 **Quasiperiodic** (8) · **Aperiodic** (6) · **Nonperiodic** (4) —

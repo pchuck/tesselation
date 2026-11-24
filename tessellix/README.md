@@ -57,20 +57,22 @@ rendering, and a collapsible parameter panel. Details in
 
 ## Supported tilings
 
-159 built-in tilings (175 tab memberships), all discoverable in both UIs
+159 built-in tilings (180 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
-ten tabs:
+eleven tabs:
 **Uniform** (11), **Two-Uniform** (20), **Laves / Catalan duals** (33,
 25 primary + 3 self-dual secondaries + 5 isohedral-type realizations),
 **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (17: types 1–3 and 6–15 as primary entries, plus
-cairo-pentagonal (type 4), floret-pentagonal (type 5) and the isohedral
-pentagon interlocks ih27/ih29 as typed
-secondary members), **Islamic** (26), **Arrangements** (8),
+cairo-pentagonal (type 4), floret-pentagonal (type 5) as typed
+secondary members and the untyped isohedral pentagon interlocks
+ih27/ih29), **Isohedral** (5: Kaplan IH templates — IH1/IH6/IH7
+hexagons on the 6³ net, IH27/IH29 pentagons on the Cairo net),
+**Islamic** (26), **Arrangements** (8),
 **Quasiperiodic** (21: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, golden rhomboid,
 fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7, Andritz
