@@ -1,5 +1,7 @@
 # Brief: duals-n14-n15 — §23k audit-discovered 2-uniform duals (triangle pair)
 
+> **LANDED as M147** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `kuniform` (the duals register in the kuniform family per the
 M145 precedent — they DISPLAY on the Laves tab via their category) ·
 **Candidate:** PROPOSED.md §23k — the second missing subscripted pair,

@@ -1,5 +1,7 @@
 # Brief: WIS-12-fold — Watanabe–Ito–Soma 12-fold substitution, rule tables certified
 
+> **LANDED as M158** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** quasiperiodic · **Candidate:** Bielefeld Substitution Tilings
 Encyclopedia entry "Watanabe-Ito-Soma 12-fold" · **Effort:** L
 (implementation dispatch, after unblock) · **Precedent to mirror:**

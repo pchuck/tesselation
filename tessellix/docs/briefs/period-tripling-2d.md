@@ -1,5 +1,7 @@
 # Brief: period-tripling-2d — marginal supersubstitution (λ = 3, 2 label classes)
 
+> **LANDED as M146** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 > **Category correction vs dispatch note:** the dispatch's guard
 > expectation "Nonperiodic tab 7 → 8" repeats exactly the error the M141
 > errata recorded: all nine existing aperiodic-family members declare

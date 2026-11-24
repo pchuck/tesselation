@@ -1,5 +1,7 @@
 # Brief: pregnant-chair — the chair family's next rep-tile
 
+> **LANDED as M136** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `reptiles` · **Candidate:** PROPOSED.md §23d ("Pregnant
 chairs … effort S each"); the M128 changelog note "**Pregnant chairs**
 remains open (effort S)" · **Effort:** S · **Precedent to mirror:**

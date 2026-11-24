@@ -1,5 +1,7 @@
 # Brief: kuniform-n6-n7 — the LAST gap in the closed 2-uniform 20-list
 
+> **LANDED as M148** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `kuniform` · **Candidate:** PROPOSED — "Still missing from the
 closed 20-list: n6, n7 (the two [3.4².6; 3.6.3.6] forms)" · **Effort:** M
 (2 landings, one commit each) · **Precedents to mirror (read FIRST):**

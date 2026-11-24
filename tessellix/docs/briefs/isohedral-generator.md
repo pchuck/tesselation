@@ -1,5 +1,7 @@
 # Brief: isohedral-generator — IH1–IH93 machinery + showcase types
 
+> **LANDED as M162** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `isohedral` (NEW — scaffolded empty by the orchestrator;
 cargo feature `isohedral` default-on; see `families/isohedral.rs`) ·
 **Candidate:** PROPOSED.md §13 · **Effort:** L · **Tier:** frontier ·

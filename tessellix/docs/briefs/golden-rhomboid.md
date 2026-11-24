@@ -1,5 +1,7 @@
 # Brief: golden-rhomboid — the Andritz φ-substitution
 
+> **LANDED as M144** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `quasiperiodic` · **Candidate:** PROPOSED.md §23a
 "Golden Rhomboid–Triangle — effort S–M" · **Effort:** M ·
 **Precedent to mirror:** `crates/tess-tilings/src/families/quasiperiodic/golden_bee.rs`

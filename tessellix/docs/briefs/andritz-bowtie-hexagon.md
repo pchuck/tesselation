@@ -1,5 +1,7 @@
 # Brief: andritz-bowtie-hexagon — the Andritz 5-fold FLC family
 
+> **LANDED as M151–M153, M160** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `islamic` · **Candidate:** PROPOSED.md §23f "Andritz
 Bowtie–Hexagon family (4 entries: small/large bowtie, hexagon
 variants) — 5-fold FLC model sets with documented substitutions;

@@ -1,5 +1,7 @@
 # Brief: period-doubling-2d — §23d limit-periodic product substitution
 
+> **LANDED as M141** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 > **Errata (post-landing, M141):** the Goal line's "category
 > `Nonperiodic`" was factually wrong — `domino.rs` and `half_hex.rs`
 > both declare `TilingCategory::Aperiodic`; period-doubling landed

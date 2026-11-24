@@ -1,5 +1,7 @@
 # Brief: thue-morse-2d — §23d aperiodic product substitution
 
+> **LANDED as M143** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `aperiodic` · **Candidate:** PROPOSED.md §23d "Period
 doubling / period tripling / Thue–Morse 2D / Squiral — marginal
 supersubstitutions; effort S–M each" (**this brief covers ONLY

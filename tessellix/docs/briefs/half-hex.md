@@ -1,5 +1,7 @@
 # Brief: half-hex — Socolar's limit-periodic half-hexagon substitution
 
+> **LANDED as M135** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `aperiodic` · **Candidate:** PROPOSED.md §23d "half-hex
 family — limit-periodic, cut-and-project; half-hex also closes the #17
 substitution-hierarchy gap; effort M" · **Effort:** M · **Precedent to

@@ -1,5 +1,7 @@
 # Brief: fibonacci-product — Fibonacci×Fibonacci
 
+> **LANDED as M154** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `quasiperiodic` · **Candidate:** PROPOSED.md §23a
 "Fibonacci×Fibonacci — 3 prototiles, product substitution; effort
 S–M" · **Effort:** M · **Precedent to mirror:**

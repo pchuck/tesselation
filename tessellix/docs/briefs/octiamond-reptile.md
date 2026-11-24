@@ -1,5 +1,7 @@
 # Brief: octiamond-reptile — Bielefeld Octiamond Reptile substitution (λ = 3)
 
+> **LANDED as M150** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 > **Status of this brief (2026-11-22):** research-only recon is COMPLETE;
 > the rule is pinned and triple-confirmed (unique partition of the
 > supertile + per-component pixel pin against the Bielefeld rule image +

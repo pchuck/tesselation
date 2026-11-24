@@ -1,5 +1,7 @@
 # Brief: girih-decagon-patch — the classic two-level girih decagon region
 
+> **LANDED as M161** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `islamic` · **Candidate:** ROADMAP "Full girih decagon
 patch — the classic decagon-and-bowtie strapwork region with
 hexagon/bowtie/rhombus infill (Lu–Steinhardt figures), as a

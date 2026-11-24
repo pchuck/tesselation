@@ -1,5 +1,7 @@
 # Brief: tangram — the classic dissection as a substitution
 
+> **LANDED as M142** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `reptiles` (host — dossier §23d "rep-tile dissection, next
 to chair/sphinx") · **Candidate:** PROPOSED.md §23d "Tangram — effort
 S–M" · **Effort:** M · **Precedent to mirror:**

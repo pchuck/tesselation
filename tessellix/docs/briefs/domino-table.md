@@ -1,5 +1,7 @@
 # Brief: domino-table — §23d limit-periodic domino/table substitutions
 
+> **LANDED as M138** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `aperiodic` · **Candidate:** PROPOSED.md §23d "Domino/table
 tiling (+variants) — limit-periodic, cut-and-project; effort M each" ·
 **Effort:** M (1–2 landings: domino, table — as the live entries

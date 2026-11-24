@@ -1,5 +1,7 @@
 # Brief: duals-n4-n3 — §23k audit-discovered 2-uniform duals (square pair)
 
+> **LANDED as M145** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `kuniform` (the duals register in the kuniform family, per
 the `kuniform-dual-n8` / `kuniform-dual-n16` precedent — they DISPLAY
 on the Laves tab via their category) · **Candidate:** PROPOSED.md §23k

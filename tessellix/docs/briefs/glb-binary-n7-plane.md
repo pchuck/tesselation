@@ -1,5 +1,7 @@
 # Brief: glb-binary-n7 plane-filling presentation (follow-up to M149)
 
+> **LANDED as M149 follow-up (non-M)** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 > **Status (2026-11-22):** user directive — GLB binary n = 7 must fill the
 > plane ("where applicable, fill the plane"). M149 landed the certified
 > single-domain core; the literature tiling (Pautze's generalized binary)

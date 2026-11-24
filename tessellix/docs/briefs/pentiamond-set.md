@@ -1,5 +1,7 @@
 # Brief: pentiamond-set — three Bielefeld pentiamond reptile tilings (AC factor 2, AC factor 3, AD factor 2)
 
+> **LANDED as M155–M157** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 > **Category note:** these land in the **`reptiles` family (Nonperiodic tab)**
 > — NOT the aperiodic family. All existing reptiles declare
 > `families: &["Nonperiodic"]` (verified in `families/reptiles.rs`,

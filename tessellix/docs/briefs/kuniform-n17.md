@@ -1,5 +1,7 @@
 # Brief: kuniform-n17 — the pgg sibling of n16
 
+> **LANDED as M140** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `kuniform` · **Candidate:** PROPOSED.md "Still missing from
 the closed 20-list: … n17 (the pgg sibling of n16)"; queue context in
 `docs/families/kuniform.md` §62 and the M119 changelog entry ·

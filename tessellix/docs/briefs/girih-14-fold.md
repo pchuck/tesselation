@@ -1,5 +1,7 @@
 # Brief: Girih-inspired 14-fold — certified substitution rule, implementation dispatch
 
+> **LANDED as M159** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `quasiperiodic` · **Candidate:** Bielefeld Tilings Encyclopedia
 "Girih inspired 14-fold Tiling" (Pautze 2017) · **Effort:** L · **Tier:**
 strong · **Precedent to mirror:** `crates/tess-tilings/src/families/quasiperiodic/glb_binary_n7.rs`

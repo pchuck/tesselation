@@ -1,5 +1,7 @@
 # Brief: girih-primitive — the four missing classical girih primitives
 
+> **LANDED as M131–M134** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `islamic` · **Candidate:** revival of the pre-rework
 `girih-primitive` fork (PROPOSED.md §23f note; the fork's disposition
 is now "revived as a brief" — the old fork/branch is gone with the old

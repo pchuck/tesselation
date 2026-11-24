@@ -1,5 +1,7 @@
 # Brief: kaplan-22a-motifs — the design-element motif library
 
+> **LANDED as M163** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `islamic` (hankin engine lives there) · **Candidate:**
 PROPOSED.md §22a (Kaplan dissertation Ch. 3, §3.5 extraction — the
 dissertation full text is in-repo at

@@ -1,5 +1,7 @@
 # Brief: glb-binary-n7 — the generalized Godrèche-Lançon-Billard binary tiling
 
+> **LANDED as M149** (see docs/history/CHANGELOG.md). Do not dispatch.
+
 **Family:** `quasiperiodic` · **Candidate:** PROPOSED.md §23e (GLB binary
 re-scope) via `docs/cyclotomic-field-layer.md` §7 step 3 ("the first
 consumer family … the cheapest XL") · **Effort:** XL ·
