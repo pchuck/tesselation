@@ -1,5 +1,23 @@
 # Brief: ammann-a3-a4 — the last two GS87 Ammann sets (A4, then A3)
 
+> **RE-PIN (2026-11-24, post-STOP — orchestrator):** landing 1's
+> certification proved the brief's original A4 pins (λ = 2, integer
+> 13/31) wrong; re-pinned per the worker's exact-arithmetic evidence
+> (`a4-cert.py` ALL PASS in Z[√2]): **λ = 1+√2, M = [[3,4],[2,3]]**
+> (tr 6, det 1, Perron root 3+2√2 = λ²), **Q(√2) arithmetic** via the
+> `ammann_beenker` (m,n) half-integer idiom (floats only at emission)
+> — the 13/31 figures are the 1-px projection of Q(√2) geometry at
+> u = 13 px. P1 = (2+√2)u square − two opposite u×u notches (both
+> chiralities); P2 = (1+√2)u × (2+√2)u rect − one 1×√2 notch
+> (half-chair, A2/A1 = 1/√2 exactly); row 1 = {3×P1, 4×P2}, row 2 =
+> {2×P1, 3×P2}; 12 explicit child polygons per the worker's STOP
+> report §5; TE "With Decoration" ornaments NOT shipped. Area laws
+> close exactly: (1+√2)²A1 = 3A1+4A2, (1+√2)²A2 = 2A1+3A2. Brief text
+> below that contradicts this block is superseded. A3 (landing 2)
+> unchanged — the rule-figure pin stands; the TE patch's density
+> mismatch (hand-drawn free tiling, not a region of the rule figure)
+> is documented in the tiling doc, not a stop.
+
 **Family:** `quasiperiodic` (A5 = Ammann–Beenker precedent, M27/M129;
 A2 = golden bee M104) · **Candidate:** PROPOSED.md §23b "Ammann A3 and
 Ammann A4 — the missing rungs of the A1–A4 request (A2 ✅ golden bee,
