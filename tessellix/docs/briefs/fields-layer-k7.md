@@ -1,5 +1,14 @@
 # Brief: fields-layer-k7 — exact cyclotomic field core (K₇) in Rust
 
+> **CLOSED 2026-11-24 — already landed.** Step 1 = M137 (`61a3b92`),
+> step 2 = M139 (`6078b6f`: K₉ + K₁₅ + L₁₀ + girih ROTM anchor),
+> step-3 consumer = M149 (`a8554f8`: GLB binary n=7). A post-M163 audit
+> (2026-11-24) independently re-certified the landed `fields.rs`
+> against every line of this brief: types, minpoly/reduction/isolating
+> constants re-derived in exact arithmetic, all five battery categories
+> green (35/35 fields tests). Deferred §8 items (K₂₁/K₁₇ on demand,
+> per-family λ-policy, D>1 denominator policy) remain open-by-design.
+
 **Family:** none — cross-cutting core infrastructure (run SOLO per
 `AGENTS.md`; no family work touches these files). **Spec:**
 [docs/cyclotomic-field-layer.md](../cyclotomic-field-layer.md) — the

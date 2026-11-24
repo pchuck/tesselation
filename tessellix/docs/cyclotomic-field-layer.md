@@ -1,6 +1,9 @@
 # Cyclotomic field layer for n-fold tiling families — design doc
 
-Status: RESEARCH / design brief (no code landed). Companion POC:
+Status: LANDED — design delivered and superseded by the implementation
+(M137 step 1 = fields.rs + K₇; M139 step 2 = K₉/K₁₅/L₁₀ + ROTM anchor;
+M149 first consumer). This doc's §7 sequencing is complete through
+step 2; §8 items are deferred by design. Companion POC:
 `spike.py` (stdlib-only, all checks green in 0.06 s; log
 `spike_output.txt`; notes `NOTES.md`). Scope: the §23e/§23i families
 gated behind "degree-3/4 arithmetic before any substitution table"
