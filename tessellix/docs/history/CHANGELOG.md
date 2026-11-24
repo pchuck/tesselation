@@ -2786,3 +2786,44 @@ TUI SVG export sanity-checked (43 tilings, 271 tests).
   Verification: cargo check --workspace zero warnings; guard subset
   green at integration. Census: Nonperiodic tab 10 → 11; reptiles
   family 9 → 10; built-ins 149 → 150; memberships 163 → 164.
+- 2026-11-23 — M158: WIS 12-fold (Watanabe–Ito–Soma)
+  `wis-12-fold` ✅ (Bielefeld substitution index entry "WIS 12-fold",
+  Watanabe, Ito & Soma, Acta Cryst. A 51:936, 1995; quasiperiodic
+  family, Quasiperiodic category): equilateral triangle + square +
+  30°/150° rhombus, dodecagonal symmetry, inflation λ = 2+√3
+  (λ² = 7+4√3). Ships the ENTRY FIGURE's published rules (WSI95
+  Fig. 2(iii) — the entry's non-unique ruleset), NOT the Bielefeld
+  patch's undocumented ruleset: the figure's clusters have zero
+  occurrences in the 792 k-node patch (tri 0/150 certified leaves, rho
+  topologically distinct, sq 0 in the crop) and the patch is
+  non-generic (no census oracle); the "correct set" attributed to
+  Musesti–Paolini (2023) has no machine-readable record. Exact
+  ℤ[√3] 4-tuple points (x = H(P+Q√3), y = H(R+S√3), H = s/2), edge
+  vectors in the index-4 sublattice, floats only at emission.
+  Non-conformal same-scale rules: children are prototiles at edge 2H
+  (same size as the parent) in a jagged cluster whose union has area
+  λ²·parent and CONTAINS the parent; the rho rule is a 3-piece
+  disconnected cluster (9+2+2 tiles) with fitted lattice-snap piece
+  offsets island (−2,−1,−3,−2) / pendant (2,1,1,0) — inter-piece gaps
+  artist-chosen in the figure (fit residuals 0.0465/0.0378 H vs
+  0.0928/0.0967 H as drawn; pendant offset a rhombus edge direction;
+  the 13-tile rho supertile never occurs in the patch, so no patch
+  census constrains the fit) — pieces share no edges and touch at
+  exactly two pinches, each a 4-tile vertex with corner sum 8 (120°
+  gap; pinch geometry figure-determined and certified).
+  Certified level-1 (exact battery, spikes w10/w10b/w11/w12, ported
+  in-module): every dissection one closed simple boundary per piece
+  with all interior edges paired; 2-area identities
+  (24,14)/(56,32)/(28,16) = λ² × parent; parent ⊆ union (exact Q⁴);
+  angle census pinned (tri 16 = 1+15, sq 29 = 9+20, rho 20 = 2+18+2
+  pinch, S(v) == want(v) everywhere); D2 non-composition pinned
+  (drift guard: tri seed 155 tiles/770 overlap pairs, sq 358/3660,
+  rho 179/1023, same-parent 0) — the rules do NOT compose at
+  depth ≥ 2, so emission is the depth-1 single-parent square
+  supertile (26 tiles, simply connected) as a finite patch, views
+  outside are background (fibonacci_fib.rs precedent).
+  Battery: 10 module tests (3-test family trio + 7 exact battery).
+  Verification: cargo check --workspace zero warnings; full suite
+  green at integration. Census: Quasiperiodic tab 18 → 19;
+  quasiperiodic family 14 → 15; built-ins 150 → 151; memberships
+  164 → 165.

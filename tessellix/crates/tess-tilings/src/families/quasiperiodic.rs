@@ -24,6 +24,7 @@ pub mod penrose_p2;
 pub mod penrose_pentagon;
 pub mod glb_binary_n7;
 pub mod fibonacci_fib;
+pub mod wis_12_fold;
 
 /// The family's registry slice, in within-tab order.
 pub fn register(mut r: Registry) -> Registry {
@@ -41,6 +42,7 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(penrose_pentagon::PenrosePentagonTiling);
         r = r.register(glb_binary_n7::GlbBinaryN7Tiling);
         r = r.register(fibonacci_fib::FibonacciFibTiling);
+        r = r.register(wis_12_fold::Wis12FoldTiling);
     r
 }
 
@@ -190,6 +192,16 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
+        "wis-12-fold" => TilingClass {
+            families: &["Quasiperiodic"],
+            method: Some("substitution"),
+            inflation: Some("2+√3"),
+            point_order: Some(12),
+            prototiles: Some(3),
+            source: Some("Watanabe, Ito & Soma (1995)"),
+            translational: Some("quasiperiodic"),
+            ..TilingClass::EMPTY
+        },
         _ => return None,
     })
 }
@@ -219,6 +231,7 @@ mod census {
         "penrose-pentagon",
         "glb-binary-n7",
         "fibonacci-fibonacci",
+        "wis-12-fold",
     ];
 
     #[test]
@@ -226,7 +239,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            14,
+            15,
             "quasiperiodic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
