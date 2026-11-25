@@ -8,7 +8,7 @@ periodic girih strapwork band
 
 **Girih** (`girih.rs`, `girih_qc.rs`) — the girih prototiles with
   exact unit-edge radical geometry. `girih-shesh-band` is a periodic
-  single-tile oblique-lattice band. `girih-quasiperiodic` generates the
+  single-tile centered-rectangular band. `girih-quasiperiodic` generates the
   genuinely quasiperiodic star-and-cross pattern with the Darb-i Imam
   3-prototile substitution (Lu & Steinhardt 2007): decagon, bobbin and
   bow-tie, inflation 2(2+√5) = 2φ³, an edge-marker seam rule, exact
