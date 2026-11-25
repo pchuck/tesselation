@@ -4,7 +4,10 @@
 //!
 //! # Geometry
 //!
-//! * Lattice `a1 = (77, 45)`, `a2 = (0, 90)` (oblique, area 6930);
+//! * Lattice `a1 = (77, 45)`, `a2 = (0, 90)` (area 6930; primitive basis
+//!   of the **centered-rectangular** lattice — the equal-length basis
+//!   {(77,45), (77,−45)} with `a2 = a1 − (77,−45)` gives the conventional
+//!   154×90 centered cell; M76 corrected the earlier "oblique" reading);
 //!   10-pointed star centres sit on the index lattice `(i, j)`, bobbin
 //!   centres at the half-lattice `(i + 1/2, j + 1/2)`-type holes.
 //! * Cell `[-38.5, 38.5] x [-45, 45]` containing 545 tiles: 99 white
@@ -12,7 +15,10 @@
 //!   four petals, two side corridors, four corners, small squares and
 //!   diamonds) and 446 ink strap pieces (the band corridors partitioned
 //!   by their medial skeleton).
-//! * Wallpaper group **pmm**: mirrors in the star axes x = 0 and y = 0
+//! * Wallpaper group **cmm** (M76 corrected the earlier pmm reading: the
+//!   (77,45) centering translation is a genuine tiling symmetry, so the
+//!   mirror structure lives on the centered-rectangular lattice):
+//!   mirrors in the star axes x = 0 and y = 0
 //!   composed with the lattice (2-fold rotations at every star and
 //!   bobbin centre). The measured artwork honours the mirrors to within
 //!   its own drawing tolerance (~0.01-0.02 px); tiles are grouped into
@@ -52,7 +58,7 @@ fn c(seed: u32, pts: &[[f64; 2]]) -> Cell {
     }
 }
 
-/// Periodic 10-pointed girih star-and-cross strapwork tiling (pmm).
+/// Periodic 10-pointed girih star-and-cross strapwork tiling (cmm).
 pub fn girih_star_cross() -> LatticeTiling {
     let cells = vec![
         c(
