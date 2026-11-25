@@ -1032,10 +1032,12 @@ mod tests {
     }
 
     /// The substitution matrix from table 0 is the pinned
-    /// [[3, 2], [1, 2]] (column sums λ²), and the per-seed counts follow
-    /// the closed forms A: (3,1)/(11,5)/(43,21)/(171,85) and
-    /// C: (2,2)/(10,6)/(42,22)/(170,86) at d = 1..4; the seed block's
-    /// round-1 letter counts are M × {A:4, C:2} = {A:16, C:8}.
+    /// [[2, 2], [2, 2]] (rank-1, column sums λ²), and the per-seed
+    /// counts follow the single closed form (2·4^(d−1), 2·4^(d−1))
+    /// for BOTH seed letters — (2,2)/(8,8)/(32,32)/(128,128) at
+    /// d = 1..4 (rank-1 makes A-seeds and D-seeds identical); the
+    /// seed block's round-1 letter counts are M × {A:0, D:2} =
+    /// {A:4, D:4}.
     #[test]
     fn substitution_matrix_and_counts() {
         // M from the tables (brief convention: row = child letter,

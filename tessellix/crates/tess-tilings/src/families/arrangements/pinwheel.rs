@@ -4,8 +4,8 @@
 //! observation: such a triangle can be divided into five isometric copies
 //! of itself at 1/√5 scale; repeatedly inflating by √5 (each inflation
 //! also twists by θ = arctan(1/2)) yields an aperiodic tiling (Radin,
-//! 1991) in which the tiles appear in infinitely many orientations, since
-//! θ is not a rational fraction of a turn.
+//! 1994, Ann. Math. 139:661) in which the tiles appear in infinitely
+//! many orientations, since θ is not a rational fraction of a turn.
 //!
 //! The triangles are labelled `(p, q, r)`: `p` is the long-leg end
 //! (|p−r| = 2s), `q` the short-leg end (|q−r| = s), `r` the right-angle
