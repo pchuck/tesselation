@@ -40,6 +40,7 @@ cargo run -p tess-tui -- list
 cargo run -p tess-tui -- export --tiling truncated-hexagonal \
     --width 1200 --height 900 --scale 2.0 --rotation 0 \
     --mode proto --out tiling.svg
+cargo run -p tess-tui -- explore --tiling square --top-k 3 --out leaderboard.json
 ```
 
 All `export` flags (`--tiling`, `--width/--height`, `--scale`,

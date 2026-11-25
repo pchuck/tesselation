@@ -30,6 +30,29 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--band-w W` | 0.1 | band width in world units for the decoration layer (requires `--decoration`) |
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
+`explore` options:
+
+| flag | default | meaning |
+|---|---|---|
+| `--tiling ID` | — (required) | tiling id, see `list` (any registered substrate — the δ axis is the meaningful axis for lattice substrates) |
+| `--out PATH` | stdout | write the leaderboard JSON to PATH instead of printing it |
+| `--csv PATH` | off | write a flat CSV variant of the leaderboard (one row per candidate; null cells for the non-applicable axis) |
+| `--gallery DIR` | off | write one SVG per top-`--top-k` ranked row per axis into DIR (refused rows skipped, with a printed count) |
+| `--top-k N` | 10 | gallery rows per axis; must be ≥ 1 (0 and non-numeric values are named parse errors) |
+
+**explore** — `tess-tui explore --tiling ID` (M170) runs a deterministic sweep over one substrate — the `pic-explorer` — with no RNG, no time, and no filesystem access in the sweep itself (registry, region and scoring are all built in-memory), and writes nothing unless asked:
+
+- the **δ axis** scores every candidate contact angle over the 17-point base grid (multiples of 5° from 5° to 85°) plus the exact validated envelope points for envelope-bearing substrates (e.g. the 90° square point, added by refinement);
+- the **θ axis** (`islamic` feature, only the two classic hankin substrates `hankin-4-8-8-motifs` and `hankin-3-12-12`) scores per-substrate motif-angle offsets ∈ {−15°, …, +15°} — one offset applied to every class's classic motif angle (7 rows per substrate).
+
+Every candidate is scored and recorded, including open-strand regimes — the M165 envelope is a closed-angle point set, not a requirement for rendering. A closed weave at a non-envelope δ (exits/corners/bad all zero) is recorded as a `closure_violation` finding, never silently dropped; refusals and incomplete partitions are named in `feasibility` (`refused: <reason>` / `incomplete_partition`), never hidden. The region is fixed at the M165 convention: 20×20 world units centered on the origin (±10). The score is deliberately not aesthetic — it separates closed weaves from open regimes, then ranks structural integrity, slivers and symmetry-invariance (weights stated in the module docs and in the JSON itself). Winners are candidates, not registry entries.
+
+```sh
+cargo run -p tess-tui -- explore --tiling square --top-k 3 --out leaderboard.json
+```
+
+Output is a `pic-explorer-leaderboard/v1` JSON document, byte-deterministic across runs (same bytes, two-run test): substrate, region, the sort contract (score ascending, ties by angle, refused sink with rank 0), both axes' score formulas, refused/violation counts, and one row per candidate — axis, substrate id, angle, rank, score, feasibility, and the feature-vector groups: δ rows carry `validity` (core vertices / exit / corner / bad / straight2 / joint), `wall_map` (degree histogram, strand count, face count, min face area), `geometry` (total wall length, strap density, crossings, min crossing angle, crossing density) and `symmetry` (translation / mirror / rotation invariance + fold note); θ rows carry `motifs`, `partition_complete`, `max_partition_error`, `n_cells`, `min_face_area`, `total_area`, `symmetry` and `feasibility_reason`. Lower score is better. The `--csv` variant flattens the same rows into one column-per-field row each; the `--gallery` SVGs are named `<substrate>-d<δ>-r<rank>.svg` / `<substrate>-t<offset>-r<rank>.svg` — δ rows via the decoration-first gallery (fill → interlace → outline-interlace → outline, band 0.1, plain-wall fallback), θ rows via cells-as-tiles. Field-by-field schema: the M170 entry in [CHANGELOG](history/CHANGELOG.md).
+
 **Browse mode** — the tab bar lists the ten display categories with card counts; below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
