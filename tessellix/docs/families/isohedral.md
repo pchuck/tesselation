@@ -24,9 +24,11 @@ Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 | `ih27-pgg-pentagon` | IH27 | Cairo V3.3.4.3.4 (dual: snub square) | pgg | pentagon; 1 U + 2 J orbits; 3 shape params; 4 aspects; secondary PentagonTypes |
 | `ih29-p4g-pentagon` | IH29 | Cairo V3.3.4.3.4 (dual: snub square) | p4g | pentagon; Klein-paired base orbit (straight edge) + J orbit; 1 shape param; 4 aspects; secondary PentagonTypes |
 
-All five are 1-isohedral realizations pinned at exact rational (or
-`Q(√3)`, IH7) parameter values; the engine also accepts arbitrary float
-parameters on the documented 2⁻²⁰ quantization policy (design doc §4).
+All five are 1-isohedral realizations pinned at exact rational parameter
+values (IH7's fitted coefficients are the `Q(√3)` ones); the engine
+also accepts arbitrary float parameters — off-default floats are
+quantized to the 2⁻²⁰ grid and handled exactly there
+(`engine.rs::resolve_params`).
 The pentagon templates sit on the Cairo net, mirroring the
 `cairo-pentagonal` classification precedent (primary Laves, secondary
 PentagonTypes); the family never touches the Wallpaper tab.
