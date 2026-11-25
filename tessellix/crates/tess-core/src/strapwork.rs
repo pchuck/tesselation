@@ -694,6 +694,54 @@ pub fn validity_stats(walls: &[Wall], region: &BBox) -> ValidityStats {
     stats
 }
 
+/// Wall-map feature extraction for the 24h δ/θ sweep (`sweep`).
+///
+/// A thin read-only wrapper over the private planar-map primitives
+/// (`build_map`, `walk_strands`, `face_traversal`) so the sweep consumes
+/// the same engine logic as the decoration gates instead of duplicating
+/// the merge/walk/traverse pipeline. `region` is the view region used by
+/// the audit convention: only vertices inside it are counted.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WallMapFeatures {
+    /// Vertex degree histogram over core vertices (region-interior).
+    pub degree_hist: BTreeMap<usize, usize>,
+    /// Number of strands decomposed from the map.
+    pub strand_count: usize,
+    /// Number of faces found by the half-edge traversal (conflict flag
+    /// ignored — the audit's gates already decide conflicts separately).
+    pub face_count: usize,
+    /// Minimum absolute face area across all faces (0.0 if no faces).
+    pub min_face_area: f64,
+}
+
+/// Count wall-map features over the view region (core vertices only).
+pub fn wall_map_features(walls: &[Wall], region: &BBox) -> WallMapFeatures {
+    let m = build_map(walls);
+    let core = m.core(region);
+    let mut degree_hist: BTreeMap<usize, usize> = BTreeMap::new();
+    for (v, &in_core) in core.iter().enumerate() {
+        if !in_core {
+            continue;
+        }
+        let d = m.adj[v].len();
+        *degree_hist.entry(d).or_insert(0usize) += 1;
+    }
+    let (strands, _census) = walk_strands(&m);
+    let (faces, _conflict) = face_traversal(&m);
+    let face_count = faces.len();
+    let min_face_area = if face_count == 0 {
+        0.0
+    } else {
+        faces.iter().map(|(_, a)| a.abs()).fold(f64::INFINITY, f64::min)
+    };
+    WallMapFeatures {
+        degree_hist,
+        strand_count: strands.len(),
+        face_count,
+        min_face_area,
+    }
+}
+
 // ------------------------------------------------------------ strand walk --
 
 /// One pass of a strand through a crossing vertex.
@@ -2158,6 +2206,99 @@ mod tests {
                     expected,
                     "reflected walls of tile {i} != tile {j} at {m:?} (δ={delta})"
                 );
+            }
+        }
+    }
+
+    /// Replicate the engine's ray construction (walls_with_delta) for one
+    /// edge midpoint: returns (direction, exit) per lean ray. Test-only.
+    fn rays_at_midpoint(tile: &Tile, m: Vec2, f: &dyn Fn(Vec2) -> f64) -> Vec<(Vec2, f64)> {
+        let pts = &tile.poly.pts;
+        let n = pts.len();
+        let mut a2 = 0.0f64;
+        let mut scale = 0.0f64;
+        for i in 0..n {
+            let (p, q) = (pts[i], pts[(i + 1) % n]);
+            a2 += p.cross(q);
+            scale = scale.max((q - p).length());
+        }
+        let sgn = if a2 > 0.0 { 1.0 } else { -1.0 };
+        let eps = 1e-9 * scale.max(1.0);
+        for i in 0..n {
+            let (va, vb) = (pts[i], pts[(i + 1) % n]);
+            let e = vb - va;
+            let len = e.length();
+            if len < EPS_EDGE {
+                continue;
+            }
+            let mid = (va + vb) * 0.5;
+            if (mid - m).length() > 1e-9 {
+                continue;
+            }
+            let t = e / len;
+            let nin = Vec2::new(-t.y * sgn, t.x * sgn);
+            let (sd, cd) = f(m).to_radians().sin_cos();
+            let mut rays = Vec::new();
+            for lean in [-1.0, 1.0] {
+                let d = Vec2::new(lean * cd * t.x + sd * nin.x, lean * cd * t.y + sd * nin.y);
+                let mut exit = f64::INFINITY;
+                for j in 0..n {
+                    let (qa, qb) = (pts[j], pts[(j + 1) % n]);
+                    let ee = qb - qa;
+                    let den = d.cross(ee);
+                    if den.abs() < EPS_PAR * ee.length() {
+                        continue;
+                    }
+                    let q = qa - m;
+                    let s = q.cross(ee) / den;
+                    let u = q.cross(d) / den;
+                    if s > eps && u > -1e-9 && u < 1.0 + 1e-9 && s < exit {
+                        exit = s;
+                    }
+                }
+                if exit.is_finite() {
+                    rays.push((d, exit));
+                }
+            }
+            return rays;
+        }
+        Vec::new()
+    }
+
+    /// Varying-f continuity at the shared edge midpoint (diss. §3.4.1):
+    /// the two incident ray pairs — tile A's
+    /// `{±cos f(m)·t + sin f(m)·nin}` and tile B's, point-reflected about
+    /// the shared midpoint — are exact point reflections (antipodal
+    /// directions, equal exit distances) even when `f` is genuinely
+    /// non-constant along the edge. Held at 1e-9 on the current engine.
+    /// (The constant-δ continuity test above pins the walls, not the rays.)
+    #[test]
+    fn deform_varying_f_ray_pair_continuity_at_shared_midpoints() {
+        // Non-constant linear ramp across x (width-4 ramp): away from any
+        // constant-δ special case.
+        let f = |p: Vec2| 45.0 + 45.0 * (p.x + 2.0) / 4.0;
+        for tiles in [square_grid(2), triangle_grid(2)] {
+            let shared = shared_internal_midpoints(&tiles);
+            assert!(!shared.is_empty(), "shared midpoints");
+            for (i, j, m) in &shared {
+                let ra = rays_at_midpoint(&tiles[*i], *m, &f);
+                let rb = rays_at_midpoint(&tiles[*j], *m, &f);
+                assert_eq!(ra.len(), 2, "two rays at {m:?}: tile {i}");
+                assert_eq!(rb.len(), 2, "two rays at {m:?}: tile {j}");
+                for (a, b) in ra.iter().zip(rb.iter()) {
+                    assert!(
+                        (b.0.x + a.0.x).abs() < 1e-9 && (b.0.y + a.0.y).abs() < 1e-9,
+                        "ray directions are antipodal at {m:?}: {:?} vs {:?}",
+                        a.0,
+                        b.0
+                    );
+                    assert!(
+                        (b.1 - a.1).abs() < 1e-9,
+                        "ray exit distances match at {m:?}: {} vs {}",
+                        a.1,
+                        b.1
+                    );
+                }
             }
         }
     }

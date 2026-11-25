@@ -33,7 +33,9 @@ complementary strap pattern. Full dossier in
 - **24h PIC explorer** — δ/θ sweep over host tilings with programmatic
   scoring (symmetry, sliver-free, strap density); ranked galleries via
   the 22g styles; winners become exact-pin registry candidates.
-  After 22g + 24a.
+  ✅ M170: sweep + `explore` CLI shipped (1921 rows, 0 refusals,
+  byte-identity tested); leaderboard banked, exact-pin candidates
+  queued. After 22g + 24a.
 - **24f Quasiperiodic medallion hosts** — gated behind CAP/A4 family
   ownership; the dual method (Ammann-bar / Robinson-triangle duals) is
   the exact path for Penrose-class hosts.

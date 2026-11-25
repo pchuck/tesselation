@@ -44,6 +44,13 @@
 //!                                  the weave, generic ones do not.
 //!     [--band-w W]                 band width in world units for the
 //!                                  decoration (default 0.1 at scale 1)
+//!   tess-tui explore --tiling ID  deterministic δ/θ sweep + leaderboard
+//!     (docs/briefs/pic-explorer.md). Emits a JSON leaderboard plus an
+//!     optional CSV and a top-K SVG gallery.
+//!     [--out FILE] [--csv FILE] [--gallery DIR] [--top-k N]
+//!     (default: prints the JSON leaderboard to stdout; --top-k defaults
+//!     to 10)
+//!
 
 mod app_ui;
 mod raster;
@@ -60,8 +67,9 @@ fn main() {
         None => app_ui::run().map_err(|e| e.to_string()),
         Some("list") => list(),
         Some("export") => export(&args[1..]),
+        Some("explore") => explore(&args[1..]),
         Some(other) => Err(format!(
-            "unknown command: {other}\nusage: tess-tui [list | export ...]"
+            "unknown command: {other}\nusage: tess-tui [list | export ... | explore ...]"
         )),
     };
     if let Err(e) = result {
@@ -421,6 +429,594 @@ fn export(args: &[String]) -> Result<(), String> {
     std::fs::write(&a.out, svg).map_err(|e| format!("failed to write {}: {e}", a.out))?;
     println!("wrote {} ({} tiles)", a.out, result.tiles.len());
     Ok(())
+}
+
+
+// ---------------------------------------------------------------------------
+// explore — the deterministic δ/θ sweep (docs/briefs/pic-explorer.md)
+// ---------------------------------------------------------------------------
+
+/// Parsed `tess-tui explore` arguments (no registry or filesystem access).
+#[derive(Debug)]
+struct ExploreArgs {
+    tiling: String,
+    out: Option<String>,
+    csv: Option<String>,
+    gallery: Option<String>,
+    top_k: usize,
+}
+
+/// Parse + validate explore arguments. Pure: named errors, no registry,
+/// no filesystem — registry/generation happens in [`explore`].
+fn parse_explore(args: &[String]) -> Result<ExploreArgs, String> {
+    let mut a = ExploreArgs {
+        tiling: String::new(),
+        out: None,
+        csv: None,
+        gallery: None,
+        top_k: 10,
+    };
+    let mut i = 0;
+    let next = |i: &mut usize| -> Result<String, String> {
+        if *i >= args.len() {
+            return Err(format!(
+                "missing value for {}",
+                args[(*i).saturating_sub(1)]
+            ));
+        }
+        let v = args[*i].clone();
+        *i += 1;
+        Ok(v)
+    };
+    while i < args.len() {
+        let key = args[i].as_str();
+        i += 1;
+        match key {
+            "--tiling" => a.tiling = next(&mut i)?,
+            "--out" => a.out = Some(next(&mut i)?),
+            "--csv" => a.csv = Some(next(&mut i)?),
+            "--gallery" => a.gallery = Some(next(&mut i)?),
+            "--top-k" => {
+                let v = next(&mut i)?;
+                a.top_k = v.parse::<usize>().map_err(|_| "bad --top-k".to_string())?;
+            }
+            other => return Err(format!("unknown option {other}")),
+        }
+    }
+    if a.tiling.is_empty() {
+        return Err("--tiling is required (see `tess-tui list`)".into());
+    }
+    if a.top_k == 0 {
+        return Err("--top-k must be >= 1".into());
+    }
+    Ok(a)
+}
+
+// --- JSON / CSV builders (pure string builders, byte-deterministic) ------
+
+fn json_str(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() + 8);
+    out.push('"');
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
+}
+
+/// 10-decimal formatting for every finite number in the output (byte-
+/// deterministic across runs and platforms); non-finite → null.
+fn json_f(x: f64) -> String {
+    if x.is_finite() {
+        format!("{:.10}", x)
+    } else {
+        "null".to_string()
+    }
+}
+
+fn json_num(x: usize) -> String {
+    x.to_string()
+}
+
+fn json_str_opt(x: &Option<String>) -> String {
+    match x {
+        Some(s) => json_str(s),
+        None => "null".to_string(),
+    }
+}
+
+fn json_bool_opt(x: Option<bool>) -> String {
+    match x {
+        Some(b) => b.to_string(),
+        None => "null".to_string(),
+    }
+}
+
+fn json_bool(x: bool) -> String {
+    x.to_string()
+}
+
+fn json_degree_hist(hist: &std::collections::BTreeMap<usize, usize>) -> String {
+    let inner: Vec<String> = hist.iter().map(|(d, n)| format!("{}: {}", json_str(&d.to_string()), json_num(*n))).collect();
+    format!("{{{}}}", inner.join(", "))
+}
+
+fn json_envelope_angles(angles: &Option<Vec<f64>>) -> String {
+    match angles {
+        Some(list) => format!(
+            "[{}]",
+            list.iter().map(|a| json_f(*a)).collect::<Vec<_>>().join(", ")
+        ),
+        None => "null".to_string(),
+    }
+}
+
+fn delta_row_json(row: &tess_tilings::sweep::DeltaRow) -> String {
+    let f = &row.features;
+    let validity = format!(
+        "{{\"core_vertices\": {}, \"exit\": {}, \"corner\": {}, \"bad\": {}, \"straight2\": {}, \"joint\": {}}}",
+        f.core_vertices, f.exit, f.corner, f.bad, f.straight2, f.joint
+    );
+    let wall_map = format!(
+        "{{\"degree_hist\": {}, \"strand_count\": {}, \"face_count\": {}, \"min_face_area\": {}}}",
+        json_degree_hist(&f.degree_hist), f.strand_count, f.face_count, json_f(f.min_face_area)
+    );
+    let geometry = format!(
+        "{{\"total_wall_length\": {}, \"strap_density\": {}, \"crossing_count\": {}, \"min_crossing_angle_deg\": {}, \"crossing_density\": {}}}",
+        json_f(f.total_wall_length), json_f(f.strap_density), f.crossing_count,
+        json_f(f.min_crossing_angle_deg), json_f(f.crossing_density)
+    );
+    let symmetry = format!(
+        "{{\"translation_invariant\": {}, \"translation_mismatch\": {}, \"mirror_invariant\": {}, \"rotation_invariant\": {}, \"note\": {}, \"fold_note\": {}}}",
+        json_bool(f.translation_invariant),
+        match f.translation_mismatch {
+            usize::MAX => "null".to_string(),
+            n => n.to_string(),
+        },
+        json_bool_opt(f.mirror_invariant),
+        json_bool_opt(f.rotation_invariant),
+        json_str(&f.symmetry_note),
+        json_str_opt(&f.fold_note)
+    );
+    let feasibility = if f.generation_message.is_some() {
+        format!("refused: {}", f.generation_message.as_deref().unwrap())
+    } else {
+        "ok".to_string()
+    };
+    let score = match row.score {
+        Some(s) => json_f(s),
+        None => "null".to_string(),
+    };
+    format!(
+        "{{\"axis\": \"delta\", \"substrate_id\": {}, \"delta_deg\": {}, \"theta_offset_deg\": null, \"rank\": {}, \"score\": {}, \"feasibility\": {}, \"envelope_member\": {}, \"envelope_angles\": {}, \"closure_violation\": {}, \"generation_message\": {}, \"validity\": {}, \"wall_map\": {}, \"geometry\": {}, \"symmetry\": {}}}",
+        json_str(&row.substrate_id),
+        json_f(row.delta_deg),
+        row.rank,
+        score,
+        json_str(&feasibility),
+        match f.envelope_member {
+            Some(true) => "true".to_string(),
+            Some(false) => "false".to_string(),
+            None => "null".to_string(),
+        },
+        json_envelope_angles(&f.envelope_angles),
+        json_str_opt(&f.closure_violation),
+        match &f.generation_message {
+            Some(m) => json_str(m),
+            None => "null".to_string(),
+        },
+        validity,
+        wall_map,
+        geometry,
+        symmetry
+    )
+}
+
+fn theta_row_json(row: &tess_tilings::sweep::ThetaRow) -> String {
+    let f = &row.features;
+    let feasibility = match &f.feasibility_reason {
+        Some(reason) => format!("refused: {reason}"),
+        None => {
+            if f.partition_complete {
+                "ok".to_string()
+            } else {
+                "incomplete_partition".to_string()
+            }
+        }
+    };
+    let score = match row.score {
+        Some(s) => json_f(s),
+        None => "null".to_string(),
+    };
+    format!(
+        "{{\"axis\": \"theta\", \"substrate_id\": {}, \"delta_deg\": null, \"theta_offset_deg\": {}, \"rank\": {}, \"score\": {}, \"feasibility\": {}, \"motifs\": {}, \"partition_complete\": {}, \"max_partition_error\": {}, \"n_cells\": {}, \"min_face_area\": {}, \"total_area\": {}, \"symmetry\": {}, \"feasibility_reason\": {}}}",
+        json_str(&row.substrate_id),
+        json_f(row.theta_offset_deg),
+        row.rank,
+        score,
+        json_str(&feasibility),
+        json_str(&f.motifs),
+        json_bool(f.partition_complete),
+        json_f(f.max_partition_error),
+        f.n_cells,
+        json_f(f.min_face_area),
+        json_f(f.total_area),
+        json_str(&f.symmetry),
+        json_str_opt(&f.feasibility_reason)
+    )
+}
+
+/// The full leaderboard document (byte-deterministic): the fixed
+/// region, the documented scores, the sort contract, then both axes.
+fn leaderboard_json(outcome: &tess_tilings::sweep::SweepOutcome) -> String {
+    let delta_json: Vec<String> = outcome.delta_rows.iter().map(delta_row_json).collect();
+    let theta_json: Vec<String> = outcome.theta_rows.iter().map(theta_row_json).collect();
+    let refused = outcome
+        .delta_rows
+        .iter()
+        .filter(|r| r.score.is_none())
+        .count()
+        + outcome
+            .theta_rows
+            .iter()
+            .filter(|r| r.score.is_none())
+            .count();
+    let closure_violations = outcome
+        .delta_rows
+        .iter()
+        .filter(|r| r.features.closure_violation.is_some())
+        .count();
+    format!(
+        "{{\"schema\": \"pic-explorer-leaderboard/v1\", \"substrate\": {}, \"region\": {{\"min\": [{}, {}], \"max\": [{}, {}]}}, \"sort\": {{\"delta\": \"score asc, delta_deg asc (refused sink, rank 0)\", \"theta\": \"score asc, theta_offset_deg asc (refused sink, rank 0)\"}}, \"score_formula_delta\": \"1000 * (not an envelope member) + 100 * bad + 10 * (exit + corner) + 1/(min_face_area + 1e-9) + 10 * (1 - translation_invariant) + 0.5 * (1 - mirror_invariant, when checked) + 0.5 * (1 - rotation_invariant, when checked); sliver >= 10 when no faces\", \"score_formula_theta\": \"1e6 * (not partition_complete) + 1/(min_face_area + 1e-9)\", \"refused_count\": {}, \"closure_violation_count\": {}, \"delta_rows\": [{}], \"theta_rows\": [{}]}}",
+        json_str(&outcome.substrate_id),
+        json_f(tess_tilings::sweep::REGION.min.x),
+        json_f(tess_tilings::sweep::REGION.min.y),
+        json_f(tess_tilings::sweep::REGION.max.x),
+        json_f(tess_tilings::sweep::REGION.max.y),
+        refused,
+        closure_violations,
+        delta_json.join(", "),
+        theta_json.join(", ")
+    )
+}
+
+/// Escape a CSV field: wrap in quotes if it contains a comma, quote or
+/// newline (inner quotes doubled) — everything else passes through.
+fn csv_field(s: &str) -> String {
+    if s.contains(',') || s.contains('"') || s.contains('\n') || s.contains('\r') {
+        format!("\"{}\"", s.replace('"', "\"\""))
+    } else {
+        s.to_string()
+    }
+}
+
+fn csv_f(x: f64) -> String {
+    if x.is_finite() {
+        format!("{:.10}", x)
+    } else {
+        String::new()
+    }
+}
+
+/// One flat row per leaderboard row (null cells for the non-applicable
+/// axis). Deterministic byte-for-byte across runs.
+fn leaderboard_csv(outcome: &tess_tilings::sweep::SweepOutcome) -> String {
+    let mut out = String::from(
+        "substrate_id,axis,delta_deg,theta_offset_deg,score,rank,feasibility,closure_envelope_member,closure_violation,core_vertices,exit,corner,bad,straight2,joint,strand_count,face_count,min_face_area,total_wall_length,strap_density,crossing_count,min_crossing_angle_deg,crossing_density,translation_invariant,translation_mismatch,mirror_invariant,rotation_invariant,symmetry,partition_complete,max_partition_error,n_cells,total_area,motifs,degree_hist\n",
+    );
+    for row in &outcome.delta_rows {
+        let f = &row.features;
+        let feasibility = if f.generation_message.is_some() {
+            format!("refused: {}", f.generation_message.as_deref().unwrap())
+        } else {
+            "ok".to_string()
+        };
+        let env = match f.envelope_member {
+            Some(true) => "true".to_string(),
+            Some(false) => "false".to_string(),
+            None => "".to_string(),
+        };
+        let mismatch = if f.translation_mismatch == usize::MAX {
+            String::new()
+        } else {
+            f.translation_mismatch.to_string()
+        };
+        let cells = vec![
+            csv_field(&row.substrate_id),
+            "delta".to_string(),
+            csv_f(row.delta_deg),
+            String::new(),
+            row.score.map(csv_f).unwrap_or_default(),
+            row.rank.to_string(),
+            csv_field(&feasibility),
+            env,
+            f.closure_violation.as_deref().map(csv_field).unwrap_or_default(),
+            f.core_vertices.to_string(),
+            f.exit.to_string(),
+            f.corner.to_string(),
+            f.bad.to_string(),
+            f.straight2.to_string(),
+            f.joint.to_string(),
+            f.strand_count.to_string(),
+            f.face_count.to_string(),
+            csv_f(f.min_face_area),
+            csv_f(f.total_wall_length),
+            csv_f(f.strap_density),
+            f.crossing_count.to_string(),
+            csv_f(f.min_crossing_angle_deg),
+            csv_f(f.crossing_density),
+            f.translation_invariant.to_string(),
+            mismatch,
+            f.mirror_invariant.map(|b| b.to_string()).unwrap_or_default(),
+            f.rotation_invariant.map(|b| b.to_string()).unwrap_or_default(),
+            csv_field(&f.symmetry_note),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            csv_field(
+                &f.degree_hist
+                    .iter()
+                    .map(|(d, n)| format!("{d}:{n}"))
+                    .collect::<Vec<_>>()
+                    .join(","),
+            ),
+        ];
+        out.push_str(&cells.join(","));
+        out.push('\n');
+    }
+    for row in &outcome.theta_rows {
+        let f = &row.features;
+        let feasibility = match &f.feasibility_reason {
+            Some(reason) => format!("refused: {reason}"),
+            None => {
+                if f.partition_complete {
+                    "ok".to_string()
+                } else {
+                    "incomplete_partition".to_string()
+                }
+            }
+        };
+        let cells = vec![
+            csv_field(&row.substrate_id),
+            "theta".to_string(),
+            String::new(),
+            csv_f(row.theta_offset_deg),
+            row.score.map(csv_f).unwrap_or_default(),
+            row.rank.to_string(),
+            csv_field(&feasibility),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+            csv_field(&f.symmetry),
+            f.partition_complete.to_string(),
+            csv_f(f.max_partition_error),
+            f.n_cells.to_string(),
+            csv_f(f.total_area),
+            csv_field(&f.motifs),
+            String::new(),
+        ];
+        out.push_str(&cells.join(","));
+        out.push('\n');
+    }
+    out
+}
+
+/// Render the top-`top_k` gallery rows into `dir`, one SVG per row:
+/// δ rows via the decoration-first gallery, θ rows via the cell render.
+/// Refused rows are skipped with a note. Returns the number of SVGs written.
+fn explore_write_gallery(
+    outcome: &tess_tilings::sweep::SweepOutcome,
+    dir: &str,
+    top_k: usize,
+) -> Result<(usize, usize), String> {
+    std::fs::create_dir_all(dir).map_err(|e| format!("failed to create gallery dir {dir}: {e}"))?;
+    let mut written = 0usize;
+    let mut skipped = 0usize;
+    let mut delta_scored: Vec<&tess_tilings::sweep::DeltaRow> = outcome
+        .delta_rows
+        .iter()
+        .filter(|r| r.rank > 0)
+        .collect();
+    delta_scored.sort_by(|a, b| a.rank.cmp(&b.rank));
+    for row in delta_scored.into_iter().take(top_k) {
+        let name = format!("{}-d{:.1}-r{}.svg", row.substrate_id, row.delta_deg, row.rank);
+        let path = std::path::Path::new(dir).join(name);
+        let svg = tess_tilings::sweep::delta_gallery_svg(
+            &outcome.delta_tiles,
+            &tess_tilings::sweep::REGION,
+            row.delta_deg,
+        );
+        std::fs::write(&path, svg).map_err(|e| format!("failed to write {}: {e}", path.display()))?;
+        written += 1;
+    }
+    let refused_delta = outcome
+        .delta_rows
+        .iter()
+        .filter(|r| r.rank == 0)
+        .count();
+    skipped += refused_delta;
+    let mut theta_scored: Vec<&tess_tilings::sweep::ThetaRow> = outcome
+        .theta_rows
+        .iter()
+        .filter(|r| r.rank > 0)
+        .collect();
+    theta_scored.sort_by(|a, b| a.rank.cmp(&b.rank));
+    for row in theta_scored.into_iter().take(top_k) {
+        let name = format!(
+            "{}-t{:.1}-r{}.svg",
+            row.substrate_id, row.theta_offset_deg, row.rank
+        );
+        let path = std::path::Path::new(dir).join(name);
+        match tess_tilings::sweep::theta_gallery_svg(&row.substrate_id, row.theta_offset_deg) {
+            Ok(svg) => {
+                std::fs::write(&path, svg).map_err(|e| format!("failed to write {}: {e}", path.display()))?;
+                written += 1;
+            }
+            Err(_) => skipped += 1,
+        }
+    }
+    let refused_theta = outcome
+        .theta_rows
+        .iter()
+        .filter(|r| r.rank == 0)
+        .count();
+    skipped += refused_theta;
+    Ok((written, skipped))
+}
+
+fn explore(args: &[String]) -> Result<(), String> {
+    let a = parse_explore(args)?;
+    let registry = tess_tilings::registry();
+    let tiling = registry
+        .get(&a.tiling)
+        .ok_or_else(|| format!("unknown tiling: {}", a.tiling))?;
+    let outcome = tess_tilings::sweep::run_sweep(tiling, &tess_tilings::sweep::REGION);
+
+    let json = leaderboard_json(&outcome);
+    let csv_text = leaderboard_csv(&outcome);
+
+    if let Some(out) = &a.out {
+        std::fs::write(out, &json).map_err(|e| format!("failed to write {out}: {e}"))?;
+        println!("wrote {out} ({} rows)", outcome.delta_rows.len() + outcome.theta_rows.len());
+    } else {
+        print!("{}", json);
+    }
+    if let Some(csv_path) = &a.csv {
+        std::fs::write(csv_path, &csv_text).map_err(|e| format!("failed to write {csv_path}: {e}"))?;
+        println!("wrote {csv_path}");
+    }
+    if let Some(dir) = &a.gallery {
+        let (written, skipped) = explore_write_gallery(&outcome, dir, a.top_k)?;
+        println!("wrote {} gallery SVG(s) into {dir} ({skipped} refused row(s) skipped)", written);
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests_explore {
+    use super::{explore, leaderboard_json, parse_explore};
+
+    fn args(v: &[&str]) -> Vec<String> {
+        v.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn explore_parse_requires_tiling() {
+        let err = parse_explore(&args(&["--top-k", "3"])).unwrap_err();
+        assert!(err.contains("--tiling is required"));
+    }
+
+    #[test]
+    fn explore_parse_rejects_bad_top_k() {
+        let err = parse_explore(&args(&["--tiling", "square", "--top-k", "0"])).unwrap_err();
+        assert!(err.contains("--top-k"));
+        let err = parse_explore(&args(&["--tiling", "square", "--top-k", "x"])).unwrap_err();
+        assert!(err.contains("--top-k"));
+    }
+
+    #[test]
+    fn explore_parse_rejects_unknown_option() {
+        let err = parse_explore(&args(&["--tiling", "square", "--bogus"])).unwrap_err();
+        assert!(err.contains("unknown option --bogus"));
+    }
+
+    #[test]
+    fn explore_rejects_unknown_tiling() {
+        let err = explore(&args(&["--tiling", "no-such-tiling"])).unwrap_err();
+        assert!(err.contains("unknown tiling: no-such-tiling"));
+    }
+
+    #[test]
+    fn explore_leaderboard_is_byte_deterministic() {
+        let reg = tess_tilings::registry();
+        let outcome = tess_tilings::sweep::run_sweep(
+            reg.get("square").unwrap(),
+            &tess_tilings::sweep::REGION,
+        );
+        let a = leaderboard_json(&outcome);
+        let b = leaderboard_json(&outcome);
+        assert_eq!(a, b);
+        assert!(a.contains("\"schema\": \"pic-explorer-leaderboard/v1\""));
+    }
+
+    #[test]
+    fn explore_two_runs_produce_identical_bytes() {
+        let tmp = std::env::temp_dir();
+        let name = std::process::id().to_string();
+        let json_a = tmp.join(format!("tess_explore_a_{name}.json"));
+        let json_b = tmp.join(format!("tess_explore_b_{name}.json"));
+        let csv_a = tmp.join(format!("tess_explore_a_{name}.csv"));
+        let csv_b = tmp.join(format!("tess_explore_b_{name}.csv"));
+        let dir_a = tmp.join(format!("tess_explore_gallery_a_{name}"));
+        let dir_b = tmp.join(format!("tess_explore_gallery_b_{name}"));
+        for (out, csv, dir) in [
+            (&json_a, &csv_a, &dir_a),
+            (&json_b, &csv_b, &dir_b),
+        ] {
+            let argv = vec![
+                "--tiling".to_string(),
+                "square".to_string(),
+                "--out".to_string(),
+                out.to_string_lossy().to_string(),
+                "--csv".to_string(),
+                csv.to_string_lossy().to_string(),
+                "--gallery".to_string(),
+                dir.to_string_lossy().to_string(),
+                "--top-k".to_string(),
+                "3".to_string(),
+            ];
+            explore(&argv).expect("explore succeeds");
+        }
+        assert_eq!(std::fs::read(&json_a).unwrap(), std::fs::read(&json_b).unwrap(), "JSON bytes");
+        assert_eq!(std::fs::read(&csv_a).unwrap(), std::fs::read(&csv_b).unwrap(), "CSV bytes");
+        let mut a_files: Vec<_> = std::fs::read_dir(&dir_a).unwrap().map(|e| e.unwrap().file_name()).collect();
+        let mut b_files: Vec<_> = std::fs::read_dir(&dir_b).unwrap().map(|e| e.unwrap().file_name()).collect();
+        a_files.sort();
+        b_files.sort();
+        assert_eq!(a_files, b_files, "gallery file sets match");
+        assert!(!a_files.is_empty(), "gallery must write at least one SVG");
+        for f in &a_files {
+            assert_eq!(
+                std::fs::read(dir_a.join(f)).unwrap(),
+                std::fs::read(dir_b.join(f)).unwrap(),
+                "gallery bytes for {:?}",
+                f
+            );
+        }
+        let _ = std::fs::remove_dir_all(&dir_a);
+        let _ = std::fs::remove_dir_all(&dir_b);
+        let _ = std::fs::remove_file(&json_a);
+        let _ = std::fs::remove_file(&json_b);
+        let _ = std::fs::remove_file(&csv_a);
+        let _ = std::fs::remove_file(&csv_b);
+    }
 }
 
 #[cfg(test)]

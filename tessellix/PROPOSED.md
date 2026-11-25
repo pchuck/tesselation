@@ -1975,6 +1975,18 @@ quasiperiodic hosts later).
   exploration proposes, exactness disposes. Also the substrate for
   24e. Deterministic sweep grid + deterministic scoring (no RNG; §15's
   determinism policy untouched).
+  **Status: ✅ M170** — sweep module (`tess-tilings/src/sweep.rs`) +
+  `tess-tui explore` CLI shipped; 112 substrates, 1921 rows, 0
+  refusals, 0 closure violations, two-run byte-identity tested.
+  Leaderboard top of grid: truncated-square δ=90° (p4m, score 0.686),
+  square δ=90°/45°, trihexagonal δ=90°, hankin-4-8-8-motifs θ
+  offsets −5…+15° (complete partitions). Findings recorded: the
+  hankin-4-8-8 δ axis is honestly poor (substrate tiles are the
+  14-cell face partition — θ is the meaningful axis for hankin
+  substrates); the 3.12.12 classic motif assignment is a documented
+  Kaplan-reading choice pending a canonical landed assignment.
+  Winners are CANDIDATES — exact-pin registry follow-ups are queued
+  separately (exploration proposes, exactness disposes).
   - **Effort** M, **tier** fast/worker, after 22g (render-surface
     conventions) and 24a (catalog hosts).
 - **24f. Quasiperiodic medallion hosts** — dodecagonal shield (M51) and

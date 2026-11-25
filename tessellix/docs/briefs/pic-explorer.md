@@ -1,5 +1,8 @@
 # Brief: pic-explorer — δ/θ sweep + programmatic scoring over host tilings (24h)
 
+> **LANDED as M170 (2026-11-25):** the sweep module + `explore` CLI are
+> on main; the leaderboard and shortlist were banked at integration.
+> This brief is kept as the dispatch record.
 > **Preconditions MET (2026-11-24):** 22g (M164 + NaN fix, all four
 > §3.7 styles render) and 22d (M165: `walls_with_delta`, envelope
 > machinery) are landed. **Family:** none — sweep harness + CLI mode;

@@ -26,6 +26,10 @@ pub use envelope::envelope_for;
 /// not a family).
 pub mod classify;
 
+/// The 24h δ/θ sweep: deterministic scoring over host tilings.
+/// Consumes the registry + envelope machinery; renders via tess-core.
+pub mod sweep;
+
 pub use classify::classification;
 
 mod fields;
@@ -238,7 +242,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations, M167 = 24a medallion interface, M168 = taylor-socolar plane-filling CHT presentation, M169 = 24c (n,c)-monster medallion catalog — all no census movement; M166 = CAP tiling, Aperiodic 11 -> 12). 163 built-ins — 63 before
+// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations, M167 = 24a medallion interface, M168 = taylor-socolar plane-filling CHT presentation, M169 = 24c (n,c)-monster medallion catalog, M170 = 24h PIC explorer (sweep module + explore CLI, no registry change) — all no census movement; M166 = CAP tiling, Aperiodic 11 -> 12). 163 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the eleven tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -1263,7 +1267,7 @@ mod decoration_finiteness_battery {
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::ParamSet;
     use tess_core::strapwork::{plan_decoration, walls, Decoration};
-    use tess_core::tiling::{Query, Tiling};
+    use tess_core::tiling::Query;
     use tess_core::svg::render_svg_decorated;
 
     /// The 12 classic-δ rows from `docs/rendering.md` (the only rows that
