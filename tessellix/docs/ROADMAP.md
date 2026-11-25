@@ -19,7 +19,9 @@ complementary strap pattern. Full dossier in
   core algorithm; ground-truth bar: reproduce M158/M161 cell tables
   first. Subsumes the open 22b hole decomposition.
 - **24c (n,c)-monster medallion generator** (22e partial; {8,12},
-  {9,12}, {9,18} first) — catalog feed, any time after 24a.
+  {9,12}, {9,18} first) — ✅ M169: six parallel-pair records with
+  exact placements, windows and M163-checked exits; {8,12}/{9,12}
+  deferred (n=9 blocked on cubic fields).
 - **24d Composition families on periodic nets** — 2–3 registry
   instances; inference-fill vs dual-net-fill compared. After 24b.
 - **24e Underdetermined-θ search** (22h partial) — after 24b maps the

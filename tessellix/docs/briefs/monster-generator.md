@@ -1,5 +1,7 @@
 # Brief: (n,c)-monster medallion generator (24c)
 
+> **LANDED as M169 (2026-11-25):** commit at main carries the six
+> parallel-pair records; this brief is kept as the dispatch record.
 > **Precondition MET (2026-11-25):** 24a landed as M167 — the medallion
 > interface, `Zq`/`Qp` exact fields, the cos²-only angle convention, the
 > three absorption obligations, and five catalog records. Read

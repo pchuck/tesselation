@@ -1937,6 +1937,11 @@ quasiperiodic hosts later).
   — overlapping regular n-gons fused at contact angles kπ/n (n ≤ 12,
   2 ≤ c ≤ ⌈n/2⌉−2) as additional catalog entries in exact fields;
   feeds 24a's catalog. Strange-star sets {8,12}, {9,12}, {9,18} first.
+  **Status: ✅ M169** — six parallel-pair records ((8,2), (10,2),
+  (10,3), (12,2), (12,3), (12,4)) pinned at the crossing-midpoint
+  coincidence; rotated placements have no equal-count windows (field
+  gap documented); M163 exit-ray cross-check green; {8,12} deferred;
+  n=9/11 blocked on unshipped fields.
   - **Effort** M each, **tier** strong.
 - **24d. Composition families on periodic nets** — unit cells with 2–3
   medallion classes (dodecagon medallions at hexagon centers +
