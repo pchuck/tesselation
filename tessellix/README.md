@@ -43,7 +43,8 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 ```
 
 All `export` flags (`--tiling`, `--width/--height`, `--scale`,
-`--rotation`, `--mode`, `--strapwork`, `--out`) are tabulated in
+`--rotation`, `--mode`, `--strapwork`, `--decoration`, `--band-w`,
+`--out`) are tabulated in
 [docs/USAGE.md](docs/USAGE.md), together with the full walkthrough of
 Browse mode, search, Render mode, keybindings, and mouse behavior.
 
@@ -54,6 +55,38 @@ the same two-mode browser over the shared browse model, with a
 responsive card grid, lazily rasterized previews, drag-pan/scroll-zoom
 rendering, and a collapsible parameter panel. Details in
 [docs/USAGE.md](docs/USAGE.md).
+
+### Rendering star patterns: strapwork and decoration styles
+
+Two export layers built on the polygons-in-contact (Hankin PIC) engine:
+`--strapwork DEG` overlays the strapwork walls on any tiling (plain SVG;
+δ measured from each tile edge — small δ packs tight stars, large δ opens
+crosses; classic 45° on square / 60° on hexagonal hosts), and
+`--decoration STYLE` + `--band-w W` (default 0.1) renders the four Kaplan
+§3.7 ornamentation styles — `fill`, `outline`, `interlace`,
+`outline-interlace` — over those walls. `--decoration` requires
+`--strapwork`; `--mode` is ignored under `--decoration`; generic δ fails
+with honest precondition errors naming the regime.
+
+```sh
+cargo run -p tess-tui -- export --tiling hexagon --width 1200 --height 900 \
+    --strapwork 60 --out hexagon-walls-60.svg
+# 237 tiles, 4266 <line> elements, 0 NaN
+
+cargo run -p tess-tui -- export --tiling hexagon --width 1200 --height 900 \
+    --strapwork 60 --decoration fill --band-w 0.1 --out hexagon-fill-60.svg
+# 237 tiles, 1807 faces (1220 lapis + 587 bone), 0 NaN
+```
+
+Twelve even-degree classic-δ rows pass all four styles (square @
+45°/90°, hexagon @ 30°/60°, triangle @ 30°/60°, trihexagonal/
+hexagram/pic-3-6-3-6/truncated-hexagonal/snub-trihexagonal @ 60°,
+truncated-square @ 45°). Full detail — per-style preconditions and error
+text, the complete table, and the known gap — is in
+[docs/rendering.md](docs/rendering.md). Note that at this HEAD the
+`outline`/`interlace`/`outline-interlace` exports write NaN in their band
+paths (gates pass; `fill` and plain walls are clean); `fill` is the
+displayable decoration option today.
 
 ## Supported tilings
 

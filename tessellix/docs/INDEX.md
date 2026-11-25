@@ -50,6 +50,9 @@ registry name.
 - [docs/USAGE.md](USAGE.md) — the TUI/CLI and GUI walkthrough: Browse
   mode, search, Render mode, keybindings, mouse behavior, all `export`
   flags
+- [docs/rendering.md](rendering.md) — the strapwork/decoration render
+  surface (M164): walls layer, the four Kaplan §3.7 styles, precondition
+  errors, classic-δ table, known NaN gap
 - [docs/ROADMAP.md](ROADMAP.md) — vetted-candidates queue + research areas
   (dossiers in [PROPOSED.md](../PROPOSED.md))
 - [docs/cyclotomic-field-layer.md](cyclotomic-field-layer.md) — exact

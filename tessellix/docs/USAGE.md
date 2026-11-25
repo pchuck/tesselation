@@ -25,6 +25,8 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--rotation` | 0 | rotation in degrees |
 | `--mode` | pattern | `single` \| `pattern` \| `proto` \| `gray` |
 | `--strapwork DEG` | off | overlay the Hankin PIC strapwork walls at contact angle DEG (measured from each tile edge) on any tiling — layer mode of the polygons-in-contact engine (`tess-core::strapwork`) |
+| `--decoration STYLE` | off | over the `--strapwork` walls (required), render a Kaplan §3.7 ornamentation style — `fill` \| `outline` \| `interlace` \| `outline-interlace`; `--mode` is ignored under `--decoration`. See [rendering.md](rendering.md) |
+| `--band-w W` | 0.1 | band width in world units for the decoration layer (requires `--decoration`) |
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 **Browse mode** — the tab bar lists the ten display categories with card counts; below it a responsive card grid shows the active tab's
