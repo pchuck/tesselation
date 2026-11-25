@@ -1937,11 +1937,25 @@ quasiperiodic hosts later).
   — overlapping regular n-gons fused at contact angles kπ/n (n ≤ 12,
   2 ≤ c ≤ ⌈n/2⌉−2) as additional catalog entries in exact fields;
   feeds 24a's catalog. Strange-star sets {8,12}, {9,12}, {9,18} first.
-  **Status: ✅ M169** — six parallel-pair records ((8,2), (10,2),
-  (10,3), (12,2), (12,3), (12,4)) pinned at the crossing-midpoint
-  coincidence; rotated placements have no equal-count windows (field
-  gap documented); M163 exit-ray cross-check green; {8,12} deferred;
-  n=9/11 blocked on unshipped fields.
+  **Status: ✅ M169 + ✅ M171 extension.** M169: six parallel-pair
+  records ((8,2), (10,2), (10,3), (12,2), (12,3), (12,4)) pinned at
+  the crossing-midpoint coincidence; M163 exit-ray cross-check green;
+  {8,12} deferred. M171: **n = 9 shipped** — the parallel family is
+  provably pinless at odd n (parity theorem: no axis-parallel midpoint
+  pin; the off-axis parallel pins carry TWO contact angles, 80°/40° —
+  not shippable), so the records use the **rotated π/9 family** (the
+  odd-n half-turn family: −U₀ = R_{π/n}U₀ as vertex sets), pin rule
+  P = M_i − R·M_j: (9,2) = {9/3} (θ = 60°, cos² = 1/4, t = s = 1/2
+  exact) and **(9,3) = {9/1}** (θ = 20° = π/n, cos² cubic → None —
+  exactly on the extension-guard boundary, dec10 precedent; window pin
+  not midpoint, documented). (9,3) exists, overturning the earlier
+  floor-band claim (which only scanned parallel pins). Exact Nq
+  coordinates over the shipped K₉ (new additive `Field::K9` variant,
+  zero consumers outside n9); d-rule d ≡ 2(i−j)−1 (mod n); union
+  2(n−c−1)+2 and lens 2c+4 node counts hold for n = 9 (hub
+  `outlines()` cross-check); certification dead-code hole in the
+  window-verify path found and fixed en route. **n = 11 remains
+  blocked on degree-5 fields.**
   - **Effort** M each, **tier** strong.
 - **24d. Composition families on periodic nets** — unit cells with 2–3
   medallion classes (dodecagon medallions at hexagon centers +

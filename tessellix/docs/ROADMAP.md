@@ -20,8 +20,10 @@ complementary strap pattern. Full dossier in
   first. Subsumes the open 22b hole decomposition.
 - **24c (n,c)-monster medallion generator** (22e partial; {8,12},
   {9,12}, {9,18} first) — ✅ M169: six parallel-pair records with
-  exact placements, windows and M163-checked exits; {8,12}/{9,12}
-  deferred (n=9 blocked on cubic fields).
+  exact placements, windows and M163-checked exits; ✅ M171: n=9
+  shipped via the rotated odd-n family — (9,2) {9/3}, (9,3) {9/1}
+  (K₉-exact, M163-checked eight records); n=11 blocked on degree-5
+  fields; {8,12}/{9,12} deferred.
 - **24d Composition families on periodic nets** — 2–3 registry
   instances; inference-fill vs dual-net-fill compared. After 24b.
 - **24e Underdetermined-θ search** (22h partial) — after 24b maps the

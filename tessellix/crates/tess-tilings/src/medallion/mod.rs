@@ -48,6 +48,11 @@ pub enum Field {
     /// Q(a), a = 2cos(pi/10), a^4 = 5a^2 - 5 — the girih field
     /// [`L10`](crate::fields::L10).
     L10,
+    /// Q(b), b = 2cos(2pi/9), b^3 = 3b - 1 — the nonagon field
+    /// [`K9`](crate::fields::K9) (the record coordinates live in its
+    /// quadratic extension by w = 2sin20, w^2 = 2 - b; see
+    /// [`monster::n9`](monster::n9)).
+    K9,
 }
 
 /// A boundary contact of the internal figure (doc §1.4).

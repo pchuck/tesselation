@@ -269,7 +269,7 @@ briefs cite them as `§N`.
   and Cargo.toml is frozen — M74-style deviation, documented in
   `lib.rs`).
 - **Status:** landed (M86), decoration reworked (M86-fix), plane-filling
-  presentation (M168). 163 tilings, 184 memberships, 1392 tests at this
+  presentation (M168). 163 tilings, 184 memberships, 1399 tests at this
   commit.
 
 

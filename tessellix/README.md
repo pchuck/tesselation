@@ -184,7 +184,7 @@ arithmetic layer is designed in
 
 ## Tests
 
-`cargo test --workspace` — currently 1392 tests, all green, zero
+`cargo test --workspace` — currently 1399 tests, all green, zero
 warnings. Every tiling ships the 3-test standard trio:
 `covers_region` (sample points inside ≥ 1 tile and total clipped tile
 area equal to the region area to 1e-6 relative — catching gaps *and*
