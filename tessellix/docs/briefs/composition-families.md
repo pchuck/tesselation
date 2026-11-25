@@ -1,10 +1,9 @@
 # Brief: composition-families — medallion-class unit cells on periodic nets (24d, instance 1)
 
-> **Status: 🚀 DISPATCHED 2026-11-25 — reduced scope** (Gate-1 open:
-> 24g permanently STOPPED, islamic family files free; Gate-2 unmet →
-> the brief's own reduced-scope clause: dual-net fill + interstice
-> boundary documentation as the 24b feed, inference reading DEFERRED).
-> Tier: strong (escalation exercised). **Family:**
+> **Status: ✅ instance 1 LANDED 2026-11-25 — M172, reduced scope**
+> (dual-net fill reading shipped, 0 seams; inference reading deferred
+> to 24b — boundary docs shipped as the 24b feed; commit 4fc5400,
+> integrated as M172). **Family:**
 > islamic. **Candidate:** PROPOSED §24d (first-listed instance).
 > **Effort:** L. **Precondition:** 24a medallion interface
 > (M167) + 24c monster catalog (M169, extended M171) landed.

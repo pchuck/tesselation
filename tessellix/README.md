@@ -90,7 +90,7 @@ text and the complete table — is in
 
 ## Supported tilings
 
-163 built-in tilings (184 tab memberships), all discoverable in both UIs
+164 built-in tilings (185 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -105,7 +105,7 @@ cairo-pentagonal (type 4), floret-pentagonal (type 5) as typed
 secondary members and the untyped isohedral pentagon interlocks
 ih27/ih29), **Isohedral** (5: Kaplan IH templates — IH1/IH6/IH7
 hexagons on the 6³ net, IH27/IH29 pentagons on the Cairo net),
-**Islamic** (29), **Arrangements** (8),
+**Islamic** (30), **Arrangements** (8),
 **Quasiperiodic** (21: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, golden rhomboid,
 fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7, Andritz
@@ -145,7 +145,7 @@ Pythagorean two-square family takes the **square ratio** b/a
 | [Laves / Catalan duals](docs/families/laves.md) | 8 | the eight Laves (Catalan-dual) tilings — a closed set; hosts the two-uniform duals |
 | [Wallpaper](docs/families/pavers.md) | 14 | paver bonds + the wallpaper-catalog completers (first realizers of p1, pm, pg, pmg, cm, p3, p31m, p3m1) |
 | [Pentagon Types](docs/families/pentagons.md) | 14 | pentagonal types 1–15 (the 15-type census; types 4–5 dual-typed) |
-| [Islamic](docs/families/islamic.md) | 34 | girih strapwork panels, Hankin/PIC ornament, khatam + najm templates, Andritz fivefold substitutions, the Darb-i Imam decagon documentary patch |
+| [Islamic](docs/families/islamic.md) | 35 | girih strapwork panels, Hankin/PIC ornament, khatam + najm templates, Andritz fivefold substitutions, the Darb-i Imam decagon documentary patch |
 | [Arrangements](docs/families/arrangements.md) | 3 | Pythagorean two-square, periodic pinwheel spin, pinwheel substitution |
 | [Quasiperiodic](docs/families/quasiperiodic.md) | 16 | Penrose family, Ammann–Beenker, Stampfli, shield, golden A2 members, GLB binary n = 7, fibonacci product, WIS 12-fold, girih 14-fold |
 | [Aperiodic](docs/families/aperiodic.md) | 11 | einstein family (hat, turtle, spectre), CAP cut-and-project, Wang tiles, Taylor-Socolar, limit-periodic substitution set |
@@ -169,7 +169,7 @@ gallery taxonomy: [docs/TAXONOMY.md](docs/TAXONOMY.md).
 Four crates: `tess-core` holds the `Tiling` trait — generate exactly the
 tiles intersecting a query bbox, no gaps/overlaps/outside tiles — plus
 self-describing parameters, the browse model, and software rendering;
-`tess-tilings` holds the 163 built-ins in eleven families (periodic tilings
+`tess-tilings` holds the 164 built-ins in eleven families (periodic tilings
 are `LatticeTiling` **data tables**, aperiodic/nonperiodic ones direct
 substitution generators with exact-arithmetic anchors); `tess-tui`
 (ratatui) and `tess-gui` (egui) are thin front ends over the shared
@@ -184,7 +184,7 @@ arithmetic layer is designed in
 
 ## Tests
 
-`cargo test --workspace` — currently 1399 tests, all green, zero
+`cargo test --workspace` — currently 1410 tests, all green, zero
 warnings. Every tiling ships the 3-test standard trio:
 `covers_region` (sample points inside ≥ 1 tile and total clipped tile
 area equal to the region area to 1e-6 relative — catching gaps *and*

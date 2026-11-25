@@ -130,7 +130,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
 
 ## Tests
 
-`cargo test --workspace` (currently 1399 tests, all green, zero warnings):
+`cargo test --workspace` (currently 1410 tests, all green, zero warnings):
 
 - **`tess-core`** — parameter defaults/stepping/wrapping, registry,
   viewport anchoring, palette mapping.

@@ -44,6 +44,7 @@ pub mod hankin_3_3_4_3_4;
 pub mod hankin_4_8_8_motifs;
 pub mod hankin_hex_motifs;
 pub mod khatam_girih;
+pub mod dodecagon_hexagram_honeycomb;
 pub mod najm;
 pub mod najm_63_motifs;
 pub mod rosette_transform;
@@ -77,6 +78,7 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(hankin_4_8_8_motifs::hankin_4_8_8_motifs());
         r = r.register(hankin_hex_motifs::hankin_hex_motifs());
         r = r.register(khatam_girih::khatam_girih());
+        r = r.register(dodecagon_hexagram_honeycomb::dodecagon_hexagram_honeycomb());
         r = r.register(najm::najm_63_2e_0_3e_ac());
         r = r.register(najm_63_motifs::najm_63_motifs());
         r = r.register(najm::najm_44_3e_0_0_a());
@@ -266,6 +268,14 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             tile_set: Some("kissing khatam star-and-cross"),
             ..TilingClass::EMPTY
         },
+        "dodecagon-hexagram-honeycomb" => TilingClass {
+            families: &["Islamic"],
+            method: Some("medallion composition on a periodic net (24d)"),
+            base_tiling: Some("6.6.6"),
+            star_type: Some("{6/2}"),
+            tile_set: Some("dodecagon + hexagram + interstice hexagon"),
+            ..TilingClass::EMPTY
+        },
         "najm-63-2e-0-3e-ac" => TilingClass {
             families: &["Islamic"],
             method: Some("Najm template"),
@@ -319,6 +329,10 @@ pub(crate) fn lattice_tilings() -> Vec<(&'static str, crate::lattice::LatticeTil
             ("pic-3-6-3-6", pic_3_6_3_6::pic_3_6_3_6()),
             ("pic-3-12-12", pic_3_12_12::pic_3_12_12()),
             ("khatam-girih", khatam_girih::khatam_girih()),
+            (
+                "dodecagon-hexagram-honeycomb",
+                dodecagon_hexagram_honeycomb::dodecagon_hexagram_honeycomb(),
+            ),
             ("hankin-4-8-8-rosette", hankin_4_8_8::hankin_4_8_8_rosette()),
             ("hankin-4-6-12", hankin_4_6_12::hankin_4_6_12()),
             ("hankin-hex-two-point", hankin_hex::hankin_hex_two_point()),
@@ -374,6 +388,7 @@ mod census {
         "hankin-4-8-8-motifs",
         "hankin-hex-motifs",
         "khatam-girih",
+        "dodecagon-hexagram-honeycomb",
         "najm-63-2e-0-3e-ac",
         "najm-63-motifs",
         "najm-44-3e-0-0-a",
@@ -389,7 +404,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            34,
+            35,
             "islamic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();

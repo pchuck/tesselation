@@ -242,7 +242,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations, M167 = 24a medallion interface, M168 = taylor-socolar plane-filling CHT presentation, M169 = 24c (n,c)-monster medallion catalog, M170 = 24h PIC explorer (sweep module + explore CLI, no registry change), M171 = 24c extension — (9,c)-monster records via the rotated odd-n family (no registry change) — all no census movement; M166 = CAP tiling, Aperiodic 11 -> 12). 163 built-ins — 63 before
+// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations, M167 = 24a medallion interface, M168 = taylor-socolar plane-filling CHT presentation, M169 = 24c (n,c)-monster medallion catalog, M170 = 24h PIC explorer (sweep module + explore CLI, no registry change), M171 = 24c extension — (9,c)-monster records via the rotated odd-n family (no registry change), M172 = 24d instance 1 — dodecagon-hexagram-honeycomb composition (Islamic 34 -> 35, built-ins 163 -> 164) — all no census movement; M166 = CAP tiling, Aperiodic 11 -> 12). 163 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the eleven tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -425,11 +425,11 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 20, 33, 17, 17, 5, 29, 8, 21, 12, 11],
+vec![11, 20, 33, 17, 17, 5, 30, 8, 21, 12, 11],
             "per-tab census (update when adding tilings)"
         );
-assert_eq!(r.len(), 163, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 184, "membership census (update when adding tilings)");
+assert_eq!(r.len(), 164, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 185, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely

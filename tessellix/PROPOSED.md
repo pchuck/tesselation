@@ -1964,6 +1964,7 @@ quasiperiodic hosts later).
   readings of "complementary fill": boundary-matched inference (24b)
   vs dual-net fill in the interstice (`dual.rs` machinery). After 24b.
   - **Effort** L per instance, **tier** worker/strong.
+  - **Status: instance 1 ✅ M172 (reduced scope)** — dodecagon-hexagram-honeycomb landed on the dual-net fill reading (0 seams); inference-fill deferred to 24b (boundary docs = the 24b feed). Companion instances (khatam rings; decagon-and-bowtie pairs) remain gated on 24b per the brief.
 - **24e. Underdetermined-θ search** (the 22h optimization tool, scoped)
   — where 24b documents freedom, search (θ, contact position) against
   an aesthetic objective (band-balance à la Castéra, crossing density);
