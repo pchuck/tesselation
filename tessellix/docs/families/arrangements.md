@@ -40,11 +40,13 @@ briefs cite them as `§N`.
 - **Lattice:** rotated square lattice with the LARGER side first,
   `[(s1, s2), (−s2, s1)]`, cell = big square `[0,s1]²` + small square
   `[s1, s1+s2] × [0, s2]`, cell area exactly s1² + s2² = |det| (the
-  square-on-hypotenuse dissection). **The plan's `[(b, a), (−a, b)]` is
-  only valid for b ≥ a**: for r < 1 the small square at (b, 0) pokes into
-  the big square one lattice step down-right (overlap b(a−b)), so the
-  construction canonicalizes (s1, s2) = (max(a,b), min(a,b)); r < 1 is
-  the r′ = 1/r family, congruent up to scale.
+  square-on-hypotenuse dissection). The construction canonicalizes
+  (s1, s2) = (max(a,b), min(a,b)), leading the lattice with the LARGER
+  side, because the small square is tucked into the notch of the big
+  squares (corner at (s1, 0)), which only fits a side no larger than the
+  big side — the uncanonicalized `[(b, a), (−a, b)]` plan is only a
+  consistent two-square dissection for b ≥ a. For r < 1 this is the
+  r′ = 1/r family, congruent up to scale.
 - **Implementation:** direct `Tiling` impl in `pythagorean.rs` (feature
   `pythagorean`, shared with pinwheel) with the lattice.rs index-range
   culling inline; third parameter `ratio` (0.2–10, step 0.05, default φ)
@@ -55,7 +57,8 @@ briefs cite them as `§N`.
   steep ratios, and `pythagorean_culling_matches_brute_force` re-emits a
   fixed index window and requires bit-identical tile sets at r = 1.1
   (basis tilted 42°) and 2.5. **The sweep caught two real bugs before
-  commit**: the r < 1 notch overflow above, and a culling bug (region
+  commit**: an r < 1 notch-overflow canonicalization bug (the notch
+  rationale above), and a culling bug (region
   bbox taken in cell space instead of lattice/u space — harmless for
   axis-aligned lattices like star-cross, wrong for rotated ones; fixed
   by mirroring lattice.rs's world→u inverse exactly).
