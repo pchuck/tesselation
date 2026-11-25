@@ -503,8 +503,11 @@ briefs cite them as `§N`.
   --workspace 590/590. First batch of the k-uniform dual family —
   the remaining p6m duals (n5, n1, n13) and the pmm duals queue
   behind the same helper.
-<!-- §43–§45 are reserved for the concurrent M93–M95 two-uniform
-     entries; §46 below is the pre-assigned M96 slot. -->
+<!-- Historical note (2026-11-25): §43–§45 were reserved for the
+     concurrent M93–M95 entries at split time. M93 (aperiodic) took
+     §43, M94 (islamic) took §44, and M95 landed at §50 (below) — no
+     kuniform arc occupies §45. §46 (the arc above this comment) was
+     the pre-assigned M96 slot. -->
 
 
 ### 49. 2-uniform (3².6²; 3⁴.6) ✅ (M97)
@@ -645,9 +648,10 @@ briefs cite them as `§N`.
   constructed at runtime by the same `dual()` helper that produced the
   M98 batch; no hand-transcribed dual geometry. Batch 2 closes the
   p6-family duals queued in M98's outlook and lands the family's
-  first chiral (p6) dual. *Provisional number — §48's numbering is
-  already out of sequence (a duplicate §56), and this fork's M-number
-  will be renumbered at integration.*
+  first chiral (p6) dual. *Numbering resolved at integration (2026-11-25):
+  the "duplicate §56" was an islamic-family artifact (najm §56 and
+  hankin §56 in PATTERNS.MD, both now in docs/families/islamic.md) —
+  kuniform.md never carried §56. This arc keeps its PATTERNS.MD §59.*
 - **The four duals (per cell):**
   - `kuniform-dual-n5` (det 9+6√3): 18 faces — 6 congruent
     quadrilaterals (the 3.4.6.4 orbit; sides (3+√3)/6, (1+√3)/2,
@@ -799,9 +803,10 @@ briefs cite them as `§N`.
   hand-transcribed dual geometry. Batch 3 is the first to leave the
   hexagonal 60° basis: it lands the family's first pmm- and cmm-duals,
   and the first dual of a non-flower hexagonal tiling (the n19 dual's
-  lattice is the primal's L9 itself). *Provisional number — this
-  fork's numbering is already out of sequence (duplicate §56), and the
-  M-number will be renumbered at integration.*
+  lattice is the primal's L9 itself). *Numbering resolved at integration
+  (2026-11-25): the "duplicate §56" was an islamic-family artifact (najm
+  §56 and hankin §56 in PATTERNS.MD, both now in docs/families/islamic.md)
+  — kuniform.md never carried §56. This arc keeps its PATTERNS.MD §61.*
 - **The three duals (per cell):**
   - `kuniform-dual-pmm` (rectangular a1 = (2,0), a2 = (0,√3),
     det 2√3): 3 faces — 1 rhombus (the 3.6.3.6 orbit — the shared

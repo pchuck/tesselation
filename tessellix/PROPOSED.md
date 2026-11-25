@@ -655,8 +655,8 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
   diffraction limit — the module header documents the scope). 8
   module tests; census 96 → 97 tilings, 108 → 109 memberships,
   Quasiperiodic 8 → 9, 674 → 682 tests (fork-local on 91dd843).
-  Details in docs/families/kuniform.md §62 (provisional number; renumber at
-  integration).
+  Details in docs/families/quasiperiodic.md §64 (the fork's provisional §62
+  was renumbered at integration; lib.rs documents the mapping).
 
 ### 8. Socolar 12-fold (and the shield tiling) — shield DONE (M51) ✅
 
