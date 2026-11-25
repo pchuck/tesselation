@@ -4,6 +4,32 @@ Live planning surface: the vetted-candidates queue
 (full dossiers in `PROPOSED.md`) and the cross-cutting research
 areas.
 
+## Medallion composition program (§24 — planned sprints, next when the queue runs dry)
+
+Two-level star-and-field compositions: high-degree medallions on
+periodic hosts, rays absorbed exactly, interstices filled by a
+complementary strap pattern. Full dossier in
+[PROPOSED §24](../PROPOSED.md); the sprint ladder:
+
+- **24a Medallion interface & catalog** — schema + exact re-derivations
+  of landed medallions (design doc first;
+  [brief](briefs/medallion-interface.md)). Conflict-free now; waits for
+  a strong/frontier slot.
+- **24b Hole-bearing substrates + boundary-matched inference** — the
+  core algorithm; ground-truth bar: reproduce M158/M161 cell tables
+  first. Subsumes the open 22b hole decomposition.
+- **24c (n,c)-monster medallion generator** (22e partial; {8,12},
+  {9,12}, {9,18} first) — catalog feed, any time after 24a.
+- **24d Composition families on periodic nets** — 2–3 registry
+  instances; inference-fill vs dual-net-fill compared. After 24b.
+- **24e Underdetermined-θ search** (22h partial) — after 24b maps the
+  freedom.
+- **24f Quasiperiodic medallion hosts** — gated behind CAP/A4 family
+  ownership.
+
+User-pinned: ground-truth-first · registry instances · periodic nets
+first.
+
 ## Proposed — vetted candidates
 
 The per-candidate research dossier — literature verification,

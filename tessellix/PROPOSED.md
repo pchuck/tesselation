@@ -48,6 +48,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 20 | Fractalizing k-uniform (2+√3 dodecagon) ✅ DONE (M110, same-plane limit-periodic family over 3.12.12 — not a substitution) | Quasiperiodic | substitution on uniform basis | M | P2 |
 | 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements ✅(M163); 22b Najm template-tiling generator ✅(M99); 22c rosette transform ✅(M99); 22d parquet deformations; 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite; 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
 | 23 | Bielefeld Tilings Encyclopedia survey — candidate clusters (golden-family Q(√φ), 8-fold Q(√2), 12-fold Q(√3), rep-tile/limit-periodic, generalized GLB binary §9-rescope, girih-family, pinwheel family, cubic/quartic field tiers) | mixed | see §23 | S–XL | P1/P2 |
+| 24 | Medallion composition program — parameterized medallion interface + hole-bearing substrates + boundary-matched inference; two-level star-and-field compositions on periodic nets (see §24) | Islamic/engine | composition generator | XL (staged) | P1 |
 
 \* golden-bee tilings are nonperiodic and (canonical form) quasiperiodic;
 confirm the diffraction claim during the spike before declaring.
@@ -1830,6 +1831,76 @@ can be adopted independently through the standard checklist.
     nearly-regular polygons as a flexibility trick; the "Altair"
     near-miss tiling (diss. Fig. 3.3) induces 4/5/6/7/8-pointed
     stars in one pattern.
+
+### 24. Medallion composition program — star-and-field two-level patterns (planned 2026-11-24)
+
+The program the foundation has been building toward: high-degree
+medallions (hexagrams {6/2}, dodecagrams {12/4}, rosettes, n-pointed
+stars, khatam rings) placed on a periodic grid/lattice, their rays
+absorbed by shapes that fit them exactly, and the interstitial space
+filled with an elaborate complementary strap pattern — generalizing
+the landed one-off medallion patterns (khatam M53–M56, najm M99,
+girih primitives M131–M134, Andritz M151–M160, WIS 12-fold M158,
+girih-14 M159, Darb-i Imam patch M161) into a **parameterized
+composition system**. Every landed asset the program needs exists:
+M57 `walls()` strap continuity over arbitrary hosts, M94 inference +
+M163 per-tile motif assignment with the exact ray-landing extension
+operator, the exact fields layer (M137/M139: K₇/K₉/K₁₅/L₁₀ over the
+quadratic fields), and the §22 render styles.
+
+User-pinned decisions (2026-11-24): **ground-truth-first** (the
+general algorithm must reproduce landed cell tables before it draws
+anything new), **registry instances** (compositions ship as tilings
+with full batteries, not a render-only layer), **periodic nets
+first** (Archimedean/Laves hosts + the landed 12/14-fold lattices;
+quasiperiodic hosts later).
+
+- **24a. Medallion interface & catalog** — the schema for self-contained
+  ornament modules: planar map on a declared convex hull + boundary
+  contact points + ray exit angles + internal figure, all in exact
+  fields; geometry-agnostic (absolute-geometry instances plug in later,
+  22f). Deliverable: design doc first, then exact re-derivations of
+  4–6 landed medallions as certification-style instances (khatam
+  4.8.8 star, {6/2} hexagram, {12/4} dodecagon rosette, girih decagon
+  panels, WIS 12-point star). No registry change.
+  - **Effort** L, **tier** strong (design doc) — brief
+    [medallion-interface](briefs/medallion-interface.md).
+- **24b. Hole-bearing substrates + boundary-matched inference** — the
+  core novel algorithm. Hypothesis: given a host substrate with
+  medallion-shaped holes whose boundary edges carry the medallion's
+  ray data (not free Hankin contacts), inference in the interstice
+  yields a consistent complementary pattern, and the classic two-level
+  patterns are instances. **Ground-truth bar: reproduce the M158 WIS
+  and M161 Darb-i Imam cell tables from the general path before
+  generating anything new.** Subsumes the open 22b item (generic hole
+  decomposition). Risk: existence/uniqueness of boundary-matched
+  solutions; where inference is underdetermined (free θ), document the
+  freedom instead of forcing a choice (feeds 24e).
+  - **Effort** XL, **tier** frontier-candidate (novel derivation),
+    after 24a.
+- **24c. (n,c)-monster medallion generator** (the 22e medallion source)
+  — overlapping regular n-gons fused at contact angles kπ/n (n ≤ 12,
+  2 ≤ c ≤ ⌈n/2⌉−2) as additional catalog entries in exact fields;
+  feeds 24a's catalog. Strange-star sets {8,12}, {9,12}, {9,18} first.
+  - **Effort** M each, **tier** strong.
+- **24d. Composition families on periodic nets** — unit cells with 2–3
+  medallion classes (dodecagon medallions at hexagon centers +
+  hexagrams at vertices, khatam rings, decagon-and-bowtie pairs);
+  ship 2–3 registry instances with the full battery. Test both
+  readings of "complementary fill": boundary-matched inference (24b)
+  vs dual-net fill in the interstice (`dual.rs` machinery). After 24b.
+  - **Effort** L per instance, **tier** worker/strong.
+- **24e. Underdetermined-θ search** (the 22h optimization tool, scoped)
+  — where 24b documents freedom, search (θ, contact position) against
+  an aesthetic objective (band-balance à la Castéra, crossing density);
+  validate against Bonner's documented corrections before trusting it.
+  - **Effort** L, **tier** strong, after 24b.
+- **24f. Quasiperiodic medallion hosts** — dodecagonal shield (M51) and
+  14-fold (M159) hosts with medallion-bearing patches. Gated behind
+  CAP/A4 file ownership (aperiodic/quasiperiodic families in flight).
+  - **Effort** XL, **tier** frontier.
+- **Enabler on demand:** fields-layer §8 items (K₁₆/K₂₀) if 16/20-fold
+  medallions enter the catalog.
 
 ## Adoption checklist (per AGENTS.md, per candidate)
 
