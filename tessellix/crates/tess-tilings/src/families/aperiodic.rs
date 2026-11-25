@@ -10,6 +10,7 @@
 use tess_core::classify::TilingClass;
 use tess_core::Registry;
 
+pub mod cap;
 pub mod domino;
 pub mod half_hex;
 pub mod hat;
@@ -24,6 +25,7 @@ pub mod turtle;
 /// The family's registry slice, in within-tab order.
 pub fn register(mut r: Registry) -> Registry {
     r = r.register(hat::HatTiling);
+    r = r.register(cap::CapTiling);
     r = r.register(turtle::TurtleTiling);
     r = r.register(spectre::SpectreTiling);
     r = r.register(taylor_socolar::TaylorSocolarTiling);
@@ -53,6 +55,19 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             source: Some("Smith et al."),
             year: Some("2023"),
             aperiodic_status: Some("einstein"),
+            translational: Some("aperiodic"),
+            ..TilingClass::EMPTY
+        },
+        "cap" => TilingClass {
+            families: &["Aperiodic"],
+            method: Some("cut-and-project (deformed metatile substitution)"),
+            inflation: Some("φ²"),
+            prototiles: Some(4),
+            reflections: Some(false),
+            chirality: Some("homochiral"),
+            source: Some("Baake, Gähler & Sadun"),
+            year: Some("2023"),
+            aperiodic_status: Some("aperiodic; pure point spectrum"),
             translational: Some("aperiodic"),
             ..TilingClass::EMPTY
         },
@@ -163,6 +178,7 @@ mod census {
     /// registered).
     const IDS: &[&str] = &[
         "hat",
+        "cap",
         "turtle",
         "spectre",
         "taylor-socolar",
@@ -179,7 +195,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            10,
+            11,
             "aperiodic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
@@ -257,6 +273,70 @@ mod hat_tests {
         check_det(
             &hat::HatTiling,
             "hat",
+            BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
+        );
+    }
+}
+
+#[cfg(test)]
+mod cap_tests {
+    use super::cap;
+    use crate::tests::{check_coverage, check_det, check_rotated};
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::{ParamSet, ParamValue};
+    use tess_core::tiling::Tiling;
+
+    fn v2(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    #[test]
+    fn cap_covers_region() {
+        let t = cap::CapTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        check_coverage(&t, "cap", &p, BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)));
+    }
+
+    /// Seeded coverage generalizes across anchor cells: large and
+    /// far-from-origin views (different 96-grid anchors, exercising the
+    /// per-generation deformation gauge) are covered too.
+    #[test]
+    fn cap_covers_large_and_distant_views() {
+        let t = cap::CapTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(crate::lattice::SCALE_ID, ParamValue::Float(1.0));
+        for (cx, cy, w, h) in [
+            (47.3, -91.2, 40.0, 30.0),
+            (-133.0, 71.0, 60.0, 45.0),
+            (90.0, -40.0, 90.0, 66.0),
+            (483.0, 217.0, 30.0, 22.0),
+        ] {
+            check_coverage(
+                &t,
+                "cap",
+                &p,
+                BBox::new(v2(cx - w, cy - h), v2(cx + w, cy + h)),
+            );
+        }
+    }
+
+    #[test]
+    fn cap_rotated_scaled() {
+        check_rotated(
+            &cap::CapTiling,
+            "cap(rot25,scale0.6)",
+            BBox::new(v2(-7.0, -7.0), v2(7.0, 7.0)),
+            0.6,
+            25.0,
+        );
+    }
+
+    #[test]
+    fn cap_deterministic() {
+        check_det(
+            &cap::CapTiling,
+            "cap",
             BBox::new(v2(-5.0, -5.0), v2(5.0, 5.0)),
         );
     }

@@ -238,9 +238,15 @@ the "mixed floret/cairo/prismatic" patterns.
   the projection generator below (the wheel is canonically
   cut-and-project) or a static W_0 patch; the inert `wheel = []`
   feature stays registered for a future CPS milestone (PROPOSED.md #8).
-- ❓ **Projection (cut-and-project) generator class** — window-based
-  generation for rhombus tilings (Penrose, AB, 12-fold) as an
-  alternative to substitution; would validate patches independently.
+- ✅ **Projection (cut-and-project) generator class — first instance
+  landed (M166):** `cap` — the Baake–Gähler–Sadun cut-and-project
+  tiling (arXiv:2305.05639), the D-map deformation of the hat metatile
+  lineage with shape vector (3φ, 3φ, 1, φ+ξ, 2φ) = a φ² left
+  eigenvector of σ̃₁ ⇒ LIDS; exact integer abcd arithmetic, floats
+  only at emission ([brief](briefs/cap-cut-project.md),
+  [design doc](../cap-cut-project-design.md)). The generic class
+  (window-based generation for Penrose/AB/12-fold as an alternative
+  to substitution) remains open.
 - ❓ **Random/statistical tilings** — lozenge (rhombille with random
   heights), square–triangle, Truchet mazes. Blocked on a determinism
   policy: would need a seeded-RNG parameter (`ParamSpec::Int`) and a

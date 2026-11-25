@@ -89,7 +89,7 @@ text and the complete table — is in
 
 ## Supported tilings
 
-162 built-in tilings (183 tab memberships), all discoverable in both UIs
+163 built-in tilings (184 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -110,7 +110,8 @@ Stampfli, shield, golden bee, golden triangle, golden rhomboid,
 fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7, Andritz
 bowtie-hexagon, Andritz 10gon-1, Andritz 10gon-2, Andritz 10gon-3,
 fibonacci-fibonacci,
-wis 12-fold, girih 14-fold), **Aperiodic** (11: einstein family, pinwheel,
+wis 12-fold, girih 14-fold), **Aperiodic** (12: einstein family, CAP
+cut-and-project, pinwheel,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
 (table), period-doubling, thue-morse, period-tripling), and
 **Nonperiodic** (11: limit-periodic rep-tiles, Hirschhorn,
@@ -146,7 +147,7 @@ Pythagorean two-square family takes the **square ratio** b/a
 | [Islamic](docs/families/islamic.md) | 34 | girih strapwork panels, Hankin/PIC ornament, khatam + najm templates, Andritz fivefold substitutions, the Darb-i Imam decagon documentary patch |
 | [Arrangements](docs/families/arrangements.md) | 3 | Pythagorean two-square, periodic pinwheel spin, pinwheel substitution |
 | [Quasiperiodic](docs/families/quasiperiodic.md) | 16 | Penrose family, Ammann–Beenker, Stampfli, shield, golden A2 members, GLB binary n = 7, fibonacci product, WIS 12-fold, girih 14-fold |
-| [Aperiodic](docs/families/aperiodic.md) | 10 | einstein family (hat, turtle, spectre), Wang tiles, Taylor-Socolar, limit-periodic substitution set |
+| [Aperiodic](docs/families/aperiodic.md) | 11 | einstein family (hat, turtle, spectre), CAP cut-and-project, Wang tiles, Taylor-Socolar, limit-periodic substitution set |
 | [Nonperiodic](docs/families/reptiles.md) | 10 | rep-tiles (chair, armchair, sphinx, P-pentomino, tangram, octiamond + pentiamonds), pregnant-chair |
 | [Isohedral types](docs/families/isohedral.md) | 5 | parameterized isohedral (IH) types — incidence symbols over their topologies with exact per-orbit shaped edges (the Escher arc; design doc docs/isohedral-generator-design.md) |
 

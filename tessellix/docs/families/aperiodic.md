@@ -8,13 +8,14 @@ Adding a tiling here touches only this family: `families/aperiodic.rs`
 `lattice_tilings` entries) plus the new module and its doc row below.
 Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 
-## Implemented (10 tilings)
+## Implemented (11 tilings)
 
 ### Aperiodic monotiles and tile sets
 
 | id | motif | notes |
 |---|---|---|
 | `hat` | Hat (aperiodic monotile, "einstein") | SMKG 2023; H/T/P/F metatile substitution (29-rule patch, 22 kept), exact Eisenstein placements; inflation φ² only in the limit (iterated outlines drift by design); tiles only with its mirror image; per-view seeded lineage blobs with exact clipped-area acceptance; non-edge-to-edge (565 midpoint T-junctions at depth 3) |
+| `cap` | CAP (cut-and-project tiling) | BGS 2023 (arXiv:2305.05639); the four hat metatiles with edge displacements (3φ, 3φ, 1, φ+ξ, 2φ) — a D-map deformation of the hat lineage, exact in ℤ[ξ,φ]; aperiodic, homochiral (6 orientations, no reflections), inflation φ² (LIDS), MLD to the φ²-rescaling, pure point spectrum; per-view BFS deformation with exact clipped-area acceptance |
 | `turtle` | Turtle ("hats in turtles", einstein family) | turtle (14 sides, area 10√3) + hat prototiles on Kaplan's exact hex lattice; 9-label 8+1 key-point substitution with per-level chirality flip; homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge; turtle:hat ratio → 4+√15 |
 | `spectre` | Spectre (chiral einstein Tile(1,1)) | single equal-edge prototile, aperiodic *without* reflections; 9-label D12 substitution (spectre.js-identical), exact Q(√3) surd geometry; edge-to-edge |
 | `taylor-socolar` | Taylor-Socolar striped hexagon (decorated-hexagon monotile) | the paper's forced 529-hexagon patch (Fig. 18 of arXiv:1008.3103) as a verbatim state table, each hexagon partitioned into 8 non-overlapping convex sub-polygons carrying one thick vertex-to-vertex chord plus a centre-split axis (2 chord-band halves + 2 axis half-bands + 2 body pentagons + 2 body triangles, 12 templates); the chords close into complete equilateral Taylor triangles on three scales (60 / 12 / 2 of side √3, 3√3, 7√3), and the state rules stay exact (R1 0/2992, R2 0/2816, R3 0/2904 re-derived in tests); finite covered patch (girih precedent), no period within hex-radius 30 |
@@ -368,6 +369,7 @@ briefs cite them as `§N`.
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
 
 - [`hat`](../tilings/hat.md) — Hat (aperiodic monotile)
+- [`cap`](../tilings/cap.md) — CAP (cut-and-project tiling)
 - [`turtle`](../tilings/turtle.md) — Turtle (hats in turtles, einstein family)
 - [`spectre`](../tilings/spectre.md) — Spectre (chiral einstein, Tile(1,1))
 - [`taylor-socolar`](../tilings/taylor-socolar.md) — Taylor-Socolar striped hexagons

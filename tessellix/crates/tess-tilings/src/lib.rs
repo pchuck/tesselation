@@ -237,7 +237,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations — both no census movement). 162 built-ins — 63 before
+// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations — both no census movement; M166 = CAP tiling, Aperiodic 11 -> 12). 163 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the eleven tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -248,8 +248,8 @@ mod tests {
         //   catalog — one card per represented group; M85 completed it),
         //   Isohedral 5 (the Kaplan IH instances, primary since the
         //   2026-11-24 tab chore), PentagonTypes 17, Islamic 29,
-        //   Arrangements 8, Quasiperiodic 21, Aperiodic 11, Nonperiodic 11.
-        // Membership census 183 = 162 primaries + 21 secondaries
+        //   Arrangements 8, Quasiperiodic 21, Aperiodic 12, Nonperiodic 11.
+        // Membership census 184 = 163 primaries + 21 secondaries
         // (3 regular Laves + 5 isohedral->Laves + 9 Wallpaper
         // + 2 typed PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5), M122 + 2 untyped
@@ -410,14 +410,21 @@ mod tests {
         // hankin-hex-motifs, najm-63-motifs — the Kaplan §3.5
         // design-element motif library; per-tile motif assignment;
         // docs/families/islamic.md §67).
+        // -> M166 Aperiodic 11 -> 12 (cap — the Baake–Gähler–Sadun
+        // cut-and-project tiling, arXiv:2305.05639: the D-map
+        // deformation of the hat metatile lineage as a TRUE
+        // cut-and-project with shape vector (3φ, 3φ, 1, φ+ξ, 2φ),
+        // a φ² left eigenvector of σ̃₁ ⇒ LIDS; exact integer abcd
+        // arithmetic, floats only at emission;
+        // docs/tilings/cap.md + aperiodic.md).
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 20, 33, 17, 17, 5, 29, 8, 21, 11, 11],
+vec![11, 20, 33, 17, 17, 5, 29, 8, 21, 12, 11],
             "per-tab census (update when adding tilings)"
         );
-assert_eq!(r.len(), 162, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 183, "membership census (update when adding tilings)");
+assert_eq!(r.len(), 163, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 184, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely

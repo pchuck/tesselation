@@ -28,7 +28,7 @@ tiling, shared cross-cutting reference docs, and frozen history.
 | laves | [docs/families/laves.md](families/laves.md) | 8 | 1 |
 | kuniform | [docs/families/kuniform.md](families/kuniform.md) | 37 | 14 |
 | reptiles | [docs/families/reptiles.md](families/reptiles.md) | 10 | 2 |
-| aperiodic | [docs/families/aperiodic.md](families/aperiodic.md) | 10 | 5 |
+| aperiodic | [docs/families/aperiodic.md](families/aperiodic.md) | 11 | 6 |
 | pavers | [docs/families/pavers.md](families/pavers.md) | 14 | 8 |
 | islamic | [docs/families/islamic.md](families/islamic.md) | 34 | 13 |
 | isohedral | [docs/families/isohedral.md](families/isohedral.md) | 5 | 0 |

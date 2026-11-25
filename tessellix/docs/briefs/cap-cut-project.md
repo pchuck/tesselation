@@ -102,3 +102,8 @@ except the two orchestrator census guards (verbatim capture). Before
 any edit: `pwd` + `git log -1 --format="%h %s"` — verify the
 cap-cut-project-impl worktree; report your base's HEAD in the final
 report.
+---
+**Status: ✅ LANDED as M166 (2026-11-24)** — true cut-and-project construction
+landed in `families/aperiodic/cap.rs` (exact integer abcd arithmetic; D-map
+deformation of the hat metatile lineage; shape vector a φ² left eigenvector
+of σ̃₁ ⇒ LIDS). 11 cap tests + census deltas integrated by the orchestrator.

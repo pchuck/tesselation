@@ -1114,9 +1114,9 @@ mod tests {
         // tab plus every secondary tab, so the tab sizes sum to the
         // 183 memberships of the 162 registered tilings, not to 162.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 183, "162 tilings carry 183 tab memberships");
+        assert_eq!(total, 184, "163 tilings carry 184 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 20, 33, 17, 17, 5, 29, 8, 21, 11, 11]);
+        assert_eq!(counts, vec![11, 20, 33, 17, 17, 5, 29, 8, 21, 12, 11]);
     }
 
     #[test]
@@ -1192,7 +1192,7 @@ mod tests {
 ("Islamic", 29),
             ("Arrangements", 8),
             ("Quasiperiodic", 21),
-            ("Aperiodic", 11),
+            ("Aperiodic", 12),
             ("Nonperiodic", 11),
         ] {
             assert!(
