@@ -46,7 +46,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 18 | n-fold rhomb family (7-fold GS/Harriss, CAST) | Quasiperiodic | degree-3 arithmetic | L+ | P2 |
 | 19 | Second measured ornamental panel | Wallpaper | M35 pipeline | M–L | P2 |
 | 20 | Fractalizing k-uniform (2+√3 dodecagon) ✅ DONE (M110, same-plane limit-periodic family over 3.12.12 — not a substitution) | Quasiperiodic | substitution on uniform basis | M | P2 |
-| 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements ✅(M163); 22b Najm template-tiling generator ✅(M99); 22c rosette transform ✅(M99); 22d parquet deformations; 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite; 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
+| 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements ✅(M163); 22b Najm template-tiling generator ✅(M99); 22c rosette transform ✅(M99); 22d parquet deformations; 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite ✅(M164); 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
 | 23 | Bielefeld Tilings Encyclopedia survey — candidate clusters (golden-family Q(√φ), 8-fold Q(√2), 12-fold Q(√3), rep-tile/limit-periodic, generalized GLB binary §9-rescope, girih-family, pinwheel family, cubic/quartic field tiers) | mixed | see §23 | S–XL | P1/P2 |
 | 24 | Medallion composition program — parameterized medallion interface + hole-bearing substrates + boundary-matched inference; two-level star-and-field compositions on periodic nets (see §24) | Islamic/engine | composition generator | XL (staged) | P1 |
 
@@ -1821,6 +1821,19 @@ can be adopted independently through the standard checklist.
     `tess_core::strapwork` layer mode first; implement the missing
     styles/controls rather than a parallel system.
   - **Effort** M, **tier** P1 (after the audit).
+  - **Status: ✅ LANDED as M164 (2026-11-24).** Phase-A audit
+    delivered (24 substrates × 8 δ, two windows, 192/192 agreement:
+    12 even-degree rows, every classic δ clean with χ=0 torus
+    folds); styles implemented in `strapwork.rs` (map/strands/
+    parity/faces/mitres/breaks) + `render_svg_decorated` in
+    `svg.rs` + `--decoration/--band-w` CLI; registered-module
+    cross-check passed (wall segments ≡ partition edges 640/668/
+    1030; faces ≡ cells 301/301/491, area gap ≤ 5.3e-15); fill
+    colour classes translation-invariant (1518 comparisons, 0
+    failures). Deviations documented in the brief report
+    (region-gated preconditions replace the bbox margin; strand
+    walks turn at deg-2 corners). Castéra band widths and the
+    fill-underlay composition remain open follow-ups.
 - **22h. Moroccan finite designs; optimization-based motif
   correction; strange stars** — diss. §3.11. Research tier ❓:
   - Castéra's Moroccan/Andalusi tradition: finite designs around one

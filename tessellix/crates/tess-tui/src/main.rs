@@ -8,12 +8,27 @@
 //!     [--param ID=VALUE ...]       set a tiling parameter (see `list`)
 //!     [--strapwork DEG]            overlay the Hankin PIC strapwork walls
 //!                                  at contact angle DEG on the tiling
+//!     [--decoration STYLE]         render a Kaplan §3.7 decoration style
+//!                                  over the strapwork walls instead of the
+//!                                  tiling itself: fill | outline |
+//!                                  interlace | outline-interlace.
+//!                                  Requires --strapwork; --mode is
+//!                                  ignored (the decoration paints paper
+//!                                  + pattern only). Styles whose wall-map
+//!                                  preconditions the contact angle does
+//!                                  not meet (Kaplan §3.7.1/§3.7.3) fail
+//!                                  with an honest error naming the angle
+//!                                  regime — classic contact angles close
+//!                                  the weave, generic ones do not.
+//!     [--band-w W]                 band width in world units for the
+//!                                  decoration (default 0.1 at scale 1)
 
 mod app_ui;
 mod raster;
 mod thumb;
 
 use tess_core::params::{ParamKind, ParamValue};
+use tess_core::strapwork::Decoration;
 use tess_core::view::ColorMode;
 
 fn main() {
@@ -42,6 +57,7 @@ fn list() -> Result<(), String> {
     Ok(())
 }
 
+#[derive(Debug)]
 struct ExportArgs {
     tiling: String,
     width: u32,
@@ -52,6 +68,8 @@ struct ExportArgs {
     mode: ColorMode,
     params: Vec<(String, String)>,
     strapwork: Option<f64>,
+    decoration: Option<Decoration>,
+    band_w: f64,
 }
 
 /// Parse a float CLI value, rejecting NaN and infinities: they would
@@ -64,7 +82,9 @@ fn finite(v: &str, what: &str) -> Result<f64, String> {
     Ok(f)
 }
 
-fn export(args: &[String]) -> Result<(), String> {
+/// Parse + validate export arguments. Kept free of registry or filesystem
+/// access so the error paths are unit-testable.
+fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
     let mut a = ExportArgs {
         tiling: String::new(),
         width: 1200,
@@ -75,6 +95,8 @@ fn export(args: &[String]) -> Result<(), String> {
         mode: ColorMode::Pattern,
         params: Vec::new(),
         strapwork: None,
+        decoration: None,
+        band_w: 0.1,
     };
     let mut i = 0;
     let next = |i: &mut usize| -> Result<String, String> {
@@ -110,6 +132,16 @@ fn export(args: &[String]) -> Result<(), String> {
                 a.mode = ColorMode::parse(&next(&mut i)?).ok_or_else(|| "bad --mode".to_string())?
             }
             "--strapwork" => a.strapwork = Some(finite(&next(&mut i)?, "--strapwork")?),
+            "--decoration" => {
+                let v = next(&mut i)?;
+                a.decoration = Some(Decoration::parse(&v).ok_or_else(|| {
+                    format!(
+                        "bad --decoration '{v}': \
+                         expected fill | outline | interlace | outline-interlace"
+                    )
+                })?);
+            }
+            "--band-w" => a.band_w = finite(&next(&mut i)?, "--band-w")?,
             "--param" => {
                 let v = next(&mut i)?;
                 let (id, value) = v
@@ -132,6 +164,20 @@ fn export(args: &[String]) -> Result<(), String> {
     if a.scale <= 0.0 {
         return Err("--scale must be a positive number".into());
     }
+    if a.decoration.is_some() && a.strapwork.is_none() {
+        return Err(
+            "--decoration requires --strapwork DEG (the decoration decorates the strapwork walls)"
+                .into(),
+        );
+    }
+    if a.band_w <= 0.0 {
+        return Err("--band-w must be a positive number".into());
+    }
+    Ok(a)
+}
+
+fn export(args: &[String]) -> Result<(), String> {
+    let a = parse_export(args)?;
 
     let registry = tess_tilings::registry();
     let tiling = registry
@@ -195,8 +241,91 @@ fn export(args: &[String]) -> Result<(), String> {
         Some(delta) => tess_core::strapwork::walls(&result.tiles, delta),
         None => Vec::new(),
     };
-    let svg = tess_core::svg::render_svg_with_walls(&result.tiles, &region, a.mode, &walls);
+    // Decoration styles (Kaplan §3.7) replace the tiling render with
+    // paper + decorated walls. The gates run on the view region itself:
+    // the coverage contract keeps every unshared host edge (the source
+    // of rim artefacts) outside it, so only genuine openings fail. The
+    // hairline inset drops vertices that sit exactly on the region edge.
+    let svg = match a.decoration {
+        Some(style) => {
+            let plan = tess_core::strapwork::plan_decoration(
+                &walls,
+                a.band_w,
+                style,
+                &region.padding(-1e-9),
+            )
+            .map_err(|e| e.to_string())?;
+            tess_core::svg::render_svg_decorated(&region, &plan)
+        }
+        None => tess_core::svg::render_svg_with_walls(&result.tiles, &region, a.mode, &walls),
+    };
     std::fs::write(&a.out, svg).map_err(|e| format!("failed to write {}: {e}", a.out))?;
     println!("wrote {} ({} tiles)", a.out, result.tiles.len());
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_export;
+
+    fn args(v: &[&str]) -> Vec<String> {
+        v.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn decoration_flags_parse() {
+        let a = parse_export(&args(&[
+            "--tiling",
+            "square",
+            "--strapwork",
+            "45",
+            "--decoration",
+            "interlace",
+            "--band-w",
+            "0.2",
+        ]))
+        .expect("valid decoration flags");
+        assert_eq!(a.decoration, Some(tess_core::strapwork::Decoration::Interlace));
+        assert_eq!(a.band_w, 0.2);
+        assert_eq!(a.strapwork, Some(45.0));
+        // Defaults: no decoration, band 0.1.
+        let d = parse_export(&args(&["--tiling", "square"])).expect("defaults");
+        assert!(d.decoration.is_none());
+        assert_eq!(d.band_w, 0.1);
+    }
+
+    #[test]
+    fn decoration_errors_are_honest_and_pre_generation() {
+        let e = parse_export(&args(&["--tiling", "square", "--decoration", "weave"])).unwrap_err();
+        assert!(e.contains("bad --decoration"), "{e}");
+        assert!(e.contains("fill | outline | interlace | outline-interlace"), "{e}");
+        let e = parse_export(&args(&["--tiling", "square", "--decoration", "fill"])).unwrap_err();
+        assert!(e.contains("--decoration requires --strapwork"), "{e}");
+        let e = parse_export(&args(&[
+            "--tiling",
+            "square",
+            "--strapwork",
+            "45",
+            "--decoration",
+            "fill",
+            "--band-w",
+            "0",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("--band-w"), "{e}");
+        let e = parse_export(&args(&[
+            "--tiling",
+            "square",
+            "--strapwork",
+            "45",
+            "--decoration",
+            "fill",
+            "--band-w",
+            "nan",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("--band-w"), "{e}");
+        // All of these fire inside parse_export — before any registry or
+        // filesystem access (unknown tiling `square` never reached).
+    }
 }

@@ -109,12 +109,14 @@ the "mixed floret/cairo/prismatic" patterns.
   the same construction; absolute trig Θ(x), E(x), T(x); absolute
   star θ = π/2 − φ, tan φ = 1/(E(r)tan(πd/n)); symmetrohedra by
   convex hull. Merges with and de-risks the hyperbolic arc (#16).
-- 🔭 **22g Decoration suite completion** — §3.7 styles audited
-  against the M53–M57 engine: bipartite 2-colour fill, equidistant-
-  curve outlines with mitered joins (Θ(l) = Θ(w)/sin(θ/2)),
-  interlacing fixed on the [p,q]⁺ double fundamental map,
-  outline-interlace composition; Castéra's "correct" band widths as
-  an open derivation.
+- ✅ **22g Decoration suite (M164)** — §3.7 styles over the M57
+  engine: bipartite 2-colour fill, mitered outline bands
+  (l = d/sin(θ/2), spike-pinned 1e-9), interlacing via strand-parity
+  alternation proven lattice-consistent by ±2-cell torus folds on
+  every classic-δ substrate, outline-interlace composition;
+  region-gated preconditions with honest per-style errors; Phase-A
+  δ-regime audit (12/192 even-degree rows, all classic δ clean).
+  Castéra's "correct" band widths remain an open derivation.
 - ❓ **22h Moroccan finite designs; optimization-based motif
   correction; strange stars** — Castéra star+saft skeletons (up to
   96-point stars), search over an aesthetic objective to replace
