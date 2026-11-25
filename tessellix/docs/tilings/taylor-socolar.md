@@ -2,12 +2,12 @@
 
 `taylor-socolar` · family [Aperiodic](../families/aperiodic.md) (`aperiodic`)
 
-aperiodic decorated-hexagon monotile (Taylor & Socolar, arXiv:1008.3103); the paper's forced 529-hexagon patch (its Fig. 18), each hexagon partitioned into 8 decorated sub-polygons carrying the canonical chord + split-axis decoration (one thick vertex-to-vertex chord plus a centre-split red/blue axis) whose chords close into nested equilateral Taylor triangles, state rules realized exactly (R1 0/2992, R2 0/2816, R3 0/2904, re-derived in tests); finite covered patch, no period within hex-radius 30
+aperiodic decorated-hexagon monotile (Taylor & Socolar, arXiv:1003.4279); **plane-filling** CHT closed-form presentation (M168): `generate` serves the whole plane — per-site O(1) state assignment reproducing the paper's forced 529-hexagon patch (its Fig. 18) state-for-state, each hexagon partitioned into 8 decorated sub-polygons carrying the canonical chord + split-axis decoration whose chords close into nested equilateral Taylor triangles, state rules realized exactly (R1 0/2992, R2 0/2816, R3 0/2904 on the shipped patch; zero R1/R2/R3 violations on hex windows R=6/8/10/14 extending beyond it)
 
 ## Algorithm
 
 **Taylor-Socolar striped hexagon** (`taylor_socolar.rs`) — the
-  decorated-hexagon aperiodic monotile (arXiv:1008.3103), ported as a
+  decorated-hexagon aperiodic monotile (arXiv:1003.4279), ported as a
   data table from the audited upstream study (M86; decoration reworked
   in M86-fix to the canonical closed-triangle form): the paper's forced
   529-site patch (Fig. 18) with its 12 tile states `(a, rbt, sdt)`,
@@ -25,8 +25,17 @@ aperiodic decorated-hexagon monotile (Taylor & Socolar, arXiv:1008.3103); the pa
   12 of side 3√3, 2 of side 7√3) and every band colour is
   state-determined. The
   underlying rules are unchanged and re-derived in tests (R1 0/2992,
-  R2 0/2816, R3 0/2904). The covered
-  domain is the finite patch (girih precedent), not the plane.
+  R2 0/2816, R3 0/2904). **M168 plane upgrade:** the covered domain is
+  the whole plane — the paper's CHT (centered hexagonal tiling)
+  realized by the §5 closed form (mirror frame `w = (v−1,u)`, min-v2
+  level/key, the 3-entry axis table, panel decomposition with signed
+  `div_euclid` floor division, the 12-ray paper-folding free-bit
+  table; center `c = (0,1)`, state `(0,0,1)`), O(1) per site, O(window)
+  emission. Certification: the closed form reproduces the shipped patch
+  **529/529**; Thm-5 parity + per-bit identities 440/440; Pfold ≡
+  A014577 64/64; zero R1/R2/R3 violations on hex windows R=6/8/10/14
+  (the windows extend beyond the old rhombus in all directions); only
+  cstate `(0,0,1)` is R1=R2=0 (the other 11 are test-only).
 
 ## See also
 

@@ -4,21 +4,36 @@
 //!
 //! # What is generated
 //!
-//! The paper's **forced finite patch** of 529 hexagons (its Figure 18: a
-//! 23×23 rhombus of hexagon sites in axial coordinates `(u, v)`, with
-//! `u + v + 21 ∈ [0, 22]` and `v ∈ [−21, 1]`), each site carrying one of the
-//! paper's 12 tile states `(a, rbt, sdt)` — `a ∈ Z3` the stripe-axis class,
-//! `rbt` which end of the polar vertex pair is red, `sdt` the stripe-offset
-//! bit. The state table is transcribed verbatim from the study's
-//! `ap_ts_patch.json`; nothing is re-derived and no coordinate is
-//! hand-copied: the state table comes from `m86_gen.py` and the decoration
-//! tables are machine-emitted by `m86fix_emit.py` from an exact `Q(√3)`
-//! model, both checked to 1e−9 by float evaluation).
+//! The paper's **plane-filling centered hexagonal tiling** (CHT) — the
+//! decorated-hexagon aperiodic monotile of Taylor and Socolar (arXiv:1008.3103),
+//! the specific member of the CHT local-isomorphism class that contains its
+//! forced 529-hexagon patch (its Figure 18: a 23×23 rhombus of hexagon sites
+//! in axial coordinates `(u, v)`, with `u + v + 21 ∈ [0, 22]` and
+//! `v ∈ [−21, 1]`). Every site of the whole plane carries one of the paper's
+//! 12 tile states `(a, rbt, sdt)` — `a ∈ Z3` the stripe-axis class, `rbt`
+//! which end of the polar vertex pair is red, `sdt` the stripe-offset bit.
 //!
-//! The covered domain is that **finite patch**, not the plane: as with the
-//! girih patches, `generate` returns exactly the tiles intersecting the
-//! query region, and a query reaching beyond the patch boundary legitimately
-//! returns only the patch tiles that reach into it, with background beyond.
+//! The state assignment is the paper's `§5` closed form (exact integer
+//! arithmetic; per-site O(1): trailing-zeros level/key + the axis table
+//! `Ta` + the §5 panel decomposition with signed floor division + the 12-ray
+//! Pfold free-bit table), pinned against the shipped 529-site table
+//! (529/529 agreement) and against the module's R1/R2/R3 handoff battery on
+//! hex windows centered at the CHT center `c = (0, 1)` (R1/R2/R3 = 0 on
+//! R=6/8/10/14 — the paper's CHT, not an island). The shipped patch is still
+//! carried as a data table — `SITES` — and is what the module's in-module
+//! tests (`taylor_socolar_handoff_battery`, the chord/triangle censuses, the
+//! no-period probe) re-derive; the generator never reads it.
+//!
+//! Each hexagon is partitioned into the same **8 convex pieces** and drawn
+//! by the same **12 templates** as the patch was; the decoration is
+//! unchanged, so the generator is a semantics/coverage upgrade, not new
+//! geometry.
+//!
+//! The covered domain is the whole plane: `generate` returns exactly the
+//! tiles intersecting the query region (the tess-core contract), for any
+//! region up to the `MAX_TILES` budget. The central site `c = (0, 1)` keeps
+//! the shipped central state `(a, rbt, sdt) = (0, 0, 1)`; every other site's
+//! state comes from the closed form above.
 //!
 //! # Decoration: chord + split axis, closing the Taylor triangles
 //!
@@ -102,26 +117,29 @@
 //! * No-period probe: of the 2790 nonzero lattice translations of hex-radius
 //!   `<= 30`, none leaves the patch's state assignment invariant on an
 //!   overlap of three or more sites.
-//! * The standard coverage trio inside the patch (an axis-aligned window and
-//!   a 0.6-scaled / 25°-rotated window, both verified exactly-once upstream),
-//!   determinism, and empty output beyond the patch.
+//! * The standard coverage trio plus a large view well outside the old
+//!   rhombus (every sampled point covered exactly once, clipped-area equality
+//!   to 1e-6 relative), determinism, and a beyond-patch disjoint-window
+//!   coverage test.
 //!
 //! # Scope honesty — cited, not reproduced
 //!
 //! Aperiodicity of the full plane tiling, the two local-isomorphism classes
 //! and the limit-periodic structure are cited from Taylor–Socolar
 //! (arXiv:1008.3103); this port proves nothing about them beyond the radius-30
-//! no-period probe on the shipped patch. The inflation/deflation hierarchy is
-//! NOT reproduced at all (the study's algebraic fit of the inflation aligns
-//! only 57.6% of sites, so it is not even verified here), and neither is the
-//! claim that this patch sits inside a unique plane tiling — the patch is
-//! genuine in the sense that the study's solver extends it (R9→R10) with zero
-//! backtracks under rules R1–R3, which is a *local-rule* statement.
+//! no-period probe on the shipped patch and the zero R1/R2/R3 census on the
+//! hex windows. The study's algebraic inflation fit aligned only 57.6% of
+//! sites because its convention search missed the corner center `c = (0, 1)`
+//! + the mirror frame — the pinned closed form resolves the admission: the
+//! off-spoke identity is exact (440/440), the full state reproduces the patch
+//! 529/529, and the hex windows are R1/R2/R3-clean (R=6/8/10/14). The
+//! inflation/deflation hierarchy itself is NOT reproduced — the paper's §2
+//! level-by-level argument is the correctness certificate for the closed
+//! form, not a lookup procedure.
 //!
 //! * Band width `W/R = 0.2` is a compromise of the reference figures'
 //!   measured bands (`HLR_trap.jpg` ≈ 0.19–0.21, `Hex_tiling_3digit.jpg`
-//!   ≈ 0.12); the shipped object is one finite patch drawn once, so no
-//!   scale family is claimed.
+//!   ≈ 0.12); one decoration scale is drawn, so no scale family is claimed.
 
 use tess_core::geometry::{BBox, Polygon, Vec2};
 use tess_core::params::{ParamSet, ParamSpec};
@@ -142,7 +160,9 @@ const DU: i8 = 0;
 const DV: i8 = 10;
 
 /// The 529 patch sites, verbatim from `ap_ts_patch.json`:
-/// `(u, v, state)` with `state = a + 3*rbt + 6*sdt`.
+/// `(u, v, state)` with `state = a + 3*rbt + 6*sdt`. Kept for tests only —
+/// the plane presentation no longer reads it at generation time.
+#[cfg(test)]
 const SITES: [(i8, i8, u8); 529] = [
     (-22, 1, 10),
     (-21, 0, 9),
@@ -1612,10 +1632,172 @@ const T51: [Piece; 8] = [
 ];
 
 /// Site centre in patch coordinates (before the scale/rotation map).
-fn centre(u: i8, v: i8) -> Vec2 {
+fn centre(u: i32, v: i32) -> Vec2 {
     let uu = f64::from(u) + f64::from(DU);
     let vv = f64::from(v) + f64::from(DV);
     Vec2::new(SQ3 * (uu + 0.5 * vv), 1.5 * vv)
+}
+
+// ── CHT closed form (pinned, arXiv:1008.3103 §5) ────────────────────────────
+//
+// Exact integer arithmetic (floats only at emission): a total O(1)-per-site
+// closed form. Per site x = (u, v), x != c:
+//   1. frame m0 (mirror frame about the CHT centre c = (0, 1)): w = (v - 1, u);
+//   2. level/key s = min(v2(u_w), v2(v_w)), P = w >> s, axis
+//      a = Ta[(P_u & 1, P_v & 1)]  (key (0, 0) unreachable: after the min-v2
+//      shift at least one coordinate is odd — no fallback, no sentinel);
+//   3. off-spoke sites: §5 panel decomposition (signed floor division) +
+//      rbt = pRB ^ (a == 1), sdt = pBS ^ (a == 1);
+//   4. on-spoke sites: free bit = Pfold(i) ^ b, companion bit = c,
+//      i = signed spoke coordinate (i1 -> u_w, i2 -> v_w, i3 -> -u_w - v_w);
+//      the j0 lines (RB lines, Lemma-8 side) carry FREE rbt; the jp lines
+//      (stripe lines, Lemma-7 side) carry FREE sdt.
+// The shipped central state (a, rbt, sdt) = (0, 0, 1) at c = (0, 1); every
+// other site's state comes from the closed form above.
+
+/// The CHT centre — a rhombus corner of the shipped patch, carried with
+/// the shipped central state (0, 0, 1).
+const CHT_C: (i32, i32) = (0, 1);
+
+/// Trailing-zeros level: v2(n), with n == 0 special-cased to the sentinel
+/// 60 (the min-v2 shift never actually divides by it at a well-defined site).
+#[inline]
+fn v2_of(n: i64) -> u32 {
+    if n == 0 {
+        60
+    } else {
+        (n.abs() as u64).trailing_zeros()
+    }
+}
+
+/// Q(n) = 2^v2(n) (the pinned level key); 2^60 (the v2(0) sentinel) for 0.
+#[inline]
+fn q_of(n: i64) -> u64 {
+    if n == 0 {
+        1u64 << 60
+    } else {
+        1u64 << v2_of(n)
+    }
+}
+
+/// Pfold(i) = mod2(i / Q(|2i|)), Pfold(0) = 0 — the paper's folding sequence
+/// (≡ A014577; signed floor division via `div_euclid`).
+#[inline]
+fn pfold(i: i64) -> u8 {
+    if i == 0 {
+        return 0;
+    }
+    (i.div_euclid(q_of(2 * i) as i64) & 1) as u8
+}
+
+/// The m0 mirror frame: w = (v - 1, u) for site x = (u, v) (center c = (0, 1)).
+#[inline]
+fn frame_of(u: i32, v: i32) -> (i64, i64) {
+    (i64::from(v) - 1, i64::from(u))
+}
+
+/// The axis table Ta: (0,1) -> 1, (1,0) -> 2, (1,1) -> 0. Key (0, 0) is
+/// unreachable at any non-central site — no fallback.
+#[inline]
+fn axis_of(pu: u8, pv: u8) -> usize {
+    match (pu, pv) {
+        (0, 1) => 1,
+        (1, 0) => 2,
+        (1, 1) => 0,
+        _ => unreachable!("Ta key (0, 0) unreachable"),
+    }
+}
+
+/// §5 panel decomposition: the FIRST panel (n = 1, 2, 3) whose coords
+/// carry the same Q-level — returns (i, j). Only called for off-spoke w.
+#[inline]
+fn panel_of(u: i64, v: i64) -> (i64, i64) {
+    let coords = [(u, -v), (v, u + v), (-u - v, -u)];
+    for &(i, j) in coords.iter() {
+        if q_of(i) == q_of(j) {
+            return (i, j);
+        }
+    }
+    unreachable!("no panel match at ({u},{v})");
+}
+
+/// The six spoke lines, in the pinned LINES order:
+/// i1j0 (u+v=0), i2j0 (u=0), i3j0 (v=0),
+/// i1jp (u-v=0), i2jp (u+2v=0), i3jp (2u+v=0).
+#[inline]
+fn spoke_line(u: i64, v: i64) -> Option<usize> {
+    if u + v == 0 {
+        Some(0)
+    } else if u == 0 {
+        Some(1)
+    } else if v == 0 {
+        Some(2)
+    } else if u - v == 0 {
+        Some(3)
+    } else if u + 2 * v == 0 {
+        Some(4)
+    } else if 2 * u + v == 0 {
+        Some(5)
+    } else {
+        None
+    }
+}
+
+/// Signed spoke coordinate: i1 -> u_w, i2 -> v_w, i3 -> -u_w - v_w.
+#[inline]
+fn spoke_i(line: usize, u: i64, v: i64) -> i64 {
+    match line {
+        0 | 3 => u,
+        1 | 4 => v,
+        _ => -u - v,
+    }
+}
+
+/// The pinned 12-ray free-bit table, keyed by (line, sign): line 0..5 =
+/// i1j0, i2j0, i3j0, i1jp, i2jp, i3jp; sign 0 = '-', 1 = '+'.
+/// entries are (b, c): free bit = Pfold(i) ^ b, companion bit = c.
+const RAY_TABLE: [[(u8, u8); 2]; 6] = [
+    [(0, 1), (0, 1)], // i1j0- : (0, 1); i1j0+ : (0, 1)
+    [(1, 1), (1, 0)], // i2j0- : (1, 1); i2j0+ : (1, 0)
+    [(0, 1), (0, 0)], // i3j0- : (0, 1); i3j0+ : (0, 0)
+    [(0, 0), (0, 0)], // i1jp- : (0, 0); i1jp+ : (0, 0)
+    [(1, 1), (1, 0)], // i2jp- : (1, 1); i2jp+ : (1, 0)
+    [(0, 1), (0, 0)], // i3jp- : (0, 1); i3jp+ : (0, 0)
+];
+
+/// The pinned §5 closed form: (a, rbt, sdt) for site x = (u, v), with the
+/// shipped central state (0, 0, 1) at c = (0, 1).
+fn state_of(u: i32, v: i32) -> (usize, usize, usize) {
+    if (u, v) == CHT_C {
+        return (0, 0, 1);
+    }
+    let (u_w, v_w) = frame_of(u, v);
+    let s = v2_of(u_w).min(v2_of(v_w));
+    let pu = ((u_w >> s) & 1) as u8;
+    let pv = ((v_w >> s) & 1) as u8;
+    let a = axis_of(pu, pv);
+    match spoke_line(u_w, v_w) {
+        Some(line) => {
+            let i = spoke_i(line, u_w, v_w);
+            let sign = usize::from(i > 0);
+            let (b, c) = RAY_TABLE[line][sign];
+            let bit = pfold(i) ^ b;
+            if line <= 2 {
+                // j0 lines: FREE rbt, companion sdt
+                (a, bit as usize, c as usize)
+            } else {
+                // jp lines: companion rbt, FREE sdt
+                (a, c as usize, bit as usize)
+            }
+        }
+        None => {
+            let (i, j) = panel_of(u_w, v_w);
+            let pbs = (i.div_euclid(q_of(i - j) as i64) & 1) as usize;
+            let prb = (i.div_euclid(q_of(i + j) as i64) & 1) as usize;
+            let aeq1 = usize::from(a == 1);
+            (a, prb ^ aeq1, pbs ^ aeq1)
+        }
+    }
 }
 
 /// The paper's corner-colour rule: true = red. Kept as the state-level
@@ -1667,7 +1849,7 @@ impl Tiling for TaylorSocolarTiling {
 
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {
         let meta = SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None).with_notes(
-            "aperiodic (cited, arXiv:1008.3103); forced finite patch of 529 hexagons; \
+            "aperiodic (cited, arXiv:1008.3103); plane-filling CHT closed form; \
              no period within hex-radius 30 of the patch (verified here)",
         );
         let map = crate::lattice::similarity_map(params);
@@ -1694,23 +1876,42 @@ impl Tiling for TaylorSocolarTiling {
             };
         }
 
-        // Finite patch: the patch IS the covered domain, so exactly the
-        // hexagons whose box meets the region contribute their 8 pieces,
-        // and each emitted piece is kept only if it reaches the region.
-        let mut tiles = Vec::new();
-        for &(u, v, st) in SITES.iter() {
-            let c = centre(u, v);
-            if c.x - HX > region.max.x
-                || c.x + HX < region.min.x
-                || c.y - 1.0 > region.max.y
-                || c.y + 1.0 < region.min.y
-            {
-                continue;
+        // Window of (u, v) sites whose hexagons can intersect the region:
+        // the region padded by the hexagon extent (±HX x, ±1.0 y), then
+        // per-row (v) the matching u-range from the centre formula
+        // x = SQ3 * (u + DU + 0.5 * (v + DV)), y = 1.5 * (v + DV).
+        let pad = BBox::new(
+            Vec2::new(region.min.x - HX - 0.5, region.min.y - 1.0 - 0.5),
+            Vec2::new(region.max.x + HX + 0.5, region.max.y + 1.0 + 0.5),
+        );
+        let v_lo = (pad.min.y / 1.5 - f64::from(DV)).floor() as i32 - 1;
+        let v_hi = (pad.max.y / 1.5 - f64::from(DV)).ceil() as i32 + 1;
+        let mut sites: Vec<(i32, i32)> = Vec::new();
+        for v in v_lo..=v_hi {
+            let off = f64::from(DU) + 0.5 * (f64::from(v) + f64::from(DV));
+            let u_lo = (pad.min.x / SQ3 - off).floor() as i32 - 1;
+            let u_hi = (pad.max.x / SQ3 - off).ceil() as i32 + 1;
+            for u in u_lo..=u_hi {
+                sites.push((u, v));
             }
-            let a = (st % 3) as usize;
-            let rbt = ((st / 3) % 2) as usize;
-            let sdt = (st / 6) as usize;
+        }
+
+        if sites.len() * 8 > crate::lattice::MAX_TILES {
+            return TilingResult {
+                tiles: Vec::new(),
+                symmetry: meta,
+                periodic: None,
+                message: Some("too many tiles for this view — zoom in"),
+            };
+        }
+
+        // Per-site state via the pinned §5 closed form (O(1)); each site
+        // emits its 8 convex pieces, kept only if it reaches the region.
+        let mut tiles = Vec::new();
+        for &(u, v) in sites.iter() {
+            let (a, rbt, sdt) = state_of(u, v);
             let kap = (a + 3 * sdt) % 6;
+            let c = centre(u, v);
             for piece in TEMPLATES[kap * 2 + usize::from(rbt != sdt)].iter() {
                 let pts: Vec<Vec2> = piece
                     .pts
@@ -2157,18 +2358,20 @@ mod tests {
         );
     }
 
-    /// Finite-patch semantics: beyond the patch there is nothing to return
-    /// (the patch is the covered domain, unlike a plane tiling).
+    /// Plane semantics (the island contract flipped): a region well
+    /// outside the shipped rhombus — shipped-patch centres span
+    /// x ∈ [-28.58, 28.58], y ∈ [-16.5, 16.5] (hexagon-inclusive:
+    /// x ∈ [-29.45, 29.45], y ∈ [-17.5, 17.5]) — still returns non-empty
+    /// tiles, and the `check_coverage` sample census passes there too
+    /// (every sample point covered at least once, clipped-area equality
+    /// to 1e-6 relative).
     #[test]
     fn taylor_socolar_empty_beyond_patch() {
-        let p = ParamSet::default_for(TaylorSocolarTiling.params());
-        let r = TaylorSocolarTiling.generate(
-            &p,
-            &Query {
-                region: BBox::new(Vec2::new(2000.0, 2000.0), Vec2::new(2010.0, 2010.0)),
-            },
+        check_covers(
+            &TaylorSocolarTiling,
+            "taylor-socolar",
+            BBox::new(Vec2::new(100.0, 30.0), Vec2::new(128.0, 58.0)),
         );
-        assert!(r.tiles.is_empty(), "tiles generated outside the patch");
     }
 
     /// The handoff battery, re-derived from the shipped table: exactly the
@@ -2220,6 +2423,228 @@ mod tests {
         assert_eq!((r1b, r1t), (0, 2992), "R1 sigma complementarity");
         assert_eq!((r2b, r2t), (0, 2816), "R2 diagonal colour inequality");
         assert_eq!((r3b, r3t), (0, 2904), "R3 triple colour rule");
+    }
+
+    /// Hex disk centred at the CHT centre c = (0, 1), hex-radius R: all
+    /// (u, v) with |du| + |dv| + |du + dv| <= 2R, |du|, |dv| <= R.
+    /// 3R^2 + 3R + 1 sites (127 / 217 / 331 / 631 at R = 6 / 8 / 10 / 14).
+    fn hex_disk(r: i32) -> Vec<(i32, i32)> {
+        let mut out = Vec::new();
+        for u in -r..=r {
+            for v in 1 - r..=1 + r {
+                let du = u;
+                let dv = v - 1;
+                if du.abs() + dv.abs() + (du + dv).abs() <= 2 * r {
+                    out.push((u, v));
+                }
+            }
+        }
+        out
+    }
+
+    /// R1/R2/R3 handoff census over a state map (module-verbatim R1/R2/R3
+    /// logic — the same rule the shipped-table `taylor_socolar_handoff_battery`
+    /// re-derives).
+    fn r123_census(
+        st: &HashMap<(i32, i32), (usize, usize, usize)>,
+    ) -> (usize, usize, usize, usize, usize, usize) {
+        let (mut r1t, mut r1b) = (0usize, 0usize);
+        let (mut r2t, mut r2b) = (0usize, 0usize);
+        let (mut r3t, mut r3b) = (0usize, 0usize);
+        for (&(u, v), &(a, rbt, sdt)) in st.iter() {
+            for m in 0..6usize {
+                let d = DELTA[m];
+                let nb = st.get(&(u + i32::from(d.0), v + i32::from(d.1)));
+                if let Some(nb) = nb {
+                    r1t += 1;
+                    if sigma(a, sdt, m) != -sigma(nb.0, nb.2, (m + 3) % 6) {
+                        r1b += 1;
+                    }
+                }
+                let dp = DELTA[(m + 5) % 6];
+                let dq = DELTA[(m + 1) % 6];
+                let c = st.get(&(u + i32::from(dp.0), v + i32::from(dp.1)));
+                let e = st.get(&(u + i32::from(dq.0), v + i32::from(dq.1)));
+                if let (Some(c), Some(e)) = (c, e) {
+                    r2t += 1;
+                    if color_red(c.0, c.1, (m + 1) % 6) == color_red(e.0, e.1, (m + 4) % 6) {
+                        r2b += 1;
+                    }
+                }
+                let k = m;
+                let d1 = DELTA[k];
+                let d2 = DELTA[(k + 1) % 6];
+                let t1 = st.get(&(u + i32::from(d1.0), v + i32::from(d1.1)));
+                let t2 = st.get(&(u + i32::from(d2.0), v + i32::from(d2.1)));
+                if let (Some(t1), Some(t2)) = (t1, t2) {
+                    r3t += 1;
+                    let c0 = color_red(a, rbt, k);
+                    if c0 == color_red(t1.0, t1.1, (k + 2) % 6)
+                        && c0 == color_red(t2.0, t2.1, (k + 4) % 6)
+                    {
+                        r3b += 1;
+                    }
+                }
+            }
+        }
+        (r1b, r1t, r2b, r2t, r3b, r3t)
+    }
+
+    /// Window states over the hex disk: the shipped cstate at the centre,
+    /// the pinned closed form everywhere else.
+    fn hex_window_states(
+        r: i32,
+        center_state: (usize, usize, usize),
+    ) -> HashMap<(i32, i32), (usize, usize, usize)> {
+        hex_disk(r)
+            .iter()
+            .map(|&(u, v)| {
+                let val = if (u, v) == (0, 1) {
+                    center_state
+                } else {
+                    state_of(u, v)
+                };
+                ((u, v), val)
+            })
+            .collect()
+    }
+
+    /// Pinned battery 1 — shipped-table reproduction: the generator's
+    /// closed-form per-site state equals the shipped SITES table
+    /// state-for-state (cstate (0, 0, 1)).
+    #[test]
+    fn taylor_socolar_closed_form_reproduces_patch() {
+        assert_eq!(SITES.len(), 529);
+        let mut mismatches: Vec<((i8, i8), (usize, usize, usize), (usize, usize, usize))> = Vec::new();
+        for &(u, v, st) in SITES.iter() {
+            let want = (
+                (st % 3) as usize,
+                ((st / 3) % 2) as usize,
+                (st / 6) as usize,
+            );
+            let got = state_of(i32::from(u), i32::from(v));
+            if got != want {
+                mismatches.push(((u, v), got, want));
+            }
+        }
+        assert!(
+            mismatches.is_empty(),
+            "closed form disagrees with the shipped table: {mismatches:?}"
+        );
+    }
+
+    /// Pinned battery 2 — Thm-5 parity law: p = rbt ^ sdt == pBS ^ pRB on
+    /// all 440 off-spoke rhombus sites (residue {0}), plus the per-bit
+    /// identities rbt ^ pRB == (a == 1) and sdt ^ pBS == (a == 1).
+    #[test]
+    fn taylor_socolar_off_spoke_identities() {
+        let mut off = 0usize;
+        let mut full = 0usize;
+        let mut thm5 = 0usize;
+        let mut per_rbt = 0usize;
+        let mut per_sdt = 0usize;
+        for &(u, v, st) in SITES.iter() {
+            if (u, v) == (0, 1) {
+                continue; // central site: cstate, not off-spoke
+            }
+            let (uw, vw) = frame_of(i32::from(u), i32::from(v));
+            if spoke_line(uw, vw).is_some() {
+                continue; // on-spoke ray sites carry the 12-ray free bit
+            }
+            off += 1;
+            let (i, j) = panel_of(uw, vw);
+            let pbs = (i.div_euclid(q_of(i - j) as i64) & 1) as usize;
+            let prb = (i.div_euclid(q_of(i + j) as i64) & 1) as usize;
+            let (a, rbt, sdt) = (
+                (st % 3) as usize,
+                ((st / 3) % 2) as usize,
+                (st / 6) as usize,
+            );
+            let got = state_of(i32::from(u), i32::from(v));
+            if got == (a, rbt, sdt) {
+                full += 1;
+            }
+            if rbt ^ sdt == pbs ^ prb {
+                thm5 += 1;
+            }
+            if rbt ^ prb == usize::from(a == 1) {
+                per_rbt += 1;
+            }
+            if sdt ^ pbs == usize::from(a == 1) {
+                per_sdt += 1;
+            }
+        }
+        assert_eq!(off, 440, "off-spoke site count on the rhombus");
+        assert_eq!(full, 440, "full-state agreement on off-spoke sites");
+        assert_eq!(thm5, 440, "Thm 5 parity law p = rbt^sdt == pBS^pRB");
+        assert_eq!(per_rbt, 440, "per-bit identity rbt ^ pRB == (a == 1)");
+        assert_eq!(per_sdt, 440, "per-bit identity sdt ^ pBS == (a == 1)");
+    }
+
+    /// Pinned battery 3 — Pfold cross-check: Pfold(-k) == A014577 a(k-1),
+    /// k = 1..=64 (a(0)=1, a(4n)=1, a(4n+2)=0, a(2n+1)=a(n)).
+    #[test]
+    fn taylor_socolar_pfold_matches_a014577() {
+        fn a014577(n: u64) -> u8 {
+            if n == 0 {
+                return 1;
+            }
+            match n % 4 {
+                0 => 1,
+                2 => 0,
+                _ => a014577(n >> 1),
+            }
+        }
+        for k in 1..=64u64 {
+            assert_eq!(pfold(-(k as i64)), a014577(k - 1), "k = {k}");
+        }
+    }
+
+    /// Pinned battery 4 — local-rule census on hex windows centred at
+    /// c = (0, 1), cstate (0, 0, 1). Window site counts 3R^2+3R+1 = 127/217/331/631.
+    #[test]
+    fn taylor_socolar_hex_window_censuses() {
+        for (r, want_sites, want) in [
+            (6, 127, (0usize, 684usize, 0usize, 612usize, 0usize, 648usize)),
+            (8, 217, (0usize, 1200usize, 0usize, 1104usize, 0usize, 1152usize)),
+            (10, 331, (0usize, 1860usize, 0usize, 1740usize, 0usize, 1800usize)),
+            (14, 631, (0usize, 3612usize, 0usize, 3444usize, 0usize, 3528usize)),
+        ] {
+            let st = hex_window_states(r, (0, 0, 1));
+            assert_eq!(st.len(), want_sites, "hex-window site count r = {r}");
+            assert_eq!(r123_census(&st), want, "hex-window census r = {r}");
+        }
+    }
+
+    /// Pinned battery 5 — cstate sweep (R = 14, winner config): R3 = 0/3528
+    /// for ALL 12 cstates (Thm 3); only cstate (0, 0, 1) gives R1=R2=0.
+    /// Others (totals 3612/3444): (0,0,0): 4/0; (0,1,0): 4/4; (0,1,1): 0/4;
+    /// (1,·,·) and (2,·,·): 8/8.
+    #[test]
+    fn taylor_socolar_cstate_sweep() {
+        for a0 in 0..3usize {
+            for r0 in 0..2usize {
+                for s0 in 0..2usize {
+                    let cs = (a0, r0, s0);
+                    let st = hex_window_states(14, cs);
+                    let (r1b, r1t, r2b, r2t, r3b, r3t) = r123_census(&st);
+                    assert_eq!((r3b, r3t), (0, 3528), "R3 sweep cstate {cs:?}");
+                    let (wr1, wr2) = if cs == (0, 0, 1) {
+                        (0, 0)
+                    } else if cs == (0, 0, 0) {
+                        (4, 0)
+                    } else if cs == (0, 1, 0) {
+                        (4, 4)
+                    } else if cs == (0, 1, 1) {
+                        (0, 4)
+                    } else {
+                        (8, 8)
+                    };
+                    assert_eq!((r1b, r1t), (wr1, 3612), "R1 sweep cstate {cs:?}");
+                    assert_eq!((r2b, r2t), (wr2, 3444), "R2 sweep cstate {cs:?}");
+                }
+            }
+        }
     }
 
     /// Chord network closure: the chord of a site is the vertex-to-vertex
@@ -2303,7 +2728,7 @@ mod tests {
         for &(u, v, st) in SITES.iter() {
             let kap = kappa(st);
             let (p, q) = (key(u, v, (kap + 1) % 6), key(u, v, (kap + 5) % 6));
-            let c = centre(u, v);
+            let c = centre(i32::from(u), i32::from(v));
             for (w, k) in [(p, (kap + 1) % 6), (q, (kap + 5) % 6)] {
                 let (dx, dy) = dir30(2 * k + 1);
                 pos.entry(w).or_insert((c.x + dx, c.y + dy));
@@ -2575,7 +3000,14 @@ mod tests {
             },
         );
         assert!(r.message.is_none(), "{:?}", r.message);
-        assert_eq!(r.tiles.len(), SITES.len() * 8, "whole-patch piece count");
+        // Plane semantics: the whole-patch region emits the shipped rhombus
+        // pieces PLUS plane-filling pieces for the non-rhombus sites whose
+        // hexagons meet the region.
+        assert!(
+            r.tiles.len() >= SITES.len() * 8,
+            "emission must contain every shipped-table piece (got {})",
+            r.tiles.len()
+        );
         let mut pool: HashMap<String, usize> = HashMap::new();
         for t in &r.tiles {
             *pool
@@ -2587,7 +3019,7 @@ mod tests {
             let rbt = ((st / 3) % 2) as usize;
             let sdt = (st / 6) as usize;
             let kap = (a + 3 * sdt) % 6;
-            let c = centre(u, v);
+            let c = centre(i32::from(u), i32::from(v));
             for piece in TEMPLATES[kap * 2 + usize::from(rbt != sdt)].iter() {
                 let pts: Vec<Vec2> = piece
                     .pts
@@ -2603,8 +3035,13 @@ mod tests {
                 );
             }
         }
-        assert!(
-            pool.values().all(|n| *n == 0),
+        // Every emitted piece is either a shipped-table piece (accounted
+        // for by the SITES loop above) or a plane-filling piece beyond the
+        // shipped rhombus (the exact leftover count).
+        let leftover: usize = pool.values().sum();
+        assert_eq!(
+            leftover,
+            r.tiles.len() - SITES.len() * 8,
             "emission contains pieces not accounted for by any site"
         );
     }
@@ -2663,7 +3100,7 @@ mod tests {
                 std::ptr::eq(tpl, TEMPLATES[tidx]),
                 "{label}: not the TEMPLATES entry"
             );
-            let c = centre(u, v);
+            let c = centre(i32::from(u), i32::from(v));
             assert!(
                 (c.x - cen[0]).abs() < 1e-12 && (c.y - cen[1]).abs() < 1e-12,
                 "{label}: centre ({}, {}) != ({}, {})",

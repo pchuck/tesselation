@@ -18,7 +18,7 @@ Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 | `cap` | CAP (cut-and-project tiling) | BGS 2023 (arXiv:2305.05639); the four hat metatiles with edge displacements (3φ, 3φ, 1, φ+ξ, 2φ) — a D-map deformation of the hat lineage, exact in ℤ[ξ,φ]; aperiodic, homochiral (6 orientations, no reflections), inflation φ² (LIDS), MLD to the φ²-rescaling, pure point spectrum; per-view BFS deformation with exact clipped-area acceptance |
 | `turtle` | Turtle ("hats in turtles", einstein family) | turtle (14 sides, area 10√3) + hat prototiles on Kaplan's exact hex lattice; 9-label 8+1 key-point substitution with per-level chirality flip; homochiral (all tiles unreflected — the plain turtle tiling mixes reflected copies), edge-to-edge; turtle:hat ratio → 4+√15 |
 | `spectre` | Spectre (chiral einstein Tile(1,1)) | single equal-edge prototile, aperiodic *without* reflections; 9-label D12 substitution (spectre.js-identical), exact Q(√3) surd geometry; edge-to-edge |
-| `taylor-socolar` | Taylor-Socolar striped hexagon (decorated-hexagon monotile) | the paper's forced 529-hexagon patch (Fig. 18 of arXiv:1008.3103) as a verbatim state table, each hexagon partitioned into 8 non-overlapping convex sub-polygons carrying one thick vertex-to-vertex chord plus a centre-split axis (2 chord-band halves + 2 axis half-bands + 2 body pentagons + 2 body triangles, 12 templates); the chords close into complete equilateral Taylor triangles on three scales (60 / 12 / 2 of side √3, 3√3, 7√3), and the state rules stay exact (R1 0/2992, R2 0/2816, R3 0/2904 re-derived in tests); finite covered patch (girih precedent), no period within hex-radius 30 |
+| `taylor-socolar` | Taylor-Socolar striped hexagon (decorated-hexagon monotile) | plane-filling CHT closed-form presentation (M86 shipped the forced 529-hexagon patch, Fig. 18 of arXiv:1003.4279, as a verbatim state table): every hexagon partitioned into 8 non-overlapping convex sub-polygons carrying one thick vertex-to-vertex chord plus a centre-split axis (2 chord-band halves + 2 axis half-bands + 2 body pentagons + 2 body triangles, 12 templates); the chords close into complete equilateral Taylor triangles on three scales (60 / 12 / 2 of side √3, 3√3, 7√3), and the state rules stay exact (R1 0/2992, R2 0/2816, R3 0/2904 re-derived in tests); M168: covered domain = the whole plane |
 | `jeandel-rao` | Jeandel-Rao 11-tile Wang tiles (smallest aperiodic Wang set) | the author's canonical 100x100 patch (arXiv:1506.06492, cited not re-proven) as an emitted table, each unit cell partitioned into 5 non-overlapping convex sub-polygons (4 edge bands of width 0.08 + interior, areas exact in Q) whose band colors make the Wang edge matching visible (H 0/9900, V 0/9900 on exact 9-color ids re-derived in tests); tile frequencies pinned; no grid translation period |t| ≤ 30 (2820 probes); finite covered patch (Taylor-Socolar precedent); no generator port — the study's DFS growth is a proven dead end (M93) |
 | `half-hex` | Half-hexagon (Socolar limit-periodic substitution) | Bielefeld entry "half-hex": one **achiral** half-hexagon prototile, six rotation classes (no reflection class — its mirror is a translation of a rotation), λ = 2 substitution into 4 children (substitution matrix S[j][i] = 1 iff (j−i) mod 6 ∈ {0,2,3,4}; PF eigenvalue 4 = λ², char poly (x−4)(x−2)(x−1)²(x+1)², pinned by exact 720-permutation i128 expansion); finite covered patch = 2^d-scaled half-hexagon recentered on the origin, d = 5..8 picked by the view diagonal (nested views bit-identical on their intersection); exact √3-field integer-pair (u,v) arithmetic end to end, floats only at the view boundary; limit-periodic — the minimal x-period of the depth-g patch is (3/2)·2^g = 6, 12, 24, 48, 96 at g = 2..6 (strictly 2× growing), cited not re-proven (Fre02 cut-and-project; GS87 Ex. 10.1.3) |
 | `domino` | Domino (table) substitution (Lançon limit-periodic) | Bielefeld entry "domino" (says verbatim "Also known as 'table tiling'" — no independent "table" entry in the substitution index; "table" is an alias of this one tiling): two domino prototiles on the square lattice — A = vertical 1×2, B = horizontal 2×1 — λ = 2 orientation-preserving substitution into 4 children (substitution matrix S = [[2,2],[2,2]], column sums = 4 = λ², PF eigenvalue 4 = λ², char poly x²−4x = x(x−4), pinned by exact 2×2 determinants); finite covered patch = the 2^d × 2^(d+1) block recentered on the origin, d = 5..8 picked by the view diagonal (nested views bit-identical on their intersection); exact integer cell arithmetic on Z² end to end, floats only at the view boundary; limit-periodic via **approximating periodic tilings** — the depth-g patch carries no proper within-patch period (measured g = 1..6; Rust battery g = 2..6): it is itself the fundamental cell of the period-(2^g, 2^(g+1)) approximant, (2,4), (4,8), (8,16), (16,32), (32,64), (64,128), strictly 2× growing per level — a different kind from half-hex, whose patch is itself (3/2)·2^g-periodic; **not** a cut-and-project / model-set structure (entry states verbatim that its dynamical spectrum has a continuous component, "Thus it cannot be a cut and project tiling" — Solomyak ETDS 17(3) 1997; Robinson Indag. Math. 10(4) 1999, "On the table and the chair"); entry tags: Finite Rotations {id}, Polyomio Tiling, Rep-Tiles, Self-Similar Substitution; discovered by Frédéric Lançon |
@@ -158,7 +158,7 @@ briefs cite them as `§N`.
 ### 36. Taylor–Socolar striped hexagons ✅ (M86; decoration reworked in M86-fix)
 
 - **Motif:** the decorated-hexagon aperiodic monotile of Taylor &
-  Socolar (arXiv:1008.3103): one hexagon carrying one decoration band,
+  Socolar (arXiv:1003.4279): one hexagon carrying one decoration band,
   the tile state `(a, rbt, sdt)` — `a ∈ Z3` stripe-axis class, `rbt` which
   end of the polar vertex pair is red, `sdt` the stripe-offset bit —
   whose edge-midpoint handoff rule is
@@ -168,9 +168,11 @@ briefs cite them as `§N`.
   M86-fix, only the drawing of it). The shipped object
   is the paper's **forced 529-hexagon patch** (its Figure 18): the
   23×23 rhombus `{v ∈ [−21, 1], u ∈ [−(v+21), 22−(v+21)]}` in axial
-  coordinates, covered domain = patch (girih precedent: `generate`
-  returns exactly the tiles intersecting the query region, background
-  beyond).
+  coordinates, reproduced state-for-state by the plane-filling CHT
+  closed form (M86). The shipped object now fills the whole plane —
+  `generate` returns the tiles intersecting the query region and there
+  is no patch boundary. The 529-site rhombus remains the patch the
+  closed form is verified against (R1 0/2992, R2 0/2816, R3 0/2904).
 - **Decoration (canonical chord + split axis, as in the reference
   figures of arXiv:1504.06823 checked against `HLR_trap.jpg` /
   `Hex_tiling_3digit.jpg`):** with vertex `V_k` at bearing `30° + 60k`
@@ -219,15 +221,21 @@ briefs cite them as `§N`.
   carrying more than two chord ends); triangle census (172 cycles; the
   74 closed rings are all triangles — corner count 3 with 120° exterior
   angle, side-scale census 60/12/2 at 1·√3 / 3·√3 / 7·√3; 24 zero-area
-  chains); whole-patch emission is exactly 529 × 8 pieces, each matched
-  signature-by-signature against the recomputed placement, every
-  hexagon's piece areas summing to `3√3/2`; no-period probe over the
-  2790 nonzero translations of hex-radius ≤ 30 finds **no period**
-  (overlap ≥ 3 sites); coverage trio inside upstream-verified
+  chains); whole-patch emission contains every one of the 529 × 8 shipped-table
+  pieces, each matched signature-by-signature against the recomputed
+  placement, every hexagon's piece areas summing to `3√3/2`; no-period
+  probe over the 2790 nonzero translations of hex-radius ≤ 30 finds
+  **no period** (overlap ≥ 3 sites); coverage trio inside upstream-verified
   exactly-once windows (default `(−14, −8.68, 14, 8.68)`,
-  0.6-scaled/25°-rotated `(−9, −5.58, 9, 5.58)`); determinism; empty
-  output beyond the patch; the runtime templates reproduce the emitter's
-  four reference placements vertex-exact (1e−12).
+  0.6-scaled/25°-rotated `(−9, −5.58, 9, 5.58)`) PLUS a large view well
+  outside the old rhombus (check_coverage sample census, clipped-area
+  equality to 1e−6 rel); the closed form reproduces the patch 529/529
+  (cstate (0, 0, 1)) and the 440 off-spoke sites 440/440 (Thm-5 parity
+  law + per-bit identities); hex-window censuses (R = 6/8/10/14: 0/684,
+  0/612, 0/648, 0/1200, 0/1104, 0/1152, 0/1860, 0/1740, 0/1800, 0/3612,
+  0/3444, 0/3528) and the 12-cstate sweep (R3 = 0/3528 all 12); determinism;
+  the runtime templates reproduce the emitter's four reference placements
+  vertex-exact (1e−12).
 - **Decoration corrected in M86-fix** to the canonical closed-triangle
   chord/split-axis structure after owner review against the
   arXiv:1504.06823 figures: the first attempt drew three straight stripe
@@ -245,9 +253,12 @@ briefs cite them as `§N`.
 - **Scope honesty:** aperiodicity of the plane tiling, the two local-
   isomorphism classes and the limit-periodic structure are **cited,
   not proven** (beyond the radius-30 probe on the shipped patch); the
-  inflation/deflation hierarchy is **not reproduced** (the study's
-  algebraic inflation fit aligns only 57.6% of sites, so it is not
-  even verified); "forced" is a local-rule statement — the study's
+  inflation/deflation hierarchy is **not reproduced** — the 57.6%
+  inflation-fit admission is **resolved** by the plane-filling CHT
+  closed form: the study's convention search missed the corner centre
+  c = (0, 1) and the mirror frame; with the pinned construction the
+  off-spoke closed form is exact 440/440 and the full state reproduces
+  the patch 529/529; "forced" is a local-rule statement — the study's
   solver extends the patch R9→R10 with zero backtracks under R1–R3;
   band width `W/R = 0.2` is a **compromise** of the reference figures
   (measured ≈ 0.19–0.21 in `HLR_trap.jpg`, ≈ 0.12 in
