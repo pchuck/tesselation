@@ -17,8 +17,8 @@ aperiodic decorated-hexagon monotile (Taylor & Socolar, arXiv:1003.4279); **plan
   blue proto 3, the red end picked by `rbt`), and 2 body pentagons +
   2 body triangles (proto 0). All cuts are exact in Q(√3) (area sum
   `3√3/2`, 0 overlaps, strict convexity), the chord rule
-  `kappa = (a + 3·sdt) mod 6` pairs every interior chord end (0 of 1058
-  unpaired) and is the only one of the 125 pairing rules among all 1296
+  `kappa = (a + 3·sdt) mod 6` pairs every interior chord end (0 of the 1010 interior
+  ends unpaired; the remaining 48 of the 1058 ends are open boundary ends) and is the only one of the 125 pairing rules among all 1296
   affine candidates that closes any ring at all, so the chord network
   **closes** into
   nested equilateral Taylor triangles on three scales (60 of side √3,
