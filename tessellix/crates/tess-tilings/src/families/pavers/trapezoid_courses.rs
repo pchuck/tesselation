@@ -38,7 +38,7 @@
 //!
 //! The partition is edge-to-edge: every edge is shared by exactly two
 //! tiles and every vertex figure sums to 360°. Edge classes: the
-//! slant edges (slope `±1/5`, length `√(1 + (1/5)²) = √65/5`), each
+//! slant edges (slope `±1/5`, length `√(1 + (1/5)²) = √26/5`), each
 //! pairing one upper with one lower trapezoid; the horizontal unit
 //! edges at `y = 0` and `y = 1` (paired between vertical cell
 //! translates); and the vertical edges at `x ∈ {0, 1, 2}` of lengths

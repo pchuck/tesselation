@@ -54,8 +54,9 @@
 //!   tiles flanking its arm — with angles `≈58.8079° × 3` +
 //!   `≈61.1921° × 3`;
 //! * the bend vertices `W_k`: two tiles meet with angles
-//!   `≈177.1677°` and `≈182.8323°` (the bend angle's cosine is
-//!   `−1559/1600` exactly).
+//!   `≈177.1677°` and `≈182.8323°` (the bend-edge directions' dot
+//!   product is `−1559/1600` exactly; the cosine itself is that
+//!   divided by `|W0V0|·|W0O|`, ≈ −0.9988).
 //!
 //! # Wallpaper group
 //!

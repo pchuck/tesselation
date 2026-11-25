@@ -43,7 +43,7 @@
 //! (the `(1,0)` shift): the top edge of `P` at `y = 1`,
 //! `(0,1)–(1,1)`, pairs with the bottom of `R2 + (−2,0)` — a row-1
 //! tile in the cell to the left. Edge classes (exact lengths): the
-//! slant edges (slope `±1/5`, length `√65/5`); the horizontal unit
+//! slant edges (slope `±1/5`, length `√26/5`); the horizontal unit
 //! edges at `y ∈ ℤ`; and the vertical edges at `x ∈ ℤ` of lengths
 //! `3/10`, `1/2`, `7/10` (row-0 verticals at the `3/10`/`1/2`/`7/10`
 //! levels; row-1 verticals at the `5/10`/`7/10` levels). There are no
@@ -131,7 +131,8 @@
 //! Verified exactly before porting (Python, stdlib,
 //! `m81_verify.py`): the eight cell polygons are convex CCW with
 //! doubled areas 120, 120, 80, 80, 120, 80, 120, 80 summing to 800 =
-//! 10² · det Λ; exactly two congruence classes (the 6/10 class with
+//! 2 · 10² · det Λ (the doubled-area factor 2 times the ×10 scale
+//! times det Λ = 4); exactly two congruence classes (the 6/10 class with
 //! squared edges {25, 49, 100, 104} and the 4/10 class with
 //! {9, 25, 100, 104}); the window `W = [−4,4]²` (×10, `[−40,40]²`)
 //! partition (188 interior edges paired exactly twice, no T-junctions
