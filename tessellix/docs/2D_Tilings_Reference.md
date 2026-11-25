@@ -18,7 +18,7 @@ Five of the nine categories below are finite and fully listed, one is enumerated
 | Aperiodic tile sets | Representative list | Open-ended |
 | Nonperiodic tilings that are not aperiodic | Representative list | Uncountable |
 
-**Markers.** *Verified* means the fact was confirmed against a source retrieved on 2026-11-16 (listed at the end). *Unverified* means it comes from general knowledge and was not re-checked.
+**Markers.** *Verified* means the fact was confirmed against a source retrieved on 2026-11-16 (listed at the end). *Unverified* means it comes from general knowledge and was not re-checked. *VERIFY-EXTERNALLY* means the fact is not checkable against the repo or this list and must be confirmed against the corresponding primary source.
 
 ## 1. Uniform (Archimedean) tilings
 
@@ -170,7 +170,7 @@ Quasiperiodic tilings are nonperiodic but have long-range order, with a diffract
 | Tübingen triangle | 10-fold | 2 triangles | A Penrose-type triangle substitution. Cut-and-project origin unverified. |
 | Danzer 7-fold | 7/14-fold | 3 triangles; 6-tile matching set 1996 | Substitution tiling. Whether it is quasiperiodic in the diffraction sense is unverified. |
 | Generalized n-fold rhomb tilings (de Bruijn, Harriss) | n-fold | Rhombs | Cut-and-project family; Harriss generalized a 7-fold substitution rule to arbitrary n. Verified. |
-| Hat and spectre tilings | Hierarchical | 1 tile | Analyzed as quasicrystalline by Socolar (2023). See section 8. |
+| Hat and spectre tilings | Hierarchical | 1 tile | Analyzed as quasicrystalline by Socolar (2023) — VERIFY-EXTERNALLY (no source in this list). See section 8. |
 
 **What is not on this list.** Gummelt's decagon is a covering (overlapping copies under matching rules) that reproduces Penrose tilings, not a tiling. The Robinson and Ammann A1 tilings are hierarchical (nested lattices and trees), not cut-and-project tilings. Robinson and Ammann A1 are listed in section 8, and the covering/tiling distinction is repeated in section 10.
 
@@ -182,11 +182,11 @@ A tile set is aperiodic if it tiles the plane but only nonperiodically, so Penro
 
 | Tile | Year | What it does |
 | --- | --- | --- |
-| Taylor–Socolar | 2010 | Disconnected tile with matching rules; its tilings need reflected copies. Verified. |
+| Taylor–Socolar | 2010 | Decorated hexagon (single connected tile) with matching rules — Verified. Needs reflected copies — VERIFY-EXTERNALLY (not documented in the repo; the shipped plane-filling presentation uses no reflected copies). |
 | Hat | 2023 | 13-sided, built from 8 kites. Every tiling mixes reflected and unreflected copies. Verified. |
 | Turtle | 2023 | Built from 10 kites; a member of the same family as the hat. Verified. |
-| Tile(a,b) family | 2023 | A continuum containing the hat and turtle. Every member is aperiodic except Tile(0,1), Tile(1,1) and Tile(1,0), which also tile periodically. Verified. |
-| Tile(1,1) | 2023 | 14-sided. Weakly chiral: aperiodic only if reflections are forbidden. Verified. |
+| Tile(a,b) family | 2023 | A continuum containing the hat and turtle — VERIFY-EXTERNALLY (not documented in the repo). The registry's hat, turtle and spectre (Tile(1,1)) are all aperiodic. |
+| Tile(1,1) | 2023 | 14-sided. Weakly chiral: aperiodic only if reflections are forbidden (arXiv:2305.17743: the equilateral member; the strictly chiral Spectres are obtained by modifying its edges — see the Spectre row). Verified. The registry's `spectre` tiling ships this equilateral tile — homochiral, aperiodic without reflections. |
 | Spectre | 2023 | Strictly chiral: aperiodic even when reflections are allowed (*Combinatorial Theory* 2024). Verified. |
 
 "Einstein" has no single definition. With matching rules allowed, even a 2 by 1 rectangle can be made aperiodic, so the interesting cases need connected tiles and no matching rules.
@@ -230,6 +230,8 @@ The Penrose sets, Robinson triangles and the starfish set generate locally equiv
 | 11 | 4 | Jeandel and Rao | 2015 (published 2021) |
 
 Jeandel and Rao proved by exhaustive search that 11 tiles and 4 colors are both minimal. Mozes (1989) showed any substitution tiling can be converted to a Wang set. All entries above are verified.
+
+*The tessellix registry also implements the hat, turtle, spectre and CAP (BGS 2023 cut-and-project) tiles and the plane-filling Taylor–Socolar striped-hexagon monotile and the Jeandel–Rao 11-tile Wang set — see docs/families/aperiodic.md.*
 
 ## 9. Nonperiodic tilings that are not aperiodic
 
