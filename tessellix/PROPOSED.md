@@ -1964,6 +1964,23 @@ quasiperiodic hosts later).
   *Islamic Geometric Patterns* (primary source acquisition flagged —
   the dissertation discusses the approach but does not document the
   systems).
+  **Status: ⛔ STOPPED 2026-11-25 (source gate confirmed + premise
+  corrected).** The free-source forensics are exhaustive: Bonner 2003
+  figures are raster-only, no text pins the level-1 net or per-class
+  tables (G1–G3 book-gated). Structural finding that outlives the
+  gate: Bonner's Type A and the landed M161 mosaic are **two different
+  hierarchical systems sharing the inflation constant** — 2φ³ =
+  4+2√5 derived three independent exact ways (Cromwell composite-edge
+  rule 2φ²+2φ; girih_qc marker composition (3φ+1)+φ²; Bonner's own
+  1:8.480 fit 4φ+2 — all land on the same K-invariant), but the
+  prescribed joint [DEC|PENT|PENT|DEC] contradicts the realized
+  [HEX|DEC|HEX] (zero pentagons in the panel): a coincident
+  "same mosaic, two derivations" table set would be fabrication.
+  The exact M161 port (every pin reproduced: 611 = 431 + 3·60;
+  270+220+121; seed + 10 edge-adjacent bow-ties) and all batteries
+  are banked in the 24g scratch. Resume requires the book (USD 17.99
+  eBook proposed); Madar-i-Shah via Webster stays possible but his
+  top-level fill rules are qualitative.
   - **Effort** L per system, **tier** strong, source-gated.
 - **24h. PIC explorer — angle sweep + programmatic scoring** — the
   generate-and-filter stage the pipeline lacks: sweep δ (and per-tile

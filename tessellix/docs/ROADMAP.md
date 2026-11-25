@@ -39,6 +39,10 @@ complementary strap pattern. Full dossier in
 - **24f Quasiperiodic medallion hosts** — gated behind CAP/A4 family
   ownership; the dual method (Ammann-bar / Robinson-triangle duals) is
   the exact path for Penrose-class hosts.
+  ⛔ STOPPED 2026-11-25: Type A tables book-gated (figures raster-only);
+  2φ³ shared-constant finding banked (three exact derivations; joint-rule
+  contradiction [DEC|PENT|PENT|DEC] vs [HEX|DEC|HEX]) — resume needs the
+  Bonner book (USD 17.99 proposed).
 
 User-pinned: ground-truth-first · registry instances · periodic nets
 first.
