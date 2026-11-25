@@ -8,7 +8,7 @@ Adding a tiling here touches only this family: `families/quasiperiodic.rs`
 `lattice_tilings` entries) plus the new module and its doc row below.
 Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 
-## Implemented (16 tilings)
+## Implemented (17 tilings)
 
 ### Quasiperiodic substitution families
 
@@ -20,6 +20,7 @@ Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 | `penrose-pentagon` | five pentagons (φ-substitution) | aperiodic set found by exhaustive pool search (strict-0 + 1-hole layers); M = [[0,1,0,1,0],[1,1,0,0,1],[2,0,0,0,3],[0,0,1,0,0],[1,1,0,0,1]] in order (50,105,451,468,484); single-seed deflation growth; non-edge-to-edge (φ-substitution children meet parent edges at t = 1/φ) |
 | `ammann-beenker` | Ammann–Beenker A5 (octagonal aperiodic) | half-tile substitution (two rhombus halves + square) with per-level mirror flips; exact Q(√2) geometry; edge-to-edge; 8-fold finite patches |
 | `ammann-beenker-tri` | Ammann–Beenker rhomb-triangle (A5 variant, 3 prototiles) | Bielefeld's "Ammann-Beenker rhomb triangle" entry: the A5 substitution's half-square triangles emitted as their own tile class instead of being paired back into squares — rhombus (proto 0) + R-triangle (proto 1) + L-triangle (proto 2), same silver-mean deflation as the classic entry (hypotenuse-pairing step removed); exact Q(√2), 8-rhombus star seed, edge-to-edge growth (no interior overlaps, hypotenuse groups ≤ 2 and R–L paired), PF-orbit counts (24,16,16) → (136,96,96) → (792,560,560) → (4616,3264,3264); 8-fold finite patches (M129) |
+| `ammann-a4` | Ammann A4 (rectilinear chair + half-chair, 2 prototiles / 10 states) | Grünbaum–Shephard (1987) rectilinear chair set: chair = S_c² square (S_c = 2+√2) minus two opposite unit notches, half-chair = S_c × λ rectangle minus one √2 × 1 notch (tall/wide); all vertices exact Z[√2] (m + n√2); inflation λ = 1+√2, count matrix [[3,4],[2,3]] (chair, HC), Perron λ², Perron ratio 1:√2; 10 oriented states in a certified exact Z[√2] rule table (chair rule D3b-achiral; per-rule diag covariance; Σ child areas = λ²·A_parent exact for every rule); non-edge-to-edge — T-junctions intrinsic to the rule frames (8 per chair rule, 5 per HC rule, 56 at level 2); single-chair seed, inradius = 1.0·scale; 8-fold symmetric model set cited, not proven (mld Ammann–Beenker per the Bielefeld encyclopedia; model-set/diffraction FLC scope note); Bielefeld patch N_chair ≈ 2014 : N_HC ≈ 2798 (ratio 1.3891 vs Perron √2 — 1.78 % finite-size deviation, not a rule error) |
 | `stampfli` | Stampfli 12-fold dodecagonal | squares + equilateral triangles + 30° rhombi; Stampfli substitution, inflation 2+√3 (Bielefeld encyclopedia rule); straddling unit children deduped by exact vertex set; 12-rhombus seed star, exact Z[√3]/4 anchors; edge-to-edge, T-junction-free, 12-fold symmetric at every generation |
 | `fractalizing-3-12-12` | Fractalizing 3.12.12 (limit-periodic dodecagon-dense) | Chavey's fractalizing family over the uniform 3.12.12: same-plane levels, level d at child edge (2+√3)^{1−d} with level d+1 = level d shrunk by 1/(2+√3) about the origin flower; hexagonal flower orbit 44 T + 12 S + 1 H + 12 D per cell (69 tiles, cell 84 + 48.5√3 = the level-0 3.12.12 cell at edge 2+√3); all level-1 vertices on the exact (m + n√3)/6 grid; edge-to-edge closure verified in exact Q(√3) (0 overlaps, 0 T-junctions, exact single coverage) |
 | `shield` | Shield tiling (Gähler, dodecagonal 12-fold) | shield hexagon + square + black/white triangles, each in two labelled orientations R/L — 4 prototiles / 8 substitution kinds carrying Gähler's matching rules; inflation θ = 2cos15° = (√6+√2)/2, PF Perron θ² = 2+√3; children tile kinked supertiles (±¼-unit-square notches); exact Q(√2,√3) geometry, all edges on the 12 dodecagonal directions; Bragg 12-fold (no local 30° center) |
@@ -458,6 +459,7 @@ Each member's full specification — algorithm, exact geometry, verification, so
 - [`penrose-pentagon`](../tilings/penrose-pentagon.md) — Penrose pentagons (5-tile φ-substitution)
 - [`ammann-beenker`](../tilings/ammann-beenker.md) — Ammann-Beenker (A5)
 - [`ammann-beenker-tri`](../tilings/ammann-beenker-tri.md) — Ammann-Beenker rhomb-triangle
+- [`ammann-a4`](../tilings/ammann-a4.md) — Ammann A4 (rectilinear chair set)
 - [`stampfli`](../tilings/stampfli.md) — Stampfli (12-fold)
 - [`fractalizing-3-12-12`](../tilings/fractalizing-3-12-12.md) — Fractalizing 3.12.12
 - [`shield`](../tilings/shield.md) — Gähler shield

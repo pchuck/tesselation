@@ -162,8 +162,9 @@ the "mixed floret/cairo/prismatic" patterns.
   Socolar-12 decoration tables are blocked-on-source (PROPOSED.md #8);
   the wheel tiling (shield's MLD dual) is parked (M61) — see the
   Research entry below.*
-- 🔭 **Ammann sets A1–A4** — the rest of Ammann's aperiodic families;
-  moderate each once the AB machinery exists.
+- 🔭 **Ammann sets A1–A4** — A4 ✅ M173 (`ammann-a4`, Quasiperiodic
+  family); A3 (φ-inflation) + A1 (parked: no substitution structure)
+  remain.
 - 🔭 **§23d limit-periodic substitutions** — ✅ **half-hex landed (M135)**
   (Socolar's half-hexagon substitution; closes the #17
   substitution-hierarchy gap; measured period hierarchy

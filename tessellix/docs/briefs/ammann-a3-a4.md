@@ -17,6 +17,12 @@
 > unchanged — the rule-figure pin stands; the TE patch's density
 > mismatch (hand-drawn free tiling, not a region of the rule figure)
 > is documented in the tiling doc, not a stop.
+>
+> **Status: ✅ A4 (landing 1) LANDED 2026-11-25 — M173, commit e3fc839**
+> (integrated onto post-M172 main after the fleet outage; cherry-pick
+> clean, census re-derived at integration: Quasiperiodic 16 -> 17,
+> built-ins 164 -> 165, memberships 185 -> 186). A3 (landing 2)
+> remains dispatched-pending.
 
 **Family:** `quasiperiodic` (A5 = Ammann–Beenker precedent, M27/M129;
 A2 = golden bee M104) · **Candidate:** PROPOSED.md §23b "Ammann A3 and

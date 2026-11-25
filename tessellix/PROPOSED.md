@@ -1456,7 +1456,12 @@ of these; each is a substitution or cut-and-project table.
   NOT a Q(√2) member — this section's Q(√2) framing holds for A4 only
   (mld to Ammann–Beenker, λ = 2 chair + outlined second prototile).
   Brief: [ammann-a3-a4](briefs/ammann-a3-a4.md); dispatched (worker
-  tier, two landings).
+  tier, two landings). **Status: A4 ✅ M173** — `ammann-a4` landed as a
+  Quasiperiodic-family substitution tiling (chair + half-chair, 10
+  oriented states, λ = 1+√2, count matrix [[3,4],[2,3]], exact Z[√2]
+  rule tables certified by an independent Python battery; non-edge-to-edge
+  with intrinsic T-junctions; 8-fold model-set claim cited, not proven).
+  A3 still pending (φ-inflation, window uncomputed).
 - **AB rhomb–triangle** — Ammann–Beenker with the triangle shown;
   effort S. ✅ landed M129 as `ammann-beenker-tri`.
 - **Octagonal 1225 tile** — single octagonal prototile, 8-fold;
