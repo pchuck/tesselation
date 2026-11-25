@@ -115,8 +115,34 @@ struct Ray {
 /// pieces are deduplicated on the 1e-6 endpoint grid and returned in a
 /// deterministic (sorted) order. See the module docs for the
 /// construction and the numerical guards.
+///
+/// Delegates to [`walls_with_delta`] with a constant function, so its
+/// output is byte-identical to the pre-deformation engine for any
+/// constant δ (the regression anchor).
 pub fn walls(tiles: &[Tile], delta_deg: f64) -> Vec<Wall> {
-    let (sd, cd) = delta_deg.to_radians().sin_cos();
+    walls_with_delta(tiles, |_| delta_deg)
+}
+
+/// Islamic parquet deformation over the PIC strapwork engine
+/// (diss. §3.4.1): the contact angle at every contact point is
+/// determined by the location of that point — `f(p)` returns the angle
+/// in degrees **at the shared edge midpoint `p`** (both tiles adjacent
+/// to an edge share that point, so the point-reflection identity
+/// survives the deformation structurally: tile A's pair
+/// `{±cos f(p)·t + sin f(p)·nin}` reflects about `p` to exactly tile B's
+/// pair, nin flipping sign with the winding side).
+///
+/// `f` is called once per non-degenerate edge midpoint (the two rays of
+/// one midpoint share a single angle), and the per-tile construction —
+/// degenerate-tile skip, exit trimming, crossing-split, dedup — is
+/// unchanged from [`walls`]. The output is ordered and deduplicated
+/// exactly as [`walls`].
+///
+/// # Determinism
+///
+/// Pure function of `(tiles, f)` — no hidden state, no RNG — ordered
+/// through the same 1e-6 endpoint-canonical dedup grid.
+pub fn walls_with_delta(tiles: &[Tile], f: impl Fn(Vec2) -> f64) -> Vec<Wall> {
     let mut out: BTreeMap<SegKey, Wall> = BTreeMap::new();
 
     for tile in tiles {
@@ -153,6 +179,8 @@ pub fn walls(tiles: &[Tile], delta_deg: f64) -> Vec<Wall> {
             // Inward normal: left of the edge for CCW loops, right for CW.
             let nin = Vec2::new(-t.y * sgn, t.x * sgn);
             let m = (va + vb) * 0.5;
+            // §3.4.1: the angle is a function of the contact point.
+            let (sd, cd) = f(m).to_radians().sin_cos();
             for lean in [-1.0, 1.0] {
                 // Unit: t ⊥ nin, both unit, lean² + … = cd² + sd² = 1.
                 let d = Vec2::new(lean * cd * t.x + sd * nin.x, lean * cd * t.y + sd * nin.y);
@@ -221,6 +249,89 @@ pub fn walls(tiles: &[Tile], delta_deg: f64) -> Vec<Wall> {
     }
 
     out.into_values().collect()
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Built-in deformation profiles (diss. §3.4.1) + envelope snap.
+//
+// The profiles are deliberately substrate-agnostic and unclamped: the
+// Phase-A envelope (tess-tilings `envelope_for`) is a data-table decision
+// that lives with the substrates, and the clamp is applied by the caller.
+// The profiles' own `nominal_range` exists so the caller can check honestly
+// whether the profile's range ever intersects the envelope — profiles whose
+// range is entirely outside the envelope get a named error, not a silent
+// clamp.
+// ──────────────────────────────────────────────────────────────────────────
+
+/// A built-in parquet-deformation profile: the contact angle as a function
+/// of point (diss. §3.4.1 — the angle at the contact point, not a
+/// parameter of the whole design). Analytic, deterministic, no RNG.
+///
+/// All values are degrees. The profile is unclamped: the caller applies
+/// the Phase-A envelope.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum BuiltInProfile {
+    /// δ(p) = a + (b − a)·(p.x − x0)/(x1 − x0) — ramp along x between
+    /// the angles a (at x0) and b (at x1).
+    Linear { a: f64, b: f64, x0: f64, x1: f64 },
+    /// δ(p) = a + (b − a)·(dist(p, c) − r0)/(r1 − r0) — ramp along the
+    /// distance from centre `c` between the angles a (at r0) and b (at r1).
+    Radial { a: f64, b: f64, c: Vec2, r0: f64, r1: f64 },
+    /// δ(p) = mid + amp·sin(k·p.x) — oscillation along x, midline `mid`,
+    /// amplitude `amp`, frequency `k`.
+    Sine { mid: f64, amp: f64, k: f64 },
+}
+
+impl BuiltInProfile {
+    /// The contact angle in degrees at point `p` (unclamped).
+    pub fn delta(&self, p: Vec2) -> f64 {
+        match *self {
+            BuiltInProfile::Linear { a, b, x0, x1 } => a + (b - a) * (p.x - x0) / (x1 - x0),
+            BuiltInProfile::Radial { a, b, c, r0, r1 } => {
+                a + (b - a) * ((p - c).length() - r0) / (r1 - r0)
+            }
+            BuiltInProfile::Sine { mid, amp, k } => mid + amp * (k * p.x).sin(),
+        }
+    }
+
+    /// The profile's honest nominal range over its own span — the interval
+    /// checked against the Phase-A envelope for the honest-error policy.
+    /// Not the unbounded plane: linear/radial report [min(a,b), max(a,b)]
+    /// (the range over the interpolation span [x0,x1] / [r0,r1]); sine
+    /// reports [mid−|amp|, mid+|amp|] (the honest range of sin over the
+    /// whole x-axis).
+    pub fn nominal_range(&self) -> (f64, f64) {
+        match *self {
+            BuiltInProfile::Linear { a, b, .. } | BuiltInProfile::Radial { a, b, .. } => {
+                (a.min(b), a.max(b))
+            }
+            BuiltInProfile::Sine { mid, amp, .. } => (mid - amp.abs(), mid + amp.abs()),
+        }
+    }
+}
+
+/// Snap `delta` to the nearest angle in `envelope` — the Phase-A snap policy
+/// for deformed walls. The envelope is a discrete set of closed angles (see
+/// the tess-tilings `envelope_for` table); clamping to the endpoints of an
+/// interval would place points at non-closed angles in between, which is
+/// meaningless, so the honest treatment is the nearest closed angle.
+///
+/// Ties break toward the lower angle. Returns `None` for an empty envelope
+/// or a non-finite `delta` — the caller maps that to a named error.
+pub fn snap_to_envelope(delta: f64, envelope: &[f64]) -> Option<f64> {
+    if envelope.is_empty() || !delta.is_finite() {
+        return None;
+    }
+    let mut best = envelope[0];
+    let mut best_d = (best - delta).abs();
+    for &e in &envelope[1..] {
+        let d = (e - delta).abs();
+        if d < best_d {
+            best = e;
+            best_d = d;
+        }
+    }
+    Some(best)
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -527,6 +638,60 @@ fn build_map(walls: &[Wall]) -> WallMap {
         kind[v] = if ok { VKind::Joint } else { VKind::Bad };
     }
     WallMap { pts, adj, pairs, kind }
+}
+
+/// Read-only summary of a wall map's vertex kinds inside a region.
+///
+/// This is the per-substrate δ-validity envelope input (diss. §3.4.1 — the
+/// angle ranges whose strands close) and the substrate scoring input for the
+/// explorer: a closed strand network has **zero** degree-1 exits, zero
+/// ray end-caps and zero bad (odd-degree / unpaired) vertices inside the
+/// core. Straight-through midpoint joints (`straight2`) and antiparallel
+/// crossings (`joint`) are the normal, expected vertex kinds.
+///
+/// Uses the same merge and core-region gates as the decoration plan:
+/// vertices inside `region` only (windowing artefacts — exits and
+/// end-caps on unshared boundary edges — lie outside a covered region).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ValidityStats {
+    /// Total merged vertices inside the core region.
+    pub core_vertices: usize,
+    /// Degree-1 boundary exits (degree-1 ray endpoints) — strand openings.
+    pub exit: usize,
+    /// Degree-2 ray end-caps (corners) — strand openings.
+    pub corner: usize,
+    /// Odd-degree vertices (≥ 3) or deg ≥ 4 crossings whose darts do not
+    /// pair antiparallel — unpaired strands.
+    pub bad: usize,
+    /// Degree-2 straight-through midpoint joints (normal).
+    pub straight2: usize,
+    /// Degree ≥ 4 antiparallel crossings (normal).
+    pub joint: usize,
+}
+
+/// Count the wall-map vertex kinds inside `region`.
+///
+/// `region` is the view region to audit — the decoration plan's window
+/// contract keeps every unshared host edge outside it, so the core here
+/// is the region itself (optionally hairline-inset, as the caller likes).
+pub fn validity_stats(walls: &[Wall], region: &BBox) -> ValidityStats {
+    let m = build_map(walls);
+    let core = m.core(region);
+    let mut stats = ValidityStats::default();
+    for (v, &in_core) in core.iter().enumerate() {
+        if !in_core {
+            continue;
+        }
+        stats.core_vertices += 1;
+        match m.kind[v] {
+            VKind::Exit => stats.exit += 1,
+            VKind::Corner => stats.corner += 1,
+            VKind::Bad => stats.bad += 1,
+            VKind::Straight2 => stats.straight2 += 1,
+            VKind::Joint => stats.joint += 1,
+        }
+    }
+    stats
 }
 
 // ------------------------------------------------------------ strand walk --
@@ -1884,5 +2049,238 @@ mod tests {
         let ws = walls(&square_grid(2), 45.0);
         assert!(plan_decoration(&ws, 0.0, Outline, &sq_core4(2)).is_err());
         assert!(plan_decoration(&ws, f64::NAN, Outline, &sq_core4(2)).is_err());
+    }
+    // ──────────────────────────────────────────────────────────────────
+    // Parquet deformation battery (22d) — see .scratch/parquet-deformations/
+    // for the Phase-A derivation notes (envelope table, sweep + probe data).
+    // ──────────────────────────────────────────────────────────────────
+
+    fn wall_keys(ws: &[Wall]) -> std::collections::BTreeSet<SegKey> {
+        ws.iter().map(key).collect()
+    }
+
+    /// Byte-identity anchor: a constant-δ profile reproduces `walls()`
+    /// exactly (the delegation in `walls()` keeps the pre-deformation
+    /// engine byte-identical) across several closed + open angles.
+    #[test]
+    fn deform_constant_delta_matches_walls_byte_identity() {
+        for tiles in [square_grid(3), triangle_grid(2)] {
+            for &d in &[15.0f64, 30.0, 45.0, 60.0, 90.0] {
+                let plain = walls(&tiles, d);
+                let via_f = walls_with_delta(&tiles, |_| d);
+                assert_eq!(plain.len(), via_f.len(), "δ={d}: len");
+                assert_eq!(wall_keys(&plain), wall_keys(&via_f), "δ={d}: key set");
+            }
+        }
+    }
+
+    /// Shared internal edge midpoints: (i, j, midpoint) for every tile pair
+    /// sharing a boundary edge. Dedup by midpoint key.
+    fn shared_internal_midpoints(tiles: &[Tile]) -> Vec<(usize, usize, Vec2)> {
+        let mut out: Vec<(usize, usize, Vec2)> = Vec::new();
+        for i in 0..tiles.len() {
+            for j in (i + 1)..tiles.len() {
+                let pi = &tiles[i].poly.pts;
+                let pj = &tiles[j].poly.pts;
+                let mut found = false;
+                'edges: for a in 0..pi.len() {
+                    let (va, vb) = (pi[a], pi[(a + 1) % pi.len()]);
+                    for c in 0..pj.len() {
+                        let (vc, vd) = (pj[c], pj[(c + 1) % pj.len()]);
+                        let same = (va - vc).length() < 1e-9 && (vb - vd).length() < 1e-9;
+                        let reversed = (va - vd).length() < 1e-9 && (vb - vc).length() < 1e-9;
+                        if same || reversed {
+                            out.push((i, j, (va + vb) * 0.5));
+                            found = true;
+                            break 'edges;
+                        }
+                    }
+                }
+                let _ = found;
+            }
+        }
+        // Dedupe by midpoint key (one midpoint belongs to exactly one pair).
+        out.sort_by_key(|t| key_pt(t.2));
+        out.dedup_by_key(|t| key_pt(t.2));
+        out
+    }
+
+    /// Continuity at the shared edge midpoint (diss. §3.4.1): the incident
+    /// wall pairs of the two adjacent tiles are point reflections about
+    /// the midpoint. Holds exactly on the grid for constant δ (a symmetry
+    /// of the whole construction); tolerance-free on the 1e-6 grid.
+    #[test]
+    fn deform_point_reflection_continuity_at_shared_midpoints() {
+        for (tiles, delta, expect_count) in [
+            (square_grid(2), 45.0f64, Some(4usize)),
+            (square_grid(2), 90.0, Some(4usize)),
+            (triangle_grid(2), 60.0, None),
+        ] {
+            let shared = shared_internal_midpoints(&tiles);
+            if let Some(n) = expect_count {
+                assert_eq!(shared.len(), n, "internal midpoints");
+            }
+            assert!(!shared.is_empty(), "shared midpoints");
+            for (i, j, m) in &shared {
+                let wm = key_pt(*m);
+                let reflect = |w: &Wall| {
+                    let (o_is_a, o) = if key_pt(w.a) == wm {
+                        (true, w.b)
+                    } else {
+                        (false, w.a)
+                    };
+                    debug_assert!(key_pt(o) != wm, "wall with coincident endpoints");
+                    let _ = o_is_a;
+                    key_seg(
+                        *m,
+                        Vec2::new(2.0 * m.x - o.x, 2.0 * m.y - o.y),
+                    )
+                };
+                let ti: Vec<Tile> = std::slice::from_ref(&tiles[*i]).to_vec();
+                let tj: Vec<Tile> = std::slice::from_ref(&tiles[*j]).to_vec();
+                let wi = walls_with_delta(&ti, |_| delta);
+                let wj = walls_with_delta(&tj, |_| delta);
+                let mut reflected: std::collections::BTreeSet<SegKey> = std::collections::BTreeSet::new();
+                for w in &wi {
+                    if key_pt(w.a) == wm || key_pt(w.b) == wm {
+                        reflected.insert(reflect(w));
+                    }
+                }
+                let mut expected: std::collections::BTreeSet<SegKey> = std::collections::BTreeSet::new();
+                for w in &wj {
+                    if key_pt(w.a) == wm || key_pt(w.b) == wm {
+                        expected.insert(key(w));
+                    }
+                }
+                assert!(!reflected.is_empty(), "tile {i} walls at {m:?}");
+                assert_eq!(
+                    reflected,
+                    expected,
+                    "reflected walls of tile {i} != tile {j} at {m:?} (δ={delta})"
+                );
+            }
+        }
+    }
+
+    /// Piecewise-constant equivalence: a per-column constant profile
+    /// reproduces, within each column, the constant-δ walls for that
+    /// column's δ exactly (the exact bridge between deformed and
+    /// classic patterns). The middle column (which straddles the
+    /// breakpoint at x = 2.0) is deliberately excluded — its walls
+    /// necessarily use the per-midpoint angles, which the continuity
+    /// test above verifies structurally at closed angles.
+    #[test]
+    fn deform_per_column_piecewise_constant_equivalence() {
+        let tiles = square_grid(3);
+        let f = |m: Vec2| if m.x < 2.0 { 45.0 } else { 90.0 };
+        let global = walls_with_delta(&tiles, f);
+        for (col, angle) in [(0i64, 45.0f64), (2i64, 90.0f64)] {
+            let col_tiles: Vec<Tile> = tiles
+                .iter()
+                .filter(|t| t.poly.pts[0].x as i64 == col)
+                .cloned()
+                .collect();
+            assert_eq!(col_tiles.len(), 3);
+            let expected: std::collections::BTreeSet<SegKey> =
+                wall_keys(&walls_with_delta(&col_tiles, |_| angle));
+            let mut actual: std::collections::BTreeSet<SegKey> = std::collections::BTreeSet::new();
+            for w in &global {
+                let lo = w.a.x.min(w.b.x);
+                let hi = w.a.x.max(w.b.x);
+                if lo >= col as f64 - 1e-9 && hi <= (col + 1) as f64 + 1e-9 {
+                    actual.insert(key(w));
+                }
+            }
+            assert_eq!(actual, expected, "column {col}");
+        }
+    }
+
+    /// Crossing-split census on the piecewise-constant case: at the
+    /// closed angles inside the core region there are no degree-1 exits
+    /// and no degree-2 end-caps. The six unpaired vertices are all
+    /// exactly on the two interior vertical seams (x = 1.0 tiles the 45°
+    /// column against the middle column, x = 2.0 is the profile
+    /// discontinuity): the 90° medians of the right column cross the
+    /// 45° diamond chords of the middle column, so the strand
+    /// pairing breaks there — the honest picture of a genuine profile
+    /// change, not a bug.
+    #[test]
+    fn deform_census_closed_piecewise_constant() {
+        let tiles = square_grid(3);
+        let f = |m: Vec2| if m.x < 2.0 { 45.0 } else { 90.0 };
+        let ws = walls_with_delta(&tiles, f);
+        let region = BBox::new(Vec2::new(0.01, 0.01), Vec2::new(2.99, 2.99));
+        let stats = validity_stats(&ws, &region);
+        assert_eq!(stats.exit, 0, "exits: {stats:?}");
+        assert_eq!(stats.corner, 0, "corners: {stats:?}");
+        assert_eq!(stats.bad, 6, "bad (seam x=2.0 vertices): {stats:?}");
+        assert!(stats.straight2 + stats.joint > 0, "non-empty: {stats:?}");
+    }
+
+    /// Determinism: two runs over the same input produce identical output.
+    #[test]
+    fn deform_deterministic_two_runs_identical() {
+        let tiles = square_grid(3);
+        let f = |m: Vec2| 45.0 + 20.0 * (m.x / 3.0);
+        let a = walls_with_delta(&tiles, f);
+        let b = walls_with_delta(&tiles, f);
+        assert_eq!(a, b);
+    }
+
+    /// Built-in profile math: the three analytic profiles.
+    #[test]
+    fn built_in_profile_math() {
+        let lin = BuiltInProfile::Linear { a: 45.0, b: 90.0, x0: 0.0, x1: 2.0 };
+        assert_eq!(lin.delta(Vec2::new(0.0, 0.0)), 45.0);
+        assert_eq!(lin.delta(Vec2::new(1.0, 0.0)), 67.5);
+        assert_eq!(lin.delta(Vec2::new(2.0, 0.0)), 90.0);
+        assert_eq!(lin.nominal_range(), (45.0, 90.0));
+        // Ramps in the other direction.
+        let lin_rev = BuiltInProfile::Linear { a: 90.0, b: 45.0, x0: 0.0, x1: 2.0 };
+        assert_eq!(lin_rev.delta(Vec2::new(0.0, 0.0)), 90.0);
+        assert_eq!(lin_rev.delta(Vec2::new(2.0, 0.0)), 45.0);
+        assert_eq!(lin_rev.nominal_range(), (45.0, 90.0));
+
+        let rad = BuiltInProfile::Radial {
+            a: 45.0,
+            b: 90.0,
+            c: Vec2::new(0.0, 0.0),
+            r0: 1.0,
+            r1: 3.0,
+        };
+        assert_eq!(rad.delta(Vec2::new(1.0, 0.0)), 45.0);
+        assert_eq!(rad.delta(Vec2::new(2.0, 0.0)), 67.5);
+        assert_eq!(rad.delta(Vec2::new(0.0, 3.0)), 90.0);
+        assert_eq!(rad.nominal_range(), (45.0, 90.0));
+
+        let sine = BuiltInProfile::Sine { mid: 60.0, amp: 15.0, k: 1.0 };
+        assert_eq!(sine.delta(Vec2::new(0.0, 0.0)), 60.0);
+        assert!((sine.delta(Vec2::new(std::f64::consts::FRAC_PI_2, 0.0)) - 75.0).abs() < 1e-12);
+        assert!((sine.delta(Vec2::new(3.0 * std::f64::consts::FRAC_PI_2, 0.0)) - 45.0).abs() < 1e-12);
+        assert_eq!(sine.nominal_range(), (45.0, 75.0));
+        // Negative amplitude: honest range is the free interval, sign-independent.
+        let sine_neg = BuiltInProfile::Sine { mid: 60.0, amp: -15.0, k: 1.0 };
+        assert!((sine_neg.delta(Vec2::new(std::f64::consts::FRAC_PI_2, 0.0)) - 45.0).abs() < 1e-12);
+        assert_eq!(sine_neg.nominal_range(), (45.0, 75.0));
+    }
+
+    /// Snap policy: nearest closed angle, ties toward the lower, honest
+    /// empty/non-finite guards.
+    #[test]
+    fn snap_to_envelope_picks_nearest_closed_angle() {
+        let env = [45.0, 90.0];
+        assert_eq!(snap_to_envelope(50.0, &env), Some(45.0));
+        assert_eq!(snap_to_envelope(80.0, &env), Some(90.0));
+        assert_eq!(snap_to_envelope(70.0, &env), Some(90.0));
+        assert_eq!(snap_to_envelope(67.5, &env), Some(45.0)); // tie -> lower
+        assert_eq!(snap_to_envelope(45.0, &env), Some(45.0));
+        assert_eq!(snap_to_envelope(226.0, &env), Some(90.0));
+        assert_eq!(snap_to_envelope(100.0, &[45.0, 60.0]), Some(60.0));
+        assert_eq!(snap_to_envelope(60.0, &[60.0]), Some(60.0));
+        assert_eq!(snap_to_envelope(80.0, &[90.0, 45.0]), Some(90.0)); // unsorted input
+        // Guards.
+        assert_eq!(snap_to_envelope(45.0, &[]), None);
+        assert_eq!(snap_to_envelope(f64::NAN, &env), None);
+        assert_eq!(snap_to_envelope(f64::INFINITY, &env), None);
     }
 }

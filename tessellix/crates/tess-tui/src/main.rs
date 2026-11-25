@@ -8,6 +8,26 @@
 //!     [--param ID=VALUE ...]       set a tiling parameter (see `list`)
 //!     [--strapwork DEG]            overlay the Hankin PIC strapwork walls
 //!                                  at contact angle DEG on the tiling
+//!     [--deform NAME PARAMS...]    Islamic parquet deformation (diss.
+//!                                  §3.4.1): the contact angle varies as a
+//!                                  function of point. NAME is one of
+//!                                  linear | radial | sine with a fixed
+//!                                  parameter list:
+//!                                    linear a b x0 x1   ramp along x: angle
+//!                                      a at x0 → b at x1
+//!                                    radial a b cx cy r0 r1   ramp along
+//!                                      distance from centre (cx, cy):
+//!                                      a at r0 → b at r1
+//!                                    sine mid amp k   oscillation along
+//!                                      x: mid + amp·sin(k·x)
+//!                                  REPLACES --strapwork (mutually
+//!                                  exclusive). Walls are clamped to the
+//!                                  substrate's validated δ-envelope
+//!                                  (nearest closed angle — see
+//!                                  tess-tilings `envelope_for`); params
+//!                                  whose range cannot ever intersect the
+//!                                  envelope are a named error, not a
+//!                                  silent clamp.
 //!     [--decoration STYLE]         render a Kaplan §3.7 decoration style
 //!                                  over the strapwork walls instead of the
 //!                                  tiling itself: fill | outline |
@@ -27,8 +47,9 @@ mod app_ui;
 mod raster;
 mod thumb;
 
+use tess_core::geometry::Vec2;
 use tess_core::params::{ParamKind, ParamValue};
-use tess_core::strapwork::Decoration;
+use tess_core::strapwork::{BuiltInProfile, Decoration, snap_to_envelope};
 use tess_core::view::ColorMode;
 
 fn main() {
@@ -68,6 +89,7 @@ struct ExportArgs {
     mode: ColorMode,
     params: Vec<(String, String)>,
     strapwork: Option<f64>,
+    deform: Option<BuiltInProfile>,
     decoration: Option<Decoration>,
     band_w: f64,
 }
@@ -80,6 +102,112 @@ fn finite(v: &str, what: &str) -> Result<f64, String> {
         return Err(format!("{what} must be a finite number: {v}"));
     }
     Ok(f)
+}
+
+/// Fixed arity + per-parameter names for `--deform` profiles (diss. §3.4.1).
+fn deform_arity(name: &str) -> Option<(usize, &'static [&'static str])> {
+    match name {
+        "linear" => Some((4, &["a", "b", "x0", "x1"])),
+        "radial" => Some((6, &["a", "b", "cx", "cy", "r0", "r1"])),
+        "sine" => Some((3, &["mid", "amp", "k"])),
+        _ => None,
+    }
+}
+
+/// Parse the `--deform NAME ...` arm: the profile name (already consumed)
+/// and its fixed numeric parameter run (scanned up to the next flag token).
+/// Errors are honest named errors — never a silent clamp at parse time.
+fn parse_deform(name: &str, args: &[String], i: &mut usize) -> Result<BuiltInProfile, String> {
+    let (arity, names) = deform_arity(name).ok_or_else(|| {
+        format!("unknown --deform profile '{name}': expected linear | radial | sine")
+    })?;
+    let mut params: Vec<&str> = Vec::new();
+    while *i < args.len() && !args[*i].starts_with("--") {
+        params.push(args[*i].as_str());
+        *i += 1;
+    }
+    if params.len() != arity {
+        return Err(format!(
+            "--deform {name}: expected {arity} numeric params ({}), got {}",
+            names.join(" "),
+            params.len()
+        ));
+    }
+    let mut vals = Vec::with_capacity(arity);
+    for (raw, pname) in params.iter().zip(names.iter()) {
+        let v: f64 = raw
+            .parse()
+            .map_err(|_| format!("--deform {name}: bad float '{raw}' (expected {pname})"))?;
+        if !v.is_finite() {
+            return Err(format!("--deform {name}: {pname} must be a finite float: '{raw}'"));
+        }
+        vals.push(v);
+    }
+    match name {
+        "linear" => {
+            let (a, b, x0, x1) = (vals[0], vals[1], vals[2], vals[3]);
+            if x0 == x1 {
+                return Err("--deform linear: x0 and x1 must differ (the ramp span)".into());
+            }
+            Ok(BuiltInProfile::Linear { a, b, x0, x1 })
+        }
+        "radial" => {
+            let (a, b, cx, cy, r0, r1) = (vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
+            if r0 == r1 {
+                return Err("--deform radial: r0 and r1 must differ (the ramp span)".into());
+            }
+            Ok(BuiltInProfile::Radial {
+                a,
+                b,
+                c: Vec2::new(cx, cy),
+                r0,
+                r1,
+            })
+        }
+        "sine" => {
+            let (mid, amp, k) = (vals[0], vals[1], vals[2]);
+            Ok(BuiltInProfile::Sine { mid, amp, k })
+        }
+        _ => unreachable!("deform_arity already rejected '{name}'"),
+    }
+}
+
+/// Resolve the parsed deformation profile against the substrate's Phase-A
+/// envelope (`tess_tilings::envelope_for`) — the documented clamp policy
+/// (diss. §3.4.1):
+///
+/// * no validated envelope for the substrate → named error (never a guess);
+/// * profile nominal range entirely disjoint from the envelope → named
+///   error "params outside envelope" — no silent clamp;
+/// * otherwise → a closure snapping every point to the nearest closed
+///   angle (clamping to the envelope is the correct behaviour).
+///
+/// Pure: the envelope is passed in so the error policy is unit-testable.
+fn resolve_deform<'a>(
+    profile: BuiltInProfile,
+    envelope: Option<&'a [f64]>,
+    substrate_id: &str,
+) -> Result<impl Fn(Vec2) -> f64 + 'a, String> {
+    let envelope = envelope.ok_or_else(|| {
+        format!(
+            "no validated δ-envelope for substrate '{substrate_id}' — not a strapwork engine substrate"
+        )
+    })?;
+    let (lo, hi) = profile.nominal_range();
+    if !envelope.iter().any(|&e| e >= lo && e <= hi) {
+        return Err(format!(
+            "--deform profile range {lo:.3}..{hi:.3} is outside the validated δ-envelope [{}] for substrate '{substrate_id}' — params outside envelope",
+            envelope
+                .iter()
+                .map(|e| format!("{e:.1}°"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
+    }
+    Ok(move |q: Vec2| {
+        snap_to_envelope(profile.delta(q), envelope)
+            .expect("envelope is non-empty and profile parameters are finite")
+    })
 }
 
 /// Parse + validate export arguments. Kept free of registry or filesystem
@@ -95,6 +223,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         mode: ColorMode::Pattern,
         params: Vec::new(),
         strapwork: None,
+        deform: None,
         decoration: None,
         band_w: 0.1,
     };
@@ -132,6 +261,10 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
                 a.mode = ColorMode::parse(&next(&mut i)?).ok_or_else(|| "bad --mode".to_string())?
             }
             "--strapwork" => a.strapwork = Some(finite(&next(&mut i)?, "--strapwork")?),
+            "--deform" => {
+                let name = next(&mut i)?;
+                a.deform = Some(parse_deform(&name, args, &mut i)?);
+            }
             "--decoration" => {
                 let v = next(&mut i)?;
                 a.decoration = Some(Decoration::parse(&v).ok_or_else(|| {
@@ -164,9 +297,15 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
     if a.scale <= 0.0 {
         return Err("--scale must be a positive number".into());
     }
-    if a.decoration.is_some() && a.strapwork.is_none() {
+    if a.strapwork.is_some() && a.deform.is_some() {
         return Err(
-            "--decoration requires --strapwork DEG (the decoration decorates the strapwork walls)"
+            "--strapwork and --deform are mutually exclusive: --deform replaces the constant contact angle"
+                .into(),
+        );
+    }
+    if a.decoration.is_some() && a.strapwork.is_none() && a.deform.is_none() {
+        return Err(
+            "--decoration requires --strapwork DEG or --deform PROFILE (the decoration decorates the strapwork walls)"
                 .into(),
         );
     }
@@ -237,9 +376,14 @@ fn export(args: &[String]) -> Result<(), String> {
     // Hankin PIC strapwork overlay (M57 layer mode): walls at the given
     // contact angle over whatever tiles were generated. Absent flag = no
     // overlay, and the SVG is byte-identical to the pre-M57 export.
-    let walls = match a.strapwork {
-        Some(delta) => tess_core::strapwork::walls(&result.tiles, delta),
-        None => Vec::new(),
+    let walls = if let Some(profile) = &a.deform {
+        let f = resolve_deform(*profile, tess_tilings::envelope_for(&a.tiling), &a.tiling)?;
+        tess_core::strapwork::walls_with_delta(&result.tiles, f)
+    } else {
+        match a.strapwork {
+            Some(delta) => tess_core::strapwork::walls(&result.tiles, delta),
+            None => Vec::new(),
+        }
     };
     // Decoration styles (Kaplan §3.7) replace the tiling render with
     // paper + decorated walls. The gates run on the view region itself:
@@ -327,5 +471,143 @@ mod tests {
         assert!(e.contains("--band-w"), "{e}");
         // All of these fire inside parse_export — before any registry or
         // filesystem access (unknown tiling `square` never reached).
+    }
+    // ──────────────────────────────────────────────────────────────────
+    // Parquet deformation (22d): --deform parse policy + resolve_deform.
+    // ──────────────────────────────────────────────────────────────────
+
+    use super::resolve_deform;
+    use tess_core::strapwork::BuiltInProfile;
+
+    #[test]
+    fn deform_parse_errors_are_honest_and_pre_generation() {
+        // Unknown profile name.
+        let e = parse_export(&args(&["--tiling", "square", "--deform", "xyz", "1"])).unwrap_err();
+        assert!(e.contains("unknown --deform profile 'xyz'"), "{e}");
+        assert!(e.contains("linear | radial | sine"), "{e}");
+        // Wrong arity — too few.
+        let e = parse_export(&args(&["--tiling", "square", "--deform", "linear", "45", "90", "0"]))
+            .unwrap_err();
+        assert!(e.contains("--deform linear: expected 4 numeric params"), "{e}");
+        assert!(e.contains("a b x0 x1"), "{e}");
+        // Wrong arity — too many.
+        let e = parse_export(&args(&["--tiling", "square", "--deform", "linear", "45", "90", "0", "1", "2"]))
+            .unwrap_err();
+        assert!(e.contains("expected 4 numeric params"), "{e}");
+        // Bad float.
+        let e = parse_export(&args(&["--tiling", "square", "--deform", "linear", "45", "90", "0", "abc"]))
+            .unwrap_err();
+        assert!(e.contains("bad float 'abc'"), "{e}");
+        assert!(e.contains("(expected x1)"), "{e}");
+        // Non-finite.
+        let e = parse_export(&args(&["--tiling", "square", "--deform", "linear", "45", "90", "0", "nan"]))
+            .unwrap_err();
+        assert!(e.contains("must be a finite float"), "{e}");
+        // Degenerate ramp span.
+        let e = parse_export(&args(&["--tiling", "square", "--deform", "linear", "45", "90", "2", "2"]))
+            .unwrap_err();
+        assert!(e.contains("x0 and x1 must differ"), "{e}");
+        let e = parse_export(&args(&[
+            "--tiling", "square", "--deform", "radial", "45", "90", "0", "0", "1", "1",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("r0 and r1 must differ"), "{e}");
+        // Mutually exclusive with --strapwork.
+        let e = parse_export(&args(&[
+            "--tiling", "square", "--strapwork", "45", "--deform", "sine", "60", "15", "1",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("mutually exclusive"), "{e}");
+        // --decoration + --deform (no --strapwork) parses — the gate accepts
+        // either overlay flag.
+        let a = parse_export(&args(&[
+            "--tiling", "square", "--deform", "sine", "60", "15", "1", "--decoration", "outline",
+        ]))
+        .expect("--decoration with --deform parses");
+        assert_eq!(a.decoration, Some(tess_core::strapwork::Decoration::Outline));
+        assert!(a.strapwork.is_none());
+    }
+
+    #[test]
+    fn resolve_deform_policy() {
+        // Unknown substrate: no validated envelope → honest named error.
+        let e = resolve_deform(
+            BuiltInProfile::Linear { a: 45.0, b: 90.0, x0: 0.0, x1: 1.0 },
+            None,
+            "unknown-substrate",
+        )
+        .err()
+        .expect("no validated envelope is an error");
+        assert!(e.contains("no validated δ-envelope"), "{e}");
+        assert!(e.contains("unknown-substrate"), "{e}");
+
+        // Entirely disjoint nominal range → named error, envelope listed.
+        let e = resolve_deform(
+            BuiltInProfile::Linear { a: 120.0, b: 150.0, x0: 0.0, x1: 1.0 },
+            Some(&[45.0, 90.0]),
+            "square",
+        )
+        .err()
+        .expect("disjoint range is an error");
+        assert!(e.contains("params outside envelope"), "{e}");
+        assert!(e.contains("45.0°"), "{e}");
+        assert!(e.contains("90.0°"), "{e}");
+        assert!(e.contains("outside the validated δ-envelope"), "{e}");
+
+        // Partial overlap: envelope intersects the nominal range → OK,
+        // points snap to the nearest closed angle (tie → lower).
+        let f = resolve_deform(
+            BuiltInProfile::Sine { mid: 75.0, amp: 15.0, k: 1.0 },
+            Some(&[60.0, 90.0]),
+            "trihexagonal",
+        )
+        .expect("intersecting envelope");
+        assert_eq!(f(tess_core::Vec2::new(0.0, 0.0)), 60.0); // 75° tie → lower
+        assert_eq!(f(tess_core::Vec2::new(std::f64::consts::FRAC_PI_2, 0.0)), 90.0); // 90° — 60 vs 90: 30 vs 0
+
+        // Partial overlap, values beyond the interpolation span still snap.
+        let f = resolve_deform(
+            BuiltInProfile::Linear { a: 45.0, b: 90.0, x0: 0.0, x1: 2.0 },
+            Some(&[60.0, 90.0]),
+            "trihexagonal",
+        )
+        .expect("envelope intersects nominal range");
+        // At x0: raw 45° → 60 (30 vs 45).
+        assert_eq!(f(tess_core::Vec2::new(0.0, 0.0)), 60.0);
+        // Mid-span: raw 67.5° → 60 (7.5 vs 22.5).
+        assert_eq!(f(tess_core::Vec2::new(1.0, 0.0)), 60.0);
+        // Beyond the span (x1 < x): raw 112.5° → 90 (30 vs 22.5).
+        assert_eq!(f(tess_core::Vec2::new(3.0, 0.0)), 90.0);
+    }
+
+    #[test]
+    fn fig_3_7_strip_smoke_is_deterministic() {
+        // Canonical Fig. 3.7 shape: square substrate, wide-aspect strip
+        // window, linear ramp 45° → 90° across the window (tight stars →
+        // open crosses along x).
+        let svg_a = std::env::temp_dir().join(format!(
+            "tess_tui_smoke_a_{}.svg",
+            std::process::id()
+        ));
+        let svg_b = std::env::temp_dir().join(format!(
+            "tess_tui_smoke_b_{}.svg",
+            std::process::id()
+        ));
+        let argv = &[
+            "--tiling", "square", "--width", "1600", "--height", "400",
+            "--deform", "linear", "45", "90", "-40", "40", "--out",
+        ];
+        for out in [&svg_a, &svg_b] {
+            let mut argv2: Vec<String> = argv.iter().map(|s| s.to_string()).collect();
+            argv2.push(out.to_string_lossy().to_string());
+            super::export(&argv2).expect("Fig. 3.7 strip export succeeds");
+        }
+        let svg = std::fs::read_to_string(&svg_a).expect("SVG A readable");
+        assert!(svg.contains("<line"), "deformed walls must render as <line> elements");
+        let bytes_a = std::fs::read(&svg_a).unwrap();
+        let bytes_b = std::fs::read(&svg_b).unwrap();
+        assert_eq!(bytes_a, bytes_b, "two runs must produce identical bytes");
+        let _ = std::fs::remove_file(&svg_a);
+        let _ = std::fs::remove_file(&svg_b);
     }
 }

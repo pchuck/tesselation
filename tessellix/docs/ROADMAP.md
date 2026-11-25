@@ -92,12 +92,21 @@ the "mixed floret/cairo/prismatic" patterns.
   §55. The 11/13-pointed-star angle-mismatch applications
   ride on 22b/22e substrates; Bonner's off-center contact adjustments
   remain unformalized.*
-- 🔭 **22d Islamic parquet deformations** — θ as a smooth function
-  of position (θ(x) strips); spatial-animation star patterns on the
-  M94 engine (an export/render feature, not a registry entry).
-  Briefed ([parquet-deformations](briefs/parquet-deformations.md)) —
-  dispatches after 22g lands (same files); Phase A yields the
-  δ-validity envelope per substrate (24h's scoring input).
+- ✅ **22d Islamic parquet deformations (M165)** — θ as a smooth
+  function of position (θ(x) strips); spatial-animation star
+  patterns on the strapwork engine (an export/render feature, not a
+  registry entry). Landed: `walls_with_delta(tiles, f)` per-contact-
+  point override (walls() byte-identical as the const wrapper),
+  Linear/Radial/Sine profiles, `--deform` CLI. **Phase-A finding:**
+  the closure envelope is a DISCRETE point set per substrate
+  (square/truncated-square {45°,90°}, trihexagonal {60°,90°},
+  truncated-hexagonal {60°} — 90° does not close there), derived by
+  1°+0.1° sweeps + probes; "clamp" = snap-to-nearest-closed-angle
+  (`snap_to_envelope`, `envelope_for` in tess-tilings). Also
+  pinned: the §3.4.1 continuity identity is RAY-PAIR-level (shared
+  midpoint ⇒ reflected pairs); wall-level identities do not survive
+  varying f. Feeds the 24h explorer (`envelope_for` +
+  `validity_stats` + snap).
 - 🔭 **22e Quasiperiodic substrates + (n,c)-monster motifs** —
   regular 2n-gons on lattice-projection rhomb patches (5-D ⇒ Penrose
   P3), overlapping polygons fused into (n,c)-monsters

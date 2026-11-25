@@ -46,7 +46,7 @@ sessions · **L** = multi-session · **XL** = arc (design doc first).
 | 18 | n-fold rhomb family (7-fold GS/Harriss, CAST) | Quasiperiodic | degree-3 arithmetic | L+ | P2 |
 | 19 | Second measured ornamental panel | Wallpaper | M35 pipeline | M–L | P2 |
 | 20 | Fractalizing k-uniform (2+√3 dodecagon) ✅ DONE (M110, same-plane limit-periodic family over 3.12.12 — not a substitution) | Quasiperiodic | substitution on uniform basis | M | P2 |
-| 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements ✅(M163); 22b Najm template-tiling generator ✅(M99); 22c rosette transform ✅(M99); 22d parquet deformations; 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite ✅(M164); 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
+| 22 | Kaplan Ch. 3 Islamic star-pattern extensions (22a design elements ✅(M163); 22b Najm template-tiling generator ✅(M99); 22c rosette transform ✅(M99); 22d parquet deformations ✅(M165); 22e quasiperiodic substrates + (n,c)-monsters + Kepler Aa; 22f absolute-geometry patterns; 22g decoration suite ✅(M164); 22h Moroccan/optimization/strange stars) | Islamic | motif/tiling generators + rendering | S–XL | P1/P2 |
 | 23 | Bielefeld Tilings Encyclopedia survey — candidate clusters (golden-family Q(√φ), 8-fold Q(√2), 12-fold Q(√3), rep-tile/limit-periodic, generalized GLB binary §9-rescope, girih-family, pinwheel family, cubic/quartic field tiers) | mixed | see §23 | S–XL | P1/P2 |
 | 24 | Medallion composition program — parameterized medallion interface + hole-bearing substrates + boundary-matched inference; two-level star-and-field compositions on periodic nets (see §24) | Islamic/engine | composition generator | XL (staged) | P1 |
 
@@ -1768,6 +1768,25 @@ can be adopted independently through the standard checklist.
     Dispatches only after 22g lands (same three files).
   - **Effort** M, **tier** P1 (rendering feature, no new tiling) —
     brief [parquet-deformations](briefs/parquet-deformations.md).
+  - **Status: ✅ LANDED as M165 (2026-11-24).** `walls_with_delta`
+    per-contact-point override (walls() byte-identical as the
+    const-f wrapper; the per-point change is exactly hoisting the
+    sin_cos into the edge loop — continuity is structural because
+    both tiles share the midpoint). Three deterministic profiles
+    (Linear/Radial/Sine) + `--deform` CLI (honest parse/resolve
+    errors). **Phase-A audit finding:** the closure envelope is a
+    DISCRETE point set, not an interval — square/truncated-square
+    close at exactly {45°, 90°}, trihexagonal at {60°, 90°},
+    truncated-hexagonal at {60°} (1°+0.1° sweeps + single-tile and
+    interior-exit probes; 784/968 degree-1 exits are interior, i.e.
+    genuine open-strand geometry, not window artefacts). Clamp
+    policy therefore = snap-to-nearest-closed-angle
+    (`snap_to_envelope`, ties→lower) with `envelope_for(substrate)`
+    exposed in tess-tilings for the 24h explorer. Geometry finding
+    pinned: the §3.4.1 continuity identity is ray-pair-level
+    (point-reflected pairs at every shared midpoint); wall-level
+    piece equivalence does NOT survive varying f (mixed-angle seam
+    tiles), documented rather than forced. Tests 1287 → 1300.
 - **22e. Quasiperiodic substrates and (n,c)-monster motifs** — diss.
   §3.10. Lattice-projection (Quasitiler) rhomb patches: an n-D
   integer lattice cut by a 2-plane yields rhombs with angles
