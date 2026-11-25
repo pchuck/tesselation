@@ -1895,8 +1895,33 @@ quasiperiodic hosts later).
   an aesthetic objective (band-balance à la Castéra, crossing density);
   validate against Bonner's documented corrections before trusting it.
   - **Effort** L, **tier** strong, after 24b.
+- **24g. Bonner polygonal systems** — the *subdivision* path to
+  multi-level patterns: nested polygonal systems (4-fold, 5-fold, …)
+  subdividing into child polygons with prescribed motifs, producing
+  multi-level results the inference path (24b) does not directly
+  reach. Build one system exactly, then compare both paths on the
+  Darb-i Imam ground truth (M161). Source: Bonner,
+  *Islamic Geometric Patterns* (primary source acquisition flagged —
+  the dissertation discusses the approach but does not document the
+  systems).
+  - **Effort** L per system, **tier** strong, source-gated.
+- **24h. PIC explorer — angle sweep + programmatic scoring** — the
+  generate-and-filter stage the pipeline lacks: sweep δ (and per-tile
+  class θ via the M163 motif assignment) over a host tiling, score
+  every candidate programmatically (symmetry preservation via
+  `classify.rs`; sliver-free via minimum crossing angle and minimum
+  face area; strap-line density per area), render ranked galleries via
+  the 22g styles. Winners become exact-pin registry candidates —
+  exploration proposes, exactness disposes. Also the substrate for
+  24e. Deterministic sweep grid + deterministic scoring (no RNG; §15's
+  determinism policy untouched).
+  - **Effort** M, **tier** fast/worker, after 22g (render-surface
+    conventions) and 24a (catalog hosts).
 - **24f. Quasiperiodic medallion hosts** — dodecagonal shield (M51) and
-  14-fold (M159) hosts with medallion-bearing patches. Gated behind
+  14-fold (M159) hosts with medallion-bearing patches; the
+  Voronoi/Delaunay *dual method* (Ammann-bar / Robinson-triangle duals)
+  noted as the exact construction path for Penrose-class hosts — the
+  centroid dual (M98) is its periodic special case. Gated behind
   CAP/A4 file ownership (aperiodic/quasiperiodic families in flight).
   - **Effort** XL, **tier** frontier.
 - **Enabler on demand:** fields-layer §8 items (K₁₆/K₂₀) if 16/20-fold

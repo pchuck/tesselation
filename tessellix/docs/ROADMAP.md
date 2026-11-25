@@ -24,8 +24,17 @@ complementary strap pattern. Full dossier in
   instances; inference-fill vs dual-net-fill compared. After 24b.
 - **24e Underdetermined-θ search** (22h partial) — after 24b maps the
   freedom.
+- **24g Bonner polygonal systems** — the subdivision path to multi-level
+  patterns (nested 4-fold/5-fold systems); compared against 24b's
+  inference path on the Darb-i Imam ground truth. Source-gated (Bonner's
+  book needs acquiring).
+- **24h PIC explorer** — δ/θ sweep over host tilings with programmatic
+  scoring (symmetry, sliver-free, strap density); ranked galleries via
+  the 22g styles; winners become exact-pin registry candidates.
+  After 22g + 24a.
 - **24f Quasiperiodic medallion hosts** — gated behind CAP/A4 family
-  ownership.
+  ownership; the dual method (Ammann-bar / Robinson-triangle duals) is
+  the exact path for Penrose-class hosts.
 
 User-pinned: ground-truth-first · registry instances · periodic nets
 first.
