@@ -23,6 +23,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--width` / `--height` | 1200 / 800 | SVG canvas size in px |
 | `--scale` | 1.0 | uniform scale (1.0 → ~20 world units tall) |
 | `--rotation` | 0 | rotation in degrees |
+| `--center X,Y` | origin | center the view at world (X, Y) — finite values |
 | `--mode` | pattern | `single` \| `pattern` \| `proto` \| `gray` |
 | `--strapwork DEG` | off | overlay the Hankin PIC strapwork walls at contact angle DEG (measured from each tile edge) on any tiling — layer mode of the polygons-in-contact engine (`tess-core::strapwork`) |
 | `--decoration STYLE` | off | over the `--strapwork` walls (required), render a Kaplan §3.7 ornamentation style — `fill` \| `outline` \| `interlace` \| `outline-interlace`; `--mode` is ignored under `--decoration`. See [rendering.md](rendering.md) |
@@ -93,15 +94,27 @@ cargo run -p tess-tui -- export --tiling taylor-socolar \
 # far-field at 35 degrees of rotation — 64,819 tiles:
 cargo run -p tess-tui -- export --tiling taylor-socolar \
     --width 1200 --height 900 --scale 0.4 --rotation 35 --mode proto --out far-field-rot.svg
+
+# far-field centered at world (60, 0): the frame is translated exactly
+# by (60, 0) — world x ∈ [26.2, 93.8] this run — 64,905 tiles:
+cargo run -p tess-tui -- export --tiling taylor-socolar \
+    --width 1200 --height 900 --scale 0.4 --center 60,0 --mode proto --out far-field-centered.svg
 ```
 
-The view is always centered on the origin — the `export` path has no
-pan/offset flag — so the far-field examples render a wide frame around
-the patch (scale 0.4 → world frame ±33.3 x by ±25 y), not a window
-centered elsewhere. Every view is subject to the tile budget: a view
-whose window would exceed `MAX_TILES` (250,000 tiles, e.g. scale 0.15 at
-this canvas) is refused — stderr `error: too many tiles for this view —
-zoom in`, exit 1, no SVG written.
+`--center X,Y` centers the frame at world (X, Y) — the view is translated
+exactly by (X, Y) while the frame size and scale are unchanged (finite
+values; a malformed or non-finite value is refused with a named parse
+error, no SVG written). The examples above are origin-centered (the
+default); the last one puts the same wide frame (scale 0.4 → world frame
+±33.3 x by ±25 y) around world (60, 0) instead — a genuinely far-field
+window, the patch no longer being near-centered in it. Verified: 64,905
+tiles (vs 64,969 origin-centered), all tokens finite, the background rect
+at x = 26.67 = 60 − 33.33.
+
+Every view is subject to the tile budget: a view whose window would
+exceed `MAX_TILES` (250,000 tiles, e.g. scale 0.15 at this canvas) is
+refused — stderr `error: too many tiles for this view — zoom in`, exit 1,
+no SVG written.
 
 ## GUI
 

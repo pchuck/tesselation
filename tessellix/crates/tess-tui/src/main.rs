@@ -5,6 +5,8 @@
 //!   tess-tui list                  list available tilings
 //!   tess-tui export --tiling ID    write an SVG of the tiling
 //!     --width N --height N --out FILE --scale F --rotation DEG --mode MODE
+//!     [--center X,Y]               center the view at world (X, Y)
+//!                                  (default: origin; finite values)
 //!     [--param ID=VALUE ...]       set a tiling parameter (see `list`)
 //!     [--strapwork DEG]            overlay the Hankin PIC strapwork walls
 //!                                  at contact angle DEG on the tiling
@@ -92,6 +94,7 @@ struct ExportArgs {
     deform: Option<BuiltInProfile>,
     decoration: Option<Decoration>,
     band_w: f64,
+    center: Option<(f64, f64)>,
 }
 
 /// Parse a float CLI value, rejecting NaN and infinities: they would
@@ -226,6 +229,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         deform: None,
         decoration: None,
         band_w: 0.1,
+        center: None,
     };
     let mut i = 0;
     let next = |i: &mut usize| -> Result<String, String> {
@@ -275,6 +279,16 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
                 })?);
             }
             "--band-w" => a.band_w = finite(&next(&mut i)?, "--band-w")?,
+            "--center" => {
+                let v = next(&mut i)?;
+                let (x_s, y_s) = v.split_once(',').ok_or_else(|| {
+                    format!("bad --center '{v}': expected X,Y")
+                })?;
+                a.center = Some((
+                    finite(x_s, "--center x")?,
+                    finite(y_s, "--center y")?,
+                ));
+            }
             "--param" => {
                 let v = next(&mut i)?;
                 let (id, value) = v
@@ -361,12 +375,13 @@ fn export(args: &[String]) -> Result<(), String> {
         params.set(spec.id, v);
     }
 
-    // View centered at the origin, ~20 world units tall at scale 1.
+    // View centered at --center (default origin), ~20 world units tall at scale 1.
     let world_h = 20.0 / a.scale.max(1e-9);
     let world_w = world_h * a.width as f64 / a.height as f64;
+    let (cx, cy) = a.center.unwrap_or((0.0, 0.0));
     let region = tess_core::BBox::new(
-        tess_core::Vec2::new(-world_w / 2.0, -world_h / 2.0),
-        tess_core::Vec2::new(world_w / 2.0, world_h / 2.0),
+        tess_core::Vec2::new(cx - world_w / 2.0, cy - world_h / 2.0),
+        tess_core::Vec2::new(cx + world_w / 2.0, cy + world_h / 2.0),
     );
     let result = tiling.generate(&params, &tess_core::Query { region });
     if let Some(msg) = result.message {
@@ -609,5 +624,94 @@ mod tests {
         assert_eq!(bytes_a, bytes_b, "two runs must produce identical bytes");
         let _ = std::fs::remove_file(&svg_a);
         let _ = std::fs::remove_file(&svg_b);
+    }
+
+    #[test]
+    fn center_flags_parse() {
+        // Default: no flag = origin-centered, no panic.
+        let a = parse_export(&args(&["--tiling", "square"])).expect("defaults");
+        assert_eq!(a.center, None);
+        // Acceptance: world coordinates, negative values, whitespace-free.
+        let a = parse_export(&args(&[
+            "--tiling",
+            "square",
+            "--center",
+            "60,-17.5",
+        ]))
+        .expect("valid --center");
+        assert_eq!(a.center, Some((60.0, -17.5)));
+        // Acceptance: decimal x, zero y.
+        let a = parse_export(&args(&[
+            "--tiling",
+            "square",
+            "--center",
+            "-33.91,0",
+        ]))
+        .expect("negative x, zero y");
+        assert_eq!(a.center, Some((-33.91, 0.0)));
+    }
+
+    #[test]
+    fn center_flags_reject_bad_values() {
+        // Malformed: missing comma.
+        let e = parse_export(&args(&["--tiling", "square", "--center", "60"])).unwrap_err();
+        assert!(e.contains("expected X,Y"), "{e}");
+        // Malformed: bad x.
+        let e = parse_export(&args(&["--tiling", "square", "--center", "abc,0"])).unwrap_err();
+        assert!(e.contains("--center x"), "{e}");
+        // Malformed: bad y.
+        let e = parse_export(&args(&["--tiling", "square", "--center", "0,abc"])).unwrap_err();
+        assert!(e.contains("--center y"), "{e}");
+        // Non-finite must not flow through (same contract as --scale).
+        let e = parse_export(&args(&["--tiling", "square", "--center", "NaN,0"])).unwrap_err();
+        assert!(e.contains("must be a finite number"), "{e}");
+        let e = parse_export(&args(&["--tiling", "square", "--center", "0,inf"])).unwrap_err();
+        assert!(e.contains("must be a finite number"), "{e}");
+        // Missing value entirely.
+        let e = parse_export(&args(&["--tiling", "square", "--center"])).unwrap_err();
+        assert!(e.contains("--center"), "{e}");
+    }
+
+    #[test]
+    fn center_region_translation_is_byte_consistent() {
+        // The region math must translate, not recenter: --center 0,0 is
+        // byte-identical to the no-flag default, and --center 60,0 differs.
+        let svg_a = std::env::temp_dir().join(format!(
+            "tess_tui_center_a_{}.svg",
+            std::process::id()
+        ));
+        let svg_b = std::env::temp_dir().join(format!(
+            "tess_tui_center_b_{}.svg",
+            std::process::id()
+        ));
+        let svg_c = std::env::temp_dir().join(format!(
+            "tess_tui_center_c_{}.svg",
+            std::process::id()
+        ));
+        let base = &["--tiling", "square", "--width", "400", "--height", "300"];
+        let mut argv_a: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        argv_a.push("--out".into());
+        argv_a.push(svg_a.to_string_lossy().into());
+        super::export(&argv_a).expect("origin-centered export succeeds");
+        let mut argv_b: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        argv_b.push("--center".into());
+        argv_b.push("0,0".into());
+        argv_b.push("--out".into());
+        argv_b.push(svg_b.to_string_lossy().into());
+        super::export(&argv_b).expect("--center 0,0 export succeeds");
+        let mut argv_c: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        argv_c.push("--center".into());
+        argv_c.push("60,0".into());
+        argv_c.push("--out".into());
+        argv_c.push(svg_c.to_string_lossy().into());
+        super::export(&argv_c).expect("--center 60,0 export succeeds");
+        let bytes_a = std::fs::read(&svg_a).unwrap();
+        let bytes_b = std::fs::read(&svg_b).unwrap();
+        let bytes_c = std::fs::read(&svg_c).unwrap();
+        assert_eq!(bytes_a, bytes_b, "--center 0,0 must be byte-identical to the default");
+        assert_ne!(bytes_a, bytes_c, "--center 60,0 must shift the view");
+        let _ = std::fs::remove_file(&svg_a);
+        let _ = std::fs::remove_file(&svg_b);
+        let _ = std::fs::remove_file(&svg_c);
     }
 }
