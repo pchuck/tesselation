@@ -24,8 +24,10 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--scale` | 1.0 | uniform scale (1.0 → ~20 world units tall) |
 | `--rotation` | 0 | rotation in degrees |
 | `--center X,Y` | origin | center the view at world (X, Y) — finite values |
+| `--param ID=VALUE` | — (optional) | override a tiling parameter for this run (see `list` for the parameter's id/type); repeatable |
 | `--mode` | pattern | `single` \| `pattern` \| `proto` \| `gray` |
 | `--strapwork DEG` | off | overlay the Hankin PIC strapwork walls at contact angle DEG (measured from each tile edge) on any tiling — layer mode of the polygons-in-contact engine (`tess-core::strapwork`) |
+| `--deform NAME PARAMS…` | off | Islamic parquet deformation (diss. §3.4.1): the contact angle varies as a function of point; NAME is `linear` (`linear a b x0 x1` — ramp along x: a at x0 → b at x1), `radial` (`radial a b cx cy r0 r1` — ramp along distance from centre (cx, cy): a at r0 → b at r1) or `sine` (`sine mid amp k` — oscillation along x: mid + amp·sin(k·x)); mutually exclusive with `--strapwork` |
 | `--decoration STYLE` | off | over the `--strapwork` walls (required), render a Kaplan §3.7 ornamentation style — `fill` \| `outline` \| `interlace` \| `outline-interlace`; `--mode` is ignored under `--decoration`. See [rendering.md](rendering.md) |
 | `--band-w W` | 0.1 | band width in world units for the decoration layer (requires `--decoration`) |
 | `--out`, `-o` | tessellix.svg | output SVG file |
@@ -53,7 +55,7 @@ cargo run -p tess-tui -- explore --tiling square --top-k 3 --out leaderboard.jso
 
 Output is a `pic-explorer-leaderboard/v1` JSON document, byte-deterministic across runs (same bytes, two-run test): substrate, region, the sort contract (score ascending, ties by angle, refused sink with rank 0), both axes' score formulas, refused/violation counts, and one row per candidate — axis, substrate id, angle, rank, score, feasibility, and the feature-vector groups: δ rows carry `validity` (core vertices / exit / corner / bad / straight2 / joint), `wall_map` (degree histogram, strand count, face count, min face area), `geometry` (total wall length, strap density, crossings, min crossing angle, crossing density) and `symmetry` (translation / mirror / rotation invariance + fold note); θ rows carry `motifs`, `partition_complete`, `max_partition_error`, `n_cells`, `min_face_area`, `total_area`, `symmetry` and `feasibility_reason`. Lower score is better. The `--csv` variant flattens the same rows into one column-per-field row each; the `--gallery` SVGs are named `<substrate>-d<δ>-r<rank>.svg` / `<substrate>-t<offset>-r<rank>.svg` — δ rows via the decoration-first gallery (fill → interlace → outline-interlace → outline, band 0.1, plain-wall fallback), θ rows via cells-as-tiles. Field-by-field schema: the M170 entry in [CHANGELOG](history/CHANGELOG.md).
 
-**Browse mode** — the tab bar lists the ten display categories with card counts; below it a responsive card grid shows the active tab's
+**Browse mode** — the tab bar lists the eleven display categories with card counts; below it a responsive card grid shows the active tab's
 tilings as blocks with a half-block raster thumbnail, the tiling name (up to
 two lines), a `group · lattice` line (wallpaper tilings), a short description
 fragment, and `params: n` when the tiling has adjustable parameters. A
@@ -119,7 +121,7 @@ cargo run -p tess-tui -- export --tiling taylor-socolar \
     --width 1200 --height 900 --scale 0.4 --rotation 35 --mode proto --out far-field-rot.svg
 
 # far-field centered at world (60, 0): the frame is translated exactly
-# by (60, 0) — world x ∈ [26.2, 93.8] this run — 64,905 tiles:
+# by (60, 0) — world x ∈ [26.67, 93.33] this run — 64,905 tiles:
 cargo run -p tess-tui -- export --tiling taylor-socolar \
     --width 1200 --height 900 --scale 0.4 --center 60,0 --mode proto --out far-field-centered.svg
 
@@ -147,7 +149,7 @@ the frame catches a partial subset of the patch — `--center -14,0` → 15 of 2
 tiles for wis-12-fold, `15,0` → 13 of 32 for golden-bee, and the nominal
 `12,0` → 198 of 611 for girih-decagon-patch — still well-formed and
 all-finite, never an error. Note the per-tiling edge: girih-decagon-patch's
-patch spans ~±17 × ±12 world units, larger than the default 30×20 frame, so
+patch spans ~±29.3 × ±30.7 world units, larger than the default 30×20 frame, so
 its origin-centered rendering already shows 245 of 611 tiles; `--scale 0.05`
 renders the full patch (26 / 32 / 611 tiles, no `MAX_TILES` trip).
 
@@ -163,7 +165,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
 `tess-core::browse` model — no side panel in either mode:
 
 - **Browse mode** — the whole window is the card grid. A tab band
-  (the ten category tabs with card counts + a search field, one
+  (the eleven category tabs with card counts + a search field, one
   wrapping row) sits over a responsive card grid: the column count is
   computed from the window width (target card ~240 px, fully dynamic
   — no upper bound) and the cards stretch to fill. Card size is
