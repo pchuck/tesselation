@@ -1,5 +1,12 @@
 # Brief: two-level subdivision systems — polygonal-net path (24g)
 
+> **⛔ STOPPED 2026-11-25 under condition (a) — never improvise.** Type A
+> per-class tables are book-gated (free-source forensics exhaustive);
+> the "same mosaic, two derivations" premise is CORRECTED — Bonner's
+> Type A and the landed M161 mosaic are different hierarchical systems
+> sharing 2φ³ (three independent exact derivations banked; the joint
+> rule contradicts). Full report: the 24g scratch REPORT.md; status
+> records in PROPOSED/ROADMAP. Resume needs the Bonner book.
 > **Precondition MET (2026-11-25):** the Bonner research dossier is banked
 > at `.scratch/bonner-24g/dossier.md` (746 lines, 9 free full-text sources
 > alongside it) — read it FIRST, especially §1 (subdivision mechanics
