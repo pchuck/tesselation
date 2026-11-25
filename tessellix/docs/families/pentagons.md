@@ -64,7 +64,7 @@ briefs cite them as `§N`.
 > with every d-side bisected by a T-junction; type 10 (James 1975)
 > seventh: the arc's first cmm and first centered-rectangular lattice —
 > the B = 90° member of the a = b = c + e, d² = c² + e² family
-> (isosceles, chiralities coincide as vertex sets), 6-tile oblique unit
+> (isosceles, chiralities coincide as vertex sets), 6-tile centered-rectangular unit
 > with det 21, non-edge-to-edge with both length-2 sides bisected; cmm
 > proven by exact audit, mirrors and a half-turn ruling out p2 and the
 > centered lattice L' = Z(3,3)+Z(−7,7) (centre (−2,5) ∈ L∖L') ruling
@@ -494,8 +494,9 @@ briefs cite them as `§N`.
 - **Unit cell:** 6 cells as (mirror, anchor, rotation) placements of
   the runtime prototile (vertex A is pinned by the anchor): the four
   D-rotations 0°/90°/180°/270° at the origin, plus M90 at
-  (1, 2) and M270 at (−1, −2), on the oblique lattice
-  w1 = (5, −2), w2 = (8, 1) with |det(w1, w2)| = 21 = 6 × area.
+  (1, 2) and M270 at (−1, −2), on the centered-rectangular lattice
+  w1 = (3, 3), w2 = (−2, 5) with |det(w1, w2)| = 21 = 6 × area (the
+  M63 basis (5, −2)/(8, 1) spans the same lattice).
   Extracted from a verified exact construction and re-verified on the
   model before porting: zero overlaps, exactly-once coverage, the
   complete refined edge gluing, and an exact symmetry audit of the
@@ -509,7 +510,8 @@ briefs cite them as `§N`.
   y = x); the glide axes fill the families x + y = 3k/2 \ 3k and
   x − y = 7k/2.  The representative genuine glide g = T(5,−2)∘R2
   has axis x + y = 3/2 at perpendicular offset (3/4, 3/4) from the
-  origin, g² = T_{(7,−7)} = 3w1 − w2 ∈ L, and no conjugate of
+  origin, g² = T_{(7,−7)} = w1 − 2w2 ∈ L (registered basis;
+  3w1 − w2 in the M63 basis), and no conjugate of
   g is a pure reflection.  Since w1 ∈ L, the symmetry coset of g is
   w1 + L = L: every (R, s) with s ∈ L is a symmetry.  True negatives
   (images verified unplaced on the 164-tile patch): the reflection in
@@ -522,14 +524,16 @@ briefs cite them as `§N`.
   orthogonal Z-basis (the minimum determinant over orthogonal integer
   pairs is 42, never 21).  That centered lattice is what separates cmm
   from pmm, and the mirrors (plus the half-turn) rule out p2.  The
-  primitive basis L (det 21, w1·w2 = 38 ≠ 0) is registered as
-  `Oblique`; the centered-rectangular structure lives in L'.
+  primitive basis L (det 21, w1·w2 = 9 for the registered basis
+  (3, 3)/(−2, 5); w1·w2 = 38 ≠ 0 for the M63 basis (5, −2)/(8, 1)) is
+  registered as `CenteredRectangular`; the centered-rectangular
+  structure lives in L'.
 - **Verify:** standard trio (coverage, rotated-scaled, deterministic)
   + unit-structure test (6 cells: four D + two M, seed pattern
   [0,1,0,1,2,2], all angles 90°/135° exact, side multiset
   {1, 1, √2, 2, 2}, closure E = (0, 2) at 1e-12, cyclic (side, angle)
-  fingerprints forward/reversed, lattice literals, w1·w2 = 38
-  (oblique), det = 6·area = 21) + refined-edge census test (164-tile
+  fingerprints forward/reversed, lattice literals, w1·w2 = 9
+  (centered-rectangular), det = 6·area = 21) + refined-edge census test (164-tile
   patch: 518 full + 76 split at t = 1/2, one covering edge per
   sub-edge; the midpoint window (−7.75, 13.75) × (−7.75, 11.75)
   is an exact count with a minimum boundary gap of 1/4) +
