@@ -7,7 +7,7 @@ documentation — catalog tables and the numbered build arcs — lives in
 milestone changelog in `docs/history/CHANGELOG.md`. Start at
 [docs/INDEX.md](docs/INDEX.md).)*
 
-**Implemented: 122 tilings** in ten families — the map and per-family
+**Implemented: 163 tilings** in eleven families — the map and per-family
 sizes are in [docs/INDEX.md](docs/INDEX.md). Doc-sync guard tests
 (`family_docs_match_registrations`, `readme_catalog_matches_registry`)
 fail the suite if the tables drift from the registry.

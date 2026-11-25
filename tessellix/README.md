@@ -168,7 +168,7 @@ gallery taxonomy: [docs/TAXONOMY.md](docs/TAXONOMY.md).
 Four crates: `tess-core` holds the `Tiling` trait — generate exactly the
 tiles intersecting a query bbox, no gaps/overlaps/outside tiles — plus
 self-describing parameters, the browse model, and software rendering;
-`tess-tilings` holds the 162 built-ins in eleven families (periodic tilings
+`tess-tilings` holds the 163 built-ins in eleven families (periodic tilings
 are `LatticeTiling` **data tables**, aperiodic/nonperiodic ones direct
 substitution generators with exact-arithmetic anchors); `tess-tui`
 (ratatui) and `tess-gui` (egui) are thin front ends over the shared

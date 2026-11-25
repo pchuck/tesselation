@@ -2,18 +2,13 @@
 
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`) — eleven since 2026-11-24, when the Isohedral
-tab was added for the Kaplan IH instances —: **Uniform** (11) · **Two-Uniform** (11) ·
-**Laves (Catalan duals)** (15) · **Wallpaper** (17) · **Pentagon
-Types** (12) · **Islamic** (16) · **Arrangements** (5) ·
-**Quasiperiodic** (8) · **Aperiodic** (6) · **Nonperiodic** (4) —
-105 memberships over the 93 implemented tilings; the 12 extra are
-secondary memberships. (Counts at this commit; the block pre-dated
-M74/M77/M78/M79, was re-synced in M81, in M84, in M85, with the
-M87/M88/M89 two-uniform batch, in M90–M92, in M93, with the M94
-Hankin batch, in M98, in M99 (hankin-3-12-12), in M99 again
-(hankin-square-two-point), in M100 (hankin-3-6-3-6), and in M100
-again (hankin-3-4-6-4) — live totals 96 tilings / 108 memberships,
-Islamic 19 — without re-syncing the counts in this block.)
+tab was added for the Kaplan IH instances —: **Uniform** (11) · **Two-Uniform** (20) ·
+**Laves (Catalan duals)** (33) · **Wallpaper** (17) · **Pentagon
+Types** (17) · **Isohedral** (5) · **Islamic** (29) · **Arrangements** (8) ·
+**Quasiperiodic** (21) · **Aperiodic** (12) · **Nonperiodic** (11) —
+184 memberships over the 163 implemented tilings; the 21 extra are
+secondary memberships. (Counts at this commit; the per-tab figures
+are pinned by `registry_groups_are_complete_and_canonically_ordered`.)
 
 - **Multi-tab membership.** `Tiling::secondary_categories()` (default
   `&[]`) lets a tiling appear in additional tabs: `triangle`,
@@ -23,7 +18,7 @@ Islamic 19 — without re-syncing the counts in this block.)
   `browse_tabs` appends secondary categories to each card's tabs and
   sorts each tab by `section_key`, which now guards on the *tab's*
   category, not the card's (a Wallpaper tab is all-secondary).
-  Both UIs (ratatui + egui) pin the ten-tab layout, and the headless
+  Both UIs (ratatui + egui) pin the eleven-tab layout, and the headless
   egui geometry test pins the new card budget (2-line card titles,
   no clipping at 1200×900, 640×800 and 2560×900).
 - **Wallpaper catalog.** The Wallpaper tab is a group catalog, not a
