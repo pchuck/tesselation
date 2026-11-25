@@ -160,7 +160,7 @@ briefs cite them as `§N`.
 
 ### 9. Pregnant chair (rep-tile) ✅ (M136)
 
-- **Motif:** the √3-inflation two-prototile rep-tile from the Bielefeld substitution index (E. Amezcua) — the "pregnant chair" (`pregnant-chair`, family reptiles; M136; sibling of §11/M142 tangram and §71/M154 fibonacci-fibonacci in the §23 cold-salvage wave).
+- **Motif:** the √3-inflation two-prototile rep-tile from the Bielefeld substitution index (E. Amezcua) — the "pregnant chair" (`pregnant-chair`, family reptiles; M136; sibling of §10/M142 tangram and §71/M154 fibonacci-fibonacci in the §23 cold-salvage wave).
 - **Key facts:** large chair [0,3]×[0,2√3]∪[3,6]×[√3,2√3], small chair [0,2]×[0,√3]∪[0,1]×[√3,2√3]; the inflated large chair tiles as 1 large + 6 small, the inflated small chair is exactly one large (area-conservative: 3√3·small = 9 = large); exact Z[√3] (i,j)-pair arithmetic throughout, floats only at render; finite-depth approximant: two-chair seed blocks on the base period lattice, per-step culling by the orientation-agnostic superset box; depth = octave quantization of the view extent (bit-identical overlapping tiles under panning/zooming); non-edge-to-edge (11 T-junctions in the 14-tile depth-1 seed block, 55L+78S = 133 leaves at d4); chiral orientation census {0,2,6,7} (4 of 8 dihedral classes) (see CHANGELOG M136).
 
 ### 10. Tangram (five-prototile dissection) ✅ (M142)
