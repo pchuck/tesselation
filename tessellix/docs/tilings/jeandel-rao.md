@@ -17,7 +17,7 @@ aperiodic 11-tile edge-colored Wang set (Jeandel-Rao, arXiv:1506.06492); the aut
   V 0/9900 on exact 9-color ids, re-derived in tests); tile frequencies
   and a radius-30 no-period probe are pinned against the study.
   Aperiodicity is cited (machine-verified upstream), not re-proved here;
-  the covered domain is the finite patch (Taylor-Socolar precedent), not
+  the covered domain is the finite patch, not
   the plane.
 
 ## See also

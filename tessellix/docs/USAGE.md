@@ -66,6 +66,43 @@ Browse with the exact prior tab, cursor, and scroll position.
 select it and open Render, wheel to scroll the grid. In Render: wheel to
 zoom. `Ctrl-C`/`Ctrl-Q` quit from any mode.
 
+## Plane-filling tilings: taylor-socolar
+
+`taylor-socolar` (M168) presents the paper's actual plane-filling CHT
+closed form — `generate` serves the whole plane: every hexagon in the
+query region is tiled and there is no patch boundary. M86 shipped the
+paper's forced 529-hexagon patch (Fig. 18 of arXiv:1003.4279) as a
+verbatim state table; M168 keeps the same rules and state table but
+renders it as a plane-fill — the 529-site rhombus survives only as a
+test-level reproduction anchor (closed form reproduces the patch
+529/529, zero R1/R2/R3 violations on windows extending past it).
+
+Verified at 1200×900 (proto mode; far-field runs byte-identical across identical invocations):
+
+```sh
+# center — the scale-1.0 frame (±13.3 x by ±10 y), 1781 tiles:
+cargo run -p tess-tui -- export --tiling taylor-socolar \
+    --width 1200 --height 900 --scale 1.0 --mode proto --out taylor-socolar.svg
+
+# far-field — the frame (±33.3 x by ±25 y) extends well beyond the
+# scale-1.0 patch extents (±29.45 by ±17.5); 25,779 of 64,969 tiles
+# sit outside them, 64,969 tiles:
+cargo run -p tess-tui -- export --tiling taylor-socolar \
+    --width 1200 --height 900 --scale 0.4 --rotation 0 --mode proto --out far-field.svg
+
+# far-field at 35 degrees of rotation — 64,819 tiles:
+cargo run -p tess-tui -- export --tiling taylor-socolar \
+    --width 1200 --height 900 --scale 0.4 --rotation 35 --mode proto --out far-field-rot.svg
+```
+
+The view is always centered on the origin — the `export` path has no
+pan/offset flag — so the far-field examples render a wide frame around
+the patch (scale 0.4 → world frame ±33.3 x by ±25 y), not a window
+centered elsewhere. Every view is subject to the tile budget: a view
+whose window would exceed `MAX_TILES` (250,000 tiles, e.g. scale 0.15 at
+this canvas) is refused — stderr `error: too many tiles for this view —
+zoom in`, exit 1, no SVG written.
+
 ## GUI
 
 `cargo run -p tess-gui` opens an egui window (1024×640, dark theme).

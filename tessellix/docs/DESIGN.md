@@ -163,7 +163,7 @@ the shared `tess-core::raster` (the TUI to character cells over its
   shipped table reproduces the study's JSON numbers R1 0/2992,
   R2 0/2816, R3 0/2904; world stripe points agree across all 2992
   shared edges to 1e-12; the whole-patch emission is exactly
-  529 × 13 pieces matched signature-by-signature with each hexagon's
+  529 × 8 pieces matched signature-by-signature with each hexagon's
   piece areas summing to 3√3/2; a no-period probe over the 2790
   hex-radius-≤30 translations finds none),
   Jeandel-Rao invariants (the handoff battery re-derived from the
