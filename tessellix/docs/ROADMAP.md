@@ -38,7 +38,11 @@ complementary strap pattern. Full dossier in
   the 22g styles; winners become exact-pin registry candidates.
   ✅ M170: sweep + `explore` CLI shipped (1921 rows, 0 refusals,
   byte-identity tested); leaderboard banked, exact-pin candidates
-  queued. After 22g + 24a.
+  queued. After 22g + 24a. Exact-pin follow-up #1 ✅ STOP — the δ=90°
+  winners are already-registered centroid duals (square→square,
+  trihexagonal→rhombille, truncated-square→tetrakis-square; δ=45 top
+  row = pic-4-8-8); sweep validated the registry, no new entries.
+  Remaining candidate: the 3.12.12 canonical motif assignment.
 - **24f Quasiperiodic medallion hosts** — gated behind CAP/A4 family
   ownership; the dual method (Ammann-bar / Robinson-triangle duals) is
   the exact path for Penrose-class hosts.

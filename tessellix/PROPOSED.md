@@ -2019,6 +2019,22 @@ quasiperiodic hosts later).
   Kaplan-reading choice pending a canonical landed assignment.
   Winners are CANDIDATES — exact-pin registry follow-ups are queued
   separately (exploration proposes, exactness disposes).
+  - **Exact-pin follow-up #1 ✅ STOP: already registered (2026-11-25,
+    no new entry).** The leaderboard head (truncated-square δ=90°,
+    score 0.686) is EXACTLY the registered Laves tiling
+    `tetrakis-square` — δ=90° ≡ the centroid dual of the host (rays
+    along inward normals → the four line families x=(i+½)A,
+    y=(j+½)A, y±x=kA over A=1+√2; right-isosceles triangle faces,
+    min area A²/4 = (3+2√2)/4; analytic score 1/(A²/4+ε)
+    reproduces 0.6862915005 to full precision; interior fragment set
+    equality with the shipped `tetrakis_square()` cell: 768 == 768;
+    p4m generator probes invariant). Same for ALL THREE δ=90° rows:
+    square→square, trihexagonal→rhombille (1.7320508 = 1/(√3/3)),
+    truncated-square→tetrakis-square; the δ=45 top row is
+    `pic-4-8-8` (rank-2 min face 0.125 = its star-tip area). The
+    sweep independently re-derived registry entries — strong
+    validation of the explorer, zero new tilings owed. Battery:
+    .scratch/hankin-ts-pin/ (REPORT.md, exact stdlib Q(√2) checks).
   - **Effort** M, **tier** fast/worker, after 22g (render-surface
     conventions) and 24a (catalog hosts).
 - **24f. Quasiperiodic medallion hosts** — dodecagonal shield (M51) and
