@@ -95,6 +95,9 @@ the "mixed floret/cairo/prismatic" patterns.
 - 🔭 **22d Islamic parquet deformations** — θ as a smooth function
   of position (θ(x) strips); spatial-animation star patterns on the
   M94 engine (an export/render feature, not a registry entry).
+  Briefed ([parquet-deformations](briefs/parquet-deformations.md)) —
+  dispatches after 22g lands (same files); Phase A yields the
+  δ-validity envelope per substrate (24h's scoring input).
 - 🔭 **22e Quasiperiodic substrates + (n,c)-monster motifs** —
   regular 2n-gons on lattice-projection rhomb patches (5-D ⇒ Penrose
   P3), overlapping polygons fused into (n,c)-monsters

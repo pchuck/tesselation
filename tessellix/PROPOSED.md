@@ -1761,8 +1761,13 @@ can be adopted independently through the standard checklist.
   Figs. 3.7–3.8) with essentially no repetition.
   - **Path:** per-contact-point θ override in the hankin engine + a
     strip/export mode (naturally an export feature, not a registry
-    entry).
-  - **Effort** M, **tier** P1 (rendering feature, no new tiling).
+    entry). Continuity is structural: both tiles share the contact
+    point, so θ = f(midpoint) preserves the point-reflection identity
+    (brief verified against the M57 engine, 2026-11-24; Phase A
+    delivers the per-substrate δ-validity envelope that feeds 24h).
+    Dispatches only after 22g lands (same three files).
+  - **Effort** M, **tier** P1 (rendering feature, no new tiling) —
+    brief [parquet-deformations](briefs/parquet-deformations.md).
 - **22e. Quasiperiodic substrates and (n,c)-monster motifs** — diss.
   §3.10. Lattice-projection (Quasitiler) rhomb patches: an n-D
   integer lattice cut by a 2-plane yields rhombs with angles
