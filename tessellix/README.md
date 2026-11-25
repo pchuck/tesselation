@@ -82,11 +82,10 @@ Twelve even-degree classic-δ rows pass all four styles (square @
 45°/90°, hexagon @ 30°/60°, triangle @ 30°/60°, trihexagonal/
 hexagram/pic-3-6-3-6/truncated-hexagonal/snub-trihexagonal @ 60°,
 truncated-square @ 45°). Full detail — per-style preconditions and error
-text, the complete table, and the known gap — is in
-[docs/rendering.md](docs/rendering.md). Note that at this HEAD the
-`outline`/`interlace`/`outline-interlace` exports write NaN in their band
-paths (gates pass; `fill` and plain walls are clean); `fill` is the
-displayable decoration option today.
+text and the complete table — is in
+[docs/rendering.md](docs/rendering.md). All four styles render cleanly
+(zero non-finite coordinates; verified on the full 12×4 matrix and by the
+`decoration_finiteness_battery` test).
 
 ## Supported tilings
 
@@ -183,7 +182,7 @@ arithmetic layer is designed in
 
 ## Tests
 
-`cargo test --workspace` — currently 1286 tests, all green, zero
+`cargo test --workspace` — currently 1287 tests, all green, zero
 warnings. Every tiling ships the 3-test standard trio:
 `covers_region` (sample points inside ≥ 1 tile and total clipped tile
 area equal to the region area to 1e-6 relative — catching gaps *and*

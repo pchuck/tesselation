@@ -1236,3 +1236,108 @@ mod strapwork_layer_mode {
         );
     }
 }
+
+/// M164-follow-up battery: every decorated classic-δ export (12 rows × 4
+/// styles) renders SVG with **zero non-finite coordinates**. This guards
+/// the NaN band/side rings that shipped — the straight-through case in
+/// `join_geometry` fell through to the parallel-lines mitre branch (isect
+/// divides by ~0 → NaN) and the SVG bytes carried literal `NaN` components.
+/// Only the CLI's exact 1200×900@scale-1.0 region is exercised (the one
+/// `docs/rendering.md` documents).
+#[cfg(all(test, feature = "uniform", feature = "islamic"))]
+mod decoration_finiteness_battery {
+    use tess_core::geometry::{BBox, Vec2};
+    use tess_core::params::ParamSet;
+    use tess_core::strapwork::{plan_decoration, walls, Decoration};
+    use tess_core::tiling::{Query, Tiling};
+    use tess_core::svg::render_svg_decorated;
+
+    /// The 12 classic-δ rows from `docs/rendering.md` (the only rows that
+    /// pass all four styles' gates — verified against the CLI).
+    const ROWS: [(&str, f64); 12] = [
+        ("square", 45.0),
+        ("square", 90.0),
+        ("hexagon", 30.0),
+        ("hexagon", 60.0),
+        ("triangle", 30.0),
+        ("triangle", 60.0),
+        ("trihexagonal", 60.0),
+        ("pic-3-6-3-6", 60.0),
+        ("truncated-hexagonal", 60.0),
+        ("truncated-square", 45.0),
+        ("snub-trihexagonal", 60.0),
+        ("hexagram", 60.0),
+    ];
+
+    const STYLES: [Decoration; 4] = [
+        Decoration::Fill,
+        Decoration::Outline,
+        Decoration::Interlace,
+        Decoration::OutlineInterlace,
+    ];
+
+    /// The CLI's scale-1.0, 1200×900 export: 20 world units tall,
+    /// 20·(1200/900) wide, centered on the origin.
+    fn cli_region() -> BBox {
+        let world_h = 20.0;
+        let world_w = world_h * 1200.0 / 900.0;
+        BBox::new(
+            Vec2::new(-world_w / 2.0, -world_h / 2.0),
+            Vec2::new(world_w / 2.0, world_h / 2.0),
+        )
+    }
+
+    /// Assert the rendered SVG carries zero non-finite coordinates: no
+    /// `NaN`/`inf` substrings anywhere (the `{:.4}` emission prints `inf`
+    /// verbatim when the f64 is infinite), and every numeric token inside
+    /// every `d="..."` attribute parses as a finite f64.
+    fn assert_finite_svg(svg: &str, where_: &str) {
+        assert!(!svg.contains("NaN"), "{where_}: NaN in rendered SVG");
+        assert!(!svg.contains("inf"), "{where_}: inf in rendered SVG");
+        let mut rest = svg;
+        while let Some(i) = rest.find("d=\"") {
+            let start = i + 3;
+            let Some(close) = rest[start..].find('"') else { break };
+            let d = &rest[start..start + close];
+            for tok in d.split(|c: char| {
+                !matches!(c, '-' | '.' | 'e' | 'E' | '+') && !c.is_ascii_digit()
+            }) {
+                if tok.is_empty() {
+                    continue;
+                }
+                let v: f64 = tok.parse().unwrap_or_else(|_| {
+                    panic!("{where_}: bad float token {tok:?} in d: {d:?}")
+                });
+                assert!(
+                    v.is_finite(),
+                    "{where_}: non-finite token {tok:?} in d: {d:?}"
+                );
+            }
+            rest = &rest[start + close..];
+        }
+    }
+
+    #[test]
+    fn classic_delta_matrix_is_finite() {
+        let registry = crate::registry();
+        for &(id, delta) in &ROWS {
+            let tiling = registry.get(id).unwrap_or_else(|| panic!("missing tiling {id}"));
+            let params = ParamSet::default_for(tiling.params());
+            let region = cli_region();
+            let res = tiling.generate(&params, &Query { region });
+            let walls = walls(&res.tiles, delta);
+            for style in STYLES {
+                let style_name = style.name();
+                let where_ = format!("{id}@{delta}/{style_name}");
+                let plan = plan_decoration(&walls, 0.1, style, &region.padding(-1e-9))
+                    .unwrap_or_else(|e| panic!("{where_}: honest precondition error: {e}"));
+                let svg = render_svg_decorated(&region, &plan);
+                assert_finite_svg(&svg, &where_);
+                assert!(
+                    svg.contains("data-deco"),
+                    "{where_}: no decoration layers painted"
+                );
+            }
+        }
+    }
+}

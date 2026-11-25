@@ -113,12 +113,18 @@ The three registered-module anchors — truncated-square @ 45°
 (pic-3-12-12) — reproduce the registered PIC partitions exactly (wall
 segments ≡ internal edges, verified by the `strapwork_layer_mode` anchors).
 
-## Known gap (code, not docs)
+## Known gap (code, not docs) — fixed
 
-The plain-walls render and `fill` are clean. `outline`, `interlace` and
-`outline-interlace` export successfully — gates pass, files are written —
-but at this HEAD their SVG path data contains `NaN` components in the band
-and side-line rings (systematic across the classic-δ rows, verified on the
-full 12-row matrix); the band geometry is not displayable as-is. `fill` is
-the displayable decoration option today. The NaN defect is flagged for the
-decoration-suite follow-up; the two other render paths are unaffected.
+At an earlier HEAD, `outline` / `interlace` / `outline-interlace` exported
+successfully but wrote SVG path data containing `NaN` components in the
+band/side-line rings: at a straight-through strand vertex (anti-parallel
+legs, θ = π), `join_geometry` computed θ via `acos` — which loses
+precision near −1 (measured θ = π − 2.1e-8 here, too far from the 1e-12
+no-op tolerance) and fell through to the exact-mitre branch, whose two
+parallel legs made `isect` divide by ~0 (0/0 → `NaN`). The fix detects the
+straight-through case geometrically (cross product vanishes, θ ≈ π) and
+emits the plain offset feet; `deco_d` and the `<line data-deco="over">`
+path also drop non-finite coordinates defensively. The 12×4 classic-δ
+matrix and the `decoration_finiteness_battery` test assert zero
+non-finite coordinates. `fill` and the plain-walls render were always
+clean.

@@ -133,6 +133,14 @@ fn deco_d(ring: &[Vec2], closed: bool) -> Option<String> {
     if ring.len() < 2 {
         return None;
     }
+    // Defense-in-depth: a ring containing any non-finite coordinate is
+    // invalid SVG and would abort parsers at its first NaN, silently
+    // dropping the whole layer — drop the ring whole instead of
+    // emitting a partial one. (Geometry must stay finite; this guards
+    // against any future emission path regression.)
+    if ring.iter().any(|p| !p.x.is_finite() || !p.y.is_finite()) {
+        return None;
+    }
     let mut d = format!("M{:.4} {:.4}", ring[0].x, ring[0].y);
     for p in &ring[1..] {
         d.push_str(&format!("L{:.4} {:.4}", p.x, p.y));
@@ -226,6 +234,11 @@ pub fn render_svg_decorated(bbox: &BBox, plan: &DecorationPlan) -> String {
     // …and its side lines redrawn, so the over band reads continuous.
     for segs in &plan.over_lines {
         for (a, b) in segs {
+            // Same non-finite guard as deco_d: skip bad segments rather
+            // than emit NaN coordinates into the `<line>` attribute.
+            if !a.x.is_finite() || !a.y.is_finite() || !b.x.is_finite() || !b.y.is_finite() {
+                continue;
+            }
             s.push_str(&format!(
                 r#"<line data-deco="over" x1="{:.4}" y1="{:.4}" x2="{:.4}" y2="{:.4}" stroke="rgb({br},{bg_},{bb})" stroke-width="{lw:.4}" stroke-linecap="butt"/>"#,
                 a.x, a.y, b.x, b.y

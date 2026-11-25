@@ -914,7 +914,14 @@ fn join_geometry(prev: Vec2, v: Vec2, next: Vec2, d: f64) -> Join {
     let x = unit(next - v);
     let cos_t = u.dot(x).clamp(-1.0, 1.0);
     let theta = cos_t.acos();
-    if std::f64::consts::PI - theta < 1e-12 {
+    // Straight-through vertex (anti-parallel legs, θ ≈ π): the two
+    // offset parallels coincide, so the mitre intersection is
+    // degenerate (isect divides by ~0 → NaN). Detect it geometrically
+    // (the cross product vanishes) rather than via π − theta: acos near
+    // -1 loses precision (θ = π − 2.1e-8 measured here, NOT within 1e-12
+    // of π), so the old tolerance let genuine straight-through vertices
+    // fall through to the parallel-lines mitre branch.
+    if u.cross(x).abs() < 1e-6 && cos_t < 0.0 {
         return Join::Noop;
     }
     // Left normals of travel: incoming direction = -u, outgoing = x.

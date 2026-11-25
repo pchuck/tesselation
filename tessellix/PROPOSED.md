@@ -1833,7 +1833,13 @@ can be adopted independently through the standard checklist.
     failures). Deviations documented in the brief report
     (region-gated preconditions replace the bbox margin; strand
     walks turn at deg-2 corners). Castéra band widths and the
-    fill-underlay composition remain open follow-ups.
+    fill-underlay composition remain open follow-ups. Same-day
+    follow-up fix: straight-through strand vertices (θ = π) were
+    mis-detected as exact mitres via `acos` precision loss near −1
+    (θ measured π − 2.1e-8 defeats the 1e-12 no-op test), dividing
+    by ~0 and emitting NaN band rings in outline/interlace modes —
+    replaced with geometric straight-through detection, emission
+    guards, and a 12-row × 4-style finiteness battery.
 - **22h. Moroccan finite designs; optimization-based motif
   correction; strange stars** — diss. §3.11. Research tier ❓:
   - Castéra's Moroccan/Andalusi tradition: finite designs around one
