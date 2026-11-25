@@ -99,17 +99,21 @@ cargo run -p tess-tui -- export --tiling taylor-socolar \
 # by (60, 0) — world x ∈ [26.2, 93.8] this run — 64,905 tiles:
 cargo run -p tess-tui -- export --tiling taylor-socolar \
     --width 1200 --height 900 --scale 0.4 --center 60,0 --mode proto --out far-field-centered.svg
+
+# CAP at the same world (60, 0) — the same frame, 1,016 tiles:
+cargo run -p tess-tui -- export --tiling cap \
+    --width 1200 --height 900 --scale 0.4 --center 60,0 --mode proto --out cap-far-field-centered.svg
 ```
 
 `--center X,Y` centers the frame at world (X, Y) — the view is translated
 exactly by (X, Y) while the frame size and scale are unchanged (finite
 values; a malformed or non-finite value is refused with a named parse
 error, no SVG written). The examples above are origin-centered (the
-default); the last one puts the same wide frame (scale 0.4 → world frame
+default); the last two put the same wide frame (scale 0.4 → world frame
 ±33.3 x by ±25 y) around world (60, 0) instead — a genuinely far-field
-window, the patch no longer being near-centered in it. Verified: 64,905
-tiles (vs 64,969 origin-centered), all tokens finite, the background rect
-at x = 26.67 = 60 − 33.33.
+window, the patch no longer being near-centered in it. Verified:
+taylor-socolar 64,905 tiles (vs 64,969 origin-centered) and CAP 1,016
+tiles, all tokens finite, the background rect at x = 26.67 = 60 − 33.33.
 
 Every view is subject to the tile budget: a view whose window would
 exceed `MAX_TILES` (250,000 tiles, e.g. scale 0.15 at this canvas) is
