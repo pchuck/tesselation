@@ -148,7 +148,7 @@ briefs cite them as `§N`.
 - **Edge structure:** **EDGE-TO-EDGE**: every edge paired exactly
   twice, no T-junctions (exact segment census over windows
   W = 2/3/5). Edge classes: the slants (slope `±1/5`, length
-  `√65/5`), each pairing one upper with one lower trapezoid; the
+  `√26/5`), each pairing one upper with one lower trapezoid; the
   horizontal unit edges at `y = 0`/`y = 1` (paired between vertical
   cell translates); the vertical edges at `x ∈ {0,1,2}` of lengths
   `3/10`, `1/2`, `7/10`.
@@ -329,7 +329,7 @@ briefs cite them as `§N`.
   twice, no T-junctions (exact segment census over the 180-clipped-
   tile window `W = [−4,4]²`: 188 interior edges, 448 vertices,
   clipped coverage 6400 = 6400, 0 overlaps). Edge classes (exact
-  lengths): the slants (slope `±1/5`, length `√65/5`), pairing
+  lengths): the slants (slope `±1/5`, length `√26/5`), pairing
   within each row — row 0: `P ↔ P'`, `mP ↔ mP'` at the `3/10`/`1/2`
   levels; row 1: `R0 ↔ R1`, `R2 ↔ R3` at the `15/10`/`17/10`
   levels; the horizontal unit edges at `y ∈ ℤ`, pairing row-1
@@ -366,7 +366,7 @@ briefs cite them as `§N`.
   `P → R2 + (−2,−2)`) + the brute-force culling cross-check + the
   legality test + the Python transcript: 8 convex CCW tiles with
   doubled areas 120, 120, 80, 80, 120, 80, 120, 80 summing to 800 =
-  10² · det Λ, the two-class congruence census, the window partition
+  2·10² · det Λ, the two-class congruence census, the window partition
   (188 interior edges paired twice, 448 vertices, no T-junctions,
   clipped coverage 6400 = 6400, 0 overlaps among 180 clipped tiles),
   the 105-vertex star census above.
@@ -697,7 +697,7 @@ briefs cite them as `§N`.
 ### 38. Running bond (2:1 dominoes) ✅ (M41)
 
 - **Motif:** the stretcher (running) bond as a `LatticeTiling` data table (`running-bond`, feature `pavers`; family pavers; M41) — the first and final of the original trio.
-- **Key facts:** rows of 2:1 dominoes offset by half a brick, rectangular lattice ⟨(2,0),(0,2)⟩, 2 split dominoes per cell (long sides split into two unit edges, 180° figures at the split midpoints); verified exactly in the Python spike; group **cmm** — mirrors at every integer x = k axis and half-integer y = l + 1/2 axes, 2-folds at (k, l+1/2) (on the mirrors) and (k+1/2, l) (between the rows), two glide families per direction, no diagonal mirrors or 4-folds, off-axis glides absent (see CHANGELOG M41).
+- **Key facts:** rows of 2:1 dominoes offset by half a brick, centered rectangular lattice ⟨(2,0),(1,1)⟩ (det 2), 1 split domino per cell (long sides split into two unit edges, 180° figures at the split midpoints); verified exactly in the Python spike; group **cmm** — mirrors at every integer x = k axis and half-integer y = l + 1/2 axes, 2-folds at (k, l+1/2) (on the mirrors) and (k+1/2, l) (between the rows), two glide families per direction, no diagonal mirrors or 4-folds, off-axis glides absent (see CHANGELOG M41).
 
 ### 39. Stack bond (2:1 dominoes) ✅ (M114)
 
