@@ -957,6 +957,56 @@ briefs cite them as `§N`.
   ⟨((3+√3)/2, (3+√3)/2), (−(3+√3)/2, (3+√3)/2)⟩, area 6+3√3,
   8 vertices/cell; combinatorial derivation open).
 
+### 63. 2-uniform (3⁶; 3².6²) — n10 (p6m) ✅ (M44)
+
+- **Motif:** the "1/3-dissected" honeycomb (Wikipedia `2-uniform n10`, t = 2, e = 3) — the first entry of the 2-uniform arc (`kuniform-p6m`, `kuniform.rs`, feature `kuniform`; family kuniform).
+- **Key facts:** the honeycomb with every third hexagon (the index-3 sublattice m ≡ n mod 3 of the center lattice span{(3/2,√3/2),(0,√3)}) cut into a six-triangle fan; exact Q(√3) table on the index-3 translation lattice (3,0),(3/2,3√3/2), two hexagons + six triangles per cell (area 9√3/2 = |det|); verified exactly in the Python spike (±3 patch: edge parity 681 shared × 2 + 108 boundary, 398 vertices / 290 interior with figures 3⁶ (49, 1 orbit) and 3².6² (241, 6 translation orbits)); standard trio + vertex-figure + cell-set symmetry tests + culling list green (see CHANGELOG M44).
+
+### 64. 2-uniform (3.6.3.6; 3².6²) — n11 (pmm) ✅ (M48)
+
+- **Motif:** the "rows of triangles between rows of hexagons" tiling (Wikipedia `2-uniform n11`, t = 2, e = 3) — the second entry of the 2-uniform arc (`kuniform-pmm`, `kuniform.rs`, same `kuniform` feature).
+- **Key facts:** flat-top hexagons on the rectangular lattice span{(2,0),(0,√3)} sharing full horizontal edges, gaps filled by one down-pointing triangle (apex (1,0)) and one up-pointing triangle (apex (1,√3)) per cell; exact Q(√3) table, one hexagon + two triangles per cell (area 2√3 = |det|); verified exactly in the Python spike (±3 patch: edge parity 260 shared × 2 + 68 boundary, 182 vertices / 114 interior with figures 3.6.3.6 (36, 1 orbit) and 3².6² (78, 2 translation orbits)); standard trio + vertex-figure + cell-set symmetry tests + culling list green (see CHANGELOG M48).
+
+### 65. 2-uniform (3.12.12; 3.4.3.12) — n2 ✅ (M118)
+
+- **Motif:** the 3-4-3-12 tiling (`kuniform-n2`, family kuniform) — dodecagons kissing flat-edge-to-flat-edge on a square lattice with 1 unit square (at the origin) + 4 unit edge triangles (apex = dodecagon corner) filling each four-dodecagon hole.
+- **Key facts:** square basis ⟨(2+√3,0),(0,2+√3)⟩, det 7+4√3 exact; 6 tiles/cell; p4m measured by coset audit (order 8 mod L, point group D4, no true glides); torus orbits t = 3 tiles / 2 vertex classes / 3 edges — matching the Wikipedia parenthetical exactly; Python exact battery (Q(√3) arithmetic) before porting (see CHANGELOG M118).
+
+### 66. 2-uniform (3³.4²; 3².4.3.4) — n16 ✅ (M119)
+
+- **Motif:** variant 1 of the wiki's 33344-33434 two-uniform entry (variant 2 = n17, §69, pgg, was open; see CHANGELOG M119) — staggered square rows and triangle bands in the snub-square-related form (`kuniform-n16`, family kuniform).
+- **Key facts:** 45°-rotated square basis ⟨(h,−h),(h,h)⟩, h = (3+√3)/2, det 6+3√3; 18 tiles/cell (6 squares + 12 triangles; 4 vertex classes of 3³.4² and 8 of 3².4.3.4); p4g measured by coset audit — axis-reflection cosets pure, both diagonal cosets true glides (axial shift 3/4 of a diagonal lattice period); torus census 4 tile orbits (8+4+4+2) + 5 edge orbits = the wiki's 4-isohedral/5-isotoxal exactly (see CHANGELOG M119).
+
+### 67. Dual of 2-uniform (3.12.12; 3.4.3.12) — n2 ✅ (M120)
+
+- **Motif:** face-centroid dual of §65 (`kuniform-n2`) — the Laves-tab companion (`kuniform-dual-n2`, Laves tab; family kuniform); same square lattice, det 7+4√3 inherited.
+- **Key facts:** 8 faces/cell over the primal's 8 vertex orbits: 4 congruent kites (3.4.3.12 orbit; sides (3+√3)/6, (2+√3)/√3, (2+√3)/√3, (3+√3)/6; angles 90/120/30/120; area 3/4+5√3/12) + 4 congruent isosceles triangles (3.12.12 orbit; sides (2+√3)/√3 ×2 over base 2+√3, angles 120/30/30); Σ = 7+4√3 = |det| exact; p4m — every orientation-reversing coset a pure reflection (zero glide cosets); tiled dual edge-to-edge; face/vertex/edge orbits 2/3/3 matching the primal's e = 3 (see CHANGELOG M120).
+
+### 68. Dual of 2-uniform (3³.4²; 3².4.3.4) — n16 ✅ (M121)
+
+- **Motif:** the key-lock tiling — face-centroid dual of §66 (`kuniform-n16`) — the Laves-tab companion (`kuniform-dual-n16`, family kuniform); same 45°-rotated square lattice, det 6+3√3 inherited.
+- **Key facts:** 12 faces/cell over the primal's 12 vertex orbits: 8 congruent pentagons (3².4.3.4 orbit; sides (3+√3)/6 ×4, 1/√3; angles 120/90/120/120/90) + 4 congruent pentagons (3³.4² orbit; sides (3+√3)/6, 1, (3+√3)/6, 1/√3, 1/√3 — the unit side crossing two squares' shared edge; angles 120/90/90/120/120), both exact areas 1/2+√3/4; Σ = 6+3√3 = |det| exact; p4g — axis mirrors pure (meeting at the corner-2 point), both diagonal cosets true half-period glides; 4-fold centers with no mirror through any of them; tile orbits 2 (8+4), vertex orbits 4, edge orbits 5 (see CHANGELOG M121).
+
+### 69. 2-uniform (3³.4²; 3².4.3.4) — n17 (pgg) ✅ (M140)
+
+- **Motif:** variant 2 of the wiki's 33344-33434 entry — the pgg sibling of §66 (`kuniform-n16`) (`kuniform-n17`, family kuniform); the wiki n-numbers are NOT row-major (the −1 filename-suffix trap pinned); the file links are authoritative.
+- **Key facts:** 12 tiles/cell (4 unit squares + 8 equilateral triangles in two 4-orbits, seeds 0/1/2), edge = 1, area 4+2√3 = |det|; exact Q(√3) lattice b1 = (½, 1+√3/2), b2 = (−2−√3, 1) (b1 ⊥ b2 exactly; |b2| = 2|b1|); the Python coset audit proves L is the TRUE primitive period lattice (0 of 12 square-centroid coset reps qualify as extra periods — no index-2 superlattice); pgg measured (4 two-fold centers/cell in exactly 2 group orbits, one glide per axis, 0 reflections); torus census t = 3 tile orbits (4+4+4), e = 6 edge orbits, v = 2 vertex orbits (4+4) — matches the wiki's 3-isohedral/6-isotoxal data (see CHANGELOG M140).
+
+### 70. Duals of n4/n3 — 2-uniform duals ✅ (M145)
+
+- **Motif:** the (4⁴; 3³.4²)₁/₂ cmm dual pair — face-centroid duals of the in-repo exact primals via the oracle-validated `dual()` helper (`kuniform-dual-n4` + `kuniform-dual-n3`, Laves tab; family kuniform) — the first of the two missing subscripted pairs the audit flagged (the (3⁶; 3³.4²)₁/₂ pair n14/n15 is §71).
+- **Key facts:** Q(√3/2) exact end to end; dual-n4: same centered-rectangular lattice ⟨(1,0),(1/2,2+√3/2)⟩ as the primal, det 2+√3/2; 3 faces/cell over the primal's 3 vertex orbits — 2 congruent pentagons (sides 1/√3 ×2, (3+√3)/6 ×2, 1; area 1/2+√3/4) over the two 3³.4² orbits + 1 unit square over the 4⁴ orbit; dual-n3: det 3+√3/2; 4 faces/cell (2 pentagons + 2 unit squares); Σ = |det| exact, edge-to-edge on both; measured group cmm on BOTH — inherited from the registered Cmm primals, pinned by the exact S(g) audit with the cmm-vs-pmm discriminator (off-mirror 2-folds at (1/4,·) and (3/4,·)) (see CHANGELOG M145).
+
+### 71. Duals of n14/n15 — 2-uniform duals ✅ (M147)
+
+- **Motif:** the (3⁶; 3³.4²)₁/₂ pmm/cmm pair — face-centroid duals of the in-repo exact primals via the oracle-validated `dual()` helper (`kuniform-dual-n14` + `kuniform-dual-n15`, Laves tab; family kuniform) — the (4⁴; 3³.4²)₁/₂ sibling of §70 (M145); §23k's audit-discovered duals all landed with M145+M147.
+- **Key facts:** Q(√3) exact end to end; dual-n14: same primitive rectangular lattice ⟨(1,0),(0,1+√3)⟩ as the primal, det 1+√3; 3 faces/cell — 2 congruent pentagons (sides 1/√3 ×2, (3+√3)/6 ×2, 1; area 1/2+√3/4) over the two 3³.4² orbits + 1 regular hexagon (side 1/√3, area √3/2) over the 3⁶ orbit; measured group pmm (all four 2-folds ON the mirror intersections, no off-mirror 2-folds, no true glides); dual-n15: same centered-rectangular lattice ⟨(1,0),(1/2,1+3√3/2)⟩, det 1+3√3/2; 4 faces/cell (2 pentagons + 2 regular hexagons); measured group cmm (off-mirror 2-folds at (1/4,1+3√3/4) and (3/4,1+3√3/4) plus genuine h/v glide families); Σ = |det| exact, edge-to-edge on both (see CHANGELOG M147).
+
+### 72. 2-uniform primals n6/n7 — COMPLETION of the 20-list ✅ (M148)
+
+- **Motif:** the two [3.4².6; 3.6.3.6] forms — the LAST gap in the closed 2-uniform 20-list (`kuniform-n6` + `kuniform-n7`, family kuniform) — the list is now COMPLETE in-repo.
+- **Key facts:** exact Q(√3) LatticeTiling data tables, one cell each, det 2+2√3; n6 (the ₂ form, Wikipedia `2-uniform n6`): point-touching flat-top unit-hexagon rows alternating with full unit-square rows, each inter-hexagon gap holding a counterposed up/down unit-triangle pair sharing the hexagon touch point as apex; CENTERED-rectangular lattice ⟨(2,0),(1,1+√3)⟩ (conventional cell 2×(2+2√3)); 5 tiles/cell; measured cmm (2 two-folds/cell, one OFF the mirror lines at (0,1/2+√3)); n7 (the ₁ form): the same 5-tile set with OPPOSITE triangle orientations; PRIMITIVE rectangular lattice ⟨(2,0),(0,1+√3)⟩; measured pmm (4 two-folds/cell all ON the mirror intersections); both forms: vertex figures 3.6.3.6 (1 class) + 3.4².6 in two cyclic orderings ("3446"/"3644"); §62's n3/n15 precedent — measured 5 tile orbits per form vs the wiki's t = 3 (n6) / t = 4 (n7), reported as a deviation per the n20 precedent (see CHANGELOG M148).
+
 ## Per-tiling documents
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):

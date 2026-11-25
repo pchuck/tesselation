@@ -403,6 +403,46 @@ briefs cite them as `§N`.
   sets) zero warnings, cargo test --workspace --all-features
   730/730.
 
+### 66. Penrose pentagon (five-shape φ-substitution) ✅ (M28)
+
+- **Motif:** the five-pentagon set of the Penrose/Robinson family — aperiodic set found by exhaustive pool search (strict-0 + 1-hole layers) over the pentagon pool (`penrose-pentagon`, family quasiperiodic; M28).
+- **Key facts:** M = [[0,1,0,1,0],[1,1,0,0,1],[2,0,0,0,3],[0,0,1,0,0],[1,1,0,0,1]] in the order (50,105,451,468,484) — one φ-substitution rule for the five shapes, single-seed deflation growth; non-edge-to-edge (φ-substitution children meet parent edges at t = 1/φ); 29 tilings, 141 tests (see CHANGELOG M28).
+
+### 67. Golden triangle (√−τ reptile) ✅ (M127)
+
+- **Motif:** the golden triangle — Danzer–van Ophuysen's triangle-pair family: the right triangle (legs 1, √τ; hypotenuse τ) dissected by the altitude from its right angle into two similar children (scales τ^−1 and τ^−1/2, area law τ^−2 + τ^−1 = 1) (`golden-triangle`, family quasiperiodic; M127).
+- **Key facts:** complex √(−τ)-inflation viewpoint (λ = i√τ, λ² = −τ, λL = L ∪ S, λS = L) in exact K = Q(λ), λ⁴ = 1 − λ², embedding (a + bλ + cλ² + dλ³) → (a − cτ) + i√τ(b − dτ); uniform rule foot F = P + τ^−2(Q − P) (τ^−2 = 2 − τ exact); chirality carried by the canonical vertex order (flips every cut), class = parity of −e; finite covered patch (seed L0), depth = clamp(ceil(−ln(E/τ)/ln τ), 5, 17), scale default 3.5; categorized Quasiperiodic on the Danzer–van Ophuysen 2000 triangle-pair family (see CHANGELOG M127).
+
+### 68. Ammann–Beenker rhomb-triangle ✅ (M129)
+
+- **Motif:** Bielefeld's "Ammann-Beenker rhomb triangle" entry (PROPOSED.md §23b) — the A5 substitution's half-square triangles emitted as their own tile class instead of being paired back into squares: 3 prototiles (rhombus 0, R-triangle 1, L-triangle 2), same silver-mean deflation as the classic entry (hypotenuse-pairing step removed) (`ammann-beenker-tri`, family quasiperiodic; M129).
+- **Key facts:** module mirrors ammann_beenker.rs (rule tables, Q(√2) deflation, 8-rhombus star seed, STEP_CAP 20); exact Q(√2) Python battery: PF-orbit counts (24,16,16) → (136,96,96) → (792,560,560) → (4616,3264,3264), edge-to-edge growth, no interior overlaps, hypotenuse groups ≤ 2 with R–L paired, parity H = 2P + U, H/r → √2; 8-fold finite patches (see CHANGELOG M129).
+
+### 69. Golden rhomboid (Andritz φ-substitution) ✅ (M144)
+
+- **Motif:** the third Andritz-family φ-substitution — equilateral triangles side 1 (Y) and side φ (O) plus the 60/120 rhombus 1×φ (R) (`golden-rhomboid`, family quasiperiodic; M144; cf. §67 golden triangle, the Andritz-family sibling).
+- **Key facts:** rules Y → O, O → O+Y+R, R → R+2O (areas 1 : φ² : 2φ in √3/4 units, all identities exact); count matrix [[1,1,0],[2,1,1],[0,1,0]] in (R,O,Y) order, char poly λ³−2λ²−2λ+1, PF eigenvalue φ² pinned as an exact Q(√5) root (φ² = (1,1)); exact 4-tuple Q(√5) arithmetic end to end, floats only at emission; 18 anchored orientation classes (Y_k 0–5, O_k 6–11, R_A/B_k 12–17), single-seed unbounded growth — depth d covers φ^d·R₀ exactly, the union is the 60° wedge {y ≥ 0, y ≤ √3·x}; T-junctions intrinsic (first at depth 2: 2 points / 5 incidences, every T-point closes to exactly π on both sides in π/3 units) (see CHANGELOG M144).
+
+### 70. Generalized GLB binary n = 7 ✅ (M149)
+
+- **Motif:** Pautze's generalized binary family at n = 7 (Hibma 2015 / Pautze 2017) — three 7-fold rhombi (acute angles π/7, 2π/7, 3π/7), inflation λ = √(2+2cos(π/7)) = 2cos(π/14) ≈ 1.9499, non-Pisot (odd n gives (n−1)/2 = 3 prototiles) (`glb-binary-n7`, family quasiperiodic; M149).
+- **Key facts:** per-parent refinement is a TWO-CHOICE pool (shape 1 → {1,6}, shape 2 → {5,2}, shape 3 → {3,4}) forced by compatible meshing at depth ≥ 2 — no local (shape, class) map drives refinement (eps-complementarity cascades through arbitrarily long adjacency chains, probed and refuted); certified generator = deterministic per-level DFS with all-pairs interior disjointness + eps-complementary bend bits on shared parent edges; exact K₇-twist pairs ((k₁, s₁k₂) ∈ K₇², K₇ = Q(b), b = 2cos(2π/7), dyadic denominators D = 2); fan-area law: every valid assembly carries total twist area 2λ^{2d} exact; depth cap 5 — the deepest level constructed AND certified (σ²…σ⁵ pass the full staircase boundary certificate; at depth 6 the candidate search exhausts: a legal patch need not admit a legal refinement) (see CHANGELOG M149).
+
+### 71. Fibonacci × Fibonacci ✅ (M154)
+
+- **Motif:** the 1-D Fibonacci substitution taken as a product with itself (`fibonacci-fibonacci`, family quasiperiodic; M154; the last §23 salvage item — siblings pregnant-chair M136, tangram M142 and golden-rhomboid §69/M144).
+- **Key facts:** 4 orientation classes (LL, LS, SL, SS) on 3 prototile shapes (φ×φ square, φ×1 / 1×φ rectangle, unit square; LS/SL one shape at two rotations); linear inflation λ = τ² = φ², module rule = two product steps (children tile the INFLATED parent, anchors scaled by λ); count matrix B = A₄² = [[4,2,2,1],[2,2,1,1],[2,1,2,1],[1,1,1,1]], char poly (x−1)²(x²−7x+1), PF eigenvalue τ⁴ = λ², per-parent area laws (5,8)/(3,5)/(3,5)/(2,3) = area·τ⁴ exact; strict PIP + proper-crossing + T-junction checks at every growth step; exact Q(√5) integer pairs end to end, floats only at emission; depth cap 6 (growth totals F_{2d+2}²: 1, 9, 64, 441, 3025, 20 736, 142 129 ≤ MAX_TILES); 4-fold point symmetry (see CHANGELOG M154).
+
+### 72. WIS 12-fold (Watanabe–Ito–Soma) ✅ (M158)
+
+- **Motif:** the Bielefeld "WIS 12-fold" entry (Watanabe, Ito & Soma, Acta Cryst. A 51:936, 1995) — equilateral triangle + square + 30°/150° rhombus, dodecagonal symmetry, inflation λ = 2+√3 (λ² = 7+4√3), shipping the ENTRY FIGURE's published rules (WSI95 Fig. 2(iii)), NOT the Bielefeld patch's undocumented ruleset (`wis-12-fold`, family quasiperiodic; M158).
+- **Key facts:** exact ℤ[√3] 4-tuple points (x = H(P+Q√3), y = H(R+S√3), H = s/2), floats only at emission; non-conformal same-scale rules — children are prototiles at edge 2H (same size as the parent) in a jagged cluster whose union has area λ²·parent and CONTAINS the parent; the rho rule is a 3-piece disconnected cluster (9+2+2 tiles) with fitted lattice-snap piece offsets; certified level-1 battery (closed simple boundary per piece, all interior edges paired, exact area identities (24,14)/(56,32)/(28,16) = λ² × parent, parent ⊆ union) — the rules do NOT compose at depth ≥ 2 (pinned drift-guard), so emission is the depth-1 single-parent square supertile (26 tiles) as a finite patch (see CHANGELOG M158).
+
+### 73. Girih-inspired 14-fold (Pautze) ✅ (M159)
+
+- **Motif:** the Bielefeld "Girih 14-fold" entry (Pautze, Symmetry 9(2):19, 2017) — 11 prototiles (R2/R3 rhombi, H26/H44/H45 hexagons, concave O29 + convex O36 octagons, concave D2 + D46/D56 decagons, regular 14-gon G14), inflation λ = 2b²+3b ≈ 6.850855 (b = 2cos(2π/7), exact K₇ triple (0,3,2), Norm(λ) = −7), λ² ≈ 46.934215 (`girih-14-fold`, family quasiperiodic; M159).
+- **Key facts:** exact ½ℤ[ζ₁₄] twist-pair geometry (dyadic K₇ pairs, sin(π/7) folded into shared exponents); certified rule tables (763 entries, 11 classes) — corner-14-gon + edge-decagon + interior-kid panels (849 kids per full round), effective kid matrix N′ (edge kids ×½, corner 14-gon wedges k_i/14) satisfying the exact K₇ area law on all 11 rows with PF eigenvalue λ²; G14 convex-fit seed generation with pad-expanded culling and MAX_TILES guards; errata pinned in the per-tiling doc (the entry's unit claim is false — Norm(λ) = −7; Pau2017 Table 7's λ = 5.801939 is contradicted by its own Figs 7.4/7.5, measured 6.8507) (see CHANGELOG M159).
+
 ## Per-tiling documents
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):

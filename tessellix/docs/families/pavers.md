@@ -684,6 +684,36 @@ briefs cite them as `§N`.
   and the tess-tilings census pins Wallpaper 17.
 - **Status:** committed (M85). 71 tilings, 529 tests at the commit.
 
+### 36. Basketweave (2:1 dominoes) ✅ (M39)
+
+- **Motif:** the classical basketweave bond as a `LatticeTiling` data table (`basketweave`, feature `pavers`; family pavers; M39) — the first of the three original paver bonds.
+- **Key facts:** 45°-rotated square lattice ⟨(2,2),(2,−2)⟩ (area 8), 2 H + 2 V split dominoes per cell; each long side split into two unit edges (mid-side vertex), so vertex figures carry 180° at the split midpoints (`2.4.4`) and 4.4.4.4 at the even-even block corners; verified exactly in a Python spike (area sum = |det|, edge parity, vertex figures, exact-once coverage, rigorous coset symmetry check); group **p4g**, not the naive p4m guess — 4-folds at every even-even point, mirrors at the odd axes only (no diagonal mirrors), and six glide families (odd-axis vertical/horizontal glides absent: T(2,0)/T(0,2) are not tiling translations) (see CHANGELOG M39).
+
+### 37. Herringbone (2:1 dominoes) ✅ (M40)
+
+- **Motif:** the chiral single-direction herringbone bond as a `LatticeTiling` data table (`herringbone`, feature `pavers`; family pavers; M40).
+- **Key facts:** L-pairs H(a,b) + V(a+2,b) at every point of the oblique lattice ⟨(1,3),(2,2)⟩ (area 4), one 2-domino cell; each long side split into two unit edges (180° figures at the split midpoints); verified exactly in the Python spike; group **pgg** as expected for the generic 2:1 case — chiral (no mirrors, no 4-folds), 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal axes y = x + c, anti-diagonal axes y = −x + c), off-family glides absent (see CHANGELOG M40).
+
+### 38. Running bond (2:1 dominoes) ✅ (M41)
+
+- **Motif:** the stretcher (running) bond as a `LatticeTiling` data table (`running-bond`, feature `pavers`; family pavers; M41) — the first and final of the original trio.
+- **Key facts:** rows of 2:1 dominoes offset by half a brick, rectangular lattice ⟨(2,0),(0,2)⟩, 2 split dominoes per cell (long sides split into two unit edges, 180° figures at the split midpoints); verified exactly in the Python spike; group **cmm** — mirrors at every integer x = k axis and half-integer y = l + 1/2 axes, 2-folds at (k, l+1/2) (on the mirrors) and (k+1/2, l) (between the rows), two glide families per direction, no diagonal mirrors or 4-folds, off-axis glides absent (see CHANGELOG M41).
+
+### 39. Stack bond (2:1 dominoes) ✅ (M114)
+
+- **Motif:** rows of 2:1 dominoes stacked directly on one another — the running bond without its half-brick offset (`stack-bond`, family pavers; M114).
+- **Key facts:** lattice ⟨(2,0),(0,1)⟩ (area 2), one split horizontal domino per cell ([0,2]×[0,1], long sides split into two collinear unit edges — 180° figures at the split midpoints); measured pmm (mirrors x = k and y = n/2, 2-folds at (k, n/2), no glides; coset probe 128-per-coset exact); figures 4.4.4.4 at even-x points, 2.2 at odd-x split midpoints; LatticeTiling data table, same paver feature as §36–§38 (see CHANGELOG M114).
+
+### 40. Herringbone 45° (2:1 dominoes) ✅ (M115)
+
+- **Motif:** the M40 herringbone bond in its 45°-laid canonical frame (`herringbone-45`, family pavers; M115) — same motif as §37, different frame.
+- **Key facts:** exact radical geometry via std::f64::consts::SQRT_2; lattice ⟨(0,2√2),(√2,0)⟩ (area 4), two split 45° dominoes per cell (the L-pair); measured pgg — 2-folds at (√2/4 + k√2/2, 3√2/4 + ℓ√2), vertical glides x = k√2/2 (glide √2), horizontal glides y = ℓ√2 + √2/4 (glide √2/2), descended from M40's diagonal/anti-diagonal glides under the 45° rotation; verified in integer P-coords (world = (√2/2)·P): cell area sum 8 = |det|, 3906-point fine grid covered once, 192 interior unit edges each shared by exactly 2, all 113 interior vertex figures 2.4.4; the coset probe uses the new shape-set helper (rotated cells break the axis-aligned bbox probe) plus the independently measured M40 group conjugated by the rotation (see CHANGELOG M115).
+
+### 41. Basketweave three-brick (2:1 dominoes) ✅ (M116)
+
+- **Motif:** the triple-basketweave paver bond — three courses of horizontal 2:1 dominoes stacked without offset, then one course of vertical dominoes, repeating with vertical period 5 (`basketweave-3`, family pavers; M116).
+- **Key facts:** lattice ⟨(6,0),(0,5)⟩ (area 30) an index-3 superlattice of the true ⟨(2,0),(0,5)⟩, kept for the whole-cluster cell convention (cf. §36/M39); 15 split dominoes per cell (9 horizontal + 6 vertical, long sides split into collinear unit edges); measured pmm (mirrors x = k and y = 2.5k + 1.5, 2-folds at (k, 2.5k′ + 1.5), no 4-folds, no essential glides); verified exactly in Python before porting: cell area sum 30 = |det|, fine shifted grid covered exactly once (6474 points), 296 interior unit edges each shared by exactly 2, vertex figures sum to 360 (see CHANGELOG M116).
+
 ## Per-tiling documents
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):

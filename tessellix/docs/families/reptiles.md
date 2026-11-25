@@ -148,6 +148,46 @@ briefs cite them as `§N`.
   view-stability, unit-scale emission, and the standard battery.
 - **Status:** committed (M32). 32 tilings, 176 tests.
 
+### 7. P-pentomino (rep-4 reptile) ✅ (M47)
+
+- **Motif:** the P-pentomino rep-tile (`p-pentomino`, family reptiles; M47) — the chair-family rep-tile line's next member after the chair (§5) and sphinx (§6).
+- **Key facts:** λ = 2 rep-4 substitution (`p_pentomino.rs`, feature `reptiles`): the inflated 20-cell P has exactly two dissections (class multisets {0,1,4,6} and {3,4,4,5}); the canonical {0,1,4,6} is used; the P is chiral, so the rule necessarily mixes chiralities — 8 orientation classes with a doubly stochastic substitution matrix (rows and columns sum to 4); non-edge-to-edge (5 T-junctions per parent, verified on maximal segments); 5×8 seed block with one tile per class (62 such tilings of the rectangle exist); octave-anchored integer-grid generation like chair; T-tetromino sibling was dropped, proven not rep-4 (0 tilings of the inflated 16-cell T) (see CHANGELOG M47).
+
+### 8. Armchair (L-tetromino rep-4) ✅ (M128)
+
+- **Motif:** the L-tetromino "armchair" (2×3 bbox, area 4) — the chair-family rep-tile line's next member (`armchair`, family reptiles; M128; §7's reptile sibling).
+- **Key facts:** the scale-2 inflated armchair has a unique L-tetromino dissection (exhaustive exact-integer enumeration: one child of each of the four orientations, rule forced); non-edge-to-edge (the canonical side-2 parent carries a T-junction at (2,2) — T-junction counts 32/144/656/2736 per generation); limit-periodic — the depth-g block's only translation period is (2^(g+1), 2^(g+1)), measured on the integer grid; 4×4 seed block, one armchair per orientation; octave-anchored like chair (see CHANGELOG M128).
+
+### 9. Pregnant chair (rep-tile) ✅ (M136)
+
+- **Motif:** the √3-inflation two-prototile rep-tile from the Bielefeld substitution index (E. Amezcua) — the "pregnant chair" (`pregnant-chair`, family reptiles; M136; sibling of §11/M142 tangram and §71/M154 fibonacci-fibonacci in the §23 cold-salvage wave).
+- **Key facts:** large chair [0,3]×[0,2√3]∪[3,6]×[√3,2√3], small chair [0,2]×[0,√3]∪[0,1]×[√3,2√3]; the inflated large chair tiles as 1 large + 6 small, the inflated small chair is exactly one large (area-conservative: 3√3·small = 9 = large); exact Z[√3] (i,j)-pair arithmetic throughout, floats only at render; finite-depth approximant: two-chair seed blocks on the base period lattice, per-step culling by the orientation-agnostic superset box; depth = octave quantization of the view extent (bit-identical overlapping tiles under panning/zooming); non-edge-to-edge (11 T-junctions in the 14-tile depth-1 seed block, 55L+78S = 133 leaves at d4); chiral orientation census {0,2,6,7} (4 of 8 dihedral classes) (see CHANGELOG M136).
+
+### 10. Tangram (five-prototile dissection) ✅ (M142)
+
+- **Motif:** the classic five-prototile tangram (`tangram`, family reptiles; M142) — the first entry in the M141-era §23d marginal-supersubstitution cluster, the salvage wave's fourth landing.
+- **Key facts:** S → {M}; M → {L}; L → {M,Q,P,S,S}; Q → {M,S,S}; P → {M,S,S} — an area-conserving λ = √2 substitution (u²-areas 1/2/4/2/2; no L child); seed pinned by determinant search: two S triangles tile the √2×√2 square (S twist 0 at (0,0), S twist 4 at (√2,√2), det = 2); homochiral P+ (every substitution row is rotation-only, so the P− mirror class is unreachable from the seed — P+ census = c_g[P] at every depth); non-edge-to-edge (T-junctions 0,0,0,6,10,18 over g = 0..5); exact Z[√2] u-pair arithmetic end to end; octave depth quantization with sound AABB culling (children ⊂ parent); 12 Rust tests (exact substitution census over all prototile×twist, T-junction census, growth count/area law, chirality, octave view-stability) (see CHANGELOG M142).
+
+### 11. Octiamond reptile ✅ (M150)
+
+- **Motif:** the Bielefeld "Octiamond Reptile" entry (Folklore; Info section empty — rule reconstructed from the rule image) — one trapezoidal 8-triomino prototile Q = (0,0),(3,0),(2,√3),(1,√3) (8 unit triangles, area 2√3) on the triangular lattice, rep-9 with λ = 3 (`octiamond-reptile`, family reptiles; M150).
+- **Key facts:** substitution matrix [9] → 9^n tiles, PF 9 = λ²; the rule was pinned by a UNIQUE exhaustive partition of the 3×-inflated 72-cell seed trapezoid TRAP3Q into 9 unit octiamonds (cross-confirmed per-component against the Bielefeld rule image, scores 0.911–0.991 vs runners-up ≤ 0.892; the blue-marked child is I+(2,2)); all 12 orientation classes reachable (12×12 class matrix, rows AND columns sum to 9); non-edge-to-edge — 8 (edge, foreign-corner) incidences in the rule's own depth-1 dissection, ladder 18/226/2202/20286/183974 over generations 0–4; 12×6 parallelogram seed block (18 tiles, 144 cells) tiles the plane exactly once under ⟨(12,0),(0,6)⟩; aperiodic — no lattice period in any of the 4 patch crops (see CHANGELOG M150).
+
+### 12. Pentiamond AC factor-2 ✅ (M155)
+
+- **Motif:** the Bielefeld "Pentiamond AC factor 2" entry (Folklore; Info empty) — λ = 2 two-prototile reptile on the triangular lattice (`pentiamond-ac-factor-2`, family reptiles; M155; the third member of the reptile trio §12–§14).
+- **Key facts:** A → 3A + 1C, C → 2A + 2C with the achiral C double-labeled; M = [[3,2],[1,2]], char poly (x−1)(x−4), PF 4 = λ², primitive index 1, per-A-seed closed form A_d = (2·4^d+1)/3; 3×5 rectangular seed block (4 A poses + 2 C poses), whole-block homothety on the block lattice; limit-periodic construction with aperiodic limit — zero exact periods in the unit tiling (|v| ≤ 16, top near-miss 0.6953); chiral A balanced 1:1 at every depth; folkloric 9945-tile patch reproduced exactly by the pinned rule (recon E PASS, coverage 1.0) (see CHANGELOG M155).
+
+### 13. Pentiamond AC factor-3 ✅ (M156)
+
+- **Motif:** the Bielefeld "Pentiamond AC factor 3" entry (Folklore; Info empty) — λ = 3 reptile (`pentiamond-ac-factor-3`, family reptiles; M156; the trio's middle member, §12/§14 siblings).
+- **Key facts:** A → 6A + 3C, C → 5A + 4C (achiral C double-labeled, mirror pair via (8, (0,9))); A/C block [[6,5],[3,4]], char poly (x−9)(x−1), PF 9 = λ², primitive index 1 (no sum-9 D column makes the 3×3 primitive — 55-candidate scan), per-A-seed closed form A_d = (5·9^d+3)/8; 2×5 seed block (both P2; block charge −2 — the folklore patch's P2-heavy 617:1899 depth-2 census, decaying to 1:1 in the limit, measured 0.9999 by d = 20); whole-block homothety on the (2·3^d, 0) × (0, 5·3^d) block lattice; limit-periodic construction, aperiodic limit — zero exact periods (|v| ≤ 12, top near-miss 0.5712); folkloric 4024-tile patch reproduced exactly; **D-row blocker:** the entry header says 3 prototiles but the D row is absent from the rule image AND the patch — implemented as A + C (2 prototiles), flagged in the module header/doc row; the A/C block is closed and the seed D-free, so the limit tiling is D-free at every depth regardless of the missing row (see CHANGELOG M156).
+
+### 14. Pentiamond AD factor-2 ✅ (M157)
+
+- **Motif:** the Bielefeld "Pentiamond AD factor 2" entry (Folklore; Info empty) — λ = 2 reptile (`pentiamond-ad-factor-2`, family reptiles; M157; the trio's last member, §12/§13 siblings).
+- **Key facts:** A → 2A + 2D, D → 2A + 2D (D dissection SELF-MIRROR — single table under both achiral labels); M = [[2,2],[2,2]] = rank-1 (x²−4x), PF 4 = λ², primitive index 1, per-seed (2·4^{d−1}, 2·4^{d−1}); UNIQUE 1×5 seed block (2 D tiles, poses 2 and 8); whole-block homothety on the block lattice; limit-periodic construction, aperiodic limit — zero exact periods (|v| ≤ 10, top near-miss 0.6270); A balanced 1:1 at every depth; folkloric 9969-tile patch reproduced exactly (recon E PASS, coverage 1.0; the entry is depth-3 nested — the only one of the three, so its refinement_property carries the genuine cross-depth partition) (see CHANGELOG M157).
+
 ## Per-tiling documents
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):

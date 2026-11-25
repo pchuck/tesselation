@@ -922,6 +922,11 @@ briefs cite them as `§N`.
   dependency).
 - **Status:** committed (M74). 63 tilings, 497 tests at the commit.
 
+### 28. Pentagon type 1 (Reinhardt) ✅ (M117)
+
+- **Motif:** the regular-hexagon member of Reinhardt's type 1 — a side-2 hexagon cut by the segment joining the midpoints of two opposite edges (cut unique up to the hexagon's symmetry; (A,B,C,D,E) = (120°,120°,120°,90°,90°), sides (2,2,1,2√3,1), tile area 3√3, all in Q(√3)) (`pentagon-1`, family pentagons; M117).
+- **Key facts:** 1-isohedral, 2 tiles per centered-rectangular cell (60°-rhombus basis, det 6√3 = 2 × area; the legality test now documents the a² = 3b² hexagonal-metric special realization); edge-to-edge; vertex stars {120°,120°,120°} / {90°,90°,90°,90°}; measured **cmm** overriding the brief's p2 pin (achiral prototile — a −120° rotation about the hexagon centre maps it onto its y-mirror; two perpendicular mirror families + glides between them; four half-turn classes, two off every mirror — ruling out pmm — plus orientation-reversing isometries ruling out p2); type-1 exclusive under all 10 dihedral relabellings; distinct from the shipped prismatic-pentagonal (also type 1, different pentagon); Python audit 31/31 before porting; 9-test in-module suite (see CHANGELOG M117).
+
 ## Per-tiling documents
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):

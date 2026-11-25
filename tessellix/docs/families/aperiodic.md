@@ -338,6 +338,31 @@ briefs cite them as `§N`.
   79 tilings, 91 memberships, 571 tests at this step (landed on the
   post-M90-M92 base).
 
+### 44. Half-hex (Socolar substitution) ✅ (M135)
+
+- **Motif:** Socolar's half-hexagon substitution (Bielefeld "half-hex"; cited Fre02 cut-and-project, GS87 Ex. 10.1.3) — one achiral prototile P1 (trapezoid half of a unit hexagon, edges {2,1,1,1}), six rotation classes and no reflection class (mirror = translated rotation) (`half-hex`, family aperiodic; M135).
+- **Key facts:** λ = 2 into 4 children (orientation offsets {0,2,3,4}); substitution matrix S[j][i] = 1 iff (j−i) mod 6 ∈ {0,2,3,4}, PF 4 = λ², char poly (x−4)(x−2)(x−1)²(x+1)² pinned by an exact 720-permutation i128 expansion; exact √3-field (u,v) integer-pair arithmetic end to end, f64 only at emission; depth d = 5..8 by the view diagonal (4⁸ = 65 536 ≤ MAX_TILES); minimal x-period p = (3/2)·2^g = 6, 12, 24, 48, 96 at g = 2..6, strictly doubling per level — limit-periodic, not a lattice table (see CHANGELOG M135).
+
+### 45. Domino (table) substitution ✅ (M138)
+
+- **Motif:** Lançon's limit-periodic domino substitution (Bielefeld entry: "Also known as 'table tiling'" — one tiling, id `domino`, not two) — two domino prototiles on Z² (A = vertical 1×2, B = horizontal 2×1) (`domino`, family aperiodic; M138).
+- **Key facts:** λ = 2 orientation-preserving into 4 children; S = [[2,2],[2,2]], column sums 4 = λ², PF 4, char poly x²−4x pinned by exact 2×2 determinants; exact integer cell arithmetic on Z², floats only at emission; finite covered patch = the 2^d × 2^(d+1) block recentered on the origin, d = 5..8 by the view diagonal; the depth-g patch is the fundamental cell of the period-(2^g, 2^(g+1)) approximating periodic tiling — (2,4), (4,8), (8,16), (16,32), (32,64), (64,128) at g = 1..6, 2× per level (the "full-block" manifest, kind-different from half-hex's in-patch p = (3/2)·2^g). NOT cut-and-project/model-set: the entry states the dynamical spectrum has a continuous component (Solomyak, ETDS 17(3) 1997; Robinson, Indag. Math. 10(4) 1999) (see CHANGELOG M138).
+
+### 46. Period doubling (2D) ✅ (M141)
+
+- **Motif:** the 2D product of the 1D period-doubling substitution a → ab, b → aa (Bielefeld entry pinned live — 1D-only) (`period-doubling`, family aperiodic; M141; cf. §45 domino, the ratio-1 square manifest of the §23d trio).
+- **Key facts:** σ⊗σ on Z² unit squares: 4 prototile label classes (aa/ab/ba/bb, class = 2·w[col] + w[row], seeds 0–3) over ONE square prototile; λ = 2 into a 2×2 frame, child (c,r) label = (σ(x)_c, σ(y)_r); S = [[1,2,2,4],[1,0,2,0],[1,2,0,0],[1,0,0,0]] (column sums all 4 = λ²), PF 4, char poly x⁴−x³−12x²−4x+16 (eigenvalues {4, 1, −2, −2}) pinned by exact i64 24-permutation determinants; limit-periodic — the depth-g patch is the fundamental cell of the period-(2^g, 2^g) approximant, measured (2,2)…(64,64) at g = 1..6 — no proper within-patch period; exact integer arithmetic on Z² end to end (see CHANGELOG M141).
+
+### 47. Thue–Morse (2D) ✅ (M143)
+
+- **Motif:** the 2D product of the classic 1D Thue–Morse morphism τ: 0 → 01, 1 → 10 (Bielefeld entry pinned live — 1D-only, 2 prototiles; rule pinned against JS99 = Allouche & Shallit, The ubiquitous Prouhet-Thue-Morse sequence, Springer 1999) (`thue-morse`, family aperiodic; M143).
+- **Key facts:** τ⊗τ on Z² unit squares: 4 label classes (00/01/10/11, child (c,r) of parent p = 2x+y gets class 2·(x⊕c) + (y⊕r), seeds 0–3) over ONE square prototile; λ = 2 into a 2×2 frame; substitution matrix S = the all-ones 4×4 — the Steinhaus property (every parent block contains each child class exactly once) — column sums all 4 = λ², PF 4, char poly x⁴−4x³ (eigenvalues {4, 0, 0, 0}, rank 1) pinned by exact i64 24-permutation determinants; THE distinguishing signature vs domino (ratio-2) and period-doubling (ratio-1): aperiodic at every depth — the depth-g patch carries NO proper translation period, measured g = 1..6 with all (g+1)²−1 proper candidate shifts rejected (3/8/15/24/35/48 per depth, 133 cumulative, zero survivors); singular continuous diffraction (JS99), not pure point; classification: Aperiodic tab, substitution, translational status "aperiodic", source "Allouche & Shallit" (see CHANGELOG M143).
+
+### 48. Period tripling (2D) ✅ (M146)
+
+- **Motif:** the λ = 3 marginal-supersubstitution landing of the §23d cluster (rule RECONSTRUCTED from the Bielefeld rule image — Info section empty, no tags or references; two-stage job: rule reconstruction, then implementation) (`period-tripling`, family aperiodic; M146; the trio's last member, §44–§47 siblings).
+- **Key facts:** ONE unit-square prototile, 2 label classes (A gray, B blue), λ = 3 into 9 children — A → 3×3 with B on the main diagonal (6A+3B), B → 3×3 all A; S = [[6,9],[3,0]], column sums 9 = λ², PF 9 = λ², char poly x²−6x−27 = (x−9)(x+3), second eigenvalue −3 = −λ — the MARGINAL case, pinned by exact 2-permutation determinant; NOT a σ⊗σ product — the 1D shadow σ: A → ABA, B → AAA (matrix [[2,3],[1,0]]) is pulled back along x+y, the 3-adic cousin of period-doubling's A → AB, B → AA; limit-periodic via approximating periodic tilings: period lattice exactly ⟨(1,−1), (3^g, 0)⟩ measured g = 1..5 (sizes 3/9/27/81/243) — period-1 along (1,−1) at every depth, axis-aligned (3^g, 3^g) strictly tripling per level (the ratio-3 signature completing the 1/2/3 ladder); marginal second eigenvalue leaves exactly one ambiguous line — x+y = 0 carries B at odd depth / A at even depth, two limit tilings up to translation; closed form: world cell (x,y) is B ⟺ v₃((x+y) mod 3^d) odd (v₃(0) := d); d = 5 single depth band (9⁵ = 59049 ≤ MAX_TILES), emission x0 = c−121, y0 = 121−r (see CHANGELOG M146).
+
 ## Per-tiling documents
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):

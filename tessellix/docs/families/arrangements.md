@@ -63,6 +63,11 @@ briefs cite them as `§N`.
   aperiodic 1-D cross sections (Klotz construction); default ratio φ
   gives Fibonacci-word cross sections.
 
+### 3. Windmill (periodic pinwheel) ✅ (M43)
+
+- **Motif:** Conway's periodic "spin" of the pinwheel motif as a 5-tile `LatticeTiling` data table (`windmill`, feature `windmill`) (`windmill`, family arrangements; M43; the §2 sibling — cf. the pinwheel substitution generator, the nonperiodic line).
+- **Key facts:** the (3,0)/(0,3) square lattice — four 1–2–√5 right triangles (seeds 1–4, the four orientation classes) pinwheeling around one square (seed 0, the largest tile); all coordinates exact integers, no surds, areas 4·1 + 5 = 9 = |det|; non-edge-to-edge (mid-side T-junctions — vertex figures 90⁴ at the lattice points (3i, 3j) and 180·90·arctan(1/2)·arctan(2) at the four T-junction classes {(0,1),(0,2),(1,0),(2,0)} mod 3); homochiral (every triangle one chirality sign) so p4 rather than p4g — 4-folds at the motif centres (3i+1.5, 3j+1.5) *and* the lattice points, 2-folds at all four centre classes mod 3, no mirrors or glides (both directions pinned by a restricted symmetry probe over a 180-tile window); naming waiver 2026-11-12 (no canonical published name exists — Wikipedia has no "Windmill tiling", pinwheel literature is aperiodic-only, Grünbaum's 1977 "windmill blades" quilt is a different edge-to-edge design — approved by the repo owner) (see CHANGELOG M43).
+
 ## Per-tiling documents
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):

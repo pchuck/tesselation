@@ -978,6 +978,76 @@ Hard-won lessons:
   zero-tolerance pin (all tables here match Python to ≤ 4.5e-16 and ship the
   Rust values at 1e-9 tolerance).
 
+### 68. Hexagram-and-hexagon-and-hexagon ({6/2}) ✅ (M42)
+
+- **Motif:** PROPOSED.md #2 — the hexagram-and-hexagon-and-hexagon tiling (`hexagram`, `hexagram.rs`, feature `hexagram`; family islamic): the {6/2} six-pointed stars on the hexagonal lattice, one-parameter tip radius T ∈ [0.05, 1/2] (default 1/2 = the kissing hexagram-and-hexagon tiling).
+- **Key facts:** the interstice is one 16-vertex polygon for T < 1/2 and splits into two regular hexagons H(C1), H(C2) (area √3/8 each, touching at the cell centre) at the kissing radius; per-cell area identity exact (√3·T² + √3/2 − √3·T² = √3/2); T = 1/3 (tips on the Voronoi ring) is the only critical value and does not change the 16-gon combinatorics; p6m group probe on the star layer (the interstice is its complement); kissing vertex figures 60.120.60.120 / 60.60.120.120; sweep covers gapped + critical + kissing radii (see CHANGELOG M42).
+
+### 69. Wichmann 12-pointed star interlace panel (W85) ✅ (M52)
+
+- **Motif:** the Wichmann data18/W85 panel (Alhambra, Mexuar patio; SPA 1914 / Wade, Lee's Kharraqan 1067–8, Bonner's Uljaytu, Topkapı scroll) as an exact-Q(√3) line-grid data table (`girih-w85`, `girih_w85.rs`, feature `girih_ext`; family islamic) — hexagonal lattice a1 = (283.92, 0), a2 = rot60(a1), strap width 9; six band families at 30°·k with a regular-vertex 12-pointed star at every lattice point; 42 tiles per cell (star 1, kite 12, pentagon 6, triangle 2, rectangle 3, sheared quad 6, reflex ink hexagon 12), all vertices on the (p + q√3)/50 grid.
+- **Key fact:** Wichmann classifies the motif as *632 (p6m), but the drawn over/under interlace is **chiral** — the exact Q(√3) symmetry probe confirms rot60 at the stars + rot180 at the three lattice-edge midpoints + rot120 at (a1+a2)/3 hold while all six mirror axes and both 30° rotations fail, so the drawn face-to-face tiling is **p6** (the only proper overgroup of p6 is p6m, ruled out) (see CHANGELOG M52).
+
+### 70. PIC fourfold khatam (4.8.8 substrate) ✅ (M53)
+
+- **Motif:** the generative strapwork engine's first deliverable (`pic-4-8-8`, `pic_4_8_8.rs`, feature `hankin_ext`; family islamic) — Hankin polygons-in-contact at contact angle δ = 45° (median opening) on the truncated-square 4.8.8 substrate; the partner of §44 (Hankin motif-inference tilings, M94) — same substrate family, different construction (inference vs. the strapwork layer engine).
+- **Key fact:** at δ = 45° every ray runs edge-midpoint to edge-midpoint, so the walls are exactly the opposite-midpoint chords — the {8/2} two-square octagram (Rub el Hizb) inside each octagon, the four midpoint chords inside each substrate square — head-to-head at shared midpoints (angle census {45°, 90°, 135°}, no T-junctions); 14 faces per square A·Z² cell (A = 1+√2) summing to 3+2√2 = |det| **exactly over Q(√2)**; group **p4m** (see CHANGELOG M53).
+
+### 71. PIC sixfold khatam (3.6.3.6 substrate) ✅ (M54)
+
+- **Motif:** the sixfold engine of the same strapwork generator (`pic-3-6-3-6`, `pic_3_6_3_6.rs`, feature `hankin_ext`; family islamic) — Hankin polygons-in-contact at contact angle **δ = 60°** on the trihexagonal 3.6.3.6 substrate, the hexagonal twin of §70 (M53); same engine family, cross-ref §44.
+- **Key fact:** δ = 60° is *derived*, not chosen — the next midpoint's ray closes onto exactly depth √3/4 only at δ = 60° (δ = 30° spans four steps; δ = 90° drives rays along normals through vertices); the walls are therefore the {6/2} hexagram plus three midsegments per triangle — a trihexagonal tiling of edge ½ holding **12 faces in three seeds** per cell, Σ = 2√3 = |det Λ| exactly over Q(√3), every vertex on the (p+q√3)/4 grid; group **p6m** (see CHANGELOG M54).
+
+### 72. PIC twelvefold khatam (3.12.12 substrate) ✅ (M56)
+
+- **Motif:** the twelvefold engine of the same strapwork generator (`pic-3-12-12`, `pic_3_12_12.rs`, feature `hankin_ext`; family islamic) — Hankin polygons-in-contact at contact angle **δ = 60°** on the truncated-hexagonal 3.12.12 substrate, the third member of the PIC family after §70 (M53) and §71 (M54); cross-ref §44.
+- **Key fact:** δ = 60° is the one contact angle that closes both dodecagon (15°/30°/45°/60°/75°/90°) and triangle (only 60°); the walls are the 12 chords Mᵢ → Mᵢ₊₄ per dodecagon — the {12/4} star, four overlaid equilateral triangles, the classic twelvefold rosette — plus the three midsegments per triangle; 18 walls per cell, face-to-face (882 walls of a 49-cell patch → V = 2266, E = 4410, F = 2146, χ = 2, 0 T-junctions); 45 faces in six seeds per cell, Σ = 6 + 7√3/2 = |det Λ| exactly over Q(√3); group **p6m** (see CHANGELOG M56).
+
+### 73. Girih bowtie (72.72.216) ✅ (M131)
+
+- **Motif:** the classical concave girih bowtie (papillon; unit edges on the 36° girih frame, interior angles 216°, 72°, 72° ×2) tessellating the plane alone — single-tile cmm CenteredRectangular lattice table (`girih-bowtie`, family islamic), interior vertex figure 72/72/216; det(t1,t2) = area(tile) ≈ 1.314328 exact over K = Q(2cos π/10).
+- **Key fact:** 7×7-patch battery: shoelace area == det < 1e-15, interior edge occurrences shared exactly 2 (6-digit keys), vertex wedges closed-or-boundary, irrational-offset grid coverage (see CHANGELOG M131; the cluster completes M131–M134 with §74–§76 below).
+
+### 74. Girih rhombus (72.72.108.108) ✅ (M132)
+
+- **Motif:** the classical thin girih rhombus (72°/108°, unit edges on the 36° frame) tessellating the plane alone — single-tile cmm CenteredRectangular lattice table ⟨(1,0),(cos72°,sin72°)⟩ (`girih-rhombus`, family islamic), |det| = sin72° = tile area exact over K = Q(2cos π/10).
+- **Key fact:** 7×7-patch battery: 84 interior / 28 boundary edge occurrences of 196 (shared exactly 2), wedges closed-or-boundary, coverage once per sample (see CHANGELOG M132; cf. §73 bowtie).
+
+### 75. Girih decagon (10.6.10) ✅ (M133)
+
+- **Motif:** the classical regular girih decagon cannot close a figure alone (144° reflex pairing needs 144+72+144 = 360) — cell = 1 DEC + 1 BOW on a cmm CenteredRectangular lattice ⟨(0,−(1+√5)·S72), (5/4+3√5/4, √5·S72)⟩ (`girih-decagon`, family islamic), det = 2a³−5a/2 ≈ 9.008536623 = DEC+BOW areas, exact over K = Q(2cos 18°); tile-level wallpaper probe → cmm.
+- **Key fact:** 7×7-patch battery: 313 interior / 158 boundary of 784 edge occurrences, wedges closed-or-boundary, 1600 irrational-offset samples covered exactly once; assembly cross-check (exact-K): classic rosette DEC + 10 PENT — 0 overlaps, all 10 decagon vertices close at exactly 360° (144+108+108); DEC-cell DEC+BOW shares exactly 1 edge (see CHANGELOG M133; cf. §73 bowtie).
+
+### 76. Girih pentagon (5.5.4.4) ✅ (M134)
+
+- **Motif:** the classical regular girih pentagon leaves 36° gaps alone (108°×5) — cell = 2 PENT (paired on a shared edge) + 2 HEX (shesh-band hexagons) + 3 RHOMB on a cm CenteredRectangular lattice ⟨(−C36, −2·S72−S36), (2+√5, 0)⟩ (`girih-pentagon`, family islamic), det ≈ 10.547378392 = 2·PENT + 2·HEX + 3·RHOMB exact over K = Q(2cos 18°); exactly one mirror family (72°, pentagon-pair axis) with interleaved glides, no rotations → cm.
+- **Key fact:** 7×7-patch battery: 765 interior / 136 boundary of 1666 edge occurrences, 1600 irrational-offset samples covered exactly once; cross-table congruence: rhombus-table tile ≅ PENT-cell rhombi, DEC-cell bowtie ≅ bowtie-table tile — the girih-primitive cluster (M131–M134, §73–§76) is now complete (see CHANGELOG M134).
+
+### 77. Andritz bowtie-and-hexagon ✅ (M151)
+
+- **Motif:** the Tilings Encyclopedia "Andritz bowtie and hexagon" entry (Feb 2016) — Andritz 2016 fivefold substitution, two unit-edge girih prototiles (bow-tie + elongated hexagon), inflation φ², substitution matrix [[2,3],[3,5]] with PF = φ⁴ (`andritz-bowtie-hexagon`, family islamic; Quasiperiodic category). First member of the §78–§80 Andritz family — cross-ref §78/§79/§80.
+- **Key fact:** exact ℤ[ζ₅] σ-frame walk — the rule derived in an exact Python prototype against the decoded Bielefeld reference patch (646 tiles, 1383 ring-exact vertices), re-verified in Rust: ring-exact unit edges and areas, the exact 253-pose inner patch reproduced pose-for-pose, level growth 27 → 168 → 1160, every interior edge shared by exactly 2 tiles out to radius 8 (level 1) / 20 (level 2); edge-to-edge at every level (see CHANGELOG M151).
+
+### 78. Andritz bowtie-and-hexagon 10gon-1 ✅ (M152)
+
+- **Motif:** the decagon-bearing member of the bowtie-hexagon fivefold family (`andritz-bowtie-hexagon-10gon-1`, family islamic; Quasiperiodic category) — three unit-edge girih prototiles (bow-tie, elongated hexagon, regular decagon), inflation φ², substitution matrix [[2,3,0],[2,2,1],[5,0,6]] with PF = φ⁴; 2nd member after §77 (M151) — cross-ref §77/§79/§80.
+- **Key fact:** exact ℤ[ζ₂₀] σ-frame walk — the rule derived from the girih edge graph of the decoded Bielefeld reference patch (edge-BFS over ℤ[ζ₂₀], 3280/3280 shared-edge label agreement), cross-checked by per-instance tuple equality (26/26 bow-tie rows, 10/10 hexagon rows, 16/16 decagon flowers, 22/22 identical taus); the frame rotates with the parent, decagon row is absolute (center + five edge-sharing petals); edge-to-edge at every level; walk sizes [14, 86, 604] (see CHANGELOG M152).
+
+### 79. Andritz bowtie-and-hexagon 10gon-2 ✅ (M153)
+
+- **Motif:** the third member of the bowtie-hexagon fivefold family (`andritz-bowtie-hexagon-10gon-2`, family islamic; Quasiperiodic category) — three unit-edge girih prototiles (bow-tie, elongated hexagon, regular decagon); σ-frame map z ↦ τ − λz with λ = 3 + 2φ, μ = −(3+2φ), τ = (−3,0,20,0,12,0,24,0); 3rd member after §77 (M151) and §78 (M152) — cross-ref §77/§78/§80.
+- **Key fact:** exact ℤ[ζ₂₀] σ-frame walk with a FITTED per-slot orientation law; **structural finding (load-bearing): the clusters form a shared covering, not a disjoint inflation** — PF(M) = 43.151 ≠ λ² = 38.889, row areas exceed λ²·A by 7–17 %, 13 % of walk tiles double-claimed consistently; the module/tests therefore treat M as verified frame-claim tables (census rows pinned, growth 41.758 vs PF within 4 %) and MEAN_AREA from the empirical patch census; the walk reproduces the decoded Bielefeld reference patch pose-for-pose both directions, every edge used exactly twice (see CHANGELOG M153).
+
+### 80. Andritz bowtie-and-hexagon 10gon-3 ✅ (M160)
+
+- **Motif:** the fourth member of the bowtie-hexagon fivefold family (`andritz-bowtie-hexagon-10gon-3`, family islamic; Quasiperiodic category) — three unit-edge girih prototiles (bow-tie, elongated hexagon, regular decagon); σ-frame map z ↦ μz + τ with μ = φ⁴·e^{72°i}; last of the family after §77 (M151), §78 (M152) and §79 (M153) — cross-ref §77/§78/§79.
+- **Key fact:** exact ℤ[ζ₂₀] σ-frame walk with frames Ψ_HEX = (8 − 8r) and Ψ_BOW = (4 − 8r) mod 20 from a 21-tile seed core; cluster census mined from the decoded 957-tile patch by unanimous union votes, hardened through the region-filter − configuration-kill fix chain (raw tables contained long-reach slots whose child claims escaped σ(parent)); shared covering again (42.7 % of walk tiles multi-claimed), so generation is by the verified walk — 957/957 reproduced with 0 overlaps, walk r ≤ 16/30 → 0 pairs; landed on the M149/M153-adjacent arc (see CHANGELOG M160).
+
+### 81. Girih decagon patch ✅ (M161)
+
+- **Motif:** the classic two-level girih figure of LS07, ROADMAP "Full girih decagon patch" (`girih-decagon-patch`, family islamic; Islamic category) — a finite patch data table assembling one large level-1 decagon plus its 10 edge-adjacent large bow-ties, each large tile replaced by its closed Darb-i Imam cluster read from `girih_qc`'s certified tables (real children + the edge-marker trio on every unique large-tile edge); 611 small tiles = 270 bobbin + 220 bow-tie + 121 decagon (431 cluster children + 60 unique C-edges × 3 trios), 0 duplicate keys (see CHANGELOG M161).
+- **Key fact:** exact Q(2cos 18°) certification — 4150 directed edges (1810 interior pairs shared exactly 2, 530 boundary), 0 T-junctions, 1730 legal vertex fans, Euler χ = 2 (topological disk), exact 10-fold symmetry, patch total 1794.340677298660, coverage 33976 samples each exactly once; strapwork bands deliberately NOT shipped (the {10/3}-star weave exceeds the exact-partition contract). Not a LatticeTiling — no culling lines.
+
 ## Per-tiling documents
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):

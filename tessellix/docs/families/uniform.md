@@ -32,6 +32,12 @@ Archimedean work is possible (or needed).
 Numbered arcs keep their PATTERNS.MD §numbers — code comments and
 briefs cite them as `§N`.
 
+Historical note: the eleven Archimedean tilings shipped in the
+foundation era (M1–M18) as part of the initial "complete the classics"
+arc — they predate the milestone changelog (the first CHANGELOG entry is
+the M19–M27 arc) and carry no per-tiling `§N` arcs, so no numbered
+build arcs are written here.
+
 ## Per-tiling documents
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
