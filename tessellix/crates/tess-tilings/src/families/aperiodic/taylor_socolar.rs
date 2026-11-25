@@ -1,11 +1,11 @@
 //! Taylor–Socolar striped-hexagon tiling — the decorated-hexagon aperiodic
-//! monotile of Taylor and Socolar (arXiv:1008.3103), ported from the audited
+//! monotile of Taylor and Socolar (arXiv:1003.4279), ported from the audited
 //! upstream study (M86) as a data table.
 //!
 //! # What is generated
 //!
 //! The paper's **plane-filling centered hexagonal tiling** (CHT) — the
-//! decorated-hexagon aperiodic monotile of Taylor and Socolar (arXiv:1008.3103),
+//! decorated-hexagon aperiodic monotile of Taylor and Socolar (arXiv:1003.4279),
 //! the specific member of the CHT local-isomorphism class that contains its
 //! forced 529-hexagon patch (its Figure 18: a 23×23 rhombus of hexagon sites
 //! in axial coordinates `(u, v)`, with `u + v + 21 ∈ [0, 22]` and
@@ -126,7 +126,7 @@
 //!
 //! Aperiodicity of the full plane tiling, the two local-isomorphism classes
 //! and the limit-periodic structure are cited from Taylor–Socolar
-//! (arXiv:1008.3103); this port proves nothing about them beyond the radius-30
+//! (arXiv:1003.4279); this port proves nothing about them beyond the radius-30
 //! no-period probe on the shipped patch and the zero R1/R2/R3 census on the
 //! hex windows. The study's algebraic inflation fit aligned only 57.6% of
 //! sites because its convention search missed the corner center `c = (0, 1)`
@@ -1638,7 +1638,7 @@ fn centre(u: i32, v: i32) -> Vec2 {
     Vec2::new(SQ3 * (uu + 0.5 * vv), 1.5 * vv)
 }
 
-// ── CHT closed form (pinned, arXiv:1008.3103 §5) ────────────────────────────
+// ── CHT closed form (pinned, arXiv:1003.4279 §5) ────────────────────────────
 //
 // Exact integer arithmetic (floats only at emission): a total O(1)-per-site
 // closed form. Per site x = (u, v), x != c:
@@ -1836,7 +1836,7 @@ impl Tiling for TaylorSocolarTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Taylor-Socolar aperiodic striped hexagon (arXiv:1008.3103): the paper's forced 529-hexagon patch, each hexagon partitioned into 8 decorated sub-polygons carrying the canonical chord + split-axis decoration whose chords close into nested Taylor triangles (R1 0/2992, R2 0/2816, R3 0/2904)."
+        "Taylor-Socolar aperiodic striped hexagon (arXiv:1003.4279): the paper's forced 529-hexagon patch, each hexagon partitioned into 8 decorated sub-polygons carrying the canonical chord + split-axis decoration whose chords close into nested Taylor triangles (R1 0/2992, R2 0/2816, R3 0/2904)."
     }
 
     fn category(&self) -> TilingCategory {
@@ -1849,7 +1849,7 @@ impl Tiling for TaylorSocolarTiling {
 
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {
         let meta = SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None).with_notes(
-            "aperiodic (cited, arXiv:1008.3103); plane-filling CHT closed form; \
+            "aperiodic (cited, arXiv:1003.4279); plane-filling CHT closed form; \
              no period within hex-radius 30 of the patch (verified here)",
         );
         let map = crate::lattice::similarity_map(params);
