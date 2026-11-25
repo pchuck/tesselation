@@ -1908,6 +1908,18 @@ quasiperiodic hosts later).
   panels, WIS 12-point star). No registry change.
   - **Effort** L, **tier** strong (design doc) — brief
     [medallion-interface](briefs/medallion-interface.md).
+  - **Status: ✅ LANDED as M167 (2026-11-25).** Design doc
+    [medallion-interface-design](medallion-interface-design.md) (schema +
+    cos²-only angle convention + the three absorption obligations) +
+    `tess-tilings/src/medallion/` (Field/Contact/Absorption, `Medallion`
+    trait, `Zq` exact sign engine, exact `first_hit`) + five exact
+    catalog re-derivations with ray-exit cos² censuses: M53 khatam
+    (Q(√2), absorption (a) exact), M56 rosette core (Q(√3), (a) exact),
+    M161 girih decagon (level-10 cyclotomic, strap closure exact,
+    path (b) deferred to 24b), {6/2} hexagram (exact landing +
+    tangency), M158 WIS 12-star ((c) exact — all 24 outline edges
+    absorbed onto dodecagon vertices). Data + tests only; no registry
+    change. 24b consumes host312 + the WIS record first.
 - **24b. Hole-bearing substrates + boundary-matched inference** — the
   core novel algorithm. Hypothesis: given a host substrate with
   medallion-shaped holes whose boundary edges carry the medallion's

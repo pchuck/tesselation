@@ -11,10 +11,10 @@ periodic hosts, rays absorbed exactly, interstices filled by a
 complementary strap pattern. Full dossier in
 [PROPOSED §24](../PROPOSED.md); the sprint ladder:
 
-- **24a Medallion interface & catalog** — schema + exact re-derivations
-  of landed medallions (design doc first;
-  [brief](briefs/medallion-interface.md)). Conflict-free now; waits for
-  a strong/frontier slot.
+- ✅ **24a Medallion interface & catalog** — schema + exact re-derivations
+  of landed medallions — **landed as M167**
+  ([design doc](medallion-interface-design.md)); five catalog records
+  with ray-exit cos² censuses; the 24b gate is now open.
 - **24b Hole-bearing substrates + boundary-matched inference** — the
   core algorithm; ground-truth bar: reproduce M158/M161 cell tables
   first. Subsumes the open 22b hole decomposition.

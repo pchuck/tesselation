@@ -29,6 +29,7 @@ pub mod classify;
 pub use classify::classification;
 
 mod fields;
+pub mod medallion;
 // M86/M93: Taylor-Socolar and Jeandel-Rao deliberately carry no per-tiling
 // feature gate (pre-refactor, the former was ungated despite a non-default
 // `socolar` feature existing, and the latter had no feature at all). They
@@ -237,7 +238,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations — both no census movement; M166 = CAP tiling, Aperiodic 11 -> 12). 163 built-ins — 63 before
+// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations — both no census movement; M166 = CAP tiling, Aperiodic 11 -> 12; M167 = 24a medallion interface — data + tests only, no census movement). 163 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the eleven tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),

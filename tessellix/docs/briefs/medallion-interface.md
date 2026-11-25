@@ -80,3 +80,8 @@ module with its batteries in ONE landing; explicit `git add` paths only;
 subject like `engine: medallion interface design doc + exact catalog
 re-derivations (24a)`. Report: doc path, spike numbers, per-medallion field
 + ray-exit tables, deviations, what 24b should consume first.
+---
+**Status: ✅ LANDED as M167 (2026-11-25)** — design doc + medallion module +
+five exact catalog re-derivations (M53 khatam, M56 rosette core, M161 girih
+decagon, {6/2} hexagram, M158 WIS 12-star), 37 tests, no registry change.
+24b consumes host312 + the WIS record first.
