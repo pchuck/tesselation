@@ -1517,7 +1517,6 @@ mod tests {
         // the 24 base-ring shapes (lone tile, identity gauge)
         let mut shapes: Vec<(u8, u8, Vec<Vec2>)> = Vec::new();
         for ty in 0..4u8 {
-            let marks = marks_of(ty);
             let segs = walk_of(ty);
             for k in 0..6u8 {
                 let mut z = [0i64; 4];

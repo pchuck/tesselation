@@ -11,7 +11,7 @@ is archived, gitignored, in `tessellix/.git.bak/`.
 ```sh
 cargo test --workspace        # full suite (848 tests); must stay green
 cargo test -p tess-tilings <test_name>   # single test
-cargo check --workspace       # convention: ZERO warnings (enforced on every commit)
+cargo check --workspace --all-targets  # convention: ZERO warnings, test targets included (enforced on every commit)
 
 cargo run -p tess-tui         # TUI — needs a REAL terminal (raw mode); do not run headless in scripts
 cargo run -p tess-tui -- list
@@ -198,7 +198,9 @@ the commit-message body; the orchestrator writes the final
   performed (worked examples in the archived `tessellix/.git.bak/`
   history; the tiling's family doc `docs/families/<family>.md` records
   the same per-tiling details).
-- Keep `cargo check --workspace` warning-free.
+- Keep `cargo check --workspace --all-targets` warning-free (the
+  `--all-targets` matters: plain `cargo check` skips `#[cfg(test)]`
+  modules, where warnings otherwise hide).
 - Tile budget: `MAX_TILES = 250_000` (`lattice.rs`) — exceeding it
   returns the "too many tiles for this view — zoom in" message, which the
   GUI shows on-canvas; keep generators cheap (the GUI regenerates every

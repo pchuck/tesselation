@@ -583,6 +583,7 @@ mod tests {
     /// Exact single coverage of the 2^g × 2^g frame (0 overlaps, 0
     /// gaps, pinned tile counts 4/16/64/256 at g = 1..4).
     #[test]
+    #[allow(non_snake_case)] // L = the frame side, the paper's notation
     fn no_overlap_and_coverage_depths() {
         let pin_counts = [4, 16, 64, 256];
         for g in 1..=4usize {
@@ -621,6 +622,7 @@ mod tests {
     /// (0, 0) moves the class-0 (0, 0) cell to class
     /// 2·w_g[px] + w_g[py] ≠ 0, since w_g[2^k] = 1 for
     /// 0 < 2^k < L. Returns (rejected candidate count, survivors).
+    #[allow(non_snake_case)] // L = the frame side, the paper's notation
     fn period_manifest(g: u32) -> (usize, Vec<(i64, i64)>) {
         let tiles = patch_of(L00, g);
         let (L, _) = patch_dims(g);

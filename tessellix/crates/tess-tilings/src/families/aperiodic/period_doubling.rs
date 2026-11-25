@@ -576,6 +576,7 @@ mod tests {
     /// Exact single coverage of the 2^g × 2^g frame (0 overlaps, 0
     /// gaps, pinned tile counts 4/16/64/256 at g = 1..4).
     #[test]
+    #[allow(non_snake_case)] // L = the frame side, the paper's notation
     fn no_overlap_and_coverage_depths() {
         let pin_counts = [4, 16, 64, 256];
         for g in 1..=4usize {
@@ -618,6 +619,7 @@ mod tests {
     /// candidate. The overlap-only notion (without the p | L
     /// filter) gives degenerate border-coincidence values
     /// [2, 3, 6, 12, 24, 48] at g = 1..6 and must not be used.
+    #[allow(non_snake_case)] // L = the frame side, the paper's notation
     fn patch_period(g: u32) -> (i64, i64) {
         let tiles = patch_of(AA, g);
         let (L, _) = patch_dims(g);
