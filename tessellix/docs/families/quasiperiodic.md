@@ -274,11 +274,16 @@ briefs cite them as `§N`.
   precedent) — the seed is a single unit A0 chair and the patch *is* the
   covered domain; cell space recentered on the patch bbox center via a
   fixed float offset (−1/2, −s/2) (1/2 ∉ Z[√φ] — documented, not
-  lattice-exact). Depth is view-anchored (pinwheel convention): E =
-  cell-space view diagonal, d = 0 for E ≥ 1 else
-  ceil(−ln E / ln φ), cap 17 (2^17 ≤ tile budget); the largest tile
-  (width s^−d) is ≈ √E, so nested views within one φ-octave emit
-  bit-identical tiles on their intersection (pinned).
+  lattice-exact). Depth is view-anchored on the patch (pinwheel
+  convention re-based): E = cell-space view diagonal, zoom = 0 for
+  E ≥ φ (the patch diagonal √(1 + s²)) else ceil(−ln(E/φ) / ln φ), then
+  d = max(D_PRESENT, zoom), capped at MAX_DEPTH = 17 (2^17 ≤ tile
+  budget), D_PRESENT = 5 — whole-patch views floor at 5 (d = 0 would
+  render the bounded patch as the lone seed chair; the UI preview
+  window is derived from the generated tiles and would pin an absolute
+  rule at d = 0), and zoomed-in views refine past the floor by
+  φ-octaves. Nested views within one φ-octave emit bit-identical tiles
+  on their intersection (pinned).
 - **T-junctions:** not edge-to-edge, intrinsically — a child's reflex
   (notch) corner lands in the relative interior of its sibling's long
   edge at exactly the s⁻⁴ fraction of that edge (s⁻² from the other end,
@@ -377,7 +382,7 @@ briefs cite them as `§N`.
   ((m + n√3)/6) · p^{1−d} with the single float multiply last, so no
   drift accumulates across levels. Depth selection d = 1 +
   floor(log_p(6/diag)) for view diagonal < 6, capped at 16 (child
-  edge p^{-15} ≈ 2.6e-8 — deeper views fail with a message, the
+  edge p^{-15} ≈ 2.6e-9 — deeper views fail with a message, the
   float horizon, mirroring Stampfli's STEP_CAP).
 - **Level-0 seed:** the uniform 3.12.12 at edge p (the shipped
   archimedean cell table: dodecagons on the lattice
