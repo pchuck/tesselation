@@ -42,7 +42,7 @@ briefs cite them as `§N`.
 All seven were data tables derived by the cairo-pentagonal method:
 dualize the existing exact primal table (face centroids in cyclic order
 around each primal vertex); coordinates stay exact in Q(√3) (or Q(√2)),
-module `crates/tess-tilings/src/laves.rs` behind feature `laves`.
+module `crates/tess-tilings/src/families/laves.rs` behind feature `laves`.
 M19 tetrakis-square, M20 rhombille, M21 triakis-triangular, M22
 deltoidal-trihexagonal, M23 kisrhombille, M24 prismatic-pentagonal,
 M25 floret-pentagonal — **the family is complete (8/8), mirroring the
@@ -54,7 +54,7 @@ shifted-grid coverage, proper-coloring search), mechanically
 cross-checked against the emitted Rust literals (vertex-by-vertex
 numeric diff — caught an x/y slip in M23 the coverage test also
 caught), and measured in the exported SVG (side/angle multisets).
-`laves_pattern_mode_is_proper_coloring` (lib.rs) re-checks proper
+`laves_pattern_mode_is_proper_coloring` (families/laves.rs) re-checks proper
 pattern coloring on generated patches. The verification script lives
 at `/tmp/opencode/laves_dual.py` (exact Q(√d) arithmetic, per-dual
 battery) with Rust-ready literal emission (`--rust` flag).
