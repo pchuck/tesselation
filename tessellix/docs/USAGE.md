@@ -115,6 +115,19 @@ window, the patch no longer being near-centered in it. Verified:
 taylor-socolar 64,905 tiles (vs 64,969 origin-centered) and CAP 1,016
 tiles, all tokens finite, the background rect at x = 26.67 = 60 − 33.33.
 
+**Finite patches beyond their domain.** `--center` translates the frame
+exactly as for any tiling, but a finite patch does not intersect a window
+far from it — `--center 500,500` on `wis-12-fold`, `golden-bee` or
+`girih-decagon-patch` writes a rect-only SVG (a single background rect, zero
+shapes, all tokens finite, exit 0, byte-identical across runs). At the rim
+the frame catches a partial subset of the patch — `--center -14,0` → 15 of 26
+tiles for wis-12-fold, `15,0` → 13 of 32 for golden-bee, and the nominal
+`12,0` → 198 of 611 for girih-decagon-patch — still well-formed and
+all-finite, never an error. Note the per-tiling edge: girih-decagon-patch's
+patch spans ~±17 × ±12 world units, larger than the default 30×20 frame, so
+its origin-centered rendering already shows 245 of 611 tiles; `--scale 0.05`
+renders the full patch (26 / 32 / 611 tiles, no `MAX_TILES` trip).
+
 Every view is subject to the tile budget: a view whose window would
 exceed `MAX_TILES` (250,000 tiles, e.g. scale 0.15 at this canvas) is
 refused — stderr `error: too many tiles for this view — zoom in`, exit 1,
