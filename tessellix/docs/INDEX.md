@@ -60,6 +60,9 @@ registry name.
   degree-3/4 cyclotomic arithmetic design doc (§23e/§23i gate: oblique
   U(k) frame, certified minpolies, Sturm sign engine, applicability
   table; stdlib spike + log in `.scratch/cyclotomic-design/`)
+- [docs/cyclotomic-field-degree5.md](cyclotomic-field-degree5.md) —
+  degree-5 field design doc (M178): K₁₁ = Q(2cos(2π/11)) + N₁₁ sine
+  extension, spike-validated, no code yet (unblocks 24c n=11)
 - [docs/TAXONOMY.md](TAXONOMY.md) — the eleven-tab gallery taxonomy (M76; Isohedral added 2026-11-24)
 - [docs/2D_Tilings_Reference.md](2D_Tilings_Reference.md) — mathematical
   background (uniform/Laves/wallpaper/quasiperiodic/aperiodic reference)

@@ -266,6 +266,13 @@ the "mixed floret/cairo/prismatic" patterns.
   ✅ **First consumer landed (M149)** — GLB binary n = 7 (§23e
   re-scope): the K₇ slice (fields.rs) consumed directly by the
   certified DFS generator; depth cap 5 = deepest certified level.
+  ✅ **Degree-5 design doc landed (M178)** —
+  [docs/cyclotomic-field-degree5.md](cyclotomic-field-degree5.md):
+  K₁₁ = Q(2cos(2π/11)) minpoly y⁵+y⁴−4y³−3y²+3y+1 (Φ₁₁ Laurent identity,
+  two independent derivations), disc 11⁴ ⇒ Z[α] maximal (no subfields),
+  RED11 tower + ISO11 certified, N₁₁ sine extension a genuine quadratic
+  over K₁₁, 55-element battery 0-bisection i128-safe at s=26;
+  implementation queued (strong tier, post-sprint-2).
 - ❓ **Wheel tiling (Nissen)** — **parked (M61)** with a proven
   negative: the edge-orthogonal dual of the shield substitution is
   exact but admits no substitution at any inflation (algebraic killer

@@ -1987,7 +1987,9 @@ quasiperiodic hosts later).
   2(n−c−1)+2 and lens 2c+4 node counts hold for n = 9 (hub
   `outlines()` cross-check); certification dead-code hole in the
   window-verify path found and fixed en route. **n = 11 remains
-  blocked on degree-5 fields.**
+  blocked on degree-5 fields** (unblocked at design level:
+  [docs/cyclotomic-field-degree5.md](docs/cyclotomic-field-degree5.md),
+  M178 — implementation job pending).
   - **Effort** M each, **tier** strong.
 - **24d. Composition families on periodic nets** — unit cells with 2–3
   medallion classes (dodecagon medallions at hexagon centers +
