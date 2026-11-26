@@ -161,12 +161,27 @@ impl Nq {
             (o, Ordering::Equal) => o,
             (Ordering::Greater, Ordering::Greater) => Ordering::Greater,
             (Ordering::Less, Ordering::Less) => Ordering::Less,
-            (su, _) => su.then_with(|| {
-                self.u
+            // Mixed signs: the conjugate factor `u − v w` has sign
+            // `sgn(u)`, so sgn(x) = sgn(u) · sgn(u² − s v²) — the
+            // product rule. `u² = s v²` is impossible for (u, v) ≠ 0
+            // (it would make s a square in K₉ with N(s) = 3), so the
+            // second factor is never Equal.
+            (su, _) => {
+                let product = self
+                    .u
                     .mul(self.u)
                     .sub(S_NQ.mul(self.v.mul(self.v)))
-                    .sign()
-            }),
+                    .sign();
+                debug_assert!(
+                    product != Ordering::Equal,
+                    "mixed-sign sgn: u² = s v² is impossible for (u, v) != 0"
+                );
+                if su == product {
+                    Ordering::Greater
+                } else {
+                    Ordering::Less
+                }
+            }
         }
     }
     /// Exact equality across denominators (cross-multiplication).
@@ -1254,6 +1269,84 @@ mod tests {
         }
         // cos^2 ordering sanity: (2+b)/4 > 1/4.
         assert_eq!(cos293().sub(cos292()).sgn(), Ordering::Greater);
+    }
+
+    /// Regression battery for the `sgn` mixed-sign arm (docs §4.3, §6.3):
+    /// the shipped arm returned `sgn(u)` unconditionally (the
+    /// `Ordering::then_with` returns `self` unless Equal), which
+    /// disagrees with the product rule `sgn(u) · sgn(u² − s·v²)`
+    /// exactly on mixed-sign elements with u² < s·v². The elements
+    /// below pin both sides of the u² vs s·v² split, plus same-sign
+    /// and zero controls. Expected signs are derived from the product
+    /// rule (exact K₉ arithmetic) and cross-checked against the f64
+    /// float view (`Nq::fl`, w₉ = 2 sin 20° from the shipped K9 float
+    /// view).
+    #[test]
+    fn sgn_mixed_sign_product_rule_regression() {
+        // Mandated element (docs §4.3, §6.3): 1 − 2·w₉ ≈ −0.368 < 0.
+        // u = 1, v = −2: u² = 1 < s·4 (s = 2−b ≈ 0.468) → product
+        // rule: Greater · Less = Less.
+        let x = Nq::new(K9::ONE, K9([-2, 0, 0]), 1);
+        assert_eq!(x.sgn(), Ordering::Less);
+        assert!(x.fl() < 0.0, "1 − 2w₉ ≈ {} < 0", x.fl());
+
+        // Mixed signs, both sides of the u² vs s·v² split:
+        //   u = 1, v = −1:  u² = 1 > s·1 ≈ 0.468 → Greater · Greater = Greater
+        //   u = −1, v = 1:  u² = 1 > s·1 ≈ 0.468 → Less · Greater = Less
+        //   u = −1, v = 2:  u² = 1 < s·4 ≈ 1.87 → Less · Less = Greater
+        let cases: [(K9, K9, Ordering); 3] = [
+            (K9::ONE, K9([-1, 0, 0]), Ordering::Greater),
+            (K9([-1, 0, 0]), K9::ONE, Ordering::Less),
+            (K9([-1, 0, 0]), K9([2, 0, 0]), Ordering::Greater),
+        ];
+        for (u, v, expect) in cases {
+            let x = Nq::new(u, v, 1);
+            assert_eq!(x.sgn(), expect);
+            // cross-check against the f64 view (w₉ from the shipped float path)
+            let fl = x.fl();
+            assert!(
+                (fl > 0.0 && expect == Ordering::Greater) || (fl < 0.0 && expect == Ordering::Less),
+                "f64 cross-check: {:?} fl = {} expect {:?}", x, fl, expect
+            );
+            // fl() must be consistent with the product rule's signs
+            let su = u.sign();
+            let term = u
+                .mul(u)
+                .sub(S_NQ.mul(v.mul(v)))
+                .sign();
+            let product_rule = if su == term { Ordering::Greater } else { Ordering::Less };
+            assert_eq!(product_rule, expect, "product rule for {:?}", x);
+        }
+        // the u = −1, v = 2 element is the mirror image of 1 − 2w₉
+        // (u = 1, v = −2); note sgn(−x) = sgn(x).reverse()
+        let mirror = Nq::new(K9([-1, 0, 0]), K9([2, 0, 0]), 1);
+        let original = Nq::new(K9::ONE, K9([-2, 0, 0]), 1);
+        assert_eq!(mirror.sgn(), original.sgn().reverse());
+
+        // Same-sign controls (the arm that was already correct):
+        //   u = 1, v = 2:  sgn(u) = Greater; same-sign ⇒ Greater
+        //   u = −1, v = −1: sgn(u) = Less; same-sign ⇒ Less
+        let same_sign: [(K9, K9, Ordering); 2] = [
+            (K9::ONE, K9([2, 0, 0]), Ordering::Greater),
+            (K9([-1, 0, 0]), K9([-1, 0, 0]), Ordering::Less),
+        ];
+        for (u, v, expect) in same_sign {
+            let x = Nq::new(u, v, 1);
+            assert_eq!(x.sgn(), expect);
+            let fl = x.fl();
+            assert!(
+                (fl > 0.0 && expect == Ordering::Greater) || (fl < 0.0 && expect == Ordering::Less),
+                "f64 cross-check: {:?} fl = {} expect {:?}", x, fl, expect
+            );
+        }
+
+        // Zero controls: u = 0 / v = 0 (zero factors ⇒ the `Equal` arms)
+        let zero_v = Nq::new(K9::ONE, K9::ZERO, 1);
+        let zero_u = Nq::new(K9::ZERO, K9::ONE, 1);
+        assert_eq!(zero_v.sgn(), Ordering::Greater);
+        assert_eq!(zero_u.sgn(), Ordering::Greater);
+        let zero = Nq::ZERO;
+        assert_eq!(zero.sgn(), Ordering::Equal);
     }
 
     fn gp_eq(p: &Gp<Nq>, q: &Gp<Nq>) -> bool {
