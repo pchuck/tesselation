@@ -242,7 +242,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations, M167 = 24a medallion interface, M168 = taylor-socolar plane-filling CHT presentation, M169 = 24c (n,c)-monster medallion catalog, M170 = 24h PIC explorer (sweep module + explore CLI, no registry change), M171 = 24c extension — (9,c)-monster records via the rotated odd-n family (no registry change), M172 = 24d instance 1 — dodecagon-hexagram-honeycomb composition (Islamic 34 -> 35, built-ins 163 -> 164), M173 = Ammann A4 rectilinear chair set (Quasiperiodic 16 -> 17, built-ins 164 -> 165) — all no census movement; M166 = CAP tiling, Aperiodic 11 -> 12). 163 built-ins — 63 before
+// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations, M167 = 24a medallion interface, M168 = taylor-socolar plane-filling CHT presentation, M169 = 24c (n,c)-monster medallion catalog, M170 = 24h PIC explorer (sweep module + explore CLI, no registry change), M171 = 24c extension — (9,c)-monster records via the rotated odd-n family (no registry change) — all no census movement; M172 = 24d instance 1 — dodecagon-hexagram-honeycomb composition (Islamic 34 -> 35, built-ins 163 -> 164), M173 = Ammann A4 rectilinear chair set (Quasiperiodic 16 -> 17, built-ins 164 -> 165); M174 = 24b hole-inference engine sprint 1 (medallion layer only, no registry change), M175 = 24h exact-pin follow-up #2 — canonical 3.12.12 motif assignment (sweep theta-axis fix, no registry change); M166 = CAP tiling, Aperiodic 11 -> 12). 165 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the eleven tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -252,9 +252,9 @@ mod tests {
         //   secondaries), Wallpaper 17 (the group
         //   catalog — one card per represented group; M85 completed it),
         //   Isohedral 5 (the Kaplan IH instances, primary since the
-        //   2026-11-24 tab chore), PentagonTypes 17, Islamic 29,
-        //   Arrangements 8, Quasiperiodic 21, Aperiodic 12, Nonperiodic 11.
-        // Membership census 184 = 163 primaries + 21 secondaries
+        //   2026-11-24 tab chore), PentagonTypes 17, Islamic 30,
+        //   Arrangements 8, Quasiperiodic 22, Aperiodic 12, Nonperiodic 11.
+        // Membership census 186 = 165 primaries + 21 secondaries
         // (3 regular Laves + 5 isohedral->Laves + 9 Wallpaper
         // + 2 typed PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5), M122 + 2 untyped
@@ -422,6 +422,10 @@ mod tests {
         // a φ² left eigenvector of σ̃₁ ⇒ LIDS; exact integer abcd
         // arithmetic, floats only at emission;
         // docs/tilings/cap.md + aperiodic.md).
+        // -> M172 Islamic 29 -> 30 (dodecagon-hexagram-honeycomb, the
+        // composition family's first instance)
+        // -> M173 Quasiperiodic 21 -> 22 (ammann-a4, the rectilinear
+        // chair set)
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
