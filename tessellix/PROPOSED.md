@@ -2064,6 +2064,25 @@ quasiperiodic hosts later).
     `sweep.rs` `classic_motifs_3_12_12()` only — the REGISTERED
     hankin-3-12-12 / pic-3-12-12 tilings keep their own verified
     geometry (separate landed works, not the θ-axis overlay).
+  - **Exact-pin follow-up #3 ✅ M176: the 4.8.8 θ-axis host was
+    already canonical (2026-11-25; pins + docs, no census change).**
+    The premise above ("substrate tiles are the 14-cell face
+    partition") is FALSE — `sweep::theta_axis_tiles` serves
+    `hankin_4_8_8::tiles()`, which IS the registered
+    `truncated-square` host (identity pinned in Rust: vertex
+    multisets equal mod lattice, diamond 1 + octagon 2(1+√2),
+    Σ = 3+2√2, envelope {45, 90}; a dedicated host id/row would be a
+    byte-identical duplicate of the M163 offset-0 row, so the honest
+    delivery is pins + docs). Both registered readings certified
+    exactly on the one host: θ=0 is byte-identical (to_bits) to
+    registered `hankin-4-8-8-motifs` (14 faces, lens [4×4, 6×8, 8,
+    32]); δ=45° walls = 28 fragments/cell ≡ the `pic-4-8-8`
+    edge-orbit set (python full-network cert: 322 bounded faces,
+    every face matched to pic cells by exact vertex-set; the cert
+    fixed a real Q(√2) numeric-sort bug — tuple ordering ≠ numeric
+    ordering). The two readings do NOT unify — distinct 14-face
+    partitions of one host, 0/14 shared areas. sweep.rs only (+292);
+    tests 1431 → 1436.
   - **Exact-pin follow-up #1 ✅ STOP: already registered (2026-11-25,
     no new entry).** The leaderboard head (truncated-square δ=90°,
     score 0.686) is EXACTLY the registered Laves tiling

@@ -47,7 +47,18 @@ complementary strap pattern. Full dossier in
   winners are already-registered centroid duals (square→square,
   trihexagonal→rhombille, truncated-square→tetrakis-square; δ=45 top
   row = pic-4-8-8); sweep validated the registry, no new entries.
-  Remaining candidate: the 3.12.12 canonical motif assignment.
+  Remaining candidate: none — the 3.12.12 canonical motif assignment
+  is settled (M175: Kaplan's own saved Taprats design Water Rings.tap;
+  Star(12, 45°, s=1) + Star(3, 45°, s=1), replacing the interim
+  rosette baseline).
+  Exact-pin follow-up #3 ✅ 2026-11-25 — canonical 4.8.8 host: the
+  hankin θ axis already runs on the registered `truncated-square`
+  host (identity pinned in Rust; no new id/row — a duplicate would be
+  byte-identical); δ=45 on the host now EXACTLY certified as
+  `pic-4-8-8` (28 wall fragments == 28 partition edge orbits mod
+  lattice, full-network face census), and θ=0 vs δ=45 certified
+  NON-unifying (two distinct 14-face partitions, 0 shared face
+  areas). No new entries; no census change.
 - **24f Quasiperiodic medallion hosts** — gated behind CAP/A4 family
   ownership; the dual method (Ammann-bar / Robinson-triangle duals) is
   the exact path for Penrose-class hosts.

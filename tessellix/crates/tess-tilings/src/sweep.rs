@@ -40,6 +40,37 @@
 //! separates closed weaves from open regimes, then ranks structural
 //! integrity, slivers and symmetry-invariance (module docs for
 //! [`documented_score`]).
+//!
+//! ## The 4.8.8 canonical host (24h follow-up #3)
+//!
+//! The `hankin-4-8-8-motifs` θ axis runs on the canonical 4.8.8 host from
+//! the start: `theta_axis_tiles` serves `hankin_4_8_8::tiles()`, and that
+//! octagon + diamond pair **is** the registered `truncated-square`
+//! Archimedean cell — same vertex multiset mod lattice, same `A·Z²` lattice
+//! (`A = 1+√2`), same Σ = 3+2√2 (pinned by
+//! `canonical_4_8_8_host_is_the_registered_truncated_square`). A dedicated
+//! host id or a `truncated-square` θ row would therefore emit a
+//! byte-identical duplicate of the `hankin-4-8-8-motifs` offset-0 row, so
+//! none was added. The 14-face result partition is **not** the substrate:
+//! it is a result (the δ-axis `SubstrateBase` generates it via
+//! `Tiling::generate`, and the θ axis rebuilds it from the host).
+//!
+//! Exact cross-checks on that host (Python Q(√2) certificates: host
+//! identity, ray-midpoint closure, face-orbit census, area tables; Rust
+//! pins):
+//!
+//! * θ = 0 on the host is byte-identical to the registered M163 motif
+//!   khatam — `theta_zero_on_canonical_host_reproduces_registered_m163_partition`.
+//! * δ = 45° on the host **is** the registered M53 `pic-4-8-8` partition:
+//!   the closed-contact-angle wall fragments (28 per lattice cell) are
+//!   exactly its edge orbits —
+//!   `delta45_wall_network_on_the_canonical_host_is_the_registered_pic_partition`
+//!   and `truncated_square_delta45_sweep_row_is_a_closed_envelope_member`.
+//! * The two partitions do **not** unify: θ = 0 (M163) and δ = 45° (M53)
+//!   are two distinct 14-face partitions of the one host — same Σ, same
+//!   p4m, zero shared face areas —
+//!   `theta_zero_and_pic_delta45_partitions_do_not_unify`. (The follow-up
+//!   brief's θ = 0 area parenthetical is the M53 table, not M163's.)
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -1486,5 +1517,266 @@ mod tests {
             );
             assert_eq!(svg_a, svg_b, "gallery render must be byte-deterministic");
         });
+    }
+
+    // ------------------------------------------------------------------
+    // 24h follow-up #3 — the canonical 4.8.8 host: host identity, Bar A
+    // (θ = 0 == registered M163 partition), Bar B (δ = 45° == registered
+    // M53 pic-4-8-8 partition) and the honest non-unification of the two.
+    // ------------------------------------------------------------------
+
+    /// Undirected segment key on the strapwork engine's 1e-6 endpoint grid.
+    fn seg_key_1e6(a: Vec2, b: Vec2) -> ([i64; 2], [i64; 2]) {
+        fn q(p: Vec2) -> [i64; 2] {
+            [(p.x * 1e6).round() as i64, (p.y * 1e6).round() as i64]
+        }
+        let (ka, kb) = (q(a), q(b));
+        if ka <= kb {
+            (ka, kb)
+        } else {
+            (kb, ka)
+        }
+    }
+
+    /// Segment key canonicalised mod the lattice `a·Z²`: the midpoint is
+    /// reduced into `[0,a)²` (with a 1e-9 nudge so midpoints lying exactly
+    /// on a cell-boundary line canonicalise consistently), then rounded on
+    /// the 1e-6 grid.
+    fn lattice_seg_key(a_pt: Vec2, b_pt: Vec2, lat: f64) -> ([i64; 2], [i64; 2]) {
+        let m = (a_pt + b_pt) * 0.5;
+        let i = ((m.x + 1e-9) / lat).floor();
+        let j = ((m.y + 1e-9) / lat).floor();
+        let t = Vec2::new(i * lat, j * lat);
+        seg_key_1e6(a_pt - t, b_pt - t)
+    }
+
+    /// `|area|` of a polygon by the shoelace formula.
+    fn poly_area(pts: &[Vec2]) -> f64 {
+        let mut s = 0.0;
+        for i in 0..pts.len() {
+            s += pts[i].cross(pts[(i + 1) % pts.len()]);
+        }
+        (s * 0.5).abs()
+    }
+
+    #[cfg(feature = "uniform")]
+    #[test]
+    fn canonical_4_8_8_host_is_the_registered_truncated_square() {
+        // The hankin-4-8-8 substrate cell IS the registered
+        // `truncated-square` Archimedean cell: two classes (octagon +
+        // diamond) with the same vertex multiset mod the lattice and the
+        // same square lattice A·Z², A = 1+√2. A dedicated host id or a
+        // duplicate θ row would emit byte-identical geometry, so none was
+        // added — this pin is the contract instead.
+        let host = hankin_4_8_8_tiles();
+        assert_eq!(host.len(), 2, "octagon + diamond substrate cell");
+        let reg = crate::families::uniform::archimedean::truncated_square();
+        assert_eq!(reg.cells.len(), 2);
+        let a = 1.0 + core::f64::consts::SQRT_2;
+        for (h, want) in [
+            (reg.lattice[0], Vec2::new(a, 0.0)),
+            (reg.lattice[1], Vec2::new(0.0, a)),
+        ] {
+            assert!(
+                (h - want).length() < 1e-12,
+                "square lattice A·Z², A = 1+√2"
+            );
+        }
+        // Vertex multiset per class, canonicalised mod the lattice.
+        let canon_pts = |pts: &[Vec2]| -> Vec<[i64; 2]> {
+            let mut v: Vec<[i64; 2]> = pts
+                .iter()
+                .map(|p| {
+                    let i = ((p.x + 1e-9) / a).floor();
+                    let j = ((p.y + 1e-9) / a).floor();
+                    let c = *p - Vec2::new(i * a, j * a);
+                    [(c.x * 1e9).round() as i64, (c.y * 1e9).round() as i64]
+                })
+                .collect();
+            v.sort_unstable();
+            v
+        };
+        let mut host_cells: Vec<(usize, Vec<[i64; 2]>, f64)> =
+            host.iter().map(|v| (v.len(), canon_pts(v), poly_area(v))).collect();
+        host_cells.sort_by_key(|(n, _, _)| *n);
+        let mut reg_cells: Vec<(usize, Vec<[i64; 2]>, f64)> = reg
+            .cells
+            .iter()
+            .map(|c| (c.poly.pts.len(), canon_pts(&c.poly.pts), poly_area(&c.poly.pts)))
+            .collect();
+        reg_cells.sort_by_key(|(n, _, _)| *n);
+        for ((nh, vh, ah), (nr, vr, ar)) in host_cells.iter().zip(reg_cells.iter()) {
+            assert_eq!(nh, nr);
+            assert_eq!(vh, vr, "host cell vertices match truncated-square mod lattice");
+            assert!((ah - ar).abs() < 1e-12);
+        }
+        // Exact class areas: diamond 1, octagon 2(1+√2), cell Σ = 3+2√2.
+        let s2 = core::f64::consts::SQRT_2;
+        assert!((host_cells[0].2 - 1.0).abs() < 1e-12, "diamond area 1");
+        assert!(
+            (host_cells[1].2 - 2.0 * (1.0 + s2)).abs() < 1e-12,
+            "octagon area 2(1+√2)"
+        );
+        let sigma: f64 = host_cells.iter().map(|(_, _, ar)| ar).sum();
+        assert!((sigma - (3.0 + 2.0 * s2)).abs() < 1e-12);
+        // The M165 envelope already carries the canonical closed angle.
+        let env = envelope_for("truncated-square").expect("truncated-square envelope");
+        assert!(env.contains(&45.0) && env.contains(&90.0));
+    }
+
+    #[cfg(feature = "islamic")]
+    #[test]
+    fn theta_zero_on_canonical_host_reproduces_registered_m163_partition() {
+        // Bar A: the θ axis at offset 0 runs `build_cells_with_motifs` on
+        // the canonical host with the landed M163 motifs — the result must
+        // be byte-identical to the registered `hankin-4-8-8-motifs` cell.
+        let (cells, report) =
+            build_cells_with_motifs(&hankin_4_8_8_tiles(), &classic_motifs_4_8_8());
+        let reg = crate::families::islamic::hankin_4_8_8_motifs::hankin_4_8_8_motifs();
+        assert!(report.complete, "offset-0 motif figures close");
+        assert_eq!(cells.len(), 14);
+        assert_eq!(cells.len(), reg.cells.len());
+        for (a, b) in cells.iter().zip(reg.cells.iter()) {
+            assert_eq!(a.seed, b.seed);
+            assert_eq!(a.poly.pts.len(), b.poly.pts.len());
+            for (p, q) in a.poly.pts.iter().zip(b.poly.pts.iter()) {
+                assert_eq!(p.x.to_bits(), q.x.to_bits(), "byte-identical partition");
+                assert_eq!(p.y.to_bits(), q.y.to_bits(), "byte-identical partition");
+            }
+        }
+        // Sweep-row features at offset 0: 14 exact faces over Σ = 3+2√2.
+        let row = theta_row("hankin-4-8-8-motifs", 0.0);
+        assert!(row.features.feasibility_reason.is_none());
+        assert!(row.features.partition_complete);
+        assert_eq!(row.features.n_cells, 14);
+        assert!(row.features.max_partition_error < 1e-9);
+        let s2 = core::f64::consts::SQRT_2;
+        assert!((row.features.total_area - (3.0 + 2.0 * s2)).abs() < 1e-9);
+        // M163 face census — 8 hexagonal petals (~0.12785) + 4 quads
+        // (~0.176777) + octagon core (1−√2/2) + 32-gon core (~3.805624).
+        // (The follow-up brief's parenthetical area list is the M53
+        // `pic-4-8-8` table, NOT this partition — see
+        // `theta_zero_and_pic_delta45_partitions_do_not_unify`.)
+        let mut lens: Vec<usize> = cells.iter().map(|c| c.poly.pts.len()).collect();
+        lens.sort_unstable();
+        assert_eq!(lens, [4, 4, 4, 4, 6, 6, 6, 6, 6, 6, 6, 6, 8, 32]);
+        let mut areas: Vec<f64> = cells.iter().map(|c| poly_area(&c.poly.pts)).collect();
+        areas.sort_by(f64::total_cmp);
+        for a in &areas[..8] {
+            assert!((a - 0.127850).abs() < 1e-6, "petal area (cert 0.12785)");
+        }
+        for a in &areas[8..12] {
+            assert!((a - 0.176777).abs() < 1e-6, "quad area (cert 0.176777)");
+        }
+        assert!((areas[12] - (1.0 - s2 / 2.0)).abs() < 1e-12, "octagon core 1−√2/2");
+        assert!((areas[13] - 3.805624).abs() < 1e-6, "32-gon core (cert 3.805624)");
+    }
+
+    #[cfg(all(feature = "islamic", feature = "uniform"))]
+    #[test]
+    fn delta45_wall_network_on_the_canonical_host_is_the_registered_pic_partition() {
+        // Bar B: at the canonical closed angle δ = 45° every wall ray on
+        // the host exits at another edge midpoint, so the two substrate
+        // tiles carry the full per-cell wall set: the 8 octagon {8/2}
+        // chords split by the octagram crossings (8 × 3 fragments) + the
+        // 4 diamond midpoint chords = 28 fragments per lattice cell. Those
+        // fragments are EXACTLY the edge orbits of the registered M53
+        // `pic-4-8-8` partition (56 directed edges over its 14 cells →
+        // 28 orbits).
+        use tess_core::geometry::Polygon;
+        let host: Vec<Tile> = hankin_4_8_8_tiles()
+            .iter()
+            .enumerate()
+            .map(|(i, v)| Tile {
+                proto: i as u8,
+                poly: Polygon { pts: v.to_vec() },
+                seed: i as u32,
+            })
+            .collect();
+        let walls = tess_core::strapwork::walls(&host, 45.0);
+        assert_eq!(
+            walls.len(),
+            28,
+            "24 octagon chord fragments (8 chords × 3, both ray directions deduped) + 4 diamond chords"
+        );
+        let a = 1.0 + core::f64::consts::SQRT_2;
+        let frags: BTreeSet<_> = walls
+            .iter()
+            .map(|w| lattice_seg_key(w.a, w.b, a))
+            .collect();
+        assert_eq!(frags.len(), 28, "one fragment per lattice edge orbit");
+        let pic = crate::families::islamic::pic_4_8_8::pic_4_8_8();
+        assert_eq!(pic.cells.len(), 14);
+        let pic_edges: BTreeSet<_> = pic
+            .cells
+            .iter()
+            .flat_map(|c| {
+                let pts = &c.poly.pts;
+                (0..pts.len()).map(move |i| lattice_seg_key(pts[i], pts[(i + 1) % pts.len()], a))
+            })
+            .collect();
+        assert_eq!(pic_edges.len(), 28, "56 directed edges → 28 lattice orbits");
+        assert_eq!(
+            frags, pic_edges,
+            "δ=45° wall fragments on the canonical host == the registered pic-4-8-8 partition edges mod lattice"
+        );
+    }
+
+    #[cfg(all(feature = "islamic", feature = "uniform"))]
+    #[test]
+    fn theta_zero_and_pic_delta45_partitions_do_not_unify() {
+        // Same host, same face count, same Σ = 3+2√2, same p4m group — but
+        // the θ = 0 (M163 motif khatam) and δ = 45° (M53 PIC) partitions
+        // are DIFFERENT face partitions: zero shared face areas at 1e-9.
+        // Recorded honestly; the θ grid is not forced to reproduce the
+        // PIC partition.
+        let (cells, _) = build_cells_with_motifs(&hankin_4_8_8_tiles(), &classic_motifs_4_8_8());
+        let pic = crate::families::islamic::pic_4_8_8::pic_4_8_8();
+        let s2 = core::f64::consts::SQRT_2;
+        let mut t_areas: Vec<f64> = cells.iter().map(|c| poly_area(&c.poly.pts)).collect();
+        let mut p_areas: Vec<f64> = pic.cells.iter().map(|c| poly_area(&c.poly.pts)).collect();
+        t_areas.sort_by(f64::total_cmp);
+        p_areas.sort_by(f64::total_cmp);
+        assert_eq!(t_areas.len(), p_areas.len());
+        for list in [&t_areas, &p_areas] {
+            let sigma: f64 = list.iter().sum();
+            assert!((sigma - (3.0 + 2.0 * s2)).abs() < 1e-9);
+        }
+        // The M53 partition areas are exactly 1/8 (8 star tips),
+        // 1/8 + √2/4 (4 house pentagons), 1/2 (small square), 1+√2 (core).
+        let pic_exact = [0.125; 8]
+            .into_iter()
+            .chain([0.125 + s2 / 4.0; 4])
+            .chain([0.5, 1.0 + s2]);
+        for (got, want) in p_areas.iter().zip(pic_exact) {
+            assert!((got - want).abs() < 1e-12, "pic-4-8-8 exact area table");
+        }
+        let shared = t_areas
+            .iter()
+            .filter(|a| p_areas.iter().any(|b| (*a - b).abs() < 1e-9))
+            .count();
+        assert_eq!(shared, 0, "two distinct 14-face partitions of one host");
+    }
+
+    #[cfg(feature = "uniform")]
+    #[test]
+    fn truncated_square_delta45_sweep_row_is_a_closed_envelope_member() {
+        // The canonical host is swept as the registered substrate it is:
+        // 45° is an M165 envelope point and the weave closes there (the
+        // weave it closes into is pinned against `pic-4-8-8` by
+        // `delta45_wall_network_on_the_canonical_host_is_the_registered_pic_partition`).
+        let reg = crate::registry();
+        let tiling = reg.get("truncated-square").expect("truncated-square registered");
+        let rows = run_delta_axis(tiling, &REGION);
+        let row = row_for(&rows, 45.0);
+        assert_eq!(row.features.envelope_member, Some(true));
+        assert!(row.features.envelope_angles.as_ref().unwrap().contains(&45.0));
+        assert_eq!(row.features.exit, 0);
+        assert_eq!(row.features.corner, 0);
+        assert_eq!(row.features.bad, 0);
+        assert!(row.features.closure_violation.is_none());
+        assert!(row.features.face_count >= 1);
+        assert!(row.features.min_face_area > 0.0);
+        assert!(row.features.translation_invariant, "lattice fold invariance");
     }
 }
