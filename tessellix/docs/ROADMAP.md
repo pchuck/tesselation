@@ -25,6 +25,19 @@ complementary strap pattern. Full dossier in
   since M139 — but engine-side: girih alphabet + L10//64 substrate
   wiring). Un-gates 24d's inference
   addendum + 24e.
+  ✅ **M180 sprint 2: girih generalization landed** —
+  new `medallion/girih_infer.rs` (Plain-equivalent stack C1+C3+C4 —
+  the 0/1810 finding: no landed interior edge lies on a carried
+  exit-ray/{10/3}-chord line, so C2's anatomy has no girih counterpart
+  and the WIS anatomy levels stay WIS-only) + `hostgirih.rs` 5-test
+  battery; conservative CELL=2.0 cell-grid prefilters (superset-only,
+  girih suite 476 s → 40 s); S2/S3 **exact** — the shipped Darb-i Imam
+  611-tile cell table reached as a member of the engine's freedom set
+  with ZERO divergences and zero patch data inside the engine
+  (census 270/220/121, exact area identity (0,−93440,0,59200)/64,
+  decagon-hole exhaustive census 11 sols two-run byte-identical,
+  guided walk 611/611). **Ground-truth bar met: M158 (sprint 1) +
+  M161 (sprint 2) both reproduced from the general path.**
 - **24c (n,c)-monster medallion generator** (22e partial; {8,12},
   {9,12}, {9,18} first) — ✅ M169: six parallel-pair records with
   exact placements, windows and M163-checked exits; ✅ M171: n=9

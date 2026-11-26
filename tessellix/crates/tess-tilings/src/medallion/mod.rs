@@ -27,10 +27,12 @@
 //!
 //! [`Tiling`]: tess_core::Tiling
 
+pub mod girih_infer;
 pub mod girih_m161;
 pub mod hexagram_62;
 pub mod holes;
 pub mod host312;
+pub mod hostgirih;
 pub mod hostwis;
 pub mod infer;
 pub mod khatam_m53;

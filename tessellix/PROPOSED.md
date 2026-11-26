@@ -1965,6 +1965,25 @@ quasiperiodic hosts later).
     landed census [16 TRI, 4 SQ, 6 RHO] is ground truth, never
     registered. Sprint 2 scope (M161 reproduction + new substrates)
     staged by report.
+  - **Status addendum: ✅ sprint 2 landed M180 (2026-11-26)** — the
+    girih generalization: `medallion/girih_infer.rs` runs the
+    Plain-equivalent stack C1+C3+C4 (the 0/1810 finding: no landed
+    interior edge lies on any carried exit-ray/{10/3}-chord line ⇒
+    C2's anatomy has no girih counterpart; the WIS RayLine/Vset/Segment
+    levels stay WIS-substrate-only), self-contained exact-sign descent
+    for L10 heights (`fields::L10::sign` unused at search heights —
+    operating-range residual; the descent exhaustively cross-checked
+    over 330,321 elements, corrected wrong on 0), conservative CELL=2.0
+    cell-grid prefilters (supersets only, outcomes identical to naive
+    scans; girih suite 476 s → 40 s), backtracker on a 512 MB scoped
+    stack for the capped 530-edge run (results stack-independent).
+    S2/S3 exact, zero divergences, zero patch data inside the engine:
+    611 tiles, census 270/220/121, 4150 directed/2340 undirected unit
+    edges, single 530-edge CCW hole, exact area identity
+    (0,−93440,0,59200)/64, Euler disk χ=2 over V=1730, decagon-hole
+    exhaustive census 11 solutions (two runs byte-identical), guided
+    walk 611/611 steps through the engine's own machinery. WIS
+    byte-identical by construction (zero-touch).
 - **24c. (n,c)-monster medallion generator** (the 22e medallion source)
   — overlapping regular n-gons fused at contact angles kπ/n (n ≤ 12,
   2 ≤ c ≤ ⌈n/2⌉−2) as additional catalog entries in exact fields;
