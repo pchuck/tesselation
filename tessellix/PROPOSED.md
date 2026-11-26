@@ -1989,7 +1989,11 @@ quasiperiodic hosts later).
   window-verify path found and fixed en route. **n = 11 remains
   blocked on degree-5 fields** (unblocked at design level:
   [docs/cyclotomic-field-degree5.md](docs/cyclotomic-field-degree5.md),
-  M178 — implementation job pending).
+  M178 — implementation job pending). The odd-n ladder's next rung
+  (n = 13, degree 6) is likewise designed:
+  [docs/cyclotomic-field-odd-n.md](docs/cyclotomic-field-odd-n.md)
+  (M179) — D=6 envelope resolved (ISO13@s₀=20); note this entry's
+  "n ≤ 12" scope line must be extended for a 13-rung.
   - **Effort** M each, **tier** strong.
 - **24d. Composition families on periodic nets** — unit cells with 2–3
   medallion classes (dodecagon medallions at hexagon centers +

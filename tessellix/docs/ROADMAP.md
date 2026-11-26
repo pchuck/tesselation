@@ -273,6 +273,16 @@ the "mixed floret/cairo/prismatic" patterns.
   RED11 tower + ISO11 certified, N₁₁ sine extension a genuine quadratic
   over K₁₁, 55-element battery 0-bisection i128-safe at s=26;
   implementation queued (strong tier, post-sprint-2).
+  ✅ **Odd-n extension design doc landed (M179)** —
+  [docs/cyclotomic-field-odd-n.md](cyclotomic-field-odd-n.md):
+  K₁₃ full treatment (m₁₃, disc 13⁵, RED13, ISO13@s₀=20) + the general
+  prime-n recipe (applicability now 7/9/11/13/15/17/21 at design level);
+  D=6 envelope resolved — s=26 structurally impossible (α⁵ monomial 135
+  bits), s₀=20 spike-selected, battery 0-bisection at 113/127 bits;
+  degree theorem w_n ∉ K_n for every odd n; composite discs measured
+  (81/1125/453789); corrects M178 §7's "degree 6 prime" slip (Gal K₁₃ =
+  Z/6: Q(√13) + cubic F₃). K₁₃ implementation queued (strong tier,
+  after K₁₁).
 - ❓ **Wheel tiling (Nissen)** — **parked (M61)** with a proven
   negative: the edge-orthogonal dual of the shield substitution is
   exact but admits no substitution at any inflation (algebraic killer

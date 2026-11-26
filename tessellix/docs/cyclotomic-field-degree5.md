@@ -414,7 +414,9 @@ proposed yet):
 - `m₁₃(y) = y⁶ + y⁵ − 5y⁴ − 4y³ + 6y² + 3y − 1` (Laurent identity
   `x⁶·m₁₃(x + x⁻¹) = Φ₁₃` exact; Sturm census 6 real roots; spike I1–I2);
 - `disc(m₁₃) = 13⁵ = 371293` (spike I4) ⇒ `Z[2cos(2π/13)]` maximal,
-  degree 6 prime ⇒ still no subfields;
+  degree 6 prime ⇒ still no subfields **[errata, M179: false — degree 6
+  is composite; Gal(K₁₃) ≅ Z/6 HAS proper subfields Q(√13) and the cubic
+  F₃ — see `cyclotomic-field-odd-n.md` §2]**;
 - `ISO13 = [118843896, 118843897]/2²⁶`, same s = 26 convention, dyadic
   bracket exact (spike I3);
 - `N(2 − b₁₃) = m₁₃(2) = 13`, prime — the same genuine-extension
