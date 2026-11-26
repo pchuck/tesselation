@@ -963,6 +963,234 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
         }
     }
 
+    /// Kuniform dual doc pin. The 17 `kuniform-dual-*` docs claim, per cell,
+    /// either an explicit "N faces over the primal's V vertex orbits" token
+    /// (5 orbit-token docs — kuniform-dual-n3, n4, n14, n15, n16) or a
+    /// face-by-polygon-type enumeration ("1 regular hexagon + 6 congruent
+    /// quadrilaterals per cell" — the other 12). The constructors emit one
+    /// canonical dual face per primal-vertex orbit
+    /// (`families/kuniform/dual.rs`: "the per-cell table holds one canonical
+    /// dual face per primal-vertex orbit, so every dual face is emitted
+    /// exactly once by exactly one cell"), so the claimed per-cell face
+    /// count equals `tiling.cells.len()` in both grammars. The orbit-token
+    /// docs additionally pin the cross-check N == V == cells.len().
+    ///
+    /// The enumeration grammar is tolerant by design: it sums, over the text
+    /// between the group parenthetical and the first " per cell", every
+    /// (number, modifier?, polygon-noun) triple. Modifiers are "congruent" /
+    /// "regular" / "isosceles" / "unit" plus bare-digit angle fragments
+    /// (the `30°/60°/90°` token); polygon nouns are hexagon(s) /
+    /// quadrilateral(s) / pentagon(s) / triangle(s) / kite(s) / rhombus /
+    /// square(s). Parenthetical spans are stripped first — they carry side
+    /// lengths, areas, orbit names and M-numbers, none of which is a face
+    /// count. A doc whose enumeration or orbit token does not parse fails
+    /// loudly rather than being silently skipped.
+    #[cfg(feature = "kuniform")]
+    #[test]
+    fn kuniform_dual_doc_claims_match_constructors() {
+        use crate::families::kuniform::dual::{
+            kuniform_dual_n1, kuniform_dual_n2, kuniform_dual_n3, kuniform_dual_n4,
+            kuniform_dual_n5, kuniform_dual_n8, kuniform_dual_n9, kuniform_dual_n12,
+            kuniform_dual_n13, kuniform_dual_n14, kuniform_dual_n15, kuniform_dual_n16,
+            kuniform_dual_n18, kuniform_dual_n19, kuniform_dual_n20, kuniform_dual_p6m,
+            kuniform_dual_pmm,
+        };
+        use crate::lattice::LatticeTiling;
+
+        /// Alphanumeric/'-' tokens — drops everything else.
+        fn tokens(s: &str) -> Vec<&str> {
+            s.split(|c: char| !(c.is_ascii_alphanumeric() || c == '-'))
+                .filter(|t| !t.is_empty())
+                .collect()
+        }
+
+        /// Drop parenthetical spans (keeping the text outside them).
+        fn strip_parens(s: &str) -> String {
+            let mut out = String::new();
+            let mut depth = 0usize;
+            for c in s.chars() {
+                match c {
+                    '(' => depth += 1,
+                    ')' => depth = depth.saturating_sub(1),
+                    _ if depth == 0 => out.push(c),
+                    _ => {}
+                }
+            }
+            out
+        }
+
+        /// Sum every (number, modifier?, polygon-noun) triple in the
+        /// face-enumeration region (the text between the group parenthetical
+        /// and the first " per cell").
+        fn enumeration_total(head_region: &str, id: &str) -> usize {
+            let stripped = strip_parens(head_region);
+            let toks = tokens(&stripped);
+            let mut total = 0usize;
+            let mut count = 0usize;
+            let mut i = 0usize;
+            while i < toks.len() {
+                let t = toks[i];
+                if !t.chars().all(|c| c.is_ascii_digit()) {
+                    i += 1;
+                    continue;
+                }
+                let n: usize = t.parse().unwrap();
+                let mut j = i + 1;
+                let mut matched_noun = false;
+                loop {
+                    match toks.get(j) {
+                        // bare-digit angle fragments (30°/60°/90°) and
+                        // modifier words are skipped; a polygon noun ends
+                        // the triple
+                        Some(&m) if m.chars().all(|c| c.is_ascii_digit()) => j += 1,
+                        Some(&m)
+                            if matches!(m, "congruent" | "regular" | "isosceles" | "unit") =>
+                        {
+                            j += 1
+                        }
+                        Some(&noun)
+                            if matches!(
+                                noun,
+                                "hexagon"
+                                    | "hexagons"
+                                    | "quadrilateral"
+                                    | "quadrilaterals"
+                                    | "pentagon"
+                                    | "pentagons"
+                                    | "triangle"
+                                    | "triangles"
+                                    | "kite"
+                                    | "kites"
+                                    | "rhombus"
+                                    | "rhombi"
+                                    | "square"
+                                    | "squares"
+                            ) =>
+                        {
+                            matched_noun = true;
+                            break;
+                        }
+                        _ => break,
+                    }
+                }
+                if matched_noun {
+                    total += n;
+                    count += 1;
+                    i = j + 1;
+                } else {
+                    i += 1;
+                }
+            }
+            assert!(
+                count >= 1,
+                "docs/tilings/{id}.md: no polygon-count claims found in face-enumeration region"
+            );
+            total
+        }
+
+        /// Parse the "N faces over the primal's V vertex orbits" token, if
+        /// present. Returns (N, V).
+        fn orbit_token(line: &str, id: &str) -> Option<(usize, usize)> {
+            let toks = tokens(line);
+            let Some(f) = toks.iter().position(|&t| t == "faces") else {
+                return None;
+            };
+            let n_faces: usize = toks
+                .get(f.wrapping_sub(1))
+                .and_then(|t| t.parse().ok())
+                .unwrap_or_else(|| {
+                    panic!("docs/tilings/{id}.md: 'N faces over the primal' — N missing")
+                });
+            let orbits_idx = toks
+                .iter()
+                .rposition(|&t| t == "orbits")
+                .unwrap_or_else(|| {
+                    panic!("docs/tilings/{id}.md: 'N faces over the primal' — orbits missing")
+                });
+            assert_eq!(
+                toks.get(orbits_idx.wrapping_sub(1)),
+                Some(&"vertex"),
+                "docs/tilings/{id}.md: expected 'V vertex orbits' token"
+            );
+            let v_orbits: usize = toks
+                .get(orbits_idx.wrapping_sub(2))
+                .and_then(|t| t.parse().ok())
+                .unwrap_or_else(|| {
+                    panic!("docs/tilings/{id}.md: 'V vertex orbits' — V missing")
+                });
+            Some((n_faces, v_orbits))
+        }
+
+        let docs_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/tilings");
+
+        let cases: Vec<(&str, fn() -> LatticeTiling)> = vec![
+            ("kuniform-dual-p6m", kuniform_dual_p6m),
+            ("kuniform-dual-pmm", kuniform_dual_pmm),
+            ("kuniform-dual-n1", kuniform_dual_n1),
+            ("kuniform-dual-n2", kuniform_dual_n2),
+            ("kuniform-dual-n3", kuniform_dual_n3),
+            ("kuniform-dual-n4", kuniform_dual_n4),
+            ("kuniform-dual-n5", kuniform_dual_n5),
+            ("kuniform-dual-n8", kuniform_dual_n8),
+            ("kuniform-dual-n9", kuniform_dual_n9),
+            ("kuniform-dual-n12", kuniform_dual_n12),
+            ("kuniform-dual-n13", kuniform_dual_n13),
+            ("kuniform-dual-n14", kuniform_dual_n14),
+            ("kuniform-dual-n15", kuniform_dual_n15),
+            ("kuniform-dual-n16", kuniform_dual_n16),
+            ("kuniform-dual-n18", kuniform_dual_n18),
+            ("kuniform-dual-n19", kuniform_dual_n19),
+            ("kuniform-dual-n20", kuniform_dual_n20),
+        ];
+
+        for (id, make) in cases {
+            let tiling = make();
+            assert_eq!(
+                tiling.id(), id,
+                "docs/tilings/{id}.md: constructor id mismatch (doc id != constructor id)"
+            );
+            let doc = std::fs::read_to_string(docs_dir.join(format!("{id}.md")))
+                .unwrap_or_else(|e| panic!("docs/tilings/{id}.md readable: {e}"));
+            let claim_lines: Vec<&str> = doc
+                .lines()
+                .filter(|l| l.contains("face-centroid dual"))
+                .collect();
+            assert_eq!(
+                claim_lines.len(), 1,
+                "docs/tilings/{id}.md: expected exactly one face-claim line (contains 'face-centroid dual'), found {}",
+                claim_lines.len()
+            );
+            let line = claim_lines[0];
+            // Face-enumeration region: text between the group parenthetical
+            // and the first " per cell".
+            let head = line
+                .split(" per cell")
+                .next()
+                .unwrap_or_else(|| panic!("docs/tilings/{id}.md: no ' per cell' found in face-claim line"));
+            let claimed = enumeration_total(head, id);
+            assert_eq!(
+                claimed,
+                tiling.cells.len(),
+                "docs/tilings/{id}.md: doc claims {claimed} faces per cell (enumeration) but the constructor produces {}",
+                tiling.cells.len()
+            );
+            // Orbit-token cross-check (the 5 token docs).
+            if let Some((n_faces, v_orbits)) = orbit_token(line, id) {
+                assert_eq!(
+                    n_faces, v_orbits,
+                    "docs/tilings/{id}.md: doc claims {n_faces} faces over the primal's {v_orbits} vertex orbits — N != V"
+                );
+                assert_eq!(
+                    n_faces,
+                    tiling.cells.len(),
+                    "docs/tilings/{id}.md: doc claims {n_faces} faces over the primal's {v_orbits} vertex orbits but the constructor produces {}",
+                    tiling.cells.len()
+                );
+            }
+        }
+    }
+
     /// Part A legality test (M76). Two independent claims per tiling:
     ///
     /// 1. *Group legality*: the declared (group, lattice kind) pair is a
