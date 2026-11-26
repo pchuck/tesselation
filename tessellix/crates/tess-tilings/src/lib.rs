@@ -2060,6 +2060,69 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
         }
     }
 
+    /// Pin (tile positivity, every built-in): every registered tiling
+    /// generates at default parameters over a fixed region (same
+    /// depth/region as `all_tiles_triangulate` above, which triangulates
+    /// every tile) and every generated tile must carry at least 3 finite
+    /// vertices and a strictly positive area. Zero-area or non-finite
+    /// tiles would silently break ear-clipping, coverage bookkeeping and
+    /// triangulation downstream; this is the hard validity gate on the
+    /// tile geometry itself. Failures name the tiling.
+    ///
+    /// Strictly positive, not epsilon: area() is the polygon's own shoelace
+    /// magnitude — 0.0 is a degenerate tile by definition (never legal),
+    /// so the threshold is exactly 0.0 (no epsilon can be "just generous",
+    /// 0.0 is the real validity cut). Vertex finiteness is checked
+    /// separately because NaN/Inf vertices would poison every downstream
+    /// computation while still passing area().
+    #[test]
+    fn all_built_ins_positive_area_tiles() {
+        let v2 = |x: f64, y: f64| Vec2::new(x, y);
+        let region = BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0));
+        // Tracked so the runner can report how much geometry this pin
+        // covered; printed on stdout (cargo captures it by default, so
+        // it shows only under --nocapture).
+        let mut total_tiles = 0usize;
+        let mut tilings_checked = 0usize;
+        for t in super::registry().iter() {
+            let p = ParamSet::default_for(t.params());
+            let r = t.generate(&p, &Query { region });
+            assert!(
+                r.message.is_none(),
+                "{}: {msg}",
+                t.name(),
+                msg = r.message.unwrap_or("")
+            );
+            assert!(!r.tiles.is_empty(), "{}: no tiles", t.name());
+            total_tiles += r.tiles.len();
+            tilings_checked += 1;
+            for tile in &r.tiles {
+                assert!(
+                    tile.poly.pts.len() >= 3,
+                    "{}: tile with fewer than 3 vertices",
+                    t.name()
+                );
+                for pt in &tile.poly.pts {
+                    assert!(
+                        pt.x.is_finite() && pt.y.is_finite(),
+                        "{}: non-finite vertex {pt}",
+                        t.name()
+                    );
+                }
+                let area = tile.poly.area();
+                assert!(
+                    area > 0.0,
+                    "{}: non-positive-area tile (area = {area})",
+                    t.name()
+                );
+            }
+        }
+        // Reported so the CI run log shows the coverage of this pin.
+        println!(
+            "all_built_ins_positive_area_tiles: examined {total_tiles} tiles across {tilings_checked} tilings"
+        );
+    }
+
     // -----------------------------------------------------------------
     // Doc-structure pin, lattice-determinant tier (kuniform + hankin
     // families). For each of the 42 docs that state a lattice-basis
@@ -2627,6 +2690,81 @@ mod lattice_culling_tests {
                 &p,
                 BBox::new(v2(-4.0, -3.0), v2(6.0, 5.0)),
                 &format!("{name}(rot30,scale0.7)"),
+            );
+        }
+    }
+
+    /// Pin (lattice area identity, whole lattice class): per unit lattice cell,
+    /// the per-cell tile count (one prototile instance per lattice translate per
+    /// cell) weighted by prototile area equals the lattice determinant:
+    ///
+    /// ```text
+    ///   Σᵢ area(cellᵢ.poly) == |lattice[0] × lattice[1]|
+    /// ```
+    ///
+    /// The translates of the cell polygons tile the plane exactly once, so the
+    /// area inside one fundamental domain is the sum of the cell areas — the
+    /// cell-space determinant of the declared basis is the area of that domain.
+    /// This is the exact identity the doc-determinant pin
+    /// (`doc_lattice_determinants_match_constructors`, end of `mod tests`)
+    /// asserts against; this pin makes the per-cell-count × prototile-area half
+    /// permanent over the WHOLE data-table class (all 104 lattice tilings),
+    /// parameter-independently (the cell polygons and the basis live in cell
+    /// space), instead of only at the two 42- and 27-doc doc-pin scopes.
+    ///
+    /// Tolerance: 1e-9 relative (determinant and shoelace magnitudes in f64;
+    /// the repo's other live-area pins use the same 1e-9 relative convention).
+    /// Failures name the tiling id; the enumeration is the
+    /// `lattice_culling_matches_brute_force` list shape — a family feature adds
+    /// its entries, so this list can never go stale.
+    #[test]
+    fn lattice_area_identity_over_the_lattice_class() {
+        let mut lattices: Vec<(&str, LatticeTiling)> = Vec::new();
+        #[cfg(feature = "uniform")]
+        lattices.extend(crate::families::uniform::lattice_tilings());
+        #[cfg(feature = "arrangements")]
+        lattices.extend(crate::families::arrangements::lattice_tilings());
+        #[cfg(feature = "pentagons")]
+        lattices.extend(crate::families::pentagons::lattice_tilings());
+        #[cfg(feature = "laves")]
+        lattices.extend(crate::families::laves::lattice_tilings());
+        #[cfg(feature = "kuniform")]
+        lattices.extend(crate::families::kuniform::lattice_tilings());
+        #[cfg(feature = "pavers")]
+        lattices.extend(crate::families::pavers::lattice_tilings());
+        #[cfg(feature = "islamic")]
+        lattices.extend(crate::families::islamic::lattice_tilings());
+
+        assert_eq!(
+            lattices.len(),
+            104,
+            "DESIGN.md claims \"All 104 lattice tilings\" — the lattice class enumerates {}",
+            lattices.len()
+        );
+        // Cross-check: the enumeration is a subset of the registry — every
+        // listed tiling is registered (no orphan data-table entry), and the
+        // doc-name key is not the identity (the tiling's own id is).
+        let registry = crate::registry();
+        for (_, lt) in &lattices {
+            let registered = registry.get(lt.id()).unwrap_or_else(|| {
+                panic!("lattice tiling {} not present in the registry", lt.id())
+            });
+            assert_eq!(
+                registered.id(),
+                lt.id(),
+                "registry id mismatch for {}",
+                lt.id()
+            );
+        }
+        for (_, lt) in &lattices {
+            let det = lt.lattice[0].cross(lt.lattice[1]).abs();
+            assert!(det > 0.0, "{}: degenerate lattice basis", lt.id());
+            assert!(!lt.cells.is_empty(), "{}: no cell polygons declared", lt.id());
+            let sum: f64 = lt.cells.iter().map(|c| c.poly.area()).sum();
+            assert!(
+                (sum - det).abs() <= 1e-9 * det.max(1.0),
+                "{}: Σ per-cell tile areas {sum} != |det| {det}",
+                lt.id()
             );
         }
     }
