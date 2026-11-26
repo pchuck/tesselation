@@ -40,7 +40,7 @@ Interior vertex figures: `60.60.120.120` (kissing points),
 | reading | faces/cell | interstice faces | edge-to-edge | seams | status |
 |---|---|---|---|---|---|
 | **dual-net fill** | 9 | 6 reflex hexagons | yes | 0 | **shipped** |
-| hole-inference (24b) | — | — | — | — | deferred |
+| hole-inference (24b) | — | — | — | — | **not applicable** (24d addendum): no 24b-alphabet fill of the interstice exists |
 
 The honeycomb circumcentric dual (triangles at the net vertices, edge
 spacing √3) passes **vertex-to-vertex** through the shipped partition:
@@ -49,10 +49,16 @@ vertices and the kissing tip points (net-edge midpoints = dual-edge
 midpoints), cutting no tile interior; each interstice hexagon has two
 opposite vertices on one dual line. The dual-net reading therefore reads
 the fill directly off the dual: the glue sites for assembly are the
-hexagon long diagonals along the dual lines. The hole-inference reading
-(inferring the interstices from medallion contact figures, per 24b) is
-deferred — its boundary documentation is this section plus the module
-header; `families/kuniform/dual.rs` was read only, not modified.
+hexagon long diagonals along the dual lines. The hole-inference reading (inferring the interstices from medallion
+contact figures, per 24b) is **not applicable** — the 24d addendum ran
+the 24b engine on this hole and the interstice boundary is not a
+consumable feed: its edges lie in two disjoint 12-ray pencils offset 15°
+(star 0+30k, dodecagon 105+30k) while the engine's candidate generator
+reaches one pencil only; two 75° corners admit no sum of tile corners
+{30,60,90,150}; and the exact area identity (C4) has no nonnegative
+solution at any engine lattice scale. Empirically the shipped engine
+derives 0 instances from this boundary and returns 0 fills exhaustively
+at every level. Exact certificate + probe: `.scratch/24d-infer-addendum/`.
 
 ## Verification
 

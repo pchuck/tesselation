@@ -36,7 +36,9 @@
 //! dodecagon `60k` vertices and the kissing points, cutting no tile
 //! interior; this is the dual-net reading shipped for 24d, whose glue
 //! sites are the hexagon long diagonals along the dual lines — the
-//! hole-inference reading is the deferred 24b phase).
+//! hole-inference reading resolved NOT APPLICABLE by the 24d addendum —
+//! the 24b alphabet cannot cover the 75° contact corners; card 'Fill
+//! reading' section).
 //!
 //! Per lattice cell: 1 dodecagon + 2 hexagrams + 6 interstice hexagons
 //! = 9 tiles, with areas `3/4 + 2·(√3/4) + 6·(√3/6 − 1/8) = 3√3/2 =

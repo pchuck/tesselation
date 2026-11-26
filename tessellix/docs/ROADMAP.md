@@ -30,7 +30,8 @@ complementary strap pattern. Full dossier in
   (K₉-exact, M163-checked eight records); n=11 blocked on degree-5
   fields; {8,12}/{9,12} deferred.
 - **24d Composition families on periodic nets** — instance 1 ✅ M172
-  (dual-net fill, reduced scope; inference-fill deferred to 24b).
+  (dual-net fill, reduced scope; inference-fill NOT APPLICABLE —
+  75° contact corners lie outside the 24b alphabet, certified).
   Companion instances after 24b.
 - **24e Underdetermined-θ search** (22h partial) — after 24b maps the
   freedom.

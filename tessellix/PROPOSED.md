@@ -1992,6 +1992,7 @@ quasiperiodic hosts later).
   vs dual-net fill in the interstice (`dual.rs` machinery). After 24b.
   - **Effort** L per instance, **tier** worker/strong.
   - **Status: instance 1 ✅ M172 (reduced scope)** — dodecagon-hexagram-honeycomb landed on the dual-net fill reading (0 seams); inference-fill deferred to 24b (boundary docs = the 24b feed). Companion instances (khatam rings; decagon-and-bowtie pairs) remain gated on 24b per the brief.
+  - **Inference-fill addendum ✅ 2026-11-25 (STOP, certified):** the deferred reading on instance 1 is NOT APPLICABLE — the 24b alphabet {30,60,90,150}° corners cannot cover the interstice's two 75° corners, its candidate generator reaches one of two disjoint 15°-offset boundary pencils, and the exact area identity (C4) has no nonnegative solution at any engine lattice scale; the shipped engine returns 0 fills exhaustively. The dual-net reading stands as instance 1's only fill reading. Companion instances keep their gating — each needs its own premise check before any engine run.
 - **24e. Underdetermined-θ search** (the 22h optimization tool, scoped)
   — where 24b documents freedom, search (θ, contact position) against
   an aesthetic objective (band-balance à la Castéra, crossing density);
