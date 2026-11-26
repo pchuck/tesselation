@@ -1444,6 +1444,448 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
             }
         }
     }
+
+    // -----------------------------------------------------------------
+    // Doc-structure pin, lattice-determinant tier (kuniform + hankin
+    // families). For each of the 42 docs that state a lattice-basis
+    // determinant token — 18 kuniform 2-uniform primals + 17 kuniform
+    // face-centroid duals + 7 hankin family docs — the token is parsed
+    // and compared against `|lattice[0].cross(lattice[1])|` of the live
+    // constructor at 1e-9 relative tolerance.
+    //
+    // The value-carrying "det " token (trailing space — NOT "|det|",
+    // which appears once more in 16 of 17 dual docs as the "sum ...
+    // = |det|" tail) must occur exactly once per doc (fail loudly on
+    // zero or more than one occurrence). Value-carrying grammar
+    // (limited to the forms present in the scoped docs): plain integer
+    // (`1`, `2`), `a√3` (`2√3`), `a+b√3` (`12+8√3`), `a√3/2` (`9√3/2`),
+    // `a+b√3/2` (`1+3√3/2`), `a+√3/2` (`3+√3/2`), `a√3/2+b` (`4√3/2+3`),
+    // and the two hand-written forms `2h² = 6+3√3` (kuniform-n16) and
+    // `(1+√3)² = 4+2√3` (hankin-3-3-4-3-4) — both parse the right-hand
+    // side after " = ". Anything else fails loudly rather than being
+    // silently skipped.
+    #[cfg(all(feature = "islamic", feature = "kuniform"))]
+    #[test]
+    fn doc_lattice_determinants_match_constructors() {
+        use crate::families::islamic::hankin_3_3_3_4_4::hankin_3_3_3_4_4;
+        use crate::families::islamic::hankin_3_3_4_3_4::hankin_3_3_4_3_4;
+        use crate::families::islamic::hankin_3_4_6_4::hankin_3_4_6_4;
+        use crate::families::islamic::hankin_3_6_3_6::hankin_3_6_3_6;
+        use crate::families::islamic::hankin_3_12_12::hankin_3_12_12;
+        use crate::families::islamic::hankin_4_6_12::hankin_4_6_12;
+        use crate::families::islamic::hankin_square_two_point::hankin_square_two_point;
+        use crate::families::kuniform::dual::{
+            kuniform_dual_n1, kuniform_dual_n2, kuniform_dual_n3, kuniform_dual_n4,
+            kuniform_dual_n5, kuniform_dual_n8, kuniform_dual_n9, kuniform_dual_n12,
+            kuniform_dual_n13, kuniform_dual_n14, kuniform_dual_n15, kuniform_dual_n16,
+            kuniform_dual_n18, kuniform_dual_n19, kuniform_dual_n20, kuniform_dual_p6m,
+            kuniform_dual_pmm,
+        };
+        use crate::families::kuniform::kuniform::{
+            kuniform_n1, kuniform_n2, kuniform_n3, kuniform_n4, kuniform_n5, kuniform_n6,
+            kuniform_n7, kuniform_n8, kuniform_n9, kuniform_n12, kuniform_n13, kuniform_n14,
+            kuniform_n15, kuniform_n16, kuniform_n17, kuniform_n18, kuniform_n19,
+            kuniform_n20,
+        };
+        use crate::lattice::LatticeTiling;
+
+        /// Parse one Q(√3) det token (see the grammar note above).
+        /// Fails loudly on anything outside the documented forms.
+        fn parse_det_token(token: &str, doc_file: &str) -> f64 {
+            let s = token.replace("\u{221a}3", "s");
+            let mut total = 0.0f64;
+            for term in s.split('+') {
+                let term = term.trim();
+                if term.is_empty() {
+                    continue;
+                }
+                let (numerator, denominator) = match term.find('/') {
+                    Some(i) => (&term[..i], Some(term[i + 1..].trim())),
+                    None => (term, None),
+                };
+                let mut coef = String::new();
+                let mut has_sqrt3 = false;
+                for ch in numerator.chars() {
+                    if ch == 's' {
+                        has_sqrt3 = true;
+                    } else if ch.is_ascii_digit() {
+                        coef.push(ch);
+                    } else {
+                        panic!(
+                            "docs/tilings/{doc_file}: det token numerator has unexpected char {ch:?}: {numerator:?}"
+                        );
+                    }
+                }
+                let coef: f64 = if coef.is_empty() {
+                    1.0
+                } else {
+                    coef.parse().unwrap()
+                };
+                let mut val = coef * if has_sqrt3 { 3.0f64.sqrt() } else { 1.0 };
+                if let Some(d) = denominator {
+                    let d: f64 = d.parse().unwrap_or_else(|e| {
+                        panic!("docs/tilings/{doc_file}: cannot parse det token denominator: {d:?} ({e})")
+                    });
+                    val /= d;
+                }
+                total += val;
+            }
+            total
+        }
+
+        let docs_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/tilings");
+
+        let cases: Vec<(&str, fn() -> LatticeTiling)> = vec![
+            // Hankin family (7 docs).
+            ("hankin-4-6-12", hankin_4_6_12),
+            ("hankin-3-12-12", hankin_3_12_12),
+            ("hankin-square-two-point", hankin_square_two_point),
+            ("hankin-3-6-3-6", hankin_3_6_3_6),
+            ("hankin-3-4-6-4", hankin_3_4_6_4),
+            ("hankin-3-3-3-4-4", hankin_3_3_3_4_4),
+            ("hankin-3-3-4-3-4", hankin_3_3_4_3_4),
+            // Kuniform 2-uniform primals (18 docs).
+            ("kuniform-n1", kuniform_n1),
+            ("kuniform-n2", kuniform_n2),
+            ("kuniform-n3", kuniform_n3),
+            ("kuniform-n4", kuniform_n4),
+            ("kuniform-n5", kuniform_n5),
+            ("kuniform-n6", kuniform_n6),
+            ("kuniform-n7", kuniform_n7),
+            ("kuniform-n8", kuniform_n8),
+            ("kuniform-n9", kuniform_n9),
+            ("kuniform-n12", kuniform_n12),
+            ("kuniform-n13", kuniform_n13),
+            ("kuniform-n14", kuniform_n14),
+            ("kuniform-n15", kuniform_n15),
+            ("kuniform-n16", kuniform_n16),
+            ("kuniform-n17", kuniform_n17),
+            ("kuniform-n18", kuniform_n18),
+            ("kuniform-n19", kuniform_n19),
+            ("kuniform-n20", kuniform_n20),
+            // Kuniform face-centroid duals (17 docs).
+            ("kuniform-dual-p6m", kuniform_dual_p6m),
+            ("kuniform-dual-pmm", kuniform_dual_pmm),
+            ("kuniform-dual-n1", kuniform_dual_n1),
+            ("kuniform-dual-n2", kuniform_dual_n2),
+            ("kuniform-dual-n3", kuniform_dual_n3),
+            ("kuniform-dual-n4", kuniform_dual_n4),
+            ("kuniform-dual-n5", kuniform_dual_n5),
+            ("kuniform-dual-n8", kuniform_dual_n8),
+            ("kuniform-dual-n9", kuniform_dual_n9),
+            ("kuniform-dual-n12", kuniform_dual_n12),
+            ("kuniform-dual-n13", kuniform_dual_n13),
+            ("kuniform-dual-n14", kuniform_dual_n14),
+            ("kuniform-dual-n15", kuniform_dual_n15),
+            ("kuniform-dual-n16", kuniform_dual_n16),
+            ("kuniform-dual-n18", kuniform_dual_n18),
+            ("kuniform-dual-n19", kuniform_dual_n19),
+            ("kuniform-dual-n20", kuniform_dual_n20),
+        ];
+
+        assert_eq!(cases.len(), 42, "det pin: expected 42 scoped docs");
+
+        for (id, make) in cases {
+            let tiling = make();
+            assert_eq!(
+                tiling.id(), id,
+                "docs/tilings/{id}.md: constructor id mismatch (doc id != constructor id)"
+            );
+            let doc = std::fs::read_to_string(docs_dir.join(format!("{id}.md")))
+                .unwrap_or_else(|e| panic!("docs/tilings/{id}.md readable: {e}"));
+
+            let occurrences = doc.matches("det ").count();
+            assert_eq!(
+                occurrences, 1,
+                "docs/tilings/{id}.md: expected exactly one \"det \" token (trailing space), found {occurrences}"
+            );
+            let rest = &doc[doc.find("det ").unwrap() + 4..];
+
+            // Hand-written forms keep only the right-hand side; the
+            // generic grammar must not see the leading "2h² = " or the
+            // leading "(1+√3)² = ".
+            let token: String = if let Some(tail) = rest.strip_prefix("2h² = ") {
+                let end = tail.find(|c: char| c == ')' || c == ';' || c == ',' || c == ' ' || c == '\u{2014}').unwrap_or(tail.len());
+                tail[..end].trim().to_string()
+            } else if let Some(tail) = rest.strip_prefix("(1+√3)² = ") {
+                let end = tail.find(|c: char| c == ')' || c == ';' || c == ',' || c == ' ' || c == '\u{2014}').unwrap_or(tail.len());
+                tail[..end].trim().to_string()
+            } else {
+                let end = rest.find(|c: char| c == ' ' || c == ';' || c == ')' || c == ',' || c == '\u{2014}').unwrap_or(rest.len());
+                rest[..end].trim().to_string()
+            };
+
+            let claimed = parse_det_token(&token, id);
+            let actual = tiling.lattice[0].cross(tiling.lattice[1]).abs();
+            assert!(
+                (actual - claimed).abs() <= 1e-9 * claimed.abs().max(1.0),
+                "docs/tilings/{id}.md: doc claims det {claimed} but the constructor's \\
+                 basis spans |cross| = {actual}"
+            );
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // Doc-structure pin, per-cell shape-composition tier (kuniform +
+    // hankin families). For each of the 27 docs that state a per-cell
+    // shape composition — 9 kuniform 2-uniform primals + 17 kuniform
+    // face-centroid duals + 1 hankin family doc (hankin-square-two-point) —
+    // the noun multiset is parsed (side counts: triangle→3,
+    // square/quadrilateral/kite/rhombus/quad→4, pentagon/pentagonal→5,
+    // hexagon/hexagonal→6, octagon→8, decagon/decagonal→10,
+    // dodecagon→12; adjectives stripped) and compared against the
+    // multiset of `cell.poly.len()` side counts of the live constructor
+    // cell polygons. The doc total (sum of the multiset) must equal
+    // `cells.len()` (the total per-cell count the existing claim pin
+    // already asserts) — internal consistency.
+    //
+    // Parser design (tolerant, limited to the forms present in the
+    // scoped docs):
+    // - Kuniform primals: segment = text between the first "tiles/cell"
+    //   and the first ";"; trailing clauses ("in orbits {...}", "the
+    //   2-hexagon + 8-triangle centered cell ...", "area ...") are
+    //   dropped at the first ", " inside the segment.
+    // - Kuniform duals: segment = text between the first ": " and the
+    //   first " per cell"; split at " + " (each sub-segment is one
+    //   "N noun" pair group); the walk from a count token tolerates
+    //   non-noun tokens (adjectives, degree numbers, "in cyclic order"
+    //   clauses, parenthetical shapes) but stops within 5 steps.
+    // - hankin-square-two-point: segment = text between the first
+    //   " per cell" and the first " — " (after the leading separator
+    //   is dropped), i.e. the "four corner triangles, two pentagonal
+    //   petals, one 10-gon core" list; ordinal words one..twelve are
+    //   accepted as counts.
+    // Anything outside the documented forms fails loudly (the multiset
+    // parse must succeed and the doc total must match the cell count).
+    #[cfg(all(feature = "islamic", feature = "kuniform"))]
+    #[test]
+    fn doc_per_cell_shape_compositions_match_constructors() {
+        use crate::families::islamic::hankin_square_two_point::hankin_square_two_point;
+        use crate::families::kuniform::dual::{
+            kuniform_dual_n1, kuniform_dual_n2, kuniform_dual_n3, kuniform_dual_n4,
+            kuniform_dual_n5, kuniform_dual_n8, kuniform_dual_n9, kuniform_dual_n12,
+            kuniform_dual_n13, kuniform_dual_n14, kuniform_dual_n15, kuniform_dual_n16,
+            kuniform_dual_n18, kuniform_dual_n19, kuniform_dual_n20, kuniform_dual_p6m,
+            kuniform_dual_pmm,
+        };
+        use crate::families::kuniform::kuniform::{
+            kuniform_n2, kuniform_n3, kuniform_n4, kuniform_n6, kuniform_n7, kuniform_n12,
+            kuniform_n14, kuniform_n15, kuniform_n17,
+        };
+        use crate::lattice::LatticeTiling;
+
+        /// Map one noun token to polygon side counts. Returns `None`
+        /// for anything that is not a shape noun (adjectives,
+        /// connectives, degree numbers, ...), which the walk-forward
+        /// tolerates by skipping.
+        fn is_shape_noun(token: &str) -> Option<u32> {
+            match token.to_ascii_lowercase().as_str() {
+                "triangle" | "triangles" => Some(3),
+                "square" | "squares" | "quad" | "quads" | "quadrilateral" | "quadrilaterals"
+                | "kite" | "kites" | "rhombus" | "rhombi" | "rhombes" => Some(4),
+                "pentagon" | "pentagons" | "pentagonal" => Some(5),
+                "hexagon" | "hexagons" | "hexagonal" => Some(6),
+                "octagon" | "octagons" => Some(8),
+                "decagon" | "decagons" | "decagonal" => Some(10),
+                "dodecagon" | "dodecagons" => Some(12),
+                _ => None,
+            }
+        }
+
+        /// Ordinals accepted as count tokens alongside plain digits.
+        fn ordinal_count(token: &str) -> Option<u32> {
+            match token.to_ascii_lowercase().as_str() {
+                "one" => Some(1),
+                "two" => Some(2),
+                "three" => Some(3),
+                "four" => Some(4),
+                "five" => Some(5),
+                "six" => Some(6),
+                "seven" => Some(7),
+                "eight" => Some(8),
+                "nine" => Some(9),
+                "ten" => Some(10),
+                "eleven" => Some(11),
+                "twelve" => Some(12),
+                _ => None,
+            }
+        }
+
+        /// Parse count-then-shape pairs from a segment. Each pair is
+        /// (count, noun-side-count); the walk from each count token
+        /// stops at the first shape noun within 5 steps and the span
+        /// is consumed so degree numbers and shape-clauses in the span
+        /// cannot double-match.
+        fn parse_pairs(segment: &str) -> Vec<(u32, u32)> {
+            let segment = segment.replace("10-gon", "decagon");
+            let tokens: Vec<&str> = segment
+                .split(|c: char| !c.is_ascii_alphanumeric())
+                .filter(|t| !t.is_empty())
+                .collect();
+            let mut pairs = Vec::new();
+            let mut i = 0usize;
+            while i < tokens.len() {
+                let count: u32 = if tokens[i].chars().all(|c| c.is_ascii_digit()) {
+                    tokens[i].parse().unwrap()
+                } else if let Some(n) = ordinal_count(tokens[i]) {
+                    n
+                } else {
+                    i += 1;
+                    continue;
+                };
+                // walk forward to the first shape noun (within 5 steps)
+                let mut j = i + 1;
+                let mut found: Option<usize> = None;
+                while j < tokens.len() && j <= i + 5 {
+                    if is_shape_noun(tokens[j]).is_some() {
+                        found = Some(j);
+                        break;
+                    }
+                    j += 1;
+                }
+                if let Some(j) = found {
+                    let side = is_shape_noun(tokens[j]).unwrap();
+                    pairs.push((count, side));
+                    i = j + 1;
+                } else {
+                    i += 1;
+                }
+            }
+            pairs
+        }
+
+        let docs_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/tilings");
+
+        // Doc id, constructor, and the class (anchor strategy) used to
+        // extract the composition segment.
+        let cases: Vec<(&str, fn() -> LatticeTiling, &str)> = vec![
+            ("hankin-square-two-point", hankin_square_two_point, "hankin"),
+            ("kuniform-n2", kuniform_n2, "primal"),
+            ("kuniform-n3", kuniform_n3, "primal"),
+            ("kuniform-n4", kuniform_n4, "primal"),
+            ("kuniform-n6", kuniform_n6, "primal"),
+            ("kuniform-n7", kuniform_n7, "primal"),
+            ("kuniform-n12", kuniform_n12, "primal"),
+            ("kuniform-n14", kuniform_n14, "primal"),
+            ("kuniform-n15", kuniform_n15, "primal"),
+            ("kuniform-n17", kuniform_n17, "primal"),
+            ("kuniform-dual-p6m", kuniform_dual_p6m, "dual"),
+            ("kuniform-dual-pmm", kuniform_dual_pmm, "dual"),
+            ("kuniform-dual-n1", kuniform_dual_n1, "dual"),
+            ("kuniform-dual-n2", kuniform_dual_n2, "dual"),
+            ("kuniform-dual-n3", kuniform_dual_n3, "dual"),
+            ("kuniform-dual-n4", kuniform_dual_n4, "dual"),
+            ("kuniform-dual-n5", kuniform_dual_n5, "dual"),
+            ("kuniform-dual-n8", kuniform_dual_n8, "dual"),
+            ("kuniform-dual-n9", kuniform_dual_n9, "dual"),
+            ("kuniform-dual-n12", kuniform_dual_n12, "dual"),
+            ("kuniform-dual-n13", kuniform_dual_n13, "dual"),
+            ("kuniform-dual-n14", kuniform_dual_n14, "dual"),
+            ("kuniform-dual-n15", kuniform_dual_n15, "dual"),
+            ("kuniform-dual-n16", kuniform_dual_n16, "dual"),
+            ("kuniform-dual-n18", kuniform_dual_n18, "dual"),
+            ("kuniform-dual-n19", kuniform_dual_n19, "dual"),
+            ("kuniform-dual-n20", kuniform_dual_n20, "dual"),
+        ];
+
+        assert_eq!(cases.len(), 27, "composition pin: expected 27 scoped docs");
+
+        for (id, make, class) in cases {
+            let tiling = make();
+            assert_eq!(
+                tiling.id(), id,
+                "docs/tilings/{id}.md: constructor id mismatch (doc id != constructor id)"
+            );
+            let doc = std::fs::read_to_string(docs_dir.join(format!("{id}.md")))
+                .unwrap_or_else(|e| panic!("docs/tilings/{id}.md readable: {e}"));
+
+            let segment: String = match class {
+                "primal" => {
+                    let anchor = "tiles/cell";
+                    assert_eq!(
+                        doc.matches(anchor).count(), 1,
+                        "docs/tilings/{id}.md: expected exactly one \"tiles/cell\" anchor"
+                    );
+                    let rest = &doc[doc.find(anchor).unwrap() + anchor.len()..];
+                    let end = rest.find(';').unwrap_or(rest.len());
+                    let mut seg = rest[..end].trim().to_string();
+                    if let Some(i) = seg.find(", ") {
+                        seg = seg[..i].trim().to_string();
+                    }
+                    seg
+                }
+                "dual" => {
+                    let anchor = ": ";
+                    let anchor_idx = doc.find(anchor).unwrap_or_else(|| {
+                        panic!("docs/tilings/{id}.md: expected a \": \" anchor for the composition segment")
+                    });
+                    let rest = &doc[anchor_idx + anchor.len()..];
+                    let end = rest.find(" per cell").unwrap_or_else(|| {
+                        panic!("docs/tilings/{id}.md: expected a \" per cell\" anchor for the composition segment")
+                    });
+                    rest[..end].trim().to_string()
+                }
+                _ => {
+                    // hankin-square-two-point: text between the first
+                    // " per cell" and the first " — " (after dropping
+                    // the leading separator).
+                    let anchor = " per cell";
+                    assert_eq!(
+                        doc.matches(anchor).count(), 1,
+                        "docs/tilings/{id}.md: expected exactly one \" per cell\" anchor"
+                    );
+                    let rest = &doc[doc.find(anchor).unwrap() + anchor.len()..];
+                    let rest = rest.trim_start();
+                    let rest = rest
+                        .strip_prefix('\u{2014}')
+                        .map(|s| s.trim_start())
+                        .unwrap_or(rest);
+                    let end = rest.find(" \u{2014} ").unwrap_or_else(|| {
+                        panic!("docs/tilings/{id}.md: expected a \" — \" separator for the composition segment")
+                    });
+                    rest[..end].trim().to_string()
+                }
+            };
+
+            let subsegments: Vec<&str> = if class == "dual" {
+                segment.split(" + ").collect()
+            } else {
+                vec![segment.as_str()]
+            };
+
+            let mut claimed: Vec<u32> = Vec::new();
+            for sub in subsegments {
+                for (count, side) in parse_pairs(sub) {
+                    let mut i = 0;
+                    while i < count {
+                        claimed.push(side);
+                        i += 1;
+                    }
+                }
+            }
+
+            assert_eq!(
+                claimed.len(),
+                tiling.cells.len(),
+                "docs/tilings/{id}.md: doc claims {} per-cell faces but the \\
+                 constructor contains {}",
+                claimed.len(),
+                tiling.cells.len()
+            );
+
+            let mut claimed_sorted = claimed.clone();
+            claimed_sorted.sort_unstable();
+            let mut actual: Vec<u32> = tiling.cells.iter().map(|c| c.poly.len() as u32).collect();
+            actual.sort_unstable();
+            assert_eq!(
+                claimed_sorted, actual,
+                "docs/tilings/{id}.md: doc shape multiset {claimed_sorted:?} != \\
+                 constructor cell polygon side counts {actual:?}"
+            );
+        }
+    }
 }
 
 #[cfg(test)]
