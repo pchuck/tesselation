@@ -471,13 +471,39 @@ fn card_key(id: &str, params: &str, w: u32, h: u32) -> String {
     format!("{id}|{params}|{w}x{h}")
 }
 
-/// The tiling's default parameter values as a params-string. Card
-/// previews always render the tiling at its default parameters (the
-/// TUI cards do the same), so this is the key's params component.
-fn default_params_str(specs: &[ParamSpec]) -> String {
+/// `glb-binary-n7` id — the only tiling whose card preview changes.
+const GLB_BINARY_N7_ID: &str = "glb-binary-n7";
+/// Preview-only scale override for `glb-binary-n7` (see `preview_params`).
+const GLB_BINARY_N7_PREVIEW_SCALE: f64 = 1.0;
+
+/// The params the card preview actually renders with: the tiling
+/// defaults, except for `glb-binary-n7`, whose preview is forced back
+/// under the depth-3 budget (see `card_texture`). Everything else
+/// (probe, window derivation, all other tilings) renders exactly as
+/// before.
+fn preview_params(default_params: &ParamSet, tiling_id: &str) -> ParamSet {
+    if tiling_id != GLB_BINARY_N7_ID {
+        return default_params.clone();
+    }
+    let mut p = default_params.clone();
+    p.set(
+        tess_tilings::lattice::SCALE_ID,
+        ParamValue::Float(GLB_BINARY_N7_PREVIEW_SCALE),
+    );
+    p
+}
+
+/// The params-string of the values the card preview actually renders
+/// with — the cache key's params component. Same declaration-order
+/// format as the former `default_params_str`, but carrying the
+/// overridden value for `glb-binary-n7`.
+fn preview_params_str(specs: &[ParamSpec], params: &ParamSet) -> String {
     specs
         .iter()
-        .map(|s| format!("{}={}", s.id.as_str(), s.default_value().display()))
+        .map(|s| {
+            let v = params.get(s.id).unwrap_or_else(|| s.default_value());
+            format!("{}={}", s.id.as_str(), v.display())
+        })
         .collect::<Vec<_>>()
         .join(",")
 }
@@ -1232,6 +1258,21 @@ impl GuiApp {
     /// indices to xterm-256). Colors follow the tiling's default
     /// preview mode (proto fallback for `Single`, which would render a
     /// featureless slab) — the TUI thumb semantics.
+    ///
+    /// `glb-binary-n7` is the one tiling whose preview is rendered
+    /// with overridden params (see `preview_params`): at its default
+    /// scale 2.75 the preview window lands in the depth-4 budget band
+    /// (cell-frame area ≈ 11.7 → est d=3 = 226, est d=4 = 858,
+    /// est d=5 = 3264 > VIEW_BUDGET 2500 — the budget rule picks the
+    /// largest d within budget, depth 4), which is ~7× more expensive
+    /// per tile than the depth-3 probe and ~80% of the card's wall
+    /// time. The preview is pushed under the depth-3 budget instead by
+    /// rescaling to 1.0 (cell-frame area 88.6 → est d=3 = 1708 ✓,
+    /// est d=4 = 6492 ✗ — depth 3). The window is unchanged (derived
+    /// from the unmodified probe); the rendered pattern is finer
+    /// (~2.75×), which is acceptable at card sizes. Only the preview
+    /// generate + shrink-retry see the override; the probe, the
+    /// window derivation and every other tiling are untouched.
     fn card_texture(
         &mut self,
         ctx: &egui::Context,
@@ -1244,12 +1285,13 @@ impl GuiApp {
             .registry()
             .get(card.id)
             .expect("card id must be registered");
-        let params_str = default_params_str(tiling.params());
+        let params = ParamSet::default_for(tiling.params());
+        let preview_params = preview_params(&params, tiling.id());
+        let params_str = preview_params_str(tiling.params(), &preview_params);
         let key = card_key(card.id, &params_str, w, h);
         if let Some(t) = self.card_textures.get(&key) {
             return t.clone();
         }
-        let params = ParamSet::default_for(tiling.params());
         let aspect = f64::from(w) / f64::from(h.max(1));
         let probe = tiling.generate(&params, &tess_core::Query {
             region: tess_core::BBox::new(
@@ -1262,7 +1304,7 @@ impl GuiApp {
             tess_core::app::mean_tile_side(&probe.tiles),
             aspect,
         );
-        let mut result = tiling.generate(&params, &tess_core::Query { region: window });
+        let mut result = tiling.generate(&preview_params, &tess_core::Query { region: window });
         let mut shrink = 0.4;
         while result.message.is_some() && shrink > 0.05 {
             let cx = (window.min.x + window.max.x) / 2.0;
@@ -1273,7 +1315,7 @@ impl GuiApp {
                 tess_core::Vec2::new(cx - hx, cy - hy),
                 tess_core::Vec2::new(cx + hx, cy + hy),
             );
-            result = tiling.generate(&params, &tess_core::Query { region: window });
+            result = tiling.generate(&preview_params, &tess_core::Query { region: window });
             shrink *= 0.4;
         }
         let mode = tiling.default_color_mode().preview_mode();
@@ -2034,11 +2076,11 @@ mod tests {
         assert_ne!(super::card_key("chair", "scale=1", 120, 90), super::card_key("other", "scale=1", 120, 90));
     }
 
-    /// The params component of the cache key is the tiling's default
+    /// The params component of the cache key is the preview's actual
     /// values in declaration order — pinned so the preview cache key is
     /// stable across runs (the determinism contract).
     #[test]
-    fn default_params_str_pinned() {
+    fn preview_params_str_pinned() {
         let registry = tess_tilings::registry();
         let star = registry.get("star-cross").expect("star-cross registered");
         let specs = star.params();
@@ -2047,11 +2089,18 @@ mod tests {
             specs.iter().map(|s| s.id.as_str()).collect::<Vec<_>>(),
             vec!["scale", "rotation", "star_radius"]
         );
-        let got = super::default_params_str(specs);
+        let got = super::preview_params_str(specs, &tess_core::params::ParamSet::default_for(specs));
         assert_eq!(got, "scale=1,rotation=0°,star_radius=0.50");
-        assert_eq!(got, super::default_params_str(specs), "deterministic");
+        assert_eq!(
+            got,
+            super::preview_params_str(specs, &tess_core::params::ParamSet::default_for(specs)),
+            "deterministic"
+        );
         // A parameterless declaration yields the empty params-string.
-        assert_eq!(super::default_params_str(&[]), "");
+        assert_eq!(
+            super::preview_params_str(&[], &tess_core::params::ParamSet::EMPTY),
+            ""
+        );
     }
 
     /// Truncation is char-safe (descriptions hold non-ASCII, e.g. the
@@ -2311,7 +2360,10 @@ mod tests {
             .get(card.id)
             .expect("star-cross is registered")
             .params();
-        let default_str = super::default_params_str(specs);
+        let default_str = super::preview_params_str(
+            specs,
+            &tess_core::params::ParamSet::default_for(specs),
+        );
         let changed_str = "scale=2,rotation=0°,star_radius=0.50";
         assert_ne!(default_str, changed_str);
         let k_default = super::card_key(card.id, &default_str, 120, 90);
