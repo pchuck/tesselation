@@ -4,7 +4,7 @@ A Rust tiling generator with two front ends: an interactive terminal UI
 (TUI) and a desktop GUI. It generates 2D tilings of the plane on demand —
 uniform/Archimedean, wallpaper, Penrose, Pythagorean, and monohedral
 nonperiodic families — and renders them live, with pan/zoom, tunable
-parameters, four color modes, and SVG export.
+parameters, five color modes, and SVG export.
 
 - **License:** MIT
 - **Rust:** edition 2021, MSRV 1.85
@@ -44,8 +44,8 @@ cargo run -p tess-tui -- explore --tiling square --top-k 3 --out leaderboard.jso
 ```
 
 All `export` flags (`--tiling`, `--width/--height`, `--scale`,
-`--rotation`, `--mode`, `--strapwork`, `--decoration`, `--band-w`,
-`--out`) are tabulated in
+`--rotation`, `--mode`, `--strapwork`, `--deform`, `--decoration`,
+`--band-w`, `--center`, `--param`, `--out`) are tabulated in
 [docs/USAGE.md](docs/USAGE.md), together with the full walkthrough of
 Browse mode, search, Render mode, keybindings, and mouse behavior.
 
@@ -66,8 +66,8 @@ crosses; classic 45° on square / 60° on hexagonal hosts), and
 `--decoration STYLE` + `--band-w W` (default 0.1) renders the four Kaplan
 §3.7 ornamentation styles — `fill`, `outline`, `interlace`,
 `outline-interlace` — over those walls. `--decoration` requires
-`--strapwork`; `--mode` is ignored under `--decoration`; generic δ fails
-with honest precondition errors naming the regime.
+`--strapwork` or `--deform`; `--mode` is ignored under `--decoration`;
+generic δ fails with honest precondition errors naming the regime.
 
 ```sh
 cargo run -p tess-tui -- export --tiling hexagon --width 1200 --height 900 \

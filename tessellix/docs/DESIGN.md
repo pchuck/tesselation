@@ -10,7 +10,7 @@ tessellix/
 └── crates/
     ├── tess-core/          # core abstractions — no external deps
     ├── tess-tilings/       # built-in generators, eleven family features
-    ├── tess-tui/           # ratatui TUI + CLI (list / export)
+    ├── tess-tui/           # ratatui TUI + CLI (list / export / explore)
     └── tess-gui/           # eframe/egui desktop app
 ```
 

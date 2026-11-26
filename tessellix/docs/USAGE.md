@@ -28,7 +28,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--mode` | pattern | `single` \| `pattern` \| `proto` \| `gray` \| `pattern-gray` |
 | `--strapwork DEG` | off | overlay the Hankin PIC strapwork walls at contact angle DEG (measured from each tile edge) on any tiling — layer mode of the polygons-in-contact engine (`tess-core::strapwork`) |
 | `--deform NAME PARAMS…` | off | Islamic parquet deformation (diss. §3.4.1): the contact angle varies as a function of point; NAME is `linear` (`linear a b x0 x1` — ramp along x: a at x0 → b at x1), `radial` (`radial a b cx cy r0 r1` — ramp along distance from centre (cx, cy): a at r0 → b at r1) or `sine` (`sine mid amp k` — oscillation along x: mid + amp·sin(k·x)); mutually exclusive with `--strapwork` |
-| `--decoration STYLE` | off | over the `--strapwork` walls (required), render a Kaplan §3.7 ornamentation style — `fill` \| `outline` \| `interlace` \| `outline-interlace`; `--mode` is ignored under `--decoration`. See [rendering.md](rendering.md) |
+| `--decoration STYLE` | off | over the strapwork walls (`--strapwork` or `--deform`, one required), render a Kaplan §3.7 ornamentation style — `fill` \| `outline` \| `interlace` \| `outline-interlace`; `--mode` is ignored under `--decoration`. See [rendering.md](rendering.md) |
 | `--band-w W` | 0.1 | band width in world units for the decoration layer (requires `--decoration`) |
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
