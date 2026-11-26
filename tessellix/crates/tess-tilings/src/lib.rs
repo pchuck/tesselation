@@ -825,6 +825,142 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
         }
     }
 
+    // -----------------------------------------------------------------
+    // Doc-sync guard, per-tiling per-cell count tier: the audit-IV
+    // derivations (2026-11) made permanent. For each verified per-cell
+    // doc claim in `docs/tilings/<id>.md` — 7 hankin + 3 stragglers
+    // (girih-w85, pentagon-10, pentagon-13) + 18 kuniform 2-uniform
+    // primals (28 docs total) — the claimed number must equal the cell
+    // count of the tiling built by its public constructor
+    // (`LatticeTiling::cells.len()`; one Cell per motif face for hankin,
+    // one Cell per tile per cell for lattice tables — the same
+    // measurement audit IV used: the derived-vs-claimed tables live in
+    // `.scratch/hankin-doc-verify/` and `.scratch/kuniform-doc-verify/`).
+    //
+    // The claim is parsed *tolerantly* on purpose: nothing depends on
+    // line numbers, the metadata line, or the exact phrasing — the doc
+    // may say "N faces per cell", "N faces per unit cell", "N tiles per
+    // hexagonal cell", "N tiles/cell", or any other bare
+    // "N (faces|tiles) (per [unit|hexagonal] cell | / cell)" token.
+    // A doc with zero or more than one matching token fails loudly
+    // rather than being silently skipped. The concurrent metadata-line
+    // normalization job (group/lattice tokens) can reformat the header
+    // without disturbing this pin.
+    #[cfg(all(feature = "islamic", feature = "kuniform", feature = "pentagons"))]
+    #[test]
+    fn tiling_doc_claims_match_constructors() {
+        use crate::families::islamic::girih_w85::girih_w85;
+        use crate::families::islamic::hankin_3_3_3_4_4::hankin_3_3_3_4_4;
+        use crate::families::islamic::hankin_3_3_4_3_4::hankin_3_3_4_3_4;
+        use crate::families::islamic::hankin_3_4_6_4::hankin_3_4_6_4;
+        use crate::families::islamic::hankin_3_6_3_6::hankin_3_6_3_6;
+        use crate::families::islamic::hankin_3_12_12::hankin_3_12_12;
+        use crate::families::islamic::hankin_4_6_12::hankin_4_6_12;
+        use crate::families::islamic::hankin_square_two_point::hankin_square_two_point;
+        use crate::families::kuniform::kuniform::{
+            kuniform_n1, kuniform_n2, kuniform_n3, kuniform_n4, kuniform_n5, kuniform_n6,
+            kuniform_n7, kuniform_n8, kuniform_n9, kuniform_n12, kuniform_n13, kuniform_n14,
+            kuniform_n15, kuniform_n16, kuniform_n17, kuniform_n18, kuniform_n19, kuniform_n20,
+        };
+        use crate::families::pentagons::pentagon10::spec as pentagon10_spec;
+        use crate::families::pentagons::pentagon13::spec as pentagon13_spec;
+        use crate::lattice::LatticeTiling;
+
+        /// Parse the doc's single per-cell count claim (see the doc
+        /// comment above for the tolerant grammar). Fails loudly when
+        /// the doc carries zero or more than one matching token.
+        fn per_cell_claim(doc: &str, id: &str) -> usize {
+            let tokens: Vec<&str> = doc
+                .split(|c: char| !(c.is_ascii_alphanumeric() || c == '-'))
+                .filter(|t| !t.is_empty())
+                .collect();
+            let mut matches = 0usize;
+            let mut value = 0usize;
+            for (i, t) in tokens.iter().enumerate() {
+                if !t.chars().all(|c| c.is_ascii_digit()) {
+                    continue;
+                }
+                let n: usize = t.parse().unwrap();
+                let noun_ok = matches!(tokens.get(i + 1), Some(&"faces") | Some(&"tiles"));
+                if !noun_ok {
+                    continue;
+                }
+                let mut j = i + 2;
+                if tokens.get(j) == Some(&"per") {
+                    j += 1;
+                }
+                if matches!(tokens.get(j), Some(&"unit") | Some(&"hexagonal")) {
+                    j += 1;
+                }
+                if tokens.get(j) == Some(&"cell") {
+                    matches += 1;
+                    value = n;
+                }
+            }
+            assert_eq!(
+                matches, 1,
+                "docs/tilings/{id}.md: expected exactly one per-cell count claim \
+                 (N faces/tiles per [unit|hexagonal] cell | N tiles/cell), found {matches}"
+            );
+            value
+        }
+
+        let docs_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/tilings");
+
+        let cases: Vec<(&str, fn() -> LatticeTiling)> = vec![
+            // Hankin family (audit IV, 7 docs).
+            ("hankin-4-6-12", hankin_4_6_12),
+            ("hankin-3-12-12", hankin_3_12_12),
+            ("hankin-square-two-point", hankin_square_two_point),
+            ("hankin-3-6-3-6", hankin_3_6_3_6),
+            ("hankin-3-4-6-4", hankin_3_4_6_4),
+            ("hankin-3-3-3-4-4", hankin_3_3_3_4_4),
+            ("hankin-3-3-4-3-4", hankin_3_3_4_3_4),
+            // Stragglers (audit IV, 3 docs).
+            ("girih-w85", girih_w85),
+            ("pentagon-10", pentagon10_spec),
+            ("pentagon-13", pentagon13_spec),
+            // Kuniform primals (audit IV, 18 docs — unpinned at the time
+            // of writing: their doc claims were never pinned anywhere).
+            ("kuniform-n1", kuniform_n1),
+            ("kuniform-n2", kuniform_n2),
+            ("kuniform-n3", kuniform_n3),
+            ("kuniform-n4", kuniform_n4),
+            ("kuniform-n5", kuniform_n5),
+            ("kuniform-n6", kuniform_n6),
+            ("kuniform-n7", kuniform_n7),
+            ("kuniform-n8", kuniform_n8),
+            ("kuniform-n9", kuniform_n9),
+            ("kuniform-n12", kuniform_n12),
+            ("kuniform-n13", kuniform_n13),
+            ("kuniform-n14", kuniform_n14),
+            ("kuniform-n15", kuniform_n15),
+            ("kuniform-n16", kuniform_n16),
+            ("kuniform-n17", kuniform_n17),
+            ("kuniform-n18", kuniform_n18),
+            ("kuniform-n19", kuniform_n19),
+            ("kuniform-n20", kuniform_n20),
+        ];
+
+        for (id, make) in cases {
+            let tiling = make();
+            assert_eq!(
+                tiling.id(), id,
+                "docs/tilings/{id}.md: constructor id mismatch (doc id != constructor id)"
+            );
+            let doc = std::fs::read_to_string(docs_dir.join(format!("{id}.md")))
+                .unwrap_or_else(|e| panic!("docs/tilings/{id}.md readable: {e}"));
+            let claimed = per_cell_claim(&doc, id);
+            assert_eq!(
+                claimed,
+                tiling.cells.len(),
+                "docs/tilings/{id}.md: doc claims {claimed} per cell but the constructor produces {}",
+                tiling.cells.len()
+            );
+        }
+    }
+
     /// Part A legality test (M76). Two independent claims per tiling:
     ///
     /// 1. *Group legality*: the declared (group, lattice kind) pair is a
