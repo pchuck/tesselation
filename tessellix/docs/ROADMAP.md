@@ -283,7 +283,7 @@ the "mixed floret/cairo/prismatic" patterns.
   lineage with shape vector (3φ, 3φ, 1, φ+ξ, 2φ) = a φ² left
   eigenvector of σ̃₁ ⇒ LIDS; exact integer abcd arithmetic, floats
   only at emission ([brief](briefs/cap-cut-project.md),
-  [design doc](../cap-cut-project-design.md)). The generic class
+  [design doc](cap-cut-project-design.md)). The generic class
   (window-based generation for Penrose/AB/12-fold as an alternative
   to substitution) remains open.
 - ❓ **Random/statistical tilings** — lozenge (rhombille with random
@@ -296,7 +296,7 @@ the "mixed floret/cairo/prismatic" patterns.
   topologies with exact per-orbit shaped edges, plus five showcase
   instances (IH1 p1 / IH6 pgg / IH7 p3 hexagons on the 6³ net,
   IH27 pgg / IH29 p4g pentagons on the Cairo net; design doc
-  [../isohedral-generator-design.md](../isohedral-generator-design.md)).
+  [isohedral-generator-design.md](isohedral-generator-design.md)).
   Exact Q(√3) field; adjacency symbols derived by exact geometric
   edge matching (BFS-closure verified), never hand-written. Category
   rule held: Laves primary, Pentagon Types secondary on the two

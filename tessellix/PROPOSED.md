@@ -858,7 +858,7 @@ table above). The first cmm entry (M97 `kuniform-n12` 3².6² ;
 > secondary, adds an 18th card and fails the guard). Instances take
 > `Laves` (Laves-topology types) or `PentagonTypes`; family scaffold =
 > the new empty `isohedral` family. Brief:
-> [isohedral-generator](briefs/isohedral-generator.md).
+> [isohedral-generator](docs/briefs/isohedral-generator.md).
 >
 > **LANDED (2026-11-24, M162):** five instances — IH1 (p1), IH6 (pgg),
 > IH7 (p3) hexagons on the 6³ net; IH27 (pgg), IH29 (p4g) pentagons on
@@ -1455,7 +1455,7 @@ of these; each is a substitution or cut-and-project table.
   inflation factor"; three rectilinear Z-chairs, window uncomputed),
   NOT a Q(√2) member — this section's Q(√2) framing holds for A4 only
   (mld to Ammann–Beenker, λ = 2 chair + outlined second prototile).
-  Brief: [ammann-a3-a4](briefs/ammann-a3-a4.md); dispatched (worker
+  Brief: [ammann-a3-a4](docs/briefs/ammann-a3-a4.md); dispatched (worker
   tier, two landings). **Status: A4 ✅ M173** — `ammann-a4` landed as a
   Quasiperiodic-family substitution tiling (chair + half-chair, 10
   oriented states, λ = 1+√2, count matrix [[3,4],[2,3]], exact Z[√2]
@@ -1772,7 +1772,7 @@ can be adopted independently through the standard checklist.
     delivers the per-substrate δ-validity envelope that feeds 24h).
     Dispatches only after 22g lands (same three files).
   - **Effort** M, **tier** P1 (rendering feature, no new tiling) —
-    brief [parquet-deformations](briefs/parquet-deformations.md).
+    brief [parquet-deformations](docs/briefs/parquet-deformations.md).
   - **Status: ✅ LANDED as M165 (2026-11-24).** `walls_with_delta`
     per-contact-point override (walls() byte-identical as the
     const-f wrapper; the per-point change is exactly hoisting the
@@ -1912,9 +1912,9 @@ quasiperiodic hosts later).
   4.8.8 star, {6/2} hexagram, {12/4} dodecagon rosette, girih decagon
   panels, WIS 12-point star). No registry change.
   - **Effort** L, **tier** strong (design doc) — brief
-    [medallion-interface](briefs/medallion-interface.md).
+    [medallion-interface](docs/briefs/medallion-interface.md).
   - **Status: ✅ LANDED as M167 (2026-11-25).** Design doc
-    [medallion-interface-design](medallion-interface-design.md) (schema +
+    [medallion-interface-design](docs/medallion-interface-design.md) (schema +
     cos²-only angle convention + the three absorption obligations) +
     `tess-tilings/src/medallion/` (Field/Contact/Absorption, `Medallion`
     trait, `Zq` exact sign engine, exact `first_hit`) + five exact
