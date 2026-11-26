@@ -983,6 +983,244 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
             memberships,
             "docs/families/aperiodic.md (line {line_no}): M168 status-line membership count"
         );
+
+        // ---- docs/TAXONOMY.md --------------------------------------
+
+        let taxonomy = std::fs::read_to_string(docs_dir.join("../../docs/TAXONOMY.md"))
+            .expect("docs/TAXONOMY.md readable from crates/tess-tilings");
+
+        // "eleven since 2026-11-24" — the tab-count word (the M76 "ten
+        // tabs" snapshot on the line above is frozen history; the live
+        // claim, eleven since the Isohedral-tab tab chore, is what is
+        // pinned here). The anchor embeds no number/word so a move of
+        // the claim still locates the line and fails on the value, not
+        // on a vanished anchor.
+        let anchor_pos = unique_anchor(
+            &taxonomy,
+            " since 2026-11-24",
+            "docs/TAXONOMY.md: eleven-since tab-count word pin",
+        );
+        let line_no = anchor_line(&taxonomy, anchor_pos);
+        let line = line_region(&taxonomy, anchor_pos);
+        let word = word_before_suffix(
+            &line,
+            "since 2026-11-24",
+            &format!("docs/TAXONOMY.md line {line_no} tab-count word pin"),
+        );
+        assert_eq!(
+            word_value(&word),
+            Some(tab_count),
+            "docs/TAXONOMY.md (line {line_no}): eleven-since word form"
+        );
+
+        // "186 memberships over the 165 implemented tilings; the 21 extra
+        // are" — the live membership census and the derived "extra"
+        // arithmetic: 21 extra == memberships - built-ins, both live
+        // values (186 - 165 = 21). The per-tab figures in the same file
+        // are already pinned against the registry by
+        // registry_groups_are_complete_and_canonically_ordered (the
+        // per-tab vector) and are intentionally not re-pinned.
+        let anchor_pos = unique_anchor(
+            &taxonomy,
+            " memberships over the",
+            "docs/TAXONOMY.md: memberships-over-built-ins pin",
+        );
+        let line_no = anchor_line(&taxonomy, anchor_pos);
+        let line = line_region(&taxonomy, anchor_pos);
+        let m = number_before_suffix(
+            &line,
+            " memberships",
+            &format!("docs/TAXONOMY.md line {line_no} membership count pin"),
+        );
+        assert_eq!(
+            m,
+            memberships,
+            "docs/TAXONOMY.md (line {line_no}): membership count"
+        );
+        let n = number_before_suffix(
+            &line,
+            " implemented tilings",
+            &format!("docs/TAXONOMY.md line {line_no} built-in total pin"),
+        );
+        assert_eq!(
+            n,
+            r.len(),
+            "docs/TAXONOMY.md (line {line_no}): built-in total"
+        );
+        let extra = number_before_suffix(
+            &line,
+            " extra are",
+            &format!("docs/TAXONOMY.md line {line_no} extra-secondary-memberships pin"),
+        );
+        assert_eq!(
+            extra,
+            memberships - r.len(),
+            "docs/TAXONOMY.md (line {line_no}): extra secondary-memberships arithmetic"
+        );
+
+        // "seventeen tilings appear under the Wallpaper catalog" — the
+        // wallpaper-catalog card count word.
+        let anchor_pos = unique_anchor(
+            &taxonomy,
+            " tilings appear under the Wallpaper",
+            "docs/TAXONOMY.md: wallpaper-catalog seventeen-tilings word pin",
+        );
+        let line_no = anchor_line(&taxonomy, anchor_pos);
+        let line = line_region(&taxonomy, anchor_pos);
+        let word = word_before_suffix(
+            &line,
+            "tilings appear",
+            &format!("docs/TAXONOMY.md line {line_no} wallpaper-catalog card-count word pin"),
+        );
+        let wallpaper_cards = tabs
+            .iter()
+            .find(|t| t.category == tess_core::TilingCategory::Wallpaper)
+            .unwrap()
+            .cards
+            .len();
+        assert_eq!(
+            word_value(&word),
+            Some(wallpaper_cards),
+            "docs/TAXONOMY.md (line {line_no}): seventeen-tilings-under-Wallpaper word form"
+        );
+    }
+
+    /// A ledger guard, not a census guard: the M-numbers cited in this
+    /// file's own `// Census of today's taxonomy` comment block must all
+    /// appear as CHANGELOG headers (audit VII measured this bijection
+    /// once by hand: 0 STALE, 101 census M-numbers, all present).
+    ///
+    /// Scope guard: only census ⊆ CHANGELOG-headers is asserted. The
+    /// converse is deliberately NOT asserted — the CHANGELOG is the
+    /// pre-repo-era ledger (M3–M38 etc. carry no census rows), audit VII
+    /// documented those as FIDEL-OK.
+    ///
+    /// Block-extraction rule (load-bearing, re-derived every run): the
+    /// census-comment block is anchored on the first line whose trimmed
+    /// content starts with `// Census of today`; it extends over every
+    /// following line whose trimmed content starts with `//`; it ends at
+    /// the first non-comment line. It never depends on line numbers, so
+    /// a comment edit elsewhere in the file cannot shift the block, and
+    /// a benign edit adding/removing M-note comment lines INSIDE the
+    /// block is simply picked up (a new M-note with no CHANGELOG header
+    /// fails this fn naming it).
+    ///
+    /// Dup-M clause: NOT pinned. M-tokens repeat legitimately in the
+    /// current block (each M is named once in the header M-list and again
+    /// in its per-family `-> M<N>` note lines — 22 distinct M-numbers on
+    /// multiple lines, M99 on 3 lines). A repeated M-note LINE would be a
+    /// copy-paste bug, but no such repeated-line signal is sound today.
+    #[test]
+    fn census_m_ledger_matches_changelog() {
+        /// `\b`-style word byte for the M-token scanner.
+        fn is_word_byte(b: u8) -> bool {
+            b.is_ascii_alphanumeric() || b == b'_'
+        }
+
+        /// The M-numbers with word boundaries (``\bM([0-9]+)\b``).
+        fn m_tokens(text: &str) -> Vec<u32> {
+            let bytes = text.as_bytes();
+            let mut out = Vec::new();
+            let mut i = 0;
+            while i < bytes.len() {
+                if bytes[i] == b'M' {
+                    let before_ok = i == 0 || !is_word_byte(bytes[i - 1]);
+                    let mut j = i + 1;
+                    while j < bytes.len() && bytes[j].is_ascii_digit() {
+                        j += 1;
+                    }
+                    let after_ok = j == bytes.len() || !is_word_byte(bytes[j]);
+                    if before_ok && j > i + 1 && after_ok {
+                        out.push(
+                            text[i + 1..j]
+                                .parse::<u32>()
+                                .expect("M-token digits parse as u32"),
+                        );
+                    }
+                    i = j.max(i + 1);
+                } else {
+                    i += 1;
+                }
+            }
+            out
+        }
+
+        let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let lib_src = std::fs::read_to_string(manifest.join("src/lib.rs"))
+            .expect("src/lib.rs readable from crates/tess-tilings");
+
+        // Extraction rule (see fn doc): header anchor + consecutive-//
+        // lines. Re-derived from the file every run.
+        let lines: Vec<&str> = lib_src.lines().collect();
+        let header_idx = lines
+            .iter()
+            .position(|l| l.trim_start().starts_with("// Census of today"))
+            .expect("census-comment header line missing from src/lib.rs");
+        let mut block_end = header_idx;
+        while block_end < lines.len()
+            && lines[block_end].trim_start().starts_with("//")
+        {
+            block_end += 1;
+        }
+        let block = lines[header_idx..block_end].join("\n");
+
+        let mut census_ms: Vec<u32> = m_tokens(&block);
+        census_ms.sort_unstable();
+        census_ms.dedup();
+        assert!(
+            !census_ms.is_empty(),
+            "census-comment block extracted but contained no M-tokens"
+        );
+
+        // CHANGELOG header matcher (audit VII): the header LINE must
+        // match `^\s*- 20\d\d-` — the M-token counts ONLY the
+        // header line, never the body (body references do not count).
+        let changelog = std::fs::read_to_string(
+            manifest.join("../../docs/history/CHANGELOG.md"),
+        )
+        .expect("docs/history/CHANGELOG.md readable from crates/tess-tilings");
+        let mut header_ms: Vec<u32> = Vec::new();
+        let mut header_line_count = 0usize;
+        for line in changelog.lines() {
+            let t = line.trim_start();
+            let bytes = t.as_bytes();
+            let is_header = bytes.len() >= 7
+                && t.starts_with("- 20")
+                && bytes[4].is_ascii_digit()
+                && bytes[5].is_ascii_digit()
+                && bytes[6] == b'-';
+            if is_header {
+                header_line_count += 1;
+                header_ms.extend(m_tokens(line));
+            }
+        }
+        header_ms.sort_unstable();
+        header_ms.dedup();
+
+        assert!(
+            !header_ms.is_empty(),
+            "no CHANGELOG header lines matched the audit VII matcher"
+        );
+
+        // Assert: every census M-number is a CHANGELOG header. Failure
+        // names EVERY missing M-number (not just the first).
+        let missing: Vec<String> = census_ms
+            .iter()
+            .filter(|m| !header_ms.contains(m))
+            .map(|m| format!("M{m}"))
+            .collect();
+        assert!(
+            missing.is_empty(),
+            "census-comment M-number(s) missing from CHANGELOG headers: {} \
+             (census block: {} M-numbers, CHANGELOG headers: {} unique M-numbers, \
+             {header_line_count} header lines) — every '// M<N>' note and header \
+             M-list entry must land with a CHANGELOG header line \
+             (audit VII matcher: '^\\s*- 20\\d\\d-', M-tokens on the header line only). \
+             Scope guard: census ⊆ headers only, never the converse.",
+            missing.join(", "),
+            census_ms.len(),
+            header_ms.len()
+        );
     }
 
     /// Doc-sync guard, per-tiling tier: every registered tiling must own
