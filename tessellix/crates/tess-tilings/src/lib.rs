@@ -932,6 +932,11 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
         }
     }
 
+    /// Every registered tiling generates without error (scale 1.0, fixed
+    /// region) and produces tiles whose ear-clipped triangulation is
+    /// valid: exactly n−2 triangles per polygon (n = vertex count), with
+    /// the triangle-area sum matching the polygon's area (within
+    /// 1e-9 × max(area, 1e-6)).
     #[test]
     fn all_tiles_triangulate() {
         let v2 = |x: f64, y: f64| Vec2::new(x, y);

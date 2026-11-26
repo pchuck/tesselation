@@ -358,6 +358,27 @@ mod tests {
     }
 
     #[test]
+    fn pattern_gray_shares_pattern_index_space() {
+        // PatternGray produces byte-identical rasters to Pattern through
+        // one palette: same index space (seed % 8), only the ramp differs
+        // (the front end's choice).
+        let a = tile(0, 0, &[[0.0, 0.0], [4.0, 0.0], [4.0, 4.0], [0.0, 4.0]]);
+        let b = tile(1, 5, &[[0.0, 1.9], [4.0, 1.9], [4.0, 2.1], [0.0, 2.1]]);
+        let bbox = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(4.0, 4.0));
+        assert_eq!(
+            raster(&[a.clone(), b.clone()], &bbox, 20, 20, ColorMode::PatternGray, &PAL).pixels,
+            raster(&[a, b], &bbox, 20, 20, ColorMode::Pattern, &PAL).pixels
+        );
+        // color_index directly: seed % 8, the proto field never leaks.
+        let t = tile(3, 9, &[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
+        assert_eq!(
+            color_index(ColorMode::PatternGray, &t),
+            color_index(ColorMode::Pattern, &t)
+        );
+        assert_eq!(color_index(ColorMode::PatternGray, &t), 9 % 8);
+    }
+
+    #[test]
     fn gray_mode_shares_proto_index_space() {
         // Gray must produce byte-identical rasters to Proto through one
         // palette: same index space, only the ramp differs (the front

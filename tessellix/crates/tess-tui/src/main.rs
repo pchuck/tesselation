@@ -1192,6 +1192,94 @@ mod tests {
     }
 
     #[test]
+    fn pattern_gray_export_emits_only_gray_fills() {
+        // End-to-end through the export path: --mode pattern-gray threads
+        // parse_export → render_svg_with_walls → tile_rgb. Every tile fill
+        // in the emitted SVG is monochrome and one of PATTERN_GRAY_PALETTE;
+        // no hue palette value appears (index-0 light gray is excluded
+        // from the hue set — it is deliberately shared). The same tiling
+        // exported in pattern mode emits hue fills — the mode is honored
+        // through the same code path.
+        let tmp = std::env::temp_dir().join(format!("tess_tui_pg_{}.svg", std::process::id()));
+        let tmp_pattern = std::env::temp_dir().join(format!("tess_tui_pg_pattern_{}.svg", std::process::id()));
+        let base = ["--tiling", "square", "--width", "640", "--height", "640"];
+        let mut argv: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        argv.extend([
+            "--mode".to_string(),
+            "pattern-gray".to_string(),
+            "--out".to_string(),
+            tmp.to_string_lossy().to_string(),
+        ]);
+        super::export(&argv).expect("pattern-gray export succeeds");
+        let svg = std::fs::read_to_string(&tmp).expect("SVG readable");
+
+        let table = tess_core::paint::PATTERN_GRAY_PALETTE;
+        let hue: std::collections::BTreeSet<(u8, u8, u8)> = tess_core::paint::PALETTE
+            .iter()
+            .skip(1)
+            .map(|&c| tess_core::paint::rgb(c))
+            .collect();
+        let mut gray_fills = std::collections::BTreeSet::new();
+        for fragment in svg.split("<path ").skip(1) {
+            let Some(i) = fragment.find("fill=\"rgb(") else { continue };
+            let rest = &fragment[i + "fill=\"rgb(".len()..];
+            let end = rest.find(')').unwrap();
+            let v: Vec<u8> = rest[..end]
+                .split(',')
+                .map(|s| s.parse().unwrap())
+                .collect();
+            assert_eq!(v.len(), 3, "fill must be rgb(r,g,b)");
+            assert_eq!(v[0], v[1], "fill not monochrome: {v:?}");
+            assert_eq!(v[1], v[2], "fill not monochrome: {v:?}");
+            assert!(
+                !hue.contains(&(v[0], v[1], v[2])),
+                "hue palette value leaked: {v:?}"
+            );
+            let hex = (v[0] as u32) << 16 | (v[1] as u32) << 8 | v[2] as u32;
+            assert!(
+                table.contains(&hex),
+                "fill {hex:#x} not in PATTERN_GRAY_PALETTE"
+            );
+            gray_fills.insert(hex);
+        }
+        assert!(
+            gray_fills.len() >= 2,
+            "checker-seed square should emit both seed-0 and seed-1 fills: {gray_fills:?}"
+        );
+
+        let mut argv_p: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        argv_p.extend([
+            "--mode".to_string(),
+            "pattern".to_string(),
+            "--out".to_string(),
+            tmp_pattern.to_string_lossy().to_string(),
+        ]);
+        super::export(&argv_p).expect("pattern export succeeds");
+        let svg_p = std::fs::read_to_string(&tmp_pattern).expect("SVG readable");
+        let hue_fills: std::collections::BTreeSet<(u8, u8, u8)> = svg_p
+            .split("<path ")
+            .skip(1)
+            .filter_map(|fragment| {
+                let i = fragment.find("fill=\"rgb(")?;
+                let rest = &fragment[i + "fill=\"rgb(".len()..];
+                let end = rest.find(')').unwrap();
+                let v: Vec<u8> = rest[..end]
+                    .split(',')
+                    .map(|s| s.parse().unwrap())
+                    .collect();
+                (v.len() == 3).then(|| (v[0], v[1], v[2]))
+            })
+            .collect();
+        assert!(
+            hue_fills.iter().any(|&f| f.0 != f.1 || f.1 != f.2),
+            "pattern mode must emit the hue palette, not the gray ramp"
+        );
+
+        let _ = std::fs::remove_file(&tmp);
+        let _ = std::fs::remove_file(&tmp_pattern);
+    }
+
+    #[test]
     fn fig_3_7_strip_smoke_is_deterministic() {
         // Canonical Fig. 3.7 shape: square substrate, wide-aspect strip
         // window, linear ramp 45° → 90° across the window (tight stars →

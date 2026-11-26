@@ -277,6 +277,68 @@ mod tests {
     }
 
     #[test]
+    fn pattern_gray_emission_is_gray_only() {
+        // End-to-end SVG emission through tile_rgb: one tile per seed
+        // 0..8 → the eight PATTERN_GRAY_PALETTE values, no hue palette
+        // value anywhere.
+        let tiles: Vec<Tile> = (0..8u32)
+            .map(|seed| {
+                let x = seed as f64;
+                Tile {
+                    proto: 0,
+                    seed,
+                    poly: Polygon::from_slice(&[
+                        pt(x, 0.0),
+                        pt(x + 0.9, 0.0),
+                        pt(x + 0.9, 0.9),
+                        pt(x, 0.9),
+                    ]),
+                }
+            })
+            .collect();
+        let bbox = BBox::new(pt(-0.5, -0.5), pt(9.0, 1.0));
+        let svg = render_svg(&tiles, &bbox, ColorMode::PatternGray);
+
+        let table = crate::paint::PATTERN_GRAY_PALETTE;
+        let hue: std::collections::BTreeSet<(u8, u8, u8)> = crate::paint::PALETTE
+            .iter()
+            .skip(1) // index 0 is the monochrome light gray; checked separately
+            .map(|&c| crate::paint::rgb(c))
+            .collect();
+        let mut seen = std::collections::BTreeSet::new();
+        let mut fill_count = 0usize;
+        for fragment in svg.split("<path ").skip(1) {
+            let Some(i) = fragment.find("fill=\"rgb(") else { continue };
+            let rest = &fragment[i + "fill=\"rgb(".len()..];
+            let end = rest.find(')').unwrap();
+            let v: Vec<u8> = rest[..end]
+                .split(',')
+                .map(|s| s.parse().unwrap())
+                .collect();
+            assert_eq!(v.len(), 3, "fill must be rgb(r,g,b)");
+            assert_eq!(v[0], v[1], "fill not monochrome: {v:?}");
+            assert_eq!(v[1], v[2], "fill not monochrome: {v:?}");
+            assert!(
+                !hue.contains(&(v[0], v[1], v[2])),
+                "hue palette value leaked: {v:?}"
+            );
+            let hex = (v[0] as u32) << 16 | (v[1] as u32) << 8 | v[2] as u32;
+            assert!(
+                table.contains(&hex),
+                "fill {hex:#x} not in PATTERN_GRAY_PALETTE"
+            );
+            seen.insert(hex);
+            fill_count += 1;
+        }
+        assert_eq!(fill_count, tiles.len(), "every tile must emit a fill");
+        assert_eq!(
+            seen.len(),
+            8,
+            "every PATTERN_GRAY_PALETTE value must appear (seeds 0..8 → 8 entries)"
+        );
+    }
+
+    #[test]
     fn plain_render_is_untouched_by_decoration() {
         let tiles = square_grid(2);
         let bbox = BBox::new(pt(-1.0, -1.0), pt(3.0, 3.0));
