@@ -42,8 +42,12 @@ complementary strap pattern. Full dossier in
   {9,12}, {9,18} first) — ✅ M169: six parallel-pair records with
   exact placements, windows and M163-checked exits; ✅ M171: n=9
   shipped via the rotated odd-n family — (9,2) {9/3}, (9,3) {9/1}
-  (K₉-exact, M163-checked eight records); n=11 blocked on degree-5
-  fields; {8,12}/{9,12} deferred.
+  (K₉-exact, M163-checked eight records); ✅ M181: odd-n rungs designed
+  engine-side — seven rotated-family records ((11,2..4), (13,2..5))
+  census-/window-/outline-certified, all contact_cos2 = None
+  ([docs/medallion-24c-odd-n-design.md](medallion-24c-odd-n-design.md));
+  implementation queued (strong tier, after the K₁₁/K₁₃ fields);
+  {8,12}/{9,12} deferred.
 - **24d Composition families on periodic nets** — instance 1 ✅ M172
   (dual-net fill, reduced scope; inference-fill NOT APPLICABLE —
   75° contact corners lie outside the 24b alphabet, certified).

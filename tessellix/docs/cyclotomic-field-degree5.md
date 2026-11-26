@@ -357,6 +357,13 @@ exact component signs (+, −), d-rule value 2. Note the pin's
 coordinates are u-pure in x and w-pure in y at this (i, j) — the
 two-level storage pays off directly.
 
+- **24c n = 11 rungs (M181 design's consumer)**: the three (11,2..4)
+  monster records consume K₁₁ exactly as contracted here (ISO11@s=26,
+  N₁₁ two-level sign rule) — engine-side design and battery mandates
+  in [medallion-24c-odd-n-design.md](medallion-24c-odd-n-design.md)
+  (M181; spike-validated: 0 bisections on the full census workload,
+  max bit height 22).
+
 ---
 
 ## 6. BATTERY_K11 design (mirrors BATTERY_L10's real-numerator principle)

@@ -1985,7 +1985,7 @@ quasiperiodic hosts later).
     walk 611/611 steps through the engine's own machinery. WIS
     byte-identical by construction (zero-touch).
 - **24c. (n,c)-monster medallion generator** (the 22e medallion source)
-  — overlapping regular n-gons fused at contact angles kπ/n (n ≤ 12,
+  — overlapping regular n-gons fused at contact angles kπ/n (n ≤ 13,
   2 ≤ c ≤ ⌈n/2⌉−2) as additional catalog entries in exact fields;
   feeds 24a's catalog. Strange-star sets {8,12}, {9,12}, {9,18} first.
   **Status: ✅ M169 + ✅ M171 extension.** M169: six parallel-pair
@@ -2005,14 +2005,15 @@ quasiperiodic hosts later).
   zero consumers outside n9); d-rule d ≡ 2(i−j)−1 (mod n); union
   2(n−c−1)+2 and lens 2c+4 node counts hold for n = 9 (hub
   `outlines()` cross-check); certification dead-code hole in the
-  window-verify path found and fixed en route. **n = 11 remains
-  blocked on degree-5 fields** (unblocked at design level:
-  [docs/cyclotomic-field-degree5.md](docs/cyclotomic-field-degree5.md),
-  M178 — implementation job pending). The odd-n ladder's next rung
-  (n = 13, degree 6) is likewise designed:
-  [docs/cyclotomic-field-odd-n.md](docs/cyclotomic-field-odd-n.md)
-  (M179) — D=6 envelope resolved (ISO13@s₀=20); note this entry's
-  "n ≤ 12" scope line must be extended for a 13-rung.
+  window-verify path found and fixed en route. The odd-n ladder rungs at n = 11 (degree 5)
+  and n = 13 (degree 6) are likewise designed engine-side:
+  [docs/cyclotomic-field-degree5.md](docs/cyclotomic-field-degree5.md)
+  (M178), [docs/cyclotomic-field-odd-n.md](docs/cyclotomic-field-odd-n.md)
+  (M179), and
+  [docs/medallion-24c-odd-n-design.md](docs/medallion-24c-odd-n-design.md)
+  (M181) — seven rotated-family rungs ((11,2..4), (13,2..5)),
+  census-, window- and outline-certified, all `contact_cos2 = None`.
+  The implementation job remains open.
   - **Effort** M each, **tier** strong.
 - **24d. Composition families on periodic nets** — unit cells with 2–3
   medallion classes (dodecagon medallions at hexagon centers +

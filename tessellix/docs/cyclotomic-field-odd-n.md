@@ -519,6 +519,14 @@ arithmetic kernels.
    certifies here constrains K₂₁ too — but K₂₁'s representation choice
    (flat deg-6 vs tower-over-K₇) is a separate impl-job decision (§8.3).
 
+- **24c n = 13 rungs (M181 design's consumer)**: the four (13,2..5)
+  monster records consume K₁₃ exactly as contracted here (ISO13@s₀=20,
+  N₁₃ two-level sign rule with the mandated wrong-shortcut regressions)
+  — engine-side design and battery mandates in
+  [medallion-24c-odd-n-design.md](medallion-24c-odd-n-design.md)
+  (M181; spike-validated: 0 bisections on the full census workload,
+  max bit height 22, all cos² full-degree ⇒ contact_cos2 = None).
+
 ---
 
 ## 6. BATTERY_K13 design (mirrors BATTERY_L10's real-numerator principle)

@@ -67,6 +67,10 @@ registry name.
   odd-n cyclotomic field layer extension design doc (M179): K₁₃ =
   Q(2cos(2π/13)) degree-6 class + the general prime-n shape, the D=6
   i128-envelope resolution (s₀-drop to 20), spike-validated, no code yet
+- [docs/medallion-24c-odd-n-design.md](medallion-24c-odd-n-design.md) —
+  24c odd-n engine-side design doc (M181): seven (n,c) monster rungs at
+  n = 11, 13 over the designed field layers, spike-validated, no code
+  yet (unblocks the 24c n=11/13 rung implementation)
 - [docs/TAXONOMY.md](TAXONOMY.md) — the eleven-tab gallery taxonomy (M76; Isohedral added 2026-11-24)
 - [docs/2D_Tilings_Reference.md](2D_Tilings_Reference.md) — mathematical
   background (uniform/Laves/wallpaper/quasiperiodic/aperiodic reference)
