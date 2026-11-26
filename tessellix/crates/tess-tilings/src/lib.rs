@@ -608,6 +608,383 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
         }
     }
 
+    /// Doc-sync guard, census-surface tier: the remaining census-class
+    /// numeric claims in the four doc surfaces — the README's word-form
+    /// census claims `readme_matches_registry` does not cover, the
+    /// `docs/INDEX.md` family/tab counts and per-family Tilings column,
+    /// the `docs/DESIGN.md` family-count word, and the
+    /// `docs/families/aperiodic.md` M168 status-line census — pinned
+    /// against the live registry. This is the per-M-landing hand-check
+    /// made permanent: a census-moving M-landing that forgets one of
+    /// these surfaces fails CI naming the file. Line-scoped,
+    /// whitespace-tolerant parsing; an anchor that is missing or
+    /// ambiguous fails loudly (zero-or-one match per claim). The
+    /// README census sentence / per-tab prose / family table are already
+    /// pinned by `readme_matches_registry`; the `## Implemented (N
+    /// tilings)` headings in `docs/families/*.md` are already pinned by
+    /// `family_docs_match_registrations`; the historical status lines in
+    /// `docs/families/aperiodic.md` (M34/M37/M38/M93) are frozen history
+    /// and not pinned. The 1431 test-suite count is not a census claim
+    /// and is not pinned (this job adds test fns and it would move).
+    #[test]
+    fn census_surface_docs_match_registry() {
+        /// The whitespace-normalized single line containing `anchor_pos`.
+        fn line_region(text: &str, anchor_pos: usize) -> String {
+            let start = text[..anchor_pos]
+                .rfind('\n')
+                .map(|p| p + 1)
+                .unwrap_or(0);
+            let end = text[anchor_pos..]
+                .find('\n')
+                .map(|i| anchor_pos + i)
+                .unwrap_or(text.len());
+            text[start..end]
+                .chars()
+                .map(|c| if c.is_whitespace() { ' ' } else { c })
+                .collect()
+        }
+
+        /// 1-based line number of the anchor at `anchor_pos`.
+        fn anchor_line(text: &str, anchor_pos: usize) -> usize {
+            text[..anchor_pos].chars().filter(|&c| c == '\n').count() + 1
+        }
+
+        /// The unique byte position of `anchor`; else panic loudly.
+        fn unique_anchor(text: &str, anchor: &str, what: &str) -> usize {
+            let positions: Vec<usize> =
+                text.match_indices(anchor).map(|(i, _)| i).collect();
+            match positions.len() {
+                0 => panic!("{what}: anchor missing: {anchor:?}"),
+                1 => positions[0],
+                n => panic!("{what}: anchor ambiguous ({n} matches): {anchor:?}"),
+            }
+        }
+
+        /// The parsed digit run immediately preceding `suffix` on the line.
+        fn number_before_suffix(line: &str, suffix: &str, what: &str) -> usize {
+            let s = line
+                .find(suffix)
+                .unwrap_or_else(|| panic!("{what}: suffix {suffix:?} missing on the anchor's line"));
+            let before = line[..s].trim();
+            let mut digits = String::new();
+            for c in before.chars().rev() {
+                if c.is_ascii_digit() {
+                    digits.push(c);
+                } else if !digits.is_empty() {
+                    break;
+                }
+            }
+            let digits: String = digits.chars().rev().collect();
+            digits
+                .parse()
+                .unwrap_or_else(|_| panic!("{what}: number not parseable before {suffix:?}"))
+        }
+
+        /// The parsed digit run immediately following `marker` on the line.
+        fn number_after_marker(line: &str, marker: &str, what: &str) -> usize {
+            let i = line
+                .find(marker)
+                .unwrap_or_else(|| panic!("{what}: marker {marker:?} missing on the anchor's line"));
+            let after = &line[i + marker.len()..];
+            let mut digits = String::new();
+            for c in after.chars() {
+                if c.is_ascii_digit() {
+                    digits.push(c);
+                } else if !digits.is_empty() {
+                    break;
+                }
+            }
+            digits
+                .parse()
+                .unwrap_or_else(|_| panic!("{what}: no digit after {marker:?}"))
+        }
+
+        /// The English word immediately preceding `suffix` on the line.
+        fn word_before_suffix(line: &str, suffix: &str, what: &str) -> String {
+            let s = line
+                .find(suffix)
+                .unwrap_or_else(|| panic!("{what}: suffix {suffix:?} missing on the anchor's line"));
+            let before = line[..s].trim_end();
+            let mut word = String::new();
+            for c in before.chars().rev() {
+                if c.is_ascii_alphabetic() {
+                    word.push(c);
+                } else {
+                    break;
+                }
+            }
+            let word: String = word.chars().rev().collect();
+            assert!(!word.is_empty(), "{what}: no word before {suffix:?}");
+            word
+        }
+
+        /// The value an English small-number word stands for.
+        fn word_value(word: &str) -> Option<usize> {
+            Some(match word {
+                "one" => 1,
+                "two" => 2,
+                "three" => 3,
+                "four" => 4,
+                "five" => 5,
+                "six" => 6,
+                "seven" => 7,
+                "eight" => 8,
+                "nine" => 9,
+                "ten" => 10,
+                "eleven" => 11,
+                "twelve" => 12,
+                "thirteen" => 13,
+                "fourteen" => 14,
+                "fifteen" => 15,
+                "sixteen" => 16,
+                "seventeen" => 17,
+                "eighteen" => 18,
+                "nineteen" => 19,
+                "twenty" => 20,
+                _ => return None,
+            })
+        }
+
+        // ---- live values ----------------------------------------------
+
+        let r = super::registry();
+        let tabs = tess_core::browse_tabs(&r);
+        let memberships: usize = tabs.iter().map(|t| t.cards.len()).sum();
+        let tab_count = tess_core::TilingCategory::ALL.len();
+        let family_count = family_cases().len();
+
+        let docs_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+
+        // ---- README.md (remaining word-form census claims) ------------
+
+        let readme = std::fs::read_to_string(docs_dir.join("../../README.md"))
+            .expect("README.md readable from crates/tess-tilings");
+
+        // "eleven tabs:" — the tab-count word.
+        let anchor_pos = unique_anchor(
+            &readme,
+            "eleven tabs",
+            "README.md: eleven-tabs word pin",
+        );
+        let line_no = anchor_line(&readme, anchor_pos);
+        let line = line_region(&readme, anchor_pos);
+        let word = word_before_suffix(
+            &line,
+            "tabs:",
+            &format!("README.md line {line_no} eleven-tabs word pin"),
+        );
+        assert_eq!(
+            word_value(&word),
+            Some(tab_count),
+            "README.md (line {line_no}): eleven-tabs word form"
+        );
+
+        // "The eleven families" — the family-count word.
+        let anchor_pos = unique_anchor(
+            &readme,
+            "The eleven families",
+            "README.md: The-eleven-families word pin",
+        );
+        let line_no = anchor_line(&readme, anchor_pos);
+        let line = line_region(&readme, anchor_pos);
+        let word = word_before_suffix(
+            &line,
+            "families",
+            &format!("README.md line {line_no} family-count word pin"),
+        );
+        assert_eq!(
+            word_value(&word),
+            Some(family_count),
+            "README.md (line {line_no}): The-eleven-families word form"
+        );
+
+        // "holds the 165 built-ins in eleven families" — the design-prose
+        // built-in total and the family-count word.
+        let anchor_pos = unique_anchor(
+            &readme,
+            " built-ins in eleven families",
+            "README.md: built-ins-in-eleven-families pin",
+        );
+        let line_no = anchor_line(&readme, anchor_pos);
+        let line = line_region(&readme, anchor_pos);
+        let n = number_before_suffix(
+            &line,
+            " built-ins",
+            &format!("README.md line {line_no} built-in tiling count pin"),
+        );
+        assert_eq!(
+            n,
+            r.len(),
+            "README.md (line {line_no}): built-in tiling count"
+        );
+        let word = word_before_suffix(
+            &line,
+            "families",
+            &format!("README.md line {line_no} family-count word pin"),
+        );
+        assert_eq!(
+            word_value(&word),
+            Some(family_count),
+            "README.md (line {line_no}): built-ins-in-eleven-families word form"
+        );
+
+        // ---- docs/INDEX.md -------------------------------------------
+
+        let index = std::fs::read_to_string(docs_dir.join("../../docs/INDEX.md"))
+            .expect("docs/INDEX.md readable from crates/tess-tilings");
+
+        // "the eleven families with doc links" — the family-count word.
+        let anchor_pos = unique_anchor(
+            &index,
+            "eleven families with doc links",
+            "docs/INDEX.md: eleven-families-with-doc-links word pin",
+        );
+        let line_no = anchor_line(&index, anchor_pos);
+        let line = line_region(&index, anchor_pos);
+        let word = word_before_suffix(
+            &line,
+            "families with doc links",
+            &format!("docs/INDEX.md line {line_no} family-count word pin"),
+        );
+        assert_eq!(
+            word_value(&word),
+            Some(family_count),
+            "docs/INDEX.md (line {line_no}): eleven-families-with-doc-links word form"
+        );
+
+        // "165 files" — the per-tiling-documents count.
+        let anchor_pos = unique_anchor(
+            &index,
+            "165 files",
+            "docs/INDEX.md: per-tiling-documents total pin",
+        );
+        let line_no = anchor_line(&index, anchor_pos);
+        let line = line_region(&index, anchor_pos);
+        let n = number_before_suffix(
+            &line,
+            " files)",
+            &format!("docs/INDEX.md line {line_no} per-tiling-documents total pin"),
+        );
+        assert_eq!(
+            n,
+            r.len(),
+            "docs/INDEX.md (line {line_no}): per-tiling-documents count"
+        );
+
+        // "the eleven-tab gallery taxonomy" — the tab-count word.
+        let anchor_pos = unique_anchor(
+            &index,
+            "eleven-tab gallery taxonomy",
+            "docs/INDEX.md: eleven-tab word pin",
+        );
+        let line_no = anchor_line(&index, anchor_pos);
+        let line = line_region(&index, anchor_pos);
+        let word = word_before_suffix(
+            &line,
+            "-tab gallery taxonomy",
+            &format!("docs/INDEX.md line {line_no} eleven-tab word pin"),
+        );
+        assert_eq!(
+            word_value(&word),
+            Some(tab_count),
+            "docs/INDEX.md (line {line_no}): eleven-tab-gallery-taxonomy word form"
+        );
+
+        // Per-family Tilings column: one row per family, the count cell
+        // equal to that family's registered size.
+        let row_count = index.matches("](families/").count();
+        assert_eq!(
+            row_count,
+            family_count,
+            "docs/INDEX.md: per-family table must have one row per family (expected {family_count}, got {row_count})"
+        );
+        for (fam, register) in family_cases() {
+            let marker = format!("](families/{fam}.md)");
+            let anchor_pos = unique_anchor(
+                &index,
+                &marker,
+                &format!("docs/INDEX.md: per-family Tilings column pin ({fam})"),
+            );
+            let line_no = anchor_line(&index, anchor_pos);
+            let line = line_region(&index, anchor_pos);
+            let n = number_after_marker(
+                &line,
+                &marker,
+                &format!("docs/INDEX.md (line {line_no}): per-family Tilings column count for {fam}"),
+            );
+            let fr = register(tess_core::Registry::new());
+            assert_eq!(
+                n,
+                fr.len(),
+                "docs/INDEX.md (line {line_no}): per-family Tilings column count for {fam}"
+            );
+        }
+
+        // ---- docs/DESIGN.md -------------------------------------------
+
+        let design = std::fs::read_to_string(docs_dir.join("../../docs/DESIGN.md"))
+            .expect("docs/DESIGN.md readable from crates/tess-tilings");
+
+        // "eleven family features" — the family-count word.
+        let anchor_pos = unique_anchor(
+            &design,
+            "eleven family features",
+            "docs/DESIGN.md: eleven-family-features word pin",
+        );
+        let line_no = anchor_line(&design, anchor_pos);
+        let line = line_region(&design, anchor_pos);
+        let word = word_before_suffix(
+            &line,
+            "family features",
+            &format!("docs/DESIGN.md line {line_no} family-count word pin"),
+        );
+        assert_eq!(
+            word_value(&word),
+            Some(family_count),
+            "docs/DESIGN.md (line {line_no}): eleven-family-features word form"
+        );
+
+        // ---- docs/families/aperiodic.md ------------------------------
+
+        let aperiodic = std::fs::read_to_string(
+            docs_dir.join("../../docs/families/aperiodic.md"),
+        )
+        .expect("docs/families/aperiodic.md readable from crates/tess-tilings");
+
+        // "165 tilings, 186 memberships" — the M168 status-line census
+        // (not the historical M34/M37/M38/M93 status lines, which are
+        // frozen history, not live census). The 1431 test-suite count
+        // is NOT pinned: it is not a census claim, and this job adds
+        // test fns which would move it.
+        let anchor_pos = unique_anchor(
+            &aperiodic,
+            "presentation (M168). ",
+            "docs/families/aperiodic.md: M168 status-line pin",
+        );
+        let line_no = anchor_line(&aperiodic, anchor_pos);
+        let line = line_region(&aperiodic, anchor_pos);
+        let n = number_before_suffix(
+            &line,
+            " tilings,",
+            &format!("docs/families/aperiodic.md line {line_no} M168 status-line total pin"),
+        );
+        assert_eq!(
+            n,
+            r.len(),
+            "docs/families/aperiodic.md (line {line_no}): M168 status-line built-in total"
+        );
+        let m = number_before_suffix(
+            &line,
+            " memberships,",
+            &format!("docs/families/aperiodic.md line {line_no} M168 status-line membership pin"),
+        );
+        assert_eq!(
+            m,
+            memberships,
+            "docs/families/aperiodic.md (line {line_no}): M168 status-line membership count"
+        );
+    }
+
     /// Doc-sync guard, per-tiling tier: every registered tiling must own
     /// `docs/tilings/<id>.md`, titled with its registry name, and every
     /// family doc's "Per-tiling documents" section must link exactly its
