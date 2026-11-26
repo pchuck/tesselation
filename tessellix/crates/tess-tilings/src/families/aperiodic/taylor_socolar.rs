@@ -3113,4 +3113,69 @@ mod tests {
             check_ref(tpl, cen, want, label);
         }
     }
+
+    /// Visibility guard: the strips (blue/red axis half-bands and chord
+    /// band, seeds 2 red / 1 blue; the body is base, seed 0) must survive
+    /// the shared `tess_core::raster` coverage model at representative
+    /// widths — they must neither collapse entirely into BORDER/grout nor
+    /// vanish under the body fills (the thin-feature rule's documented home).
+    /// Floors are ~1/3 of the live observed counts at the default region
+    /// (WIN); exact shares are NOT pinned (AA/supersample drift tolerance).
+    #[test]
+    fn taylor_socolar_strips_survive_rasterization() {
+        use tess_core::raster;
+        use tess_core::ColorMode;
+
+        // Identity palette: pixel value == pattern seed (paint::PALETTE:
+        // 0 light gray base, 1 blue, 2 red).
+        const PAL: [u8; 8] = [0, 1, 2, 3, 4, 5, 6, 7];
+
+        let p = ParamSet::default_for(TaylorSocolarTiling.params());
+        let region = BBox::new(Vec2::new(WIN[0], WIN[1]), Vec2::new(WIN[2], WIN[3]));
+        let r = TaylorSocolarTiling.generate(&p, &Query { region });
+        // The bounded WIN region must generate, not refuse on MAX_TILES.
+        assert!(
+            r.message.is_none(),
+            "MAX_TILES refusal defeats the guard: {:?}",
+            r.message
+        );
+
+        // Pixel counts of the three pattern seeds (0 base / 1 blue / 2 red).
+        let count = |w: u32, h: u32| -> (u32, u32, u32) {
+            let rr = raster::raster(&r.tiles, &region, w, h, ColorMode::Pattern, &PAL);
+            let (mut base, mut blue, mut red) = (0u32, 0u32, 0u32);
+            for px in &rr.pixels {
+                match *px {
+                    0 => base += 1,
+                    1 => blue += 1,
+                    2 => red += 1,
+                    _ => {} // BORDER / GAP / unexpected
+                }
+            }
+            (base, blue, red)
+        };
+
+        // 100 px wide: cell ~0.28 world units, strips (band width 0.2)
+        // sub-cell — the thin-feature rule's documented case. Observed live
+        // (total 6200 px): base=2466 blue=540 red=1246 — floors = observed/3.
+        let (b, bl, rd) = count(100, 62);
+        assert!(b >= 800, "100px: base swallowed? base={b}");
+        assert!(bl >= 180, "100px: strips collapsed? blue={bl}");
+        assert!(rd >= 400, "100px: strips collapsed? red={rd}");
+
+        // 200 px wide: cell ~0.14 world units. Observed live (total 24800 px):
+        // base=12864 blue=1606 red=3845 — floors = observed/3.
+        let (b, bl, rd) = count(200, 124);
+        assert!(b >= 4_000, "200px: base swallowed? base={b}");
+        assert!(bl >= 500, "200px: strips collapsed? blue={bl}");
+        assert!(rd >= 1_100, "200px: strips collapsed? red={rd}");
+
+        // 640 px wide: cell ~0.044 world units, strips multi-cell — ordinary
+        // boundary rendering. Observed live (total 253440 px): base=161311
+        // blue=13382 red=33318 — floors = observed/3.
+        let (b, bl, rd) = count(640, 396);
+        assert!(b >= 50_000, "640px: base swallowed? base={b}");
+        assert!(bl >= 4_000, "640px: strips collapsed? blue={bl}");
+        assert!(rd >= 10_000, "640px: strips collapsed? red={rd}");
+    }
 }
