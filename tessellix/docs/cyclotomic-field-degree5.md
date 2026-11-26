@@ -141,12 +141,24 @@ Envelope at real magnitudes (spike F + H, measured):
 - `interval_horner` accumulator at s = 26: **112 bits** worst element,
   **113 bits** worst pairwise comparator difference (all 1485 pairs
   measured) — i64-impossible, i128-safe **[P]**.
-- Each bisection round lifts the accumulator scale by `deg−1 = 4`
-  bits (sa = 4·s′) and the `poly_sign_at(m, ·)` peak by the same net
-  amount (deg·s′ +5, near-root shrink −1): **3 rounds certified**
-  (2¹¹³⁺¹² = 2¹²⁵ < 2¹²⁷); a 4th round at max battery heights would sit
-  at 2¹²⁹ — outside i128 (see §8, open question; the battery pins
-  single-pass so the cap is never exercised in tests).
+- **Erratum (impl-time exact audit, landed with the K₁₁ code — replaces
+  the "+4 bits/round" model):** the binding i128 wall of the
+  `poly_sign_at(m, ·)` mid/end-point evaluations is the near-root Horner
+  **intermediate**, not the final value: the step
+  `A₁·num = 2^{deg·s′}·(m(y) − m₀)` rides at |m₀|·2^{deg·s′} near a
+  simple root, so the wall is **deg·s′ + 1 bits**. Measured exactly at
+  s = 26: the bracket endpoints themselves need **131** bits and the
+  CAP = 4 mid-evals 136/141/146/151 — the m-side *final-value* bits are
+  112/115/118/124 through rounds 1–4 (what the old model read; they
+  reproduce exactly, asserted by the Rust test
+  `k11_k13_sign_engine_envelope`, but are not the binding quantity).
+  Landing (option C): the constant **stands at s = 26** — endpoint
+  certification runs through an exact 192-bit scan (`poly_scan_192`) in
+  the bracket test, the battery is certified 0-bisection so the
+  fallback is dead code, and the engine's Horner steps are now checked
+  (fails loudly, never a silent release wrap). Full-contract grid
+  (endpoint + CAP = 4 intermediates ≤ 127): s = 21 (peaks 106 /
+  111–126) — documented, not shipped.
 
 **Why not a flat degree-10 representation:** the natural alternative —
 store `u + v·w` as one degree-10 element of `Q(ζ₄₄)⁺` — needs
@@ -445,14 +457,17 @@ proposed yet):
    gap-fill (`1 − 2w₉` case) — separate code job, docs-only here.
    Verify first that no shipped n9 geometry path can hit the subset
    (`u² < s·v²` on mixed signs) before treating it as latent-only.
-2. **BISECT_CAP at D = 5** (§2.2): measured envelope certifies 3
-   bisection rounds; the generic CAP = 4 would touch 2¹²⁹ at max
-   battery heights in round 4. Options: (a) keep CAP = 4 and pin
-   single-pass in the battery (current L10 discipline — the cap is
-   then dead code in tests); (b) document a K₁₁-specific 3-round
-   bound in the block comment; (c) drop s₀ to 24 for +8 bits of
-   headroom. Recommendation: (a) now, revisit if a consumer produces
-   near-collinear comparators.
+2. **BISECT_CAP at D = 5** (§2.2) — **RESOLVED at landing (option C: the
+   option-(a) discipline, corrected reason).** Keep CAP = 4 and pin
+   single-pass in the battery. The corrected reason (§2.2 erratum) is NOT
+   battery heights: the cap is dead **by envelope** — at s = 26 no mid-eval
+   is i128-executable at all (136–151 bits of intermediate) and even the
+   endpoint re-assertion needs 131 bits, certified instead through the
+   exact 192-bit scan in the bracket test. `poly_sign_at`'s checked Horner
+   steps make any future consumer that straddles at s′ ≥ 26
+   (deg·s′ + 1 > 127) fail loudly. The old options (b) 3-round bound and
+   (c) s₀ = 24 are moot: the full-contract grid is s = 21, documented but
+   not shipped.
 3. **N₁₁ denominator-growth policy:** gcd-reduce-per-op (n9) vs the
    /64-closed convention (girih Kq, CHANGELOG-flagged residual).
    Measure both at the M169/M171 record shapes before the impl job.

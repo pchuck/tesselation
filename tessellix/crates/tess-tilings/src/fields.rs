@@ -260,12 +260,49 @@ fn interval_horner(c: &[i64], lo: i64, hi: i64, s: i32) -> (i128, i128) {
 
 /// Exact sign of m(num/2^s) by dyadic Horner — integer arithmetic only
 /// (degree read from the slice length).
+///
+/// # i128 envelope (impl-time exact audit, pinned by
+/// [`k11_k13_sign_engine_envelope`])
+///
+/// Near a simple root the Horner **intermediates** — step
+/// `A₁·num = 2^{deg·s′}·(m(y) − m₀)` ride at `|m₀|·2^{deg·s′}` — bound
+/// the evaluation, not the final value `2^{deg·s}·|m(y)|`: the true
+/// wall is `deg·s′ + 1` bits. The steps are therefore **checked** — an
+/// evaluation past the envelope fails loudly (release included) instead
+/// of wrapping silently. Live non-firing peaks on the certified grids
+/// (ceiling 127): K₇/K₉ @ s = 31 endpoints 94, K₁₅/L₁₀ @ s = 26
+/// 105/107, [`ISO13`] @ s₀ = 20 endpoints 121 / fallback round 1 = 127.
+/// The one constant past it — [`ISO11`] @ s = 26, endpoints 131, CAP = 4
+/// mid-evals 136–151 — is certified through the exact 192-bit scan
+/// [`poly_scan_192`] in [`check_iso_bracket`] instead, so no certified
+/// workload ever reaches these checks in overflow.
 fn poly_sign_at(m: &[i64], num: i64, s: i32) -> i32 {
     let deg = m.len() - 1;
     let mut acc = m[deg] as i128; // leading coefficient
     let mut sa = 0i32;
     for i in (0..deg).rev() {
-        acc = acc * num as i128 + ((m[i] as i128) << (sa + s));
+        // Checked Horner steps (envelope note above): identical
+        // arithmetic, but a past-envelope evaluation panics with the
+        // operating-range message in every profile instead of wrapping.
+        let prod = acc.checked_mul(num as i128).unwrap_or_else(|| {
+            panic!(
+                "poly_sign_at: Horner product overflow (deg={deg}, s={s}, \
+                 sa={sa}) — interval scale past the i128 envelope; see the \
+                 envelope note on this function"
+            )
+        });
+        let add = (m[i] as i128).checked_shl((sa + s) as u32).unwrap_or_else(|| {
+            panic!(
+                "poly_sign_at: addend shift overflow (sa+s={})",
+                sa + s
+            )
+        });
+        acc = prod.checked_add(add).unwrap_or_else(|| {
+            panic!(
+                "poly_sign_at: Horner sum overflow (deg={deg}, s={s}, \
+                 sa={sa}) — interval scale past the i128 envelope"
+            )
+        });
         sa += s;
     }
     acc.signum() as i32
@@ -1168,6 +1205,319 @@ impl L10 {
         kval10(self.0)
     }
 }
+
+// =====================================================================
+// K11 — Q(b), b = 2cos(2π/11); degree 5; denominator 1. The odd-prime
+// cyclotomic field of the M178 design (docs/cyclotomic-field-degree5.md):
+// additive-only infrastructure at landing, zero consumers — the K9/M171
+// pattern (the future n = 11 monster geometry lives in its quadratic
+// extension by w = 2sin(π/11), w² = 2 − b; design §5.2).
+// =====================================================================
+
+/// Float value of the generator b = 2cos(2π/11) (cross-check/emission
+/// use only).
+#[allow(dead_code)]
+const B11_F: f64 = 1.6825070656623624;
+
+/// An element of K₁₁ = Q(b), b = 2cos(2π/11): the tuple `K11([c0..c4])`
+/// is the field element c0 + c1·b + … + c4·b⁴ at global denominator 1.
+///
+/// Minpoly (M178-certified — the Laurent identity x⁵·m(x + x⁻¹) = Φ₁₁
+/// holds EXACTLY and m is irreducible (Rabin test mod 2), so m is THE
+/// minimal polynomial of b; tests re-assert both): m(y) = y⁵ + y⁴ −
+/// 4y³ − 3y² + 3y + 1, whence the reduction rows [`RED11`].
+///
+/// disc(m) = 11⁴ = 14641 (Sylvester/Bareiss, the Rust test) — the field
+/// discriminant of the real subfield of Q(ζ₁₁): conductor 11 prime, so
+/// Z[b] is the full ring of integers (M178 §2). N(2 − b) = m(2) = 11
+/// prime ⇒ 2 − b is not a square ⇒ w ∉ K₁₁ (genuine quadratic
+/// extension, design §4.1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
+pub struct K11(pub [i64; 5]);
+
+/// Minpoly of b, low→high: y⁵ + y⁴ − 4y³ − 3y² + 3y + 1 (M178 §5.1).
+#[allow(dead_code)]
+pub const MK11: [i64; 6] = [1, 3, -3, -4, 1, 1];
+
+/// Reduction rows (M178 §5.1, b⁵..b⁸ low→high, remainder-derived and
+/// float-certified Python-side — re-derived independently by polynomial
+/// remainder in the fresh verification pass, and re-asserted exactly by
+/// the Rust tower test): basis coordinates of b⁵, …, b⁸.
+#[allow(dead_code)]
+pub const RED11: [[i64; 5]; 4] = [
+    [-1, -3, 3, 4, -1],
+    [1, 2, -6, -1, 5],
+    [-5, -14, 17, 14, -6],
+    [6, 13, -32, -7, 20],
+];
+
+/// Isolating interval of b (the rightmost conjugate): the consecutive
+/// dyadics [112911137/2²⁶, 112911138/2²⁶] ≈ [1.682507053, 1.682507068],
+/// strictly containing b ≈ 1.6825070656623624. Certified Python-side
+/// (spike `spike_k11.py` B3–B5, re-run by the fresh pass): m(lo) < 0 <
+/// m(hi) exactly, exactly one root of m inside (Sturm), and m′ is
+/// root-free on the bracket with m′ > 0 there (Sturm count + exact
+/// interval positivity — the fresh path) so m is strictly increasing:
+/// the fact [`ksign`]'s bisection consumes. s = 26 is the M178 constant:
+/// the 55-element battery is single-pass decisive over it with
+/// accumulators ≤ 113 bits. **Envelope erratum (exact audit — see
+/// [`k11_k13_sign_engine_envelope`]):** the binding i128 wall of the
+/// *m-side* evaluator [`poly_sign_at`] is the near-root Horner
+/// INTERMEDIATE riding at |m(b) − m₀| ≈ 1 on the scale 2^{5s} — 131
+/// bits at these endpoints — not the final value (M178 §2.2's
+/// 112/115/118/124 walls count final values and reproduce exactly; the
+/// erratum landed with the doc). **Landing (option C): the constant
+/// stands at s = 26** — endpoint certification runs through the exact
+/// 192-bit scan [`poly_scan_192`] in [`check_iso_bracket`]; the
+/// 0-bisection battery keeps the fallback dead, and [`poly_sign_at`]'s
+/// steps are now checked (loud panic, never a silent release wrap).
+/// Full-contract grids (endpoint + CAP = 4 intermediates ≤ 127):
+/// s = 21 (peaks 106/111–126), or s = 25 endpoint-only (126) with a
+/// dead fallback — documented, not shipped.
+#[allow(dead_code)]
+pub const ISO11: Iso = Iso {
+    lo_num: 112911137,
+    hi_num: 112911138,
+    s: 26,
+    m_increasing: true,
+};
+
+/// Float value of a K11 element (cross-check/emission use only).
+#[inline]
+#[allow(dead_code)]
+pub fn kval11(x: [i64; 5]) -> f64 {
+    x[0] as f64
+        + x[1] as f64 * B11_F
+        + x[2] as f64 * (B11_F * B11_F)
+        + x[3] as f64 * (B11_F * B11_F * B11_F)
+        + x[4] as f64 * (B11_F * B11_F * B11_F * B11_F)
+}
+
+#[allow(dead_code)]
+impl K11 {
+    /// The zero element.
+    pub const ZERO: K11 = K11([0, 0, 0, 0, 0]);
+    /// The unit element.
+    pub const ONE: K11 = K11([1, 0, 0, 0, 0]);
+    /// The generator b = 2cos(2π/11).
+    pub const B: K11 = K11([0, 1, 0, 0, 0]);
+
+    /// Exact zero test — equality is never numeric (doc §5.1).
+    #[inline]
+    pub fn is_zero(&self) -> bool {
+        self.0 == [0, 0, 0, 0, 0]
+    }
+
+    /// Field addition.
+    #[inline]
+    pub fn add(self, y: K11) -> K11 {
+        K11(kadd(self.0, y.0))
+    }
+
+    /// Field subtraction.
+    #[inline]
+    pub fn sub(self, y: K11) -> K11 {
+        K11(ksub(self.0, y.0))
+    }
+
+    /// Field negation.
+    #[inline]
+    pub fn neg(self) -> K11 {
+        K11(kneg(self.0))
+    }
+
+    /// Scaling by an integer (exact).
+    #[inline]
+    pub fn scale(self, c: i64) -> K11 {
+        K11(kscale(self.0, c))
+    }
+
+    /// Field multiplication (convolution + [`RED11`] fold).
+    #[inline]
+    pub fn mul(self, y: K11) -> K11 {
+        K11(kmul(self.0, y.0, &RED11))
+    }
+
+    /// Exact sign — the isolating-interval engine ([`ksign`] with the
+    /// K₁₁ constants).
+    pub fn sign(&self) -> Ordering {
+        ksign(self.0, &MK11, &ISO11)
+    }
+
+    /// Exact norm N(x) = Res(m, x) (Sylvester/Bareiss, i128).
+    pub fn norm(&self) -> i128 {
+        knorm(&MK11, &self.0)
+    }
+
+    /// Float value — cross-check and emission use only.
+    #[inline]
+    pub fn float(&self) -> f64 {
+        kval11(self.0)
+    }
+}
+
+// =====================================================================
+// K13 — Q(b), b = 2cos(2π/13); degree 6; denominator 1. The odd-prime
+// cyclotomic field of the M179 design (docs/cyclotomic-field-odd-n.md):
+// additive-only infrastructure at landing, zero consumers — the
+// K9/M171 pattern (the future n = 13 monster geometry lives in its
+// quadratic extension by w = 2sin(π/13), w² = 2 − b; design §5.2).
+// =====================================================================
+
+/// Float value of the generator b = 2cos(2π/13) (cross-check/emission
+/// use only).
+#[allow(dead_code)]
+const B13_F: f64 = 1.7709120513064198;
+
+/// An element of K₁₃ = Q(b), b = 2cos(2π/13): the tuple
+/// `K13([c0..c5])` is the field element c0 + c1·b + … + c5·b⁵ at global
+/// denominator 1.
+///
+/// Minpoly (M179-certified — Laurent identity x⁶·m(x + x⁻¹) = Φ₁₃
+/// exactly + irreducible (Rabin test mod 2); tests re-assert both):
+/// m(y) = y⁶ + y⁵ − 5y⁴ − 4y³ + 6y² + 3y − 1 (Newton sums
+/// p₁..p₆ = −1, 11, −4, 31, −16, 98), whence the reduction rows
+/// [`RED13`]. disc(m) = 13⁵ = 371293 (Sylvester/Bareiss; also the
+/// conductor-discriminant chain disc(F₃)² · disc(Q(√13)) = 13⁴ · 13
+/// through the cubic-period subfield — certified in the subfield test).
+/// The quadratic subfield Q(√13) is generated by the Gauss period η =
+/// Σ χ(t)·C_t = [5, −4, −8, 2, 2, 0] with η² = 13 exactly.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
+pub struct K13(pub [i64; 6]);
+
+/// Minpoly of b, low→high: y⁶ + y⁵ − 5y⁴ − 4y³ + 6y² + 3y − 1 (M179
+/// §5.1).
+#[allow(dead_code)]
+pub const MK13: [i64; 7] = [-1, 3, 6, -4, -5, 1, 1];
+
+/// Reduction rows (M179 §5.1, b⁶..b¹⁰ low→high; fold amplification
+/// L1-norms 20/25/111/152/491, each row float-certified and re-derived
+/// by polynomial remainder in the fresh verification pass).
+#[allow(dead_code)]
+pub const RED13: [[i64; 6]; 5] = [
+    [1, -3, -6, 4, 5, -1],
+    [-1, 4, 3, -10, -1, 6],
+    [6, -19, -32, 27, 20, -7],
+    [-7, 27, 23, -60, -8, 27],
+    [27, -88, -135, 131, 75, -35],
+];
+
+/// Isolating interval of b (the rightmost conjugate): the consecutive
+/// dyadics [1856935/2²⁰, 1856936/2²⁰] ≈ [1.77091121673, 1.77091217041],
+/// strictly containing b ≈ 1.7709120513064198.
+///
+/// **Why s = 20 and NOT the 26 the deg-3/4/5 fields use** (M179 §2.2 —
+/// the design mandates this note): at s = 26 the interval-Horner
+/// accumulator for the α⁵ monomial alone reaches 135 bits — over the
+/// 127-bit i128 ceiling — so the s = 26 bracket [118843896/2²⁶,
+/// 118843897/2²⁶] (re-certified exact, the M178 constant) is
+/// structurally unusable for D = 6. The s₀ was chosen by the
+/// pre-registered three-part rule over the s-ladder: **R1** every
+/// battery element AND every comparator resolves single-pass at s
+/// (holds through s = 26); **R2** the bisection mid-evals
+/// [`poly_sign_at`] along the true CAP = 4 path stay ≤ 127 bits
+/// (element-height-independent, m-side) — this is the BINDING gate: s =
+/// 21 and 22 hit walls of 130/135 bits in round 4, s = 20 is the
+/// largest passing value; **R3** pick the largest qualifying s. The
+/// certified mid-eval walls at s₀ = 20 are **110/114/110/125** bits
+/// through rounds 1–4 (final-value bits — reproduced exactly, and
+/// asserted, by the Rust envelope test), and the whole 59-element
+/// battery sits at 113-bit accumulators, single-pass. Note from the impl-time exact
+/// audit: the R2 figures count final accumulator values; the Horner
+/// INTERMEDIATES at s₀ = 20 peak at 121 (endpoints) / 127 (round 1) /
+/// 133–145 (rounds 2–4, dead code under the certified 0-bisection
+/// battery) — the erratum landed in M179 §2.2 with this commit; s₀ = 20
+/// remains valid for every path the engine actually executes, and under
+/// the option-C bracket check its endpoints (121 bits) still run through
+/// the shipped i128 evaluator with parity evidence.
+/// Certified Python-side (spike `spike_k13.py` F0–F6 with the Sturm
+/// isolation + strict-monotonicity chain, re-run by the fresh
+/// verification pass); m(lo) < 0 < m(hi) exactly and m′ > 0 on the
+/// bracket — the facts [`ksign`] consumes.
+#[allow(dead_code)]
+pub const ISO13: Iso = Iso {
+    lo_num: 1856935,
+    hi_num: 1856936,
+    s: 20,
+    m_increasing: true,
+};
+
+/// Float value of a K13 element (cross-check/emission use only).
+#[inline]
+#[allow(dead_code)]
+pub fn kval13(x: [i64; 6]) -> f64 {
+    x[0] as f64
+        + x[1] as f64 * B13_F
+        + x[2] as f64 * (B13_F * B13_F)
+        + x[3] as f64 * (B13_F * B13_F * B13_F)
+        + x[4] as f64 * (B13_F * B13_F * B13_F * B13_F)
+        + x[5] as f64 * (B13_F * B13_F * B13_F * B13_F * B13_F)
+}
+
+#[allow(dead_code)]
+impl K13 {
+    /// The zero element.
+    pub const ZERO: K13 = K13([0, 0, 0, 0, 0, 0]);
+    /// The unit element.
+    pub const ONE: K13 = K13([1, 0, 0, 0, 0, 0]);
+    /// The generator b = 2cos(2π/13).
+    pub const B: K13 = K13([0, 1, 0, 0, 0, 0]);
+
+    /// Exact zero test — equality is never numeric (doc §5.1).
+    #[inline]
+    pub fn is_zero(&self) -> bool {
+        self.0 == [0, 0, 0, 0, 0, 0]
+    }
+
+    /// Field addition.
+    #[inline]
+    pub fn add(self, y: K13) -> K13 {
+        K13(kadd(self.0, y.0))
+    }
+
+    /// Field subtraction.
+    #[inline]
+    pub fn sub(self, y: K13) -> K13 {
+        K13(ksub(self.0, y.0))
+    }
+
+    /// Field negation.
+    #[inline]
+    pub fn neg(self) -> K13 {
+        K13(kneg(self.0))
+    }
+
+    /// Scaling by an integer (exact).
+    #[inline]
+    pub fn scale(self, c: i64) -> K13 {
+        K13(kscale(self.0, c))
+    }
+
+    /// Field multiplication (convolution + [`RED13`] fold).
+    #[inline]
+    pub fn mul(self, y: K13) -> K13 {
+        K13(kmul(self.0, y.0, &RED13))
+    }
+
+    /// Exact sign — the isolating-interval engine ([`ksign`] with the
+    /// K₁₃ constants).
+    pub fn sign(&self) -> Ordering {
+        ksign(self.0, &MK13, &ISO13)
+    }
+
+    /// Exact norm N(x) = Res(m, x) (Sylvester/Bareiss, i128).
+    pub fn norm(&self) -> i128 {
+        knorm(&MK13, &self.0)
+    }
+
+    /// Float value — cross-check and emission use only.
+    #[inline]
+    pub fn float(&self) -> f64 {
+        kval13(self.0)
+    }
+}
 // =====================================================================
 // Test battery — mirrors the spike battery per doc §7 / the brief:
 // (1) minpoly zero + float cross-checks, (2) frame, (3) star walks,
@@ -1301,7 +1651,14 @@ mod tests {
     /// Sign-engine certificate, exact: with m strictly increasing on the
     /// isolating interval (certified Python-side) and m(b) = 0, opposite
     /// exact signs of m at the endpoints pin b strictly inside — no
-    /// numerics. Then the float sanity of the pasted dyadic endpoints
+    /// numerics. The endpoint signs come from the exact 192-bit Horner
+    /// scan [`poly_scan_192`] (same step semantics as the shipped
+    /// [`poly_sign_at`], unbounded width — the only form that certifies
+    /// [`ISO11`] @ s = 26, whose near-root intermediates need 131 bits);
+    /// wherever the scan shows the i128 envelope fits (peak ≤ 127 —
+    /// every field but [`ISO11`]) the shipped evaluator is additionally
+    /// parity-checked, so each certification keeps engine evidence.
+    /// Then the float sanity of the pasted dyadic endpoints
     /// (width ≤ `max_w`) and a smoke pass of the engine on the obvious
     /// elements.
     fn check_iso_bracket<const D: usize>(
@@ -1311,8 +1668,22 @@ mod tests {
         max_w: f64,
         sign: impl Fn([i64; D]) -> Ordering,
     ) {
-        assert_eq!(poly_sign_at(m, iso.lo_num, iso.s), -1, "m(lo) < 0");
-        assert_eq!(poly_sign_at(m, iso.hi_num, iso.s), 1, "m(hi) > 0");
+        let (sg_lo, _, pk_lo) = poly_scan_192(m, iso.lo_num, iso.s);
+        let (sg_hi, _, pk_hi) = poly_scan_192(m, iso.hi_num, iso.s);
+        assert_eq!(sg_lo, -1, "m(lo) < 0");
+        assert_eq!(sg_hi, 1, "m(hi) > 0");
+        if pk_lo.max(pk_hi) <= 127 {
+            assert_eq!(
+                poly_sign_at(m, iso.lo_num, iso.s),
+                sg_lo,
+                "i128 engine parity at lo"
+            );
+            assert_eq!(
+                poly_sign_at(m, iso.hi_num, iso.s),
+                sg_hi,
+                "i128 engine parity at hi"
+            );
+        }
         let den = (1u64 << iso.s) as f64;
         let (lof, hif) = (iso.lo_num as f64 / den, iso.hi_num as f64 / den);
         assert!(lof < bf && bf < hif, "float b not inside the interval");
@@ -2247,5 +2618,724 @@ mod tests {
     fn l10_sign_order_battery_matches_float() {
         let cells: [[i64; 4]; 44] = BATTERY_L10.map(|k| k.0);
         check_sign_order(&cells, &ML10, &ISO_L10, kval10);
+    }
+
+    // =================================================================
+    // K11 / K13 — odd-prime cyclotomic K-layers (M178/M179 design docs,
+    // additive-only infrastructure at landing, zero consumers — the
+    // K9/M171 pattern).
+    // =================================================================
+
+    /// m(x + x⁻¹) == x^{−D}·Φₙ == Σ_{k=−D..D} x^k EXACTLY in integer
+    /// Laurent arithmetic (Horner over a windowed exponent vector): m is
+    /// the minimal polynomial of 2cos(2π/n) once irreducibility is pinned
+    /// ([`m11_m13_irreducible_rabin_mod2`], M178 §2 / M179 §2.1).
+    fn laurent_is_all_ones(m: &[i64]) -> bool {
+        let d = m.len() - 1;
+        let win = 2 * d + 3;
+        let off = d + 1;
+        let mut p = vec![0i64; win];
+        for &c in m.iter().rev() {
+            let mut q = vec![0i64; win];
+            for i in 0..win {
+                if p[i] != 0 {
+                    q[i + 1] += p[i];
+                    q[i - 1] += p[i];
+                }
+            }
+            q[off] += c;
+            p = q;
+        }
+        (0..win).all(|i| p[i] == ((off - d..=off + d).contains(&i)) as i64)
+    }
+
+    /// Rabin irreducibility over F₂ (bitmask polynomial arithmetic):
+    /// m̄ squarefree AND gcd(x^{2^k} − x, m̄) == 1 for k = 1..=d/2. Both
+    /// m₁₁ and m₁₃ are irreducible mod 2 (the fresh verification path
+    /// found p = 2 as the witness prime for both; M178 §2, M179 §7.2
+    /// applies the same test shape to the extension polynomial).
+    fn rabin_irreducible_mod2(m: &[i64]) -> bool {
+        fn pmul2(a: u64, b: u64) -> u64 {
+            let (mut r, mut a, mut b) = (0u64, a, b);
+            while b != 0 {
+                if b & 1 != 0 {
+                    r ^= a;
+                }
+                a <<= 1;
+                b >>= 1;
+            }
+            r
+        }
+        fn pmod2(mut a: u64, f: u64) -> u64 {
+            let df = 63 - f.leading_zeros();
+            while a != 0 && 63 - a.leading_zeros() >= df {
+                a ^= f << (63 - a.leading_zeros() - df);
+            }
+            a
+        }
+        fn gcd2(mut a: u64, mut b: u64) -> u64 {
+            while b != 0 {
+                let t = pmod2(a, b);
+                a = b;
+                b = t;
+            }
+            a
+        }
+        let d = m.len() - 1;
+        let f: u64 = m
+            .iter()
+            .enumerate()
+            .map(|(i, &c)| ((c & 1) as u64) << i)
+            .sum();
+        if f >> d != 1 {
+            return false; // degenerate mod 2 (leading coeff must stay 1)
+        }
+        // squarefree: gcd(m, m′) == 1 in F₂[x] (m′ keeps odd-degree terms).
+        let mut deriv = 0u64;
+        for i in (1..=d).step_by(2) {
+            if m[i] & 1 != 0 {
+                deriv |= 1u64 << (i - 1);
+            }
+        }
+        if gcd2(f, deriv) != 1 {
+            return false;
+        }
+        // gcd(x^{2^k} − x, m) == 1 for k = 1..=d/2, Frobenius-iterated.
+        let mut h = pmod2(0b100, f); // x² mod m
+        for k in 1..=d / 2 {
+            if k > 1 {
+                h = pmod2(pmul2(h, h), f);
+            }
+            if gcd2(h ^ 0b10, f) != 1 {
+                return false;
+            }
+        }
+        true
+    }
+
+    /// The Chebyshev tower over the RED table: C₀ = 2, C₁ = b,
+    /// C_k = b·C_{k−1} − C_{k−2} closes exactly — C_k == C_{n−k} for
+    /// k = 1..=(n−1)/2 and C_n == 2 (2cos(2πn/n) = 2cos(2π)). This is the
+    /// bⁿ-fold reduction the RED rows encode; it holds only when every
+    /// pasted row is the true remainder (M178 §3, M179 §2.3).
+    fn check_red_tower_wrap<const D: usize>(red: &[[i64; D]], n: usize) {
+        let (two, gen) = (kscale(kbasis::<D>(0), 2), kbasis::<D>(1));
+        let mut c = vec![two, gen];
+        for _ in 2..=n {
+            let k = c.len();
+            c.push(ksub(kmul(gen, c[k - 1], red), c[k - 2]));
+        }
+        for k in 1..=(n - 1) / 2 {
+            assert_eq!(c[k], c[n - k], "tower: C_{k} != C_({n}−k)");
+        }
+        assert_eq!(c[n], two, "tower: C_{n} != 2");
+    }
+
+    /// One single-pass interval evaluation of every element and every
+    /// pairwise difference of `cells` over `iso` (no bisection): returns
+    /// (undecided count, peak accumulator bits) — the 0-bisection
+    /// certification bar and the i128 envelope load at the certified s.
+    fn single_pass_audit<const D: usize>(cells: &[[i64; D]], iso: &Iso) -> (usize, u32) {
+        let mut undecided = 0usize;
+        let mut peak = 0u32;
+        for i in 0..cells.len() {
+            for j in i..cells.len() {
+                let x = if i == j {
+                    cells[i]
+                } else {
+                    ksub(cells[i], cells[j])
+                };
+                let (vl, vh) = interval_horner(&x, iso.lo_num, iso.hi_num, iso.s);
+                let b = (128 - vl.unsigned_abs().leading_zeros())
+                    .max(128 - vh.unsigned_abs().leading_zeros());
+                if b > peak {
+                    peak = b;
+                }
+                // undecided ⇔ vl ≤ 0 ≤ vh (ksign decides iff vh < 0 or vl > 0)
+                if vl <= 0 && vh >= 0 {
+                    undecided += 1;
+                }
+            }
+        }
+        (undecided, peak)
+    }
+
+    /// Exact float statistics of a battery: (min |value|, min pairwise gap).
+    fn float_stats<const D: usize>(cells: &[[i64; D]], fval: impl Fn([i64; D]) -> f64) -> (f64, f64) {
+        let vals: Vec<f64> = cells.iter().map(|c| fval(*c)).collect();
+        let mut minabs = f64::INFINITY;
+        let mut gap = f64::INFINITY;
+        for (i, &v) in vals.iter().enumerate() {
+            minabs = minabs.min(v.abs());
+            for &w in &vals[i + 1..] {
+                gap = gap.min((v - w).abs());
+            }
+        }
+        (minabs, gap)
+    }
+
+    /// Battery (55 elements, M178 §4.1/§6.1 construction families):
+    /// 18 raw /64 hull-grid tuples + 14 exact field pins (Chebyshev tower
+    /// C₂..C₅, w² = 2 − b and its companions, basis/rational shapes) + 23
+    /// strap/exit/top-degree numerator shapes. Fresh verification pass
+    /// (scratch `.scratch/oddn-fields-impl/verify_impl.py`, independent
+    /// second path to the banked `spike_k11.py`) pins: 55/55 distinct,
+    /// max coefficient height 160, min |value| 0.2846, min comparator gap
+    /// 0.05592; every element and all 1485 comparator differences resolve
+    /// SINGLE-PASS over [`ISO11`] — 0 bisections — with Horner
+    /// accumulators peaking at 112 (element) / 113 (difference) bits of
+    /// the 127-bit i128 ceiling.
+    const BATTERY_K11: [K11; 55] = [
+        // (i) raw /64 hull-grid tuples (max height 160).
+        K11([160, 0, -64, 0, 32]),
+        K11([0, -128, 0, 64, -32]),
+        K11([-96, 0, 64, 0, -16]),
+        K11([0, -32, 0, 32, 0]),
+        K11([0, 0, 32, 0, -8]),
+        K11([0, -64, 0, 32, 8]),
+        K11([64, 0, 0, 0, 0]),
+        K11([-64, 0, 0, 0, 0]),
+        K11([0, -32, 0, 0, 0]),
+        K11([64, 0, -32, 0, 0]),
+        K11([-64, 0, 32, 0, 0]),
+        K11([0, -96, 0, 32, 0]),
+        K11([0, 96, 0, -32, 0]),
+        K11([0, 32, 0, 0, 0]),
+        K11([-96, 0, 32, 0, 0]),
+        K11([96, 0, -32, 0, 0]),
+        K11([0, 0, 0, 64, -32]),
+        K11([0, 0, -64, 0, 16]),
+        // (ii) exact field pins.
+        K11([-2, 0, 1, 0, 0]), // C₂ = b² − 2
+        K11([0, -3, 0, 1, 0]), // C₃ = b³ − 3b
+        K11([2, 0, -4, 0, 1]), // C₄
+        K11([-1, 2, 3, -1, -1]), // C₅
+        K11([2, -1, 0, 0, 0]), // w² = 2 − b (N = 11, M178 §4.1)
+        K11([4, 0, -1, 0, 0]), // 4 − b² = (2 − b)(2 + b)
+        K11([5, 0, -1, 0, 0]), // 5 − b²
+        K11([-1, 0, 1, 0, 0]), // b² − 1
+        K11([4, 0, 0, 0, 0]),  // rational 4
+        K11([1, 0, 0, 0, 0]),  // unit
+        K11([0, 0, 1, 0, 0]),  // b²
+        K11([0, 1, 0, 0, 0]),  // generator b
+        K11([-3, 0, 0, 1, 0]), // b³ − 3
+        K11([-15, 0, 11, 0, 0]), // 11b² − 15
+        // (iii) strap / exit / top-degree numerator shapes.
+        K11([0, 17, 0, -12, 0]), // 17b − 12b³
+        K11([0, 13, 0, -10, 0]), // 13b − 10b³
+        K11([0, 7, 0, -6, 0]),   // 7b − 6b³
+        K11([0, 7, 0, -4, 0]),   // 7b − 4b³
+        K11([0, 3, 0, -2, 0]),   // 3b − 2b³
+        K11([0, 1, 0, -1, 0]),   // b − b³
+        K11([0, 2, 0, -1, 0]),   // 2b − b³
+        K11([0, -2, 0, 1, 0]),   // b³ − 2b
+        K11([0, -5, 0, 2, 0]),   // 2b³ − 5b
+        K11([0, -1, 0, 1, 0]),   // b³ − b
+        K11([0, -3, 0, 2, 0]),   // 2b³ − 3b
+        K11([0, -5, 0, 3, 0]),   // 3b³ − 5b
+        K11([0, -7, 0, 4, 0]),   // 4b³ − 7b
+        K11([5, 0, -4, 0, 0]),   // 5 − 4b² (exit x-numerator)
+        K11([5, 0, -3, 0, 0]),   // 5 − 3b²
+        K11([-5, 0, 3, 0, 0]),   // 3b² − 5
+        K11([-5, 0, 4, 0, 0]),   // 4b² − 5
+        K11([5, 0, -2, 0, 0]),   // 5 − 2b²
+        K11([-3, 0, 2, 0, 0]),   // 2b² − 3
+        K11([0, -9, 0, 5, 0]),   // 5b³ − 9b
+        K11([0, 0, 0, 0, 3]),    // 3b⁴ (top-degree probe)
+        K11([0, 0, 0, -2, 5]),   // 5b⁴ − 2b³
+        K11([1, 1, 1, 1, 1]),    // all-ones shape
+    ];
+
+    /// (1) m(b) == 0 exactly on the tuple model; the pasted [`RED11`]
+    /// rows are exactly b⁵..b⁸ under [`kmul`]; float cross-checks; the
+    /// B11_F float constant; the norm identities N(1) = 1,
+    /// N(b) = (−1)⁵·m₀ = −1 with multiplicativity on integral probes;
+    /// N(2 − b) = m(2) = 11 prime (the genuine-quadratic certificate of
+    /// M178 §4.1: w ∉ K₁₁); and the RED tower wrap C_k == C_{11−k},
+    /// C₁₁ = 2.
+    #[test]
+    fn k11_minpoly_red_rows_and_norm() {
+        check_minpoly_red(&MK11, &RED11, kval11, B11_F);
+        assert!(
+            (B11_F - 2.0 * (2.0 * PI / 11.0).cos()).abs() < 1e-15,
+            "B11_F constant"
+        );
+        check_norm_identities(
+            &MK11,
+            &RED11,
+            &[[2, -1, 0, 0, 0], [-3, 0, 1, 0, 0], [1, 1, 0, -1, 0]],
+            -1,
+        );
+        assert_eq!(knorm(&MK11, &[2, -1, 0, 0, 0]), 11, "N(2 − b) != 11");
+        check_red_tower_wrap(&RED11, 11);
+    }
+
+    /// Sign-engine certificate, exact (see [`check_iso_bracket`]); width
+    /// bound is the deg-5 s = 26 envelope (2⁻²⁶ ≈ 1.49e-8). The endpoint
+    /// re-assertion runs through the exact 192-bit scan [`poly_scan_192`]
+    /// — ISO11's near-root Horner intermediates need 131 bits at s = 26
+    /// ([`k11_k13_sign_engine_envelope`]); every field whose endpoints fit
+    /// i128 additionally parity-checks the shipped [`poly_sign_at`] here.
+    #[test]
+    fn k11_iso_interval_brackets_b_exactly() {
+        check_iso_bracket(&MK11, &ISO11, B11_F, 2e-8, |x| K11(x).sign());
+    }
+
+    /// (4) exact signs match float signs; floats distinct; the exact
+    /// total order matches the float sort (shared checker).
+    #[test]
+    fn k11_sign_order_battery_matches_float() {
+        let cells: [[i64; 5]; 55] = BATTERY_K11.map(|k| k.0);
+        check_sign_order(&cells, &MK11, &ISO11, kval11);
+    }
+
+    /// Certification bar: every [`BATTERY_K11`] element and every one of
+    /// the 1485 comparator differences is decided in a SINGLE pass over
+    /// [`ISO11`] (0 bisections), i128 accumulators ≤ 113 bits — and the
+    /// battery statistics the fresh path pinned (55 distinct, max height
+    /// 160, min |value| 0.2846, min gap 0.05592) hold here.
+    #[test]
+    fn k11_battery_single_pass_zero_bisection() {
+        let cells: [[i64; 5]; 55] = BATTERY_K11.map(|k| k.0);
+        let mut seen = cells.to_vec();
+        seen.sort_unstable();
+        seen.dedup();
+        assert_eq!(seen.len(), 55, "battery must be a set (55 distinct)");
+        assert_eq!(
+            cells
+                .iter()
+                .map(|c| c.iter().map(|v| v.abs()).max().unwrap())
+                .max()
+                .unwrap(),
+            160,
+            "max coefficient height"
+        );
+        let (undecided, peak) = single_pass_audit(&cells, &ISO11);
+        assert_eq!(undecided, 0, "0-bisection bar broken at s = 26");
+        assert!(peak <= 127, "i128 envelope breached: {peak} bits");
+        assert_eq!(peak, 113, "pair-side accumulator peak");
+        let (minabs, gap) = float_stats(&cells, kval11);
+        assert!((minabs - 0.2846).abs() < 1e-3, "min |value| {minabs}");
+        assert!((gap - 0.05592).abs() < 1e-4, "min comparator gap {gap}");
+    }
+
+    /// Battery (59 elements; 62 constructed, 3 exact duplicates dropped —
+    /// the u² − (2−b)v² cores collide in the classes (1, ±3)/(−1, 3) and
+    /// (±1, 2): the pinned drops are (−17,9,0,0,0,0) twice and
+    /// (−7,4,0,0,0,0) once). Construction families (M179 §6.1, re-run
+    /// independently by scratch `verify_impl.py` against banked
+    /// `spike_k13.py`): 6 tower C₁..C₆ ×32, 6 qⱼ·cos-half y-numerators
+    /// ×32, 6 synthetic /64 hull tuples, 17 exact pins (tower, 2 − b,
+    /// η = √13, cubic periods A₀..A₂), 16 strap/exit shapes (incl. the
+    /// b⁵ envelope probe), 4 u² − (2−b)v² cores, 4 hull-edge u² cores
+    /// (height 4096). Fresh-path statistics (asserted below): min |value|
+    /// 0.08365, min comparator gap 0.01199, every element and all 1711
+    /// comparator differences SINGLE-PASS at s₀ = 20, accumulator peak
+    /// 113 bits, L1 norms ≤ 13312 (element) / 20480 (pair) under the
+    /// 2^{127−5s₀}/x̂⁵ ≈ 7.7e6 ceiling.
+    const BATTERY_K13: [K13; 59] = [
+        // (i) Chebyshev tower ×32 and qⱼ·cos-half ×32 numerators.
+        K13([0, 32, 0, 0, 0, 0]),             // 32·C₁
+        K13([-64, 0, 32, 0, 0, 0]),           // 32·C₂
+        K13([0, -96, 0, 32, 0, 0]),           // 32·C₃
+        K13([64, 0, -128, 0, 32, 0]),         // 32·C₄
+        K13([0, 160, 0, -160, 0, 32]),        // 32·C₅
+        K13([-32, -96, 96, 128, -32, -32]),   // 32·C₆
+        K13([32, 96, -96, -128, 32, 32]),     // 32·q₁·(−C₆), j = 1
+        K13([32, -64, -96, 32, 32, 0]),       // 32·q₂·cos-half, j = 2
+        K13([-32, -64, 32, 32, 0, 0]),        // 32·q₃·cos-half, j = 3
+        K13([-32, 32, 32, 0, 0, 0]),          // 32·q₄·cos-half, j = 4
+        K13([32, 32, 0, 0, 0, 0]),            // 32·q₅·cos-half, j = 5
+        K13([32, 0, 0, 0, 0, 0]),             // 32·q₆·cos-half, j = 6
+        // (i) synthetic /64 hull-grid tuples.
+        K13([160, 0, -64, 0, 32, 0]),
+        K13([0, -128, 0, 64, -32, 8]),
+        K13([-96, 0, 64, 0, -16, 0]),
+        K13([0, -32, 0, 32, 0, -8]),
+        K13([0, 0, 32, 0, -8, 0]),
+        K13([64, 0, 0, 0, 0, -16]),
+        // (ii) exact field pins.
+        K13([-2, 0, 1, 0, 0, 0]),         // C₂
+        K13([0, -3, 0, 1, 0, 0]),         // C₃
+        K13([2, 0, -4, 0, 1, 0]),         // C₄
+        K13([0, 5, 0, -5, 0, 1]),         // C₅
+        K13([-1, -3, 3, 4, -1, -1]),      // C₆
+        K13([2, -1, 0, 0, 0, 0]),         // w² = 2 − b (N = 13)
+        K13([4, 0, -1, 0, 0, 0]),         // 4 − b²
+        K13([5, 0, -1, 0, 0, 0]),         // 5 − b²
+        K13([-1, 0, 1, 0, 0, 0]),         // b² − 1
+        K13([4, 0, 0, 0, 0, 0]),          // rational 4
+        K13([1, 0, 0, 0, 0, 0]),          // unit
+        K13([0, 1, 0, 0, 0, 0]),          // generator b
+        K13([5, -4, -8, 2, 2, 0]),        // η = √13 (Gauss periods)
+        K13([1, -4, -8, 2, 2, 0]),        // η − 4
+        K13([0, 6, 0, -5, 0, 1]),         // A₀ = C₁ + C₅
+        K13([-2, -3, 1, 1, 0, 0]),        // A₁ = C₂ + C₃
+        K13([1, -3, -1, 4, 0, -1]),       // A₂ = C₄ + C₆
+        // (iii) strap / exit / top-degree numerator shapes.
+        K13([0, 17, 0, -12, 0, 3]),
+        K13([0, 13, 0, -10, 0, -2]),
+        K13([0, 7, 0, -6, 0, 1]),
+        K13([0, 3, 0, -2, 0, 0]),
+        K13([0, 1, 0, -1, 0, 0]),
+        K13([0, -2, 0, 1, 0, 0]),
+        K13([0, -5, 0, 2, 0, 0]),
+        K13([0, -7, 0, 4, 0, 0]),
+        K13([5, 0, -4, 0, 0, 0]),         // exit x-numerator
+        K13([-5, 0, 3, 0, 0, 0]),         // exit x-numerator
+        K13([1, 1, 1, 1, 1, 1]),          // all-ones shape
+        K13([0, 0, 0, 0, 0, 1]),          // b⁵ — the s = 26 envelope probe
+        K13([0, 0, 0, 0, 3, -2]),
+        K13([0, 0, 0, 0, -2, 5]),
+        K13([0, 0, 0, 3, 0, -5]),
+        K13([0, 0, -7, 0, 0, 9]),
+        // (iv) real u² − (2−b)v² cores (from the mixed-sign list).
+        K13([-17, 9, 0, 0, 0, 0]),        // (u, v) = (1, ±3)/(−1, 3) class
+        K13([-46, 25, 0, 0, 0, 0]),       // (2, −5)
+        K13([-89, 49, 0, 0, 0, 0]),       // (3, −7)
+        K13([-7, 4, 0, 0, 0, 0]),         // (±1, 2) class
+        // (v) hull-edge u² cores (X-row walk, heights 4096).
+        K13([4096, 0, 0, 0, 0, 0]),              // (32·C₀)²
+        K13([0, 0, 1024, 0, 0, 0]),              // (32·C₁)²
+        K13([4096, 0, -4096, 0, 1024, 0]),       // (32·C₂)²
+        K13([1024, -3072, 3072, 4096, -1024, -1024]), // (32·C₃)²
+    ];
+
+    /// (1) m(b) == 0 exactly; the pasted [`RED13`] rows are exactly
+    /// b⁶..b¹⁰ under [`kmul`] (fold amplification L1 20/25/111/152/491);
+    /// float cross-checks; B13_F; norm identities with
+    /// N(b) = (−1)⁶·m₀ = −1 and multiplicativity; N(2 − b) = m(2) = 13
+    /// prime; and the RED tower wrap C_k == C_{13−k}, C₁₃ = 2.
+    #[test]
+    fn k13_minpoly_red_rows_and_norm() {
+        check_minpoly_red(&MK13, &RED13, kval13, B13_F);
+        assert!(
+            (B13_F - 2.0 * (2.0 * PI / 13.0).cos()).abs() < 1e-15,
+            "B13_F constant"
+        );
+        check_norm_identities(
+            &MK13,
+            &RED13,
+            &[[2, -1, 0, 0, 0, 0], [-3, 0, 1, 0, 0, 0], [1, 1, 0, -1, 0, 0]],
+            -1,
+        );
+        assert_eq!(knorm(&MK13, &[2, -1, 0, 0, 0, 0]), 13, "N(2 − b) != 13");
+        check_red_tower_wrap(&RED13, 13);
+    }
+
+    /// Sign-engine certificate, exact (see [`check_iso_bracket`]); width
+    /// bound is the s₀ = 20 envelope (2⁻²⁰ ≈ 9.54e-7) — see [`ISO13`] for
+    /// why 20 is the certified constant for degree 6.
+    #[test]
+    fn k13_iso_interval_brackets_b_exactly() {
+        check_iso_bracket(&MK13, &ISO13, B13_F, 1e-6, |x| K13(x).sign());
+    }
+
+    /// (4) exact signs match float signs; floats distinct; the exact
+    /// total order matches the float sort (shared checker).
+    #[test]
+    fn k13_sign_order_battery_matches_float() {
+        let cells: [[i64; 6]; 59] = BATTERY_K13.map(|k| k.0);
+        check_sign_order(&cells, &MK13, &ISO13, kval13);
+    }
+
+    /// Certification bar (see the K₁₁ twin): 59/59 distinct (the three
+    /// duplicate cores are dropped by construction, pinned in the battery
+    /// comment), max height 4096, all 59 elements + 1711 comparator
+    /// differences single-pass at s₀ = 20 with 113-bit peak accumulators,
+    /// min |value| 0.08365, min gap 0.01199 — and the L1 envelope:
+    /// element 13312 / pair 20480 against the 2^{127−5s₀}/x̂⁵ ≈ 7.7e6
+    /// ceiling (≈ 376× margin).
+    #[test]
+    fn k13_battery_single_pass_zero_bisection() {
+        let cells: [[i64; 6]; 59] = BATTERY_K13.map(|k| k.0);
+        let mut seen = cells.to_vec();
+        seen.sort_unstable();
+        seen.dedup();
+        assert_eq!(seen.len(), 59, "battery must be a set (59 distinct)");
+        assert_eq!(
+            cells
+                .iter()
+                .map(|c| c.iter().map(|v| v.abs()).max().unwrap())
+                .max()
+                .unwrap(),
+            4096,
+            "max coefficient height"
+        );
+        let (undecided, peak) = single_pass_audit(&cells, &ISO13);
+        assert_eq!(undecided, 0, "0-bisection bar broken at s₀ = 20");
+        assert!(peak <= 127, "i128 envelope breached: {peak} bits");
+        assert_eq!(peak, 113, "accumulator peak");
+        let l1 = |x: &[i64; 6]| -> i64 { x.iter().map(|c| c.abs()).sum() };
+        let l1e = cells.iter().map(l1).max().unwrap();
+        let mut l1p = 0i64;
+        for i in 0..cells.len() {
+            for j in i + 1..cells.len() {
+                l1p = l1p.max(l1(&ksub(cells[i], cells[j])));
+            }
+        }
+        assert_eq!(l1e, 13312, "max element L1");
+        assert_eq!(l1p, 20480, "max pair L1");
+        let xhat = ISO13.hi_num as f64 / (1u64 << ISO13.s) as f64;
+        let ceiling = (1i128 << (127 - 5 * ISO13.s)) as f64 / xhat.powi(5);
+        assert!((l1p as f64) * 376.0 < ceiling, "L1 envelope margin");
+        let (minabs, gap) = float_stats(&cells, kval13);
+        assert!((minabs - 0.08365).abs() < 1e-3, "min |value| {minabs}");
+        assert!((gap - 0.01199).abs() < 1e-4, "min comparator gap {gap}");
+    }
+
+    /// Algebraic certificate, part 1: the Laurent identity
+    /// xⁿ·mₙ(x + x⁻¹) = Φₙ exactly (exact integer Laurent Horner).
+    #[test]
+    fn m11_m13_laurent_identity_exact() {
+        assert!(laurent_is_all_ones(&MK11), "m₁₁ Laurent identity");
+        assert!(laurent_is_all_ones(&MK13), "m₁₃ Laurent identity");
+    }
+
+    /// Algebraic certificate, part 2: irreducibility of m₁₁ and m₁₃
+    /// (Rabin test, witness prime p = 2 for both — combined with the
+    /// Laurent identity this pins them as THE minimal polynomials of
+    /// 2cos(2π/11) resp. 2cos(2π/13)).
+    #[test]
+    fn m11_m13_irreducible_rabin_mod2() {
+        assert!(rabin_irreducible_mod2(&MK11), "m₁₁ reducible mod 2");
+        assert!(rabin_irreducible_mod2(&MK13), "m₁₃ reducible mod 2");
+    }
+
+    /// Algebraic certificate, part 3: discriminants through the engine's
+    /// own Sylvester/Bareiss layout ([`knorm`]): knorm(m₁₁, m₁₁′) = +11⁴
+    /// (d = 5: Res = disc) and knorm(m₁₃, m₁₃′) = −13⁵ (d = 6:
+    /// Res = (−1)^{d(d−1)/2}·disc). disc = n^{(n−3)/2} is the conductor
+    /// discriminant of the real subfield ⇒ Z[b] is the full ring of
+    /// integers (M178 §2, M179 §2.1).
+    #[test]
+    fn k11_k13_discriminants_via_knorm() {
+        assert_eq!(
+            knorm(&MK11, &[3, -6, -12, 4, 5]),
+            11u32.pow(4) as i128,
+            "disc(m₁₁) via knorm"
+        );
+        assert_eq!(
+            knorm(&MK13, &[3, 12, -12, -20, 5, 6]),
+            -(13u32.pow(5) as i128),
+            "Res(m₁₃, m₁₃′) via knorm"
+        );
+    }
+
+    /// K₁₃ subfield certificates (M179 §8): η = [5, −4, −8, 2, 2, 0]
+    /// with η² = 13 exactly (the quadratic subfield Q(√13)); cubic
+    /// periods A₀ = C₁ + C₅, A₁ = C₂ + C₃, A₂ = C₄ + C₆ with
+    /// A₀ + A₁ + A₂ = −1, e₂ = −4, e₃ = −1 exactly — i.e. the cubic
+    /// period polynomial h₃ = y³ + y² − 4y + 1 (disc 13², certified
+    /// Python-side).
+    #[test]
+    fn k13_subfield_certificates() {
+        let eta = K13([5, -4, -8, 2, 2, 0]);
+        assert_eq!(eta.mul(eta), K13([13, 0, 0, 0, 0, 0]), "η² != 13");
+        let a0 = K13([0, 6, 0, -5, 0, 1]);
+        let a1 = K13([-2, -3, 1, 1, 0, 0]);
+        let a2 = K13([1, -3, -1, 4, 0, -1]);
+        assert_eq!(
+            a0.add(a1).add(a2),
+            K13([-1, 0, 0, 0, 0, 0]),
+            "A₀ + A₁ + A₂ != −1"
+        );
+        let e2 = a0.mul(a1).add(a0.mul(a2)).add(a1.mul(a2));
+        assert_eq!(e2, K13([-4, 0, 0, 0, 0, 0]), "e₂ != −4");
+        assert_eq!(a0.mul(a1).mul(a2), K13([-1, 0, 0, 0, 0, 0]), "e₃ != −1");
+    }
+
+    /// Exact 192-bit signed integer (two's complement, 3×u64 limbs) —
+    /// test-only evidence machinery to re-run the shipped [`poly_sign_at`]
+    /// Horner beyond the i128 ceiling and measure where it breaks; the
+    /// engine itself never uses it.
+    #[derive(Clone)]
+    struct I192([u64; 3]);
+
+    impl I192 {
+        fn from_i128(v: i128) -> Self {
+            I192([v as u64, (v >> 64) as u64, if v < 0 { !0 } else { 0 }])
+        }
+        /// Multiply by a small factor (|m| ≤ 6 suffices for minpoly
+        /// coefficients; products stay below 2^{165} on every scanned
+        /// path, so the limb chain is exact).
+        fn mul_small(&self, m: i64) -> Self {
+            let mut l = [0u64; 3];
+            let mut carry: i128 = 0;
+            for i in 0..3 {
+                let cur = self.0[i] as u128 as i128 * (m as i128) + carry;
+                l[i] = cur as u64;
+                carry = cur >> 64;
+            }
+            let _ = carry; // top-out carry = sign-extension + m·[self < 0]; the
+                           // magnitudes above guarantee no wraparound
+            I192(l)
+        }
+        /// Add `v << k` (sign-extended; `k` may exceed 127).
+        fn add_shl(&mut self, v: i64, k: u32) {
+            let (base, sh) = ((k / 64) as usize, k % 64);
+            let mut carry: i128 = (v as i128) << sh;
+            for i in base..3 {
+                let cur = self.0[i] as u128 as i128 + carry;
+                self.0[i] = cur as u64;
+                carry = cur >> 64;
+            }
+            let _ = carry; // as in mul_small: chain exact for bounded magnitudes
+        }
+        fn negative(&self) -> bool {
+            (self.0[2] as i64) < 0
+        }
+        fn signum(&self) -> i32 {
+            if self.0 == [0, 0, 0] {
+                0
+            } else if self.negative() {
+                -1
+            } else {
+                1
+            }
+        }
+        /// Bit length of |self|.
+        fn bitlen(&self) -> u32 {
+            let a = if self.negative() {
+                // two's complement negate
+                let mut l = [!self.0[0], !self.0[1], !self.0[2]];
+                let mut c = 1u128;
+                for x in l.iter_mut() {
+                    let s = *x as u128 + c;
+                    *x = s as u64;
+                    c = s >> 64;
+                }
+                I192(l)
+            } else {
+                self.clone()
+            };
+            (0..3).rev().find(|&i| a.0[i] != 0).map_or(0, |i| {
+                64 * i as u32 + 64 - a.0[i].leading_zeros()
+            })
+        }
+    }
+
+    /// Exact re-run of the shipped [`poly_sign_at`] Horner in [`I192`]:
+    /// returns (signum, final |acc| bits, peak |intermediate| bits). The
+    /// peak covers every `acc·num` product, every materialized addend
+    /// `mᵢ << (sa+s)` and every accumulator, so the engine's eval is
+    /// debug-panic-free on i128 exactly when `peak ≤ 127` (the criterion
+    /// catches both the shift-count and the value overflow, as both
+    /// minpolys have |m₀| = 1).
+    fn poly_scan_192(m: &[i64], num: i64, s: i32) -> (i32, u32, u32) {
+        let deg = m.len() - 1;
+        let mut acc = I192::from_i128(m[deg] as i128);
+        let mut peak = acc.bitlen();
+        let mut sa = 0i32;
+        for i in (0..deg).rev() {
+            let mut prod = acc.mul_small(num);
+            peak = peak.max(prod.bitlen());
+            if m[i] != 0 {
+                peak = peak.max(64 - m[i].unsigned_abs().leading_zeros() + (sa + s) as u32);
+            }
+            prod.add_shl(m[i], (sa + s) as u32);
+            peak = peak.max(prod.bitlen());
+            acc = prod;
+            sa += s;
+        }
+        (acc.signum(), acc.bitlen(), peak)
+    }
+
+    /// Walk the [`BISECT_CAP`] path [`ksign`] would take on an undecided
+    /// cell ([`mid_num`] + keeping the root half by `m_increasing`),
+    /// scanning each mid-eval in [`I192`]; returns (s′, final, peak).
+    fn bisect_path_192(m: &[i64], iso: &Iso) -> Vec<(i32, u32, u32)> {
+        let (mut lo, mut hi, mut s) = (iso.lo_num, iso.hi_num, iso.s);
+        let mut out = Vec::new();
+        for _ in 0..BISECT_CAP {
+            let (mid, s2) = mid_num(lo, hi, s);
+            let (sg, fin, peak) = poly_scan_192(m, mid, s2);
+            out.push((s2, fin, peak));
+            if s2 > s {
+                lo *= 2;
+                hi *= 2;
+            }
+            if sg > 0 {
+                hi = mid; // m_increasing on both ISO intervals
+            } else {
+                lo = mid;
+            }
+            s = s2;
+        }
+        out
+    }
+
+    /// Envelope truth of the shipped m-side evaluator [`poly_sign_at`]
+    /// near a root: the Horner intermediates ride at |m(y) − m₀| ≈ |m₀|
+    /// = 1 on the scale 2^{deg·s′}, so the real i128 wall is the
+    /// INTERMEDIATE peak ≈ deg·s′ + 1 — not the final-value bits the
+    /// design docs tabulated. Measured exactly here (fresh audit, scratch
+    /// `envelope_audit.py`): **ISO13 @ s₀ = 20** endpoints peak 121 bits
+    /// (fits — the shipped bracket check passes), and along the CAP = 4
+    /// path the doc walls 110/114/110/125 reproduce as final values
+    /// while the intermediates peak at 127/133/139/145 — only round 1 is
+    /// i128-executable (rounds 2–4 are certified-dead code, the battery
+    /// being 0-bisection; M179 §2.2's "all four rounds ≤ 127" reads
+    /// the final bits — erratum landed with this commit). **ISO11 @
+    /// s = 26** was the STOP-gate (d) finding: the two ENDPOINT
+    /// re-assertions need 131 bits, past the shipped evaluator
+    /// (bracket itself is exact: scan signs −1/+1, Sturm-isolated;
+    /// the battery never calls `poly_sign_at`). The
+    /// corrected full-contract answers (endpoint + CAP = 4 peak ≤ 127)
+    /// are s = 21 for deg 5 (peak 126) and s = 16 for deg 6; s = 25 is
+    /// endpoint-only-fit (126) for deg 5. Landed under option C
+    /// (single-pass-pin discipline): the constants stand, [`ISO11`]
+    /// certifies through this scan in [`check_iso_bracket`], and the
+    /// dead fallback is now loud (checked steps in [`poly_sign_at`])
+    /// — the shipped K₇/K₉/K₁₅/L₁₀ constants all pass
+    /// the full contract.
+    #[test]
+    fn k11_k13_sign_engine_envelope() {
+        // K13 @ s₀ = 20: endpoints exact, executable, and the scan agrees
+        // with the shipped evaluator; round 1 fits and matches too.
+        let (sgl, fin_l, pk_l) = poly_scan_192(&MK13, ISO13.lo_num, ISO13.s);
+        let (sgh, fin_h, pk_h) = poly_scan_192(&MK13, ISO13.hi_num, ISO13.s);
+        assert_eq!((sgl, sgh), (-1, 1), "ISO13 brackets b exactly");
+        assert_eq!((fin_l, fin_h), (105, 102));
+        assert_eq!(pk_l.max(pk_h), 121, "ISO13 endpoint peak bits (i128-fits)");
+        assert_eq!(poly_sign_at(&MK13, ISO13.lo_num, ISO13.s), sgl);
+        assert_eq!(poly_sign_at(&MK13, ISO13.hi_num, ISO13.s), sgh);
+        let p13 = bisect_path_192(&MK13, &ISO13);
+        assert_eq!(
+            p13.iter().map(|r| r.1).collect::<Vec<_>>(),
+            vec![110, 114, 110, 125],
+            "M179 wall table = FINAL value bits, reproduced exactly"
+        );
+        assert_eq!(
+            p13.iter().map(|r| (r.0, r.2)).collect::<Vec<_>>(),
+            vec![(21, 127), (22, 133), (23, 139), (24, 145)],
+            "intermediate peaks — only round 1 is i128-executable"
+        );
+        let (mid, s2) = mid_num(ISO13.lo_num, ISO13.hi_num, ISO13.s);
+        assert_eq!(
+            poly_sign_at(&MK13, mid, s2),
+            poly_scan_192(&MK13, mid, s2).0,
+            "round-1 parity with the shipped evaluator (it fits at s′ = 21)"
+        );
+
+        // K11 @ s = 26: exact bracket, but 131-bit endpoint intermediates
+        // — the gate (d) finding; certified through this scan at landing
+        // (option C), see the envelope test's doc comment.
+        let (sgl, fin_l, pk_l) = poly_scan_192(&MK11, ISO11.lo_num, ISO11.s);
+        let (sgh, fin_h, pk_h) = poly_scan_192(&MK11, ISO11.hi_num, ISO11.s);
+        assert_eq!((sgl, sgh), (-1, 1), "ISO11 brackets b exactly (I192 scan)");
+        assert_eq!((fin_l, fin_h), (108, 106));
+        assert_eq!((pk_l, pk_h), (131, 131), "ISO11 endpoint peak — gate (d)");
+        let p11 = bisect_path_192(&MK11, &ISO11);
+        assert_eq!(
+            p11.iter().map(|r| r.1).collect::<Vec<_>>(),
+            vec![112, 115, 118, 124],
+            "M178 wall table = FINAL value bits, reproduced exactly"
+        );
+        assert_eq!(
+            p11.iter().map(|r| (r.0, r.2)).collect::<Vec<_>>(),
+            vec![(27, 136), (28, 141), (29, 146), (30, 151)],
+            "intermediate peaks — every round dead at s = 26"
+        );
     }
 }

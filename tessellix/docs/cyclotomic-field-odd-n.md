@@ -221,9 +221,18 @@ s₀ = 20 the true-path walls are:
 | 3 | 23 | 110 |
 | 4 | 24 | 125 |
 
-— all four CAP = 4 rounds certified ≤ 127 (worst 125): **the retained
-bisection fallback is i128-safe**, one more certified round than K₁₁'s
-three (M178 §2.2).
+— the walls tabulated here are **final-value** bits (reproduced exactly,
+asserted by the Rust test `k11_k13_sign_engine_envelope`). **Erratum
+(impl-time exact audit, landed with the K₁₃ code):** the binding i128
+quantity is the near-root Horner *intermediate*, `|m₀|·2^{6s′}` — wall
+`6s′ + 1` bits — measured 127/133/139/145 through rounds 1–4 (the
+endpoint check itself: 121 bits, fits). At s₀ = 20 only **round 1** of
+the fallback is therefore i128-executable: rounds 2–4 are dead code,
+safe under the certified 0-bisection battery, and loud now (checked
+Horner steps in `poly_sign_at`, no silent release wrap). Full-contract
+grid for deg 6 (endpoint + all four rounds): s₀ = 16 (peaks 97 /
+103–121) — documented, not shipped; s₀ = 20 stands under the
+single-pass-pin discipline.
 
 **`ISO13: Iso { lo_num: 1856935, hi_num: 1856936, s: 20,
 m_increasing: true }`** **[P]** — Sturm-isolated (exactly one root of

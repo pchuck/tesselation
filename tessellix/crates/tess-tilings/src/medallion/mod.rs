@@ -58,6 +58,18 @@ pub enum Field {
     /// quadratic extension by w = 2sin20, w^2 = 2 - b; see
     /// [`monster::n9`](monster::n9)).
     K9,
+    /// Q(b), b = 2cos(2pi/11), b^5 + b^4 - 4b^3 - 3b^2 + 3b + 1 = 0 —
+    /// the hendecagon field [`K11`](crate::fields::K11) (record
+    /// coordinates would live in its quadratic extension by
+    /// w = 2sin(pi/11), w^2 = 2 - b; the `monster::n11` module is
+    /// design-gated on M178/M169 — additive infrastructure today).
+    K11,
+    /// Q(b), b = 2cos(2pi/13), b^6 + b^5 - 5b^4 - 4b^3 + 6b^2 + 3b - 1
+    /// = 0 — the tridecagon field [`K13`](crate::fields::K13) (same
+    /// two-level shape, w^2 = 2 - b; `monster::n13` design-gated on
+    /// M179 — additive infrastructure today, isolating interval at the
+    /// certified s0 = 20, M179 §2.2).
+    K13,
 }
 
 /// A boundary contact of the internal figure (doc §1.4).
