@@ -2346,6 +2346,124 @@ mod tests {
         assert!(gui.card_textures.keys().any(|k| k.ends_with("|180x135")));
     }
 
+    /// Headless full-registry card sweep — the trilogy-closing
+    /// generation test: every built-in tiling, driven through the
+    /// production `card_texture` path at the default card size
+    /// (120x90): probe → shrink-retry window → raster → texture
+    /// handle. Generation must not panic, and exactly one texture
+    /// handle must be cached per registry id. The count assert is
+    /// pinned to 165, so a registry change fails loudly right here.
+    #[test]
+    fn card_generation_sweep_covers_full_registry() {
+        let registry = tess_tilings::registry();
+        let ids: Vec<&'static str> = registry.iter().map(|t| t.id()).collect();
+        assert_eq!(
+            ids.len(),
+            165,
+            "sweep must enumerate the full registry — {} ids, expected 165",
+            ids.len()
+        );
+
+        // The real cards from the canonical browse model — the same
+        // source the production card grid passes to the card path.
+        let tabs =
+            tess_core::browse_tabs_with(&registry, tess_tilings::classification);
+        let mut cards: HashMap<&'static str, tess_core::CardMeta> = HashMap::new();
+        for tab in &tabs {
+            for card in &tab.cards {
+                cards.insert(card.id, *card);
+            }
+        }
+
+        let ctx = egui::Context::default();
+        let mut gui = super::GuiApp::new();
+        let (w, h) = (120, 90);
+        let mut family_times: HashMap<String, (usize, std::time::Duration)> = HashMap::new();
+        let mut slowest: (&'static str, std::time::Duration) = ("", std::time::Duration::ZERO);
+        let t0 = std::time::Instant::now();
+        for id in &ids {
+            let card = cards
+                .get(id)
+                .unwrap_or_else(|| panic!("{id}: no card in browse tabs"));
+            let s = std::time::Instant::now();
+            let _handle = gui.card_texture(&ctx, card, w, h);
+            let dt = s.elapsed();
+            if dt > slowest.1 {
+                slowest = (*id, dt);
+            }
+            let cat = registry
+                .get(id)
+                .map(|t| format!("{:?}", t.category()))
+                .unwrap_or_else(|| "?".into());
+            let entry = family_times.entry(cat).or_default();
+            entry.0 += 1;
+            entry.1 += dt;
+        }
+        let elapsed = t0.elapsed();
+
+        // (a) reaching this point means generation completed for every
+        // id — the production path returned a handle without panicking.
+        // (b) the cache now holds exactly one keyed entry per id, and
+        // every entry is at the fixed card size.
+        assert_eq!(
+            gui.card_textures.len(),
+            ids.len(),
+            "one texture handle per registry id"
+        );
+        assert!(
+            gui.card_textures
+                .keys()
+                .all(|k| k.ends_with("|120x90")),
+            "all textures at the fixed card size"
+        );
+        eprintln!(
+            "card_generation_sweep: {} ids in {:?} | slowest: {} {:?} | per-family: {}",
+            ids.len(),
+            elapsed,
+            slowest.0,
+            slowest.1,
+            family_times
+                .iter()
+                .map(|(cat, (n, sum))| format!("{cat}={n}x{:?}", sum))
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+
+        // Semantic spot-assert (kept inside the sweep so the new
+        // test count is exactly +1, not +2): at the 120x90 card
+        // scale, "square" generates exactly the pinned tile count
+        // through the same probe window the production card path
+        // derives, proving the sweep's "generation succeeds" is not
+        // vacuously green.
+        let square = registry.get("square").expect("square is registered");
+        let params = tess_core::params::ParamSet::default_for(square.params());
+        let probe = square.generate(
+            &params,
+            &tess_core::Query {
+                region: tess_core::BBox::new(
+                    tess_core::Vec2::new(-10.0, -10.0),
+                    tess_core::Vec2::new(10.0, 10.0),
+                ),
+            },
+        );
+        let window = tess_core::app::preview_window(
+            probe.periodic,
+            tess_core::app::mean_tile_side(&probe.tiles),
+            120.0 / 90.0,
+        );
+        let result = square.generate(&params, &tess_core::Query { region: window });
+        assert!(
+            result.message.is_none(),
+            "square should not refuse at card scale: {:?}",
+            result.message
+        );
+        assert_eq!(
+            result.tiles.len(),
+            16,
+            "pinned square tile count at 120x90 card scale"
+        );
+    }
+
     /// `card_target_for_cols` is the exact inverse of
     /// `columns_for_width` at the regime edge: for a sweep of
     /// width/cols pairs the round trip reproduces `cols` — the
