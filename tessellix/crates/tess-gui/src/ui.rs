@@ -3167,4 +3167,126 @@ mod tests {
         gui.app.viewport.zoom = 120.0;
         assert!(gui.should_regen(&gui.cache_key(800, 600)), "new key: regen");
     }
+
+    /// COLOR-MODE FAST PATH (phase-2a safety net): the geometry cache is
+    /// blind to color mode — painting reads it live every frame and it
+    /// never affects the generated geometry. Pinned through the headless
+    /// `draw_canvas` pass itself: one pass generates, then cycling the
+    /// paint-time state and re-running the pass reuses the stored result
+    /// (misses unchanged, stored RenderKey identical, result verbatim).
+    /// This is the contract the phase-2a off-thread generation must
+    /// preserve — color must never become a regeneration trigger.
+    ///
+    /// The honest observable here is `render_cache_misses` plus the stored
+    /// key identity (RenderCache exposes no generation counter or texture
+    /// handle): a regeneration would both increment the miss counter and
+    /// produce a fresh stored key.
+    #[test]
+    fn canvas_cache_recolors_without_regeneration() {
+        let ctx = egui::Context::default();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
+        let mut gui = super::GuiApp::new();
+        let pass = |gui: &mut super::GuiApp, screen: egui::Rect| {
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            let _ = ctx.run(input, |ctx| {
+                gui.draw_canvas(ctx);
+            });
+        };
+
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 1, "first draw generates");
+        let mode_before = gui.app.color_mode;
+        let key_before = gui.render_cache.as_ref().unwrap().key.clone();
+        let tiles_before = gui.render_cache.as_ref().unwrap().result.tiles.len();
+
+        // A color-mode change is paint-time state, not a generation trigger.
+        gui.app.cycle_color_mode();
+        assert_ne!(gui.app.color_mode, mode_before, "color mode actually changed");
+
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 1, "color-mode change must not regenerate");
+        let after = gui.render_cache.as_ref().unwrap();
+        assert_eq!(after.key, key_before, "same stored RenderKey after a color-mode-only change");
+        assert_eq!(after.result.tiles.len(), tiles_before, "cached result reused verbatim");
+    }
+
+    /// SELECTION-CHANGE POLICY (phase-2a safety net): switching the
+    /// tiling id regenerates exactly once and REPLACES the stored entry —
+    /// a single slot, wholesale replacement — with no multi-entry retain.
+    /// Pinned through the headless `draw_canvas` pass: select A, then B,
+    /// then re-select A — misses go 1 -> 2 -> 3, and the re-selected A
+    /// regenerates the identical key (state is not retained across the
+    /// switch).
+    #[test]
+    fn canvas_cache_selection_change_is_wholesale_replacement() {
+        let ctx = egui::Context::default();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
+        let mut gui = super::GuiApp::new();
+        let pass = |gui: &mut super::GuiApp, screen: egui::Rect| {
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            let _ = ctx.run(input, |ctx| {
+                gui.draw_canvas(ctx);
+            });
+        };
+
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 1, "first draw generates");
+        let key_a = gui.render_cache.as_ref().unwrap().key.clone();
+
+        gui.app.select_id("penrose");
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 2, "selection change regenerates exactly once");
+        let key_b = gui.render_cache.as_ref().unwrap().key.clone();
+        assert_ne!(key_b, key_a, "stored entry replaced by the new selection's key");
+        assert_eq!(key_b.id, "penrose", "stored key is the new selection's");
+
+        // Re-selecting regenerates from scratch — no multi-entry retain.
+        gui.app.select_id("square");
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 3, "re-selecting regenerates");
+        let key_a2 = gui.render_cache.as_ref().unwrap().key.clone();
+        assert_eq!(key_a2, key_a, "re-selection re-generates the identical key (no retained state)");
+    }
+
+    /// PER-AXIS SIZE KEY (phase-2a safety net): a width-only or height-only
+    /// change is a distinct key — pinning that the canvas-size fields are
+    /// individually sensitive, not just jointly (existing one-to-one
+    /// pin changes both axes together).
+    #[test]
+    fn canvas_cache_size_change_regenerates_per_axis() {
+        let ctx = egui::Context::default();
+        let mut gui = super::GuiApp::new();
+        let pass = |gui: &mut super::GuiApp, w: f32, h: f32| {
+            let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(w, h));
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            let _ = ctx.run(input, |ctx| {
+                gui.draw_canvas(ctx);
+            });
+        };
+
+        pass(&mut gui, 800.0, 600.0);
+        assert_eq!(gui.render_cache_misses, 1, "first draw generates");
+        pass(&mut gui, 800.0, 600.0);
+        assert_eq!(gui.render_cache_misses, 1, "same size stays cached");
+
+        pass(&mut gui, 801.0, 600.0);
+        assert_eq!(gui.render_cache_misses, 2, "width-only change regenerates");
+        pass(&mut gui, 801.0, 600.0);
+        assert_eq!(gui.render_cache_misses, 2, "same resized view stays cached");
+
+        pass(&mut gui, 801.0, 599.0);
+        assert_eq!(gui.render_cache_misses, 3, "height-only change regenerates");
+
+        pass(&mut gui, 800.0, 600.0);
+        assert_eq!(gui.render_cache_misses, 4, "both-axis restore regenerates");
+    }
 }
