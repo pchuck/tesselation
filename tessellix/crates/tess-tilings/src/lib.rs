@@ -668,6 +668,104 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
         }
     }
 
+    /// Doc-sync guard, symmetry tier: every per-tiling doc's metadata line
+    /// (the line starting with a backtick) must declare the wallpaper-group
+    /// and lattice tokens the registry declares for that tiling — matching
+    /// `declared_symmetry()` Display strings byte for byte — and docs for
+    /// tilings the registry leaves symmetry-undeclared (`None`) must omit
+    /// both tokens. Pinned against the registry, never against a
+    /// hand-maintained table: a doc that loses a token, an extra token, or a
+    /// stale token (or a registry symmetry change that no doc reflects)
+    /// fails here with the id and the mismatch. Covers all 165 registered
+    /// tilings.
+    #[test]
+    fn tiling_docs_metadata_tokens_match_registry() {
+        let docs_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/tilings");
+        let r = super::registry();
+        assert_eq!(
+            r.len(),
+            165,
+            "registry census (this tier covers all registered docs)"
+        );
+        let n_docs = std::fs::read_dir(&docs_dir)
+            .expect("docs/tilings readable")
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().extension().map_or(false, |x| x == "md"))
+            .count();
+        assert_eq!(
+            n_docs,
+            r.len(),
+            "docs/tilings must carry exactly one doc per registered tiling (registry={}, docs={})",
+            r.len(),
+            n_docs
+        );
+
+        let mut with_tokens = 0usize;
+        for t in r.iter() {
+            let path = docs_dir.join(format!("{}.md", t.id()));
+            let doc = std::fs::read_to_string(&path)
+                .unwrap_or_else(|e| panic!("docs/tilings/{}.md readable: {e}", t.id()));
+            let meta = doc
+                .lines()
+                .find(|l| l.trim_start().starts_with('`'))
+                .unwrap_or_else(|| {
+                    panic!("docs/tilings/{}.md has no metadata line", t.id())
+                });
+
+            let doc_group = meta.find("wallpaper group `").map(|i| {
+                let rest = &meta[i + "wallpaper group `".len()..];
+                rest.split('`')
+                    .next()
+                    .expect("wallpaper-group token has a closing backtick")
+            });
+            let doc_lattice = meta.find(" lattice").map(|i| {
+                meta[..i]
+                    .rsplit(|c: char| !c.is_ascii_lowercase() && c != '-')
+                    .next()
+                    .unwrap_or("")
+            }).filter(|w| !w.is_empty());
+
+            match t.declared_symmetry() {
+                Some(s) => {
+                    with_tokens += 1;
+                    let expected_group = s.group.to_string();
+                    let expected_lattice = s.lattice.to_string();
+                    assert_eq!(
+                        doc_group.as_deref(),
+                        Some(expected_group.as_str()),
+                        "docs/tilings/{}.md metadata wallpaper-group token must match the registry (expected `{expected_group}`)",
+                        t.id()
+                    );
+                    assert_eq!(
+                        doc_lattice.as_deref(),
+                        Some(expected_lattice.as_str()),
+                        "docs/tilings/{}.md metadata lattice token must match the registry (expected `{expected_lattice}`)",
+                        t.id()
+                    );
+                }
+                None => {
+                    assert!(
+                        doc_group.is_none() && doc_lattice.is_none(),
+                        "docs/tilings/{}.md must omit symmetry tokens (registry declares none), saw group `{:?}` lattice `{:?}`",
+                        t.id(),
+                        doc_group,
+                        doc_lattice
+                    );
+                }
+            }
+        }
+
+        // A pin that silently passes while carrying no tokens is a bug:
+        // the registry must drive a non-trivial token population.
+        let expected_symmetry_docs = r.iter().filter(|t| t.declared_symmetry().is_some()).count();
+        assert!(expected_symmetry_docs > 0, "registry declares no symmetry — pin would be vacuous");
+        assert_eq!(
+            with_tokens, expected_symmetry_docs,
+            "docs carrying symmetry tokens must equal the tilings declaring symmetry"
+        );
+    }
+
     /// Doc-sync guard for the per-family docs: each
     /// `docs/families/<family>.md` must state its family's registered
     /// size in the "Implemented (N tilings)" heading and list every
