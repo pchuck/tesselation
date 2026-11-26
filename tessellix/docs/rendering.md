@@ -42,7 +42,7 @@ brings the four Kaplan §3.7 ornamentation styles over the walls:
 - **outline-interlace** (§3.7.4) — outline drawn over the interlaced
   rendering.
 
-`--decoration` **requires `--strapwork`**; the decoration paints paper +
+`--decoration` **requires `--strapwork` or `--deform`**; the decoration paints paper +
 pattern, so **`--mode` is ignored** (verified: identical output with
 `--mode single`, `--mode pattern`, `--mode proto`). Gates run on vertices
 strictly inside the view (window-rim artefacts are kept outside by the view
@@ -84,7 +84,7 @@ Other regimes, also verified at the same scale:
   `the wall map has 29792 odd-degree vertex/vertices inside the view (e.g. at (-13.308, -8.771)) — fill needs an Eulerian map (2- and 4-valent vertices only, Kaplan §3.7.1); generic contact angles open the strands, try a classic angle`
 - **interlace, multi-strand crossings** (`triangle --strapwork 90 --decoration interlace`): `1829 crossing(s) are not crossed by exactly two strands inside the view (e.g. at (-13.000, -9.815)) — multi-strand crossings have no total over/under order`
 - **bad style** (`--decoration weave`): `bad --decoration 'weave': expected fill | outline | interlace | outline-interlace`
-- **no `--strapwork`** with `--decoration`: `--decoration requires --strapwork DEG (the decoration decorates the strapwork walls)`
+- **no `--strapwork`** with `--decoration`: `--decoration requires --strapwork DEG or --deform PROFILE (the decoration decorates the strapwork walls)`
 - **bad `--band-w`** (0 or negative): `--band-w must be a positive number`
 
 ## Classic-δ table

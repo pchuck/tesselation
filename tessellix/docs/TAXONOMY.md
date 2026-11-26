@@ -4,9 +4,9 @@ M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`) — eleven since 2026-11-24, when the Isohedral
 tab was added for the Kaplan IH instances —: **Uniform** (11) · **Two-Uniform** (20) ·
 **Laves (Catalan duals)** (33) · **Wallpaper** (17) · **Pentagon
-Types** (17) · **Isohedral** (5) · **Islamic** (29) · **Arrangements** (8) ·
-**Quasiperiodic** (21) · **Aperiodic** (12) · **Nonperiodic** (11) —
-184 memberships over the 163 implemented tilings; the 21 extra are
+Types** (17) · **Isohedral** (5) · **Islamic** (30) · **Arrangements** (8) ·
+**Quasiperiodic** (22) · **Aperiodic** (12) · **Nonperiodic** (11) —
+186 memberships over the 165 implemented tilings; the 21 extra are
 secondary memberships. (Counts at this commit; the per-tab figures
 are pinned by `registry_groups_are_complete_and_canonically_ordered`.)
 
@@ -18,7 +18,7 @@ are pinned by `registry_groups_are_complete_and_canonically_ordered`.)
   `browse_tabs` appends secondary categories to each card's tabs and
   sorts each tab by `section_key`, which now guards on the *tab's*
   category, not the card's (a Wallpaper tab is all-secondary).
-  Both UIs (ratatui + egui) pin the eleven-tab layout, and the headless
+  The ratatui UI pins the eleven-tab layout and per-tab counts, and the headless
   egui geometry test pins the new card budget (2-line card titles,
   no clipping at 1200×900, 640×800 and 2560×900).
 - **Wallpaper catalog.** The Wallpaper tab is a group catalog, not a

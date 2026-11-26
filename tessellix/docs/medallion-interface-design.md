@@ -3,7 +3,7 @@
 Status: LANDED — the schema, the five exact catalog re-derivations and
 their batteries ship together with this doc
 (`crates/tess-tilings/src/medallion/`, data + tests only, zero registry
-impact: built-ins stay 162, memberships 183). Inference (placing new
+impact: built-ins stay 165, memberships 186). Inference (placing new
 medallions, absorbing new ray sets — §24b) is explicitly out of scope;
 §7 states what 24b consumes first. Companion spikes (stdlib Python, all
 assertions green): `.scratch/medallion-interface/` — `spike.py` (schema
@@ -66,7 +66,8 @@ Medallion :=
 
 The Rust module (`crates/tess-tilings/src/medallion/`) mirrors this:
 `Field`, `Contact`, `Absorption` enums + the `Medallion` trait (ID,
-field, symmetry order, hull edge², path, f64 views for consumers), with
+field, symmetry order, path, f64 views for consumers: `hull_f64`, `exit_rays_f64`,
+`contact_cos2`), with
 the exact integer tables per instance. Coordinate storage follows the
 shipped conventions **[C: fields.rs, wis_12_fold.rs]**:
 
