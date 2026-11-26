@@ -181,9 +181,8 @@ mod tests {
         }
     }
 
-    /// The Pentagon tab sort key: types 1–15 all declared (type 1 is
-    /// M117, pending integration at the time this table shipped),
-    /// cairo = 4 and floret = 5 as secondary members.
+    /// The Pentagon tab sort key: types 2–15 all declared, cairo = 4
+    /// and floret = 5 as the aliased secondary members.
     #[test]
     fn pentagon_types_are_declared_sequentially() {
         for (id, ty) in [

@@ -195,9 +195,6 @@ mod tests {
         check_deterministic(t, name, &p, region);
     }
 
-    /// The GUI fills each tile with ear-clipped triangles; verify the
-    /// triangulation of every generated tile is valid: n−2 triangles and
-    /// area conserved to high precision (a sign of no overfill/gaps).
     /// The declared-category grouping both UIs render, via the shared
     /// [`tess_core::browse_tabs`] model: one tab per category in
     /// canonical [`TilingCategory::ALL`] order, each tiling in its

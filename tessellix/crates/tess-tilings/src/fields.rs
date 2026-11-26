@@ -2113,7 +2113,7 @@ mod tests {
     /// layer — exact /64 field products via [`kmul`] with [`RED_L10`]
     /// (the girih_qc rule: fold, assert the product stays in the /64
     /// lattice, divide), accumulated along the matrix chain — compared
-    /// bit-for-bit against the 80 pasted integers above. Any regression
+    /// bit-for-bit against the 80 pasted tuples above. Any regression
     /// in the generic field layer, the L₁₀ reduction rows, or the girih
     /// table breaks this equality.
     #[test]
