@@ -1938,6 +1938,28 @@ quasiperiodic hosts later).
   freedom instead of forcing a choice (feeds 24e).
   - **Effort** XL, **tier** frontier-candidate (novel derivation),
     after 24a.
+  - **Status: ✅ sprint 1 landed M174 (2026-11-25)** — the WIS
+    hole-bearing substrate fixture + the boundary-matched inference
+    engine in `medallion/` (hull-reading 24→20 strictly-inside
+    instances, ray lines, deterministic backtracking jigsaw over
+    [TRI, SQ, RHO30, RHO150] with the C1 boundary-exact / C2 level /
+    C3 edge-to-edge + rule-3 T-junction kill + disjointness + hole
+    closure + wedge / C4 exact-2-area constraint stack, ℤ[√3] i128
+    exact, total-order iteration, byte-identical determinism).
+    Exhaustive battery: Segment-K20 6480/6480 fills, 0 invalid,
+    census fingerprint {(16,0,14):324 … (16,4,6):648 ← shipped},
+    shipped ∈ fingerprint set; RayLineVset-K20 identical fill set
+    across constraint systems; RayLine freedom documented (freedom
+    sets are first-class `Report` output — feeds 24e as designed).
+    Ground-truth bar partially met: the shipped M158 cell table is
+    reproduced from the general path; M161 (Darb-i Imam) NOT yet —
+    the 14-fold field Q(2cos π/10) is degree-4 and needs a new exact
+    order/sign kernel + re-derived candidate generator (clean STOP
+    with precise gap; transfers: frontier rule, C1–C4, rule-3 kill,
+    freedom output, determinism skeleton). NO registry change; the
+    landed census [16 TRI, 4 SQ, 6 RHO] is ground truth, never
+    registered. Sprint 2 scope (M161 reproduction + new substrates)
+    staged by report.
 - **24c. (n,c)-monster medallion generator** (the 22e medallion source)
   — overlapping regular n-gons fused at contact angles kπ/n (n ≤ 12,
   2 ≤ c ≤ ⌈n/2⌉−2) as additional catalog entries in exact fields;

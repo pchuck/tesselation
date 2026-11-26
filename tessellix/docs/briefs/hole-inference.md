@@ -11,6 +11,14 @@
 > yours). **Tier:** frontier. **Effort** XL — this brief scopes the
 > first landing (sprint 1 + stretch); the XL remainder is staged by
 > report. PROPOSED §24b.
+>
+> **Status: ✅ sprint 1 LANDED 2026-11-25 — M174, commit 6856ece**
+> (integrated onto post-M173 main; WIS substrate + inference engine +
+> exhaustive battery; M158 reproduced, M161 staged behind the
+> degree-4 field-kernel gap; XL remainder staged by report. Delivery
+> recovered byte-exactly from the session DB after the fleet-outage
+> crash zero-filled the untracked job files — recovery verified
+> against the harness's own edit patches).
 
 ## Goal
 

@@ -18,6 +18,11 @@ complementary strap pattern. Full dossier in
 - **24b Hole-bearing substrates + boundary-matched inference** — the
   core algorithm; ground-truth bar: reproduce M158/M161 cell tables
   first. Subsumes the open 22b hole decomposition.
+  ✅ M174 sprint 1: WIS substrate + inference engine landed
+  (6480/6480 exhaustive fills, 0 invalid; freedom `Report` output
+  feeds 24e); M158 reproduced from the general path, M161 staged
+  (degree-4 field kernel gap documented). Un-gates 24d's inference
+  addendum + 24e.
 - **24c (n,c)-monster medallion generator** (22e partial; {8,12},
   {9,12}, {9,18} first) — ✅ M169: six parallel-pair records with
   exact placements, windows and M163-checked exits; ✅ M171: n=9

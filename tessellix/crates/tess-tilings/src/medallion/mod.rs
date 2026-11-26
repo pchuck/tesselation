@@ -29,7 +29,10 @@
 
 pub mod girih_m161;
 pub mod hexagram_62;
+pub mod holes;
 pub mod host312;
+pub mod hostwis;
+pub mod infer;
 pub mod khatam_m53;
 pub mod monster;
 pub mod rosette_m56;
