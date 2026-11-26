@@ -799,6 +799,7 @@ impl GuiApp {
                         ColorMode::Pattern,
                         ColorMode::Proto,
                         ColorMode::Gray,
+                        ColorMode::PatternGray,
                     ] {
                         if ui
                             .selectable_label(self.app.color_mode == m, m.label())

@@ -16,7 +16,7 @@ cargo check --workspace --all-targets  # convention: ZERO warnings, test targets
 cargo run -p tess-tui         # TUI — needs a REAL terminal (raw mode); do not run headless in scripts
 cargo run -p tess-tui -- list
 cargo run -p tess-tui -- export --tiling ID --width 1200 --height 900 \
-    --scale F --rotation DEG --mode single|pattern|proto|gray --out FILE
+    --scale F --rotation DEG --mode single|pattern|proto|gray|pattern-gray --out FILE
 cargo run -p tess-gui         # egui window — needs a display (headless containers: can't run)
 ```
 

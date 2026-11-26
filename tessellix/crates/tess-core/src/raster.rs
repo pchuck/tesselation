@@ -84,7 +84,10 @@ impl Raster {
 fn color_index(mode: ColorMode, tile: &Tile) -> usize {
     match mode {
         ColorMode::Single => 0,
-        ColorMode::Pattern => (tile.seed as usize) % 8,
+        // `PatternGray` shares `Pattern`'s index space; the front end
+        // picks the pattern-gray ramp (`paint::PATTERN_GRAY_PALETTE`)
+        // instead of the color palette.
+        ColorMode::Pattern | ColorMode::PatternGray => (tile.seed as usize) % 8,
         // `Gray` shares `Proto`'s index space; the front end picks the
         // gray ramp (`paint::GRAY_PALETTE`) instead of the color palette.
         ColorMode::Proto | ColorMode::Gray => (tile.proto as usize) % 8,

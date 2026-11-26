@@ -122,7 +122,9 @@ the shared `tess-core::raster` (the TUI to character cells over its
   `seed`, the generator's choice), `proto` (color by prototile index),
   `gray` (monochrome: the proto index space drawn from an 8-step
   lightness ramp — the print/e-ink mode; browse thumbnails keep their
-  color previews).
+  color previews), `pattern-gray` (monochrome: the pattern index space
+  drawn from the Rec.709 luma of the color palette — the print/e-ink
+  variant of `pattern`).
   Shared 8-color palette; the TUI maps it to the nearest xterm-256
   indices and rasterizes to character cells, the GUI draws convex
   polygons directly, and the CLI writes SVG paths (y-axis flipped to

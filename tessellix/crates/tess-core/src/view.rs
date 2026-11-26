@@ -15,14 +15,20 @@ pub enum ColorMode {
     /// drawn from a gray lightness ramp instead of the color palette —
     /// the print/e-ink mode (structure without hue).
     Gray,
+    /// Rec.709 grayscale variant of `Pattern`: the same pattern-indexed
+    /// selection (`seed % 8`) drawn from a gray lightness ramp instead of
+    /// the color palette — pattern structure without hue. Appended after
+    /// `Gray` (not before) so the existing ALL-index pins stay stable.
+    PatternGray,
 }
 
 impl ColorMode {
-    pub const ALL: [ColorMode; 4] = [
+    pub const ALL: [ColorMode; 5] = [
         ColorMode::Single,
         ColorMode::Pattern,
         ColorMode::Proto,
         ColorMode::Gray,
+        ColorMode::PatternGray,
     ];
 
     pub fn next(self) -> ColorMode {
@@ -31,8 +37,9 @@ impl ColorMode {
             ColorMode::Pattern => 1,
             ColorMode::Proto => 2,
             ColorMode::Gray => 3,
+            ColorMode::PatternGray => 4,
         };
-        ColorMode::ALL[(idx + 1) % 4]
+        ColorMode::ALL[(idx + 1) % 5]
     }
 
     pub fn label(self) -> &'static str {
@@ -41,6 +48,7 @@ impl ColorMode {
             ColorMode::Pattern => "pattern",
             ColorMode::Proto => "proto",
             ColorMode::Gray => "gray",
+            ColorMode::PatternGray => "pattern-gray",
         }
     }
 
@@ -50,6 +58,7 @@ impl ColorMode {
             "pattern" => Some(ColorMode::Pattern),
             "proto" => Some(ColorMode::Proto),
             "gray" => Some(ColorMode::Gray),
+            "pattern-gray" => Some(ColorMode::PatternGray),
             _ => None,
         }
     }
@@ -57,8 +66,8 @@ impl ColorMode {
     /// The mode a small thumbnail should render in. `Single` colors
     /// every tile alike, which makes a thumbnail a featureless slab —
     /// previews fall back to `Proto` (prototile classes), the mode that
-    /// reveals structure at thumbnail scale. `Gray` is self-sufficient
-    /// (structure without hue) and previews as itself.
+    /// reveals structure at thumbnail scale. `Gray` and `PatternGray` are
+    /// self-sufficient (structure without hue) and preview as themselves.
     pub fn preview_mode(self) -> ColorMode {
         match self {
             ColorMode::Single => ColorMode::Proto,
@@ -150,10 +159,24 @@ mod tests {
         assert_eq!(ColorMode::Single.next(), ColorMode::Pattern);
         assert_eq!(ColorMode::Pattern.next(), ColorMode::Proto);
         assert_eq!(ColorMode::Proto.next(), ColorMode::Gray);
-        assert_eq!(ColorMode::Gray.next(), ColorMode::Single);
+        assert_eq!(ColorMode::Gray.next(), ColorMode::PatternGray);
+        assert_eq!(ColorMode::PatternGray.next(), ColorMode::Single);
         assert_eq!(ColorMode::parse("gray"), Some(ColorMode::Gray));
+        assert_eq!(ColorMode::parse("pattern-gray"), Some(ColorMode::PatternGray));
         assert_eq!(ColorMode::parse("nope"), None);
         assert_eq!(ColorMode::Gray.label(), "gray");
+        assert_eq!(ColorMode::PatternGray.label(), "pattern-gray");
+        assert_eq!(
+            ColorMode::parse(ColorMode::PatternGray.label()),
+            Some(ColorMode::PatternGray)
+        );
         assert_eq!(ColorMode::Gray.preview_mode(), ColorMode::Gray);
+        assert_eq!(ColorMode::PatternGray.preview_mode(), ColorMode::PatternGray);
+    }
+
+    #[test]
+    fn color_mode_all_len_is_five() {
+        assert_eq!(ColorMode::ALL.len(), 5);
+        assert_eq!(ColorMode::ALL[4], ColorMode::PatternGray);
     }
 }

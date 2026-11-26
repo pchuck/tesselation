@@ -36,15 +36,38 @@ pub const GRAY_PALETTE: [u32; 8] = [
     0x2C2C2C, // 7
 ];
 
+/// Grayscale ramp for [`ColorMode::PatternGray`] (see `crate::view`):
+/// the Rec.709 luma of each [`PALETTE`] color —
+/// `L = 0.2126·R + 0.7152·G + 0.0722·B` on 8-bit sRGB values (not
+/// linearized, not Rec.601), rounded half away from zero — indexed by
+/// seed exactly like the color palette so pattern structure survives the
+/// palette swap. Index 0 matches `Single`'s light gray (and `Gray`'s
+/// index 0). Cyan/orange collide at 162 (rounded); cyan is nudged to 163
+/// (max |deviation| 0.543 over the table) in preference to orange → 161
+/// (0.939), and both still preserve luma order. The table was pinned by a
+/// python certificate (see .scratch/pattern-gray/luma_certificate.py).
+pub const PATTERN_GRAY_PALETTE: [u32; 8] = [
+    0xD4D4D4, // 0: light gray (matches Single / GRAY_PALETTE[0])
+    0x898989, // 1: blue  (luma 137.446)
+    0x858585, // 2: red   (luma 133.311)
+    0xB5B5B5, // 3: green (luma 180.515)
+    0xC3C3C3, // 4: yellow (luma 194.884)
+    0x909090, // 5: purple (luma 143.875)
+    0xA3A3A3, // 6: cyan  (luma 162.457, nudged +1 to keep entries distinct)
+    0xA2A2A2, // 7: orange (luma 161.939)
+];
+
 pub fn tile_rgb(mode: ColorMode, tile: &Tile) -> u32 {
     let idx = match mode {
         ColorMode::Single => 0,
         ColorMode::Pattern => (tile.seed as usize) % PALETTE.len(),
+        ColorMode::PatternGray => (tile.seed as usize) % PALETTE.len(),
         ColorMode::Proto => (tile.proto as usize) % PALETTE.len(),
         ColorMode::Gray => (tile.proto as usize) % GRAY_PALETTE.len(),
     };
     match mode {
         ColorMode::Gray => GRAY_PALETTE[idx],
+        ColorMode::PatternGray => PATTERN_GRAY_PALETTE[idx],
         _ => PALETTE[idx],
     }
 }
@@ -161,6 +184,100 @@ mod tests {
         // above the border color so outlines keep their contrast.
         assert_eq!(GRAY_PALETTE[0], PALETTE[0]);
         assert!(lum(GRAY_PALETTE[7]) > lum(BORDER));
+    }
+
+    #[test]
+    fn pattern_gray_palette_is_pinned() {
+        // The pinned table (certificate: Rec.709 luma of each PALETTE
+        // color, rounded half away from zero, cyan nudged +1 to keep
+        // entries distinct) — kept byte-for-byte with the certificate.
+        const EXPECTED: [u32; 8] = [
+            0xD4D4D4, 0x898989, 0x858585, 0xB5B5B5, 0xC3C3C3, 0x909090, 0xA3A3A3, 0xA2A2A2,
+        ];
+        assert_eq!(PATTERN_GRAY_PALETTE, EXPECTED);
+        // Monochrome throughout (r == g == b).
+        for &g in PATTERN_GRAY_PALETTE.iter() {
+            let (r, gr, b) = rgb(g);
+            assert_eq!(r, gr, "pattern-gray entry {g:#x} not monochrome");
+            assert_eq!(gr, b, "pattern-gray entry {g:#x} not monochrome");
+        }
+    }
+
+    #[test]
+    fn pattern_gray_palette_all_distinct() {
+        for i in 0..PATTERN_GRAY_PALETTE.len() {
+            for j in (i + 1)..PATTERN_GRAY_PALETTE.len() {
+                assert_ne!(
+                    PATTERN_GRAY_PALETTE[i], PATTERN_GRAY_PALETTE[j],
+                    "entries {i} and {j} collide"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn pattern_gray_palette_within_luma_tolerance() {
+        // Rec.709 luma computed in-test from the PALETTE values as f64;
+        // each entry must be within 0.55 of it (0.543 over the pinned
+        // table, by construction).
+        for (i, &c) in PALETTE.iter().enumerate() {
+            let (r, g, b) = rgb(c);
+            let luma = 0.2126 * f64::from(r) + 0.7152 * f64::from(g) + 0.0722 * f64::from(b);
+            let (gr, gg, gb) = rgb(PATTERN_GRAY_PALETTE[i]);
+            let actual = f64::from(gr);
+            assert!(
+                (actual - luma).abs() < 0.55,
+                "index {i}: |{actual} - {luma}| too large"
+            );
+            assert_eq!(gr, gg);
+            assert_eq!(gg, gb);
+        }
+    }
+
+    #[test]
+    fn pattern_gray_palette_zero_matches_single_and_gray() {
+        assert_eq!(PATTERN_GRAY_PALETTE[0], PALETTE[0]);
+        assert_eq!(PATTERN_GRAY_PALETTE[0], GRAY_PALETTE[0]);
+    }
+
+    #[test]
+    fn pattern_gray_follows_pattern_seed_index() {
+        // PatternGray selects by seed exactly like Pattern (seed % 8);
+        // only the gray table is substituted.
+        for seed in 0u32..64 {
+            let expected = PATTERN_GRAY_PALETTE[(seed as usize) % 8];
+            for proto in 0u8..8 {
+                assert_eq!(
+                    tile_rgb(ColorMode::PatternGray, &tile(proto, seed)),
+                    expected,
+                    "proto must not leak into the pattern-gray selection (seed {seed}, proto {proto})"
+                );
+            }
+        }
+        // The proto field must never leak into the selection:
+        assert_eq!(
+            tile_rgb(ColorMode::PatternGray, &tile(0, 5)),
+            tile_rgb(ColorMode::PatternGray, &tile(7, 5))
+        );
+        // Distinct seeds give distinct colors (the point of the table):
+        let colors: std::collections::BTreeSet<u32> = (0..8u32)
+            .map(|seed| tile_rgb(ColorMode::PatternGray, &tile(0, seed)))
+            .collect();
+        assert_eq!(colors.len(), 8, "pattern-gray collapsed distinct seeds");
+    }
+
+    #[test]
+    fn tile_rgb_pattern_gray_matches_pattern_index() {
+        // Selection equivalence proven against the Pattern arm directly:
+        // the gray table is substituted at the pattern's exact index.
+        for seed in 0u32..64 {
+            let pattern_idx = (seed as usize) % PALETTE.len();
+            let t = tile(3, seed);
+            assert_eq!(
+                tile_rgb(ColorMode::PatternGray, &t),
+                PATTERN_GRAY_PALETTE[pattern_idx]
+            );
+        }
     }
 
     #[test]

@@ -95,6 +95,10 @@ struct Tui {
     /// xterm-256 indices of the gray ramp (`paint::GRAY_PALETTE`),
     /// selected when the color mode is `Gray`.
     palette256_gray: Vec<u8>,
+    /// xterm-256 indices of the pattern-gray ramp
+    /// (`paint::PATTERN_GRAY_PALETTE`), selected when the color mode is
+    /// `PatternGray`.
+    palette256_pattern_gray: Vec<u8>,
     border256: u8,
     gap256: u8,
     /// Last rendered canvas size; pans scale with it.
@@ -134,6 +138,10 @@ impl Tui {
             .iter()
             .map(|&c| paint::rgb_to_256(c))
             .collect();
+        let palette256_pattern_gray: Vec<u8> = paint::PATTERN_GRAY_PALETTE
+            .iter()
+            .map(|&c| paint::rgb_to_256(c))
+            .collect();
         Self {
             app: App::new(registry, 8.0),
             tabs,
@@ -145,6 +153,7 @@ impl Tui {
             params_open: false,
             palette256,
             palette256_gray,
+            palette256_pattern_gray,
             border256: paint::rgb_to_256(paint::BORDER),
             gap256: 124,
             canvas_size: (0, 0),
@@ -981,10 +990,10 @@ fn render_render_view(frame: &mut Frame, tui: &mut Tui, area: Rect) {
             );
         } else {
             let bbox = tui.app.viewport.world_bbox(w, h);
-            let palette256: &[u8] = if tui.app.color_mode == ColorMode::Gray {
-                &tui.palette256_gray
-            } else {
-                &tui.palette256
+            let palette256: &[u8] = match tui.app.color_mode {
+                ColorMode::Gray => &tui.palette256_gray,
+                ColorMode::PatternGray => &tui.palette256_pattern_gray,
+                _ => &tui.palette256,
             };
             let r = raster::raster(
                 &result.tiles,
