@@ -152,6 +152,15 @@ pub struct GuiApp {
     /// parameter values change — never per frame — so panel rendering
     /// cannot trigger view-sized tile generation (e.g. Hirschhorn growth).
     meta: Option<Meta>,
+    /// The cached canvas result: everything `draw_canvas` paints is
+    /// derived from this, so the tiling is only regenerated when the key
+    /// changes (tiling, params, viewport, canvas size). Color mode is
+    /// read live at paint time and never enters the key.
+    render_cache: Option<RenderCache>,
+    /// Diagnostics: the number of canvas regenerations (one per cache
+    /// miss). Counted so tests can pin the cache behavior — production
+    /// only ever increments it.
+    render_cache_misses: usize,
     /// The shared browser model (`tess_core::browse`), built once at
     /// startup: one bounded ±10-world-unit probe per tiling, the same
     /// cost the TUI pays for its tab bar.
@@ -214,6 +223,31 @@ pub struct GuiApp {
     /// The viewport zoom the app was constructed with — the 100%
     /// baseline for the zoom label and its click-to-reset.
     zoom_default: f64,
+}
+
+/// What determines the canvas `TilingResult`: the tiling id, the
+/// parameter fingerprint (every current parameter value, `|id=value`),
+/// the viewport (center + zoom) and the canvas size. Two frames with
+/// equal keys draw identical geometry, so `draw_canvas` only regenerates
+/// on a real change. Color mode is deliberately excluded: painting reads
+/// it live every frame and it never affects the generated geometry.
+#[derive(Clone, Debug, PartialEq)]
+struct RenderKey {
+    id: String,
+    params: String,
+    center_x: f64,
+    center_y: f64,
+    zoom: f64,
+    w: u32,
+    h: u32,
+}
+
+/// The cached canvas result. Stored so the canvas repaints the same
+/// geometry instead of regenerating on every frame; `render_cache_misses`
+/// counts the regenerations.
+struct RenderCache {
+    key: RenderKey,
+    result: tess_core::TilingResult,
 }
 
 /// Region-independent metadata shown in the side panel.
@@ -515,6 +549,8 @@ impl GuiApp {
             mode: GuiMode::Browse,
             params_open: true,
             meta: None,
+            render_cache: None,
+            render_cache_misses: 0,
             tabs,
             active_tab,
             tab_selected,
@@ -532,14 +568,12 @@ impl GuiApp {
         }
     }
 
-    /// The cached metadata for the current tiling + parameters, refreshing
-    /// it on a miss. The cache key is the tiling id plus every current
-    /// parameter value. The probe region is a tiny box at the origin,
-    /// which every generator covers instantly (aperiodic patches grow
-    /// from the origin) — so a refresh can never kick off expensive
-    /// generation, and panning the view never touches this path.
-    fn metadata(&mut self) -> &Meta {
-        let mut key = self.app.selected_id().to_string();
+    /// The shared params fingerprint: every current parameter value as
+    /// `|id={:?}` fragments, in spec order. The tiling id is added by
+    /// each caller — the metadata cache prepends it inline, the canvas
+    /// cache stores it as its own key field.
+    fn params_fingerprint(&self) -> String {
+        let mut key = String::new();
         for spec in self.app.tiling().params() {
             let v = self
                 .app
@@ -547,6 +581,17 @@ impl GuiApp {
                 .unwrap_or_else(|| spec.default_value());
             key.push_str(&format!("|{}={:?}", spec.id, v));
         }
+        key
+    }
+
+    /// The cached metadata for the current tiling + parameters, refreshing
+    /// it on a miss. The cache key is the tiling id plus every current
+    /// parameter value. The probe region is a tiny box at the origin,
+    /// which every generator covers instantly (aperiodic patches grow
+    /// from the origin) — so a refresh can never kick off expensive
+    /// generation, and panning the view never touches this path.
+    fn metadata(&mut self) -> &Meta {
+        let key = format!("{}{}", self.app.selected_id(), self.params_fingerprint());
         if self.meta.as_ref().is_none_or(|m| m.key != key) {
             let r = self.app.result_region(tess_core::BBox::new(
                 tess_core::Vec2::new(-0.5, -0.5),
@@ -1319,6 +1364,32 @@ impl GuiApp {
         }
     }
 
+    /// The canvas cache key for `w` x `h`: the tiling id, the parameter
+    /// fingerprint, the viewport (center + zoom) and the canvas size —
+    /// everything that determines the generated geometry. Callers pass
+    /// the current viewport size so a window resize is a distinct key.
+    /// Color mode is deliberately absent (see [`RenderKey`]).
+    fn cache_key(&self, w: u32, h: u32) -> RenderKey {
+        let v = &self.app.viewport;
+        RenderKey {
+            id: self.app.selected_id().to_string(),
+            params: self.params_fingerprint(),
+            center_x: v.center.x,
+            center_y: v.center.y,
+            zoom: v.zoom,
+            w,
+            h,
+        }
+    }
+
+    /// Whether the cached canvas result is stale for `key` (never seen,
+    /// or any component differs). A cheap field-wise comparison — the
+    /// whole point of the cache is that this, not the generator, decides
+    /// whether a frame regenerates.
+    fn should_regen(&self, key: &RenderKey) -> bool {
+        self.render_cache.as_ref().map(|c| &c.key) != Some(key)
+    }
+
     fn draw_canvas(&mut self, ctx: &egui::Context) {
         let (painter, response, rect) = egui::CentralPanel::default()
             .show(ctx, |ui| {
@@ -1378,13 +1449,25 @@ impl GuiApp {
 
         let w = rect.width().max(1.0) as u32;
         let h = rect.height().max(1.0) as u32;
-        let result = self.app.result(w, h);
+        // Only regenerate when something that determines the result
+        // changed: the tiling, any parameter, the viewport, or the size.
+        // The canvas is painted every frame, but frames that do not
+        // change any of those reuse the stored result — otherwise every
+        // queued X11 event during a slow-frame would kick off another
+        // multi-second generation (the OS "not responding" storm).
+        let key = self.cache_key(w, h);
+        if self.should_regen(&key) {
+            let result = self.app.result(w, h);
+            self.render_cache_misses += 1;
+            self.render_cache = Some(RenderCache { key, result });
+        }
+        let result = &self.render_cache.as_ref().unwrap().result;
 
         let (br, bg_, bb) = paint::rgb(paint::BORDER);
         let (ar, ag, ab) = paint::rgb(paint::BACKGROUND);
         painter.rect_filled(rect, 0.0, egui::Color32::from_rgb(ar, ag, ab));
 
-        if let Some(msg) = result.message {
+        if let Some(msg) = &result.message {
             painter.text(
                 rect.center(),
                 egui::Align2::CENTER_CENTER,
@@ -2552,5 +2635,147 @@ mod tests {
         gui.walk_render(1);
         assert_eq!(gui.app.selected_id(), first_id, "wraps to the first card");
         assert_eq!(gui.tab_selected[at].as_deref(), Some(first_id));
+    }
+
+    /// The canvas result cache, driven headlessly through `draw_canvas`
+    /// itself — the same path the render loop takes. First draw on a
+    /// view = exactly one miss; an unchanged view = zero more; zoom,
+    /// pan, param change, selection change and canvas resize each add
+    /// exactly one (the one-to-one correspondence between a trigger and
+    /// a regeneration is the whole point of the cache).
+    #[test]
+    fn canvas_cache_tracks_view_params_and_selection() {
+        let ctx = egui::Context::default();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
+        let mut gui = super::GuiApp::new();
+        let pass = |gui: &mut super::GuiApp, screen: egui::Rect| {
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            let _ = ctx.run(input, |ctx| {
+                gui.draw_canvas(ctx);
+            });
+        };
+
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 1, "first draw generates");
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 1, "same view stays cached");
+
+        // Zoom (the zoom label/button path mutates the viewport; the
+        // cache key reads it fresh each pass).
+        gui.app.viewport.zoom = 120.0;
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 2, "zoom regenerates");
+
+        // Pan, restoring the baseline zoom first so this pass's miss is
+        // the pan itself.
+        gui.app.viewport.zoom = 60.0;
+        gui.app.pan(7.0, 3.0);
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 3, "pan regenerates");
+
+        // Parameter change (square tiling's `scale` param).
+        let scale = tess_core::params::ParamId::new("scale");
+        gui.app.set_param_value(scale, tess_core::params::ParamValue::Float(2.0));
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 4, "param change regenerates");
+
+        // Selection change.
+        gui.app.select_id("penrose");
+        pass(&mut gui, screen);
+        assert_eq!(gui.render_cache_misses, 5, "selection change regenerates");
+
+        // Canvas resize (a different screen rect is a different key).
+        let screen2 = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(900.0, 500.0));
+        pass(&mut gui, screen2);
+        assert_eq!(gui.render_cache_misses, 6, "canvas resize regenerates");
+        pass(&mut gui, screen2);
+        assert_eq!(gui.render_cache_misses, 6, "same resized view stays cached");
+    }
+
+    /// The canvas cache stores a MAX_TILES refusal like any other
+    /// result: two passes at a view that refuses (far-zoomed-out) draw
+    /// it once, not once per frame.
+    #[test]
+    fn canvas_cache_caches_max_tiles_refusals() {
+        let ctx = egui::Context::default();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
+        let mut gui = super::GuiApp::new();
+        // Tiny zoom → a huge world region → a refused generation.
+        gui.app.viewport.zoom = 0.01;
+        let pass = |gui: &mut super::GuiApp| {
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            let _ = ctx.run(input, |ctx| {
+                gui.draw_canvas(ctx);
+            });
+        };
+        pass(&mut gui);
+        assert_eq!(gui.render_cache_misses, 1, "first draw generates (refusal)");
+        assert!(
+            gui.render_cache.as_ref().unwrap().result.message.is_some(),
+            "zoom 0.01 at this canvas size refuses"
+        );
+        pass(&mut gui);
+        assert_eq!(gui.render_cache_misses, 1, "refusal cached across frames");
+    }
+
+    /// `cache_key` is exactly the geometry the generator reads —
+    /// stable under identical reads, divergent on zoom/pan/size/param/
+    /// selection, and deliberately blind to color mode (painting reads
+    /// it fresh every frame).
+    #[test]
+    fn cache_key_is_stable_and_sensitive() {
+        let mut gui = super::GuiApp::new();
+        let key = gui.cache_key(800, 600);
+        assert_eq!(key, gui.cache_key(800, 600), "stable across identical reads");
+
+        let baseline_zoom = gui.app.viewport.zoom;
+        gui.app.viewport.zoom = 120.0;
+        assert_ne!(key, gui.cache_key(800, 600), "zoom enters the key");
+        gui.app.viewport.zoom = baseline_zoom;
+        assert_eq!(key, gui.cache_key(800, 600), "zoom restore");
+
+        let baseline_center = gui.app.viewport.center;
+        gui.app.viewport.center = tess_core::Vec2::new(1.0, -2.0);
+        assert_ne!(key, gui.cache_key(800, 600), "center enters the key");
+        gui.app.viewport.center = baseline_center;
+        assert_eq!(key, gui.cache_key(800, 600), "center restore");
+
+        assert_ne!(key, gui.cache_key(801, 600), "width enters the key");
+        assert_ne!(key, gui.cache_key(800, 601), "height enters the key");
+
+        let scale = tess_core::params::ParamId::new("scale");
+        let old_scale = gui.app.param_value(scale).unwrap();
+        gui.app.set_param_value(scale, tess_core::params::ParamValue::Float(2.0));
+        assert_ne!(key, gui.cache_key(800, 600), "params enter the key");
+        gui.app.set_param_value(scale, old_scale);
+        assert_eq!(key, gui.cache_key(800, 600), "param restore");
+
+        gui.app.select_id("penrose");
+        assert_ne!(key, gui.cache_key(800, 600), "selection enters the key");
+        gui.app.select_id("square");
+        assert_eq!(key, gui.cache_key(800, 600), "selection restore");
+
+        gui.app.cycle_color_mode();
+        assert_eq!(key, gui.cache_key(800, 600), "color mode is excluded");
+    }
+
+    /// Fresh `should_regen` is the miss; same key is the hit — the
+    /// exact decision `draw_canvas` makes per frame.
+    #[test]
+    fn should_regen_mirrors_cache_freshness() {
+        let mut gui = super::GuiApp::new();
+        assert!(gui.should_regen(&gui.cache_key(800, 600)), "empty cache: regen");
+        let key = gui.cache_key(800, 600);
+        let result = gui.app.result(800, 600);
+        gui.render_cache = Some(super::RenderCache { key: key.clone(), result });
+        assert!(!gui.should_regen(&key), "same key: hit");
+        gui.app.viewport.zoom = 120.0;
+        assert!(gui.should_regen(&gui.cache_key(800, 600)), "new key: regen");
     }
 }

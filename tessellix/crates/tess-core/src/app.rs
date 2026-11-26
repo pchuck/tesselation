@@ -175,7 +175,12 @@ impl App {
     }
 
     /// Generate tiles for the current viewport of `w` x `h` pixels.
-    /// Generation is cheap, so this regenerates on every call.
+    /// Generation cost varies enormously across tilings, view sizes and
+    /// parameter values — a cheap periodic grid in a small window is
+    /// instant, while a growth-based tiling at a wide zoom can take
+    /// multiple seconds — so callers must not assume it is free. The
+    /// GUI caches the result per (tiling id, params, viewport, canvas
+    /// size) and reuses it across repaints that change none of those.
     pub fn result(&self, w: u32, h: u32) -> TilingResult {
         let region = self.viewport.world_bbox(w, h);
         self.result_region(region)
