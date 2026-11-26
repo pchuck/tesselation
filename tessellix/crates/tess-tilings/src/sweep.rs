@@ -1779,4 +1779,137 @@ mod tests {
         assert!(row.features.min_face_area > 0.0);
         assert!(row.features.translation_invariant, "lattice fold invariance");
     }
+
+    // ------------------------------------------------------------------
+    // Explore gating invariants (audit X, permanent pins): the θ-axis
+    // iff-subset and the δ-envelope-extra set. Test-only addition — no
+    // production reads beyond the existing sweep/envelope seams.
+    // ------------------------------------------------------------------
+
+    /// Audit-X pin (test-only): the θ axis exists exactly for the two
+    /// hankin motif substrates in `THETA_AXIS_IDS` — and for no other
+    /// substrate in the registry.
+    #[cfg(feature = "islamic")]
+    #[test]
+    fn theta_axis_gating_is_exactly_the_two_hankin_substrates() {
+        let mut actual_gated: Vec<&str> = THETA_AXIS_IDS.to_vec();
+        actual_gated.sort_unstable();
+        assert_eq!(
+            actual_gated,
+            vec!["hankin-3-12-12", "hankin-4-8-8-motifs"],
+            "θ gating set drifted (expected exactly the two hankin motif substrates): {actual_gated:?}"
+        );
+        let mut actual_grid: Vec<f64> = THETA_GRID.to_vec();
+        actual_grid.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        assert_eq!(
+            actual_grid,
+            vec![-15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0],
+            "θ offset grid drifted: {actual_grid:?}"
+        );
+        let reg = crate::registry();
+        let mut gated: Vec<&str> = Vec::new();
+        for tiling in reg.iter() {
+            let id = tiling.id();
+            if THETA_AXIS_IDS.contains(&id) {
+                gated.push(id);
+                continue;
+            }
+            assert!(
+                run_theta_axis(id).is_empty(),
+                "theta axis leaked rows for non-gated substrate `{id}`: expected zero θ rows"
+            );
+        }
+        gated.sort_unstable();
+        assert_eq!(
+            gated,
+            vec!["hankin-3-12-12", "hankin-4-8-8-motifs"],
+            "theta axis gating set drifted: {gated:?}"
+        );
+    }
+
+    /// Audit-X pin (test-only): each θ-axis substrate produces exactly the
+    /// documented 7 rows — offset multiset == THETA_GRID, every row scored,
+    /// ranks == 1..=7.
+    #[cfg(feature = "islamic")]
+    #[test]
+    fn theta_axis_present_sets_are_seven_rows_with_documented_offsets_and_all_scored() {
+        for id in THETA_AXIS_IDS {
+            let rows = run_theta_axis(id);
+            assert_eq!(
+                rows.len(),
+                7,
+                "{id}: θ rows must be exactly 7, got {}",
+                rows.len()
+            );
+            let mut offsets: Vec<f64> = rows.iter().map(|r| r.theta_offset_deg).collect();
+            offsets.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            let mut grid = THETA_GRID.to_vec();
+            grid.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            assert_eq!(offsets, grid, "{id}: θ offset multiset drifted");
+            for r in &rows {
+                assert!(
+                    r.score.is_some(),
+                    "{id}: all θ rows must be scored (offset {:.1})",
+                    r.theta_offset_deg
+                );
+            }
+            let mut ranks: Vec<usize> = rows.iter().map(|r| r.rank).collect();
+            ranks.sort_unstable();
+            assert_eq!(
+                ranks,
+                vec![1, 2, 3, 4, 5, 6, 7],
+                "{id}: θ ranks must be a permutation of 1..=7"
+            );
+        }
+    }
+
+    /// Audit-X pin (test-only): the δ axis is 17 rows for every substrate
+    /// except square/truncated-square/trihexagonal, which carry the 90°
+    /// envelope point (18 rows); truncated-hexagonal keeps its 60° envelope
+    /// point on the base grid (no extra row, 17 rows).
+    #[test]
+    fn delta_envelope_extras_are_exactly_the_named_three_at_90deg() {
+        assert_eq!(DELTA_GRID.len(), 17, "base δ grid must be 17 points");
+        let reg = crate::registry();
+        let mut saw_extra_ids: Vec<&str> = Vec::new();
+        for tiling in reg.iter() {
+            let id = tiling.id();
+            let grid = delta_grid(id);
+            let expect_extra = id == "square" || id == "truncated-square" || id == "trihexagonal";
+            let expect = if expect_extra { 18 } else { 17 };
+            assert_eq!(
+                grid.len(),
+                expect,
+                "{id}: δ-row count drifted — expected {expect}, got {} ({grid:?})",
+                grid.len()
+            );
+            if expect_extra {
+                assert!(
+                    (grid[grid.len() - 1] - 90.0).abs() < 1e-9,
+                    "{id}: the envelope-extra row must be the 90° point, got {:?}",
+                    grid.last()
+                );
+                saw_extra_ids.push(id);
+            } else {
+                assert!(
+                    !grid.iter().any(|&a| (a - 90.0).abs() < 1e-9),
+                    "{id}: unexpected 90° envelope extra: {grid:?}"
+                );
+            }
+        }
+        saw_extra_ids.sort_unstable();
+        assert_eq!(
+            saw_extra_ids,
+            vec!["square", "trihexagonal", "truncated-square"],
+            "δ envelope-extra substrate set drifted: {saw_extra_ids:?}"
+        );
+        // truncated-hexagonal: its 60° envelope point sits on the base grid,
+        // so no extra row is appended.
+        let th_grid = delta_grid("truncated-hexagonal");
+        assert_eq!(th_grid.len(), 17, "truncated-hexagonal must stay at 17 δ rows");
+        assert!(
+            th_grid.contains(&60.0),
+            "truncated-hexagonal base grid must still carry 60°: {th_grid:?}"
+        );
+    }
 }
