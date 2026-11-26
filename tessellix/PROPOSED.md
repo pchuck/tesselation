@@ -2046,6 +2046,24 @@ quasiperiodic hosts later).
   Kaplan-reading choice pending a canonical landed assignment.
   Winners are CANDIDATES — exact-pin registry follow-ups are queued
   separately (exploration proposes, exactness disposes).
+  - **Exact-pin follow-up #2 ✅ canonical settled, θ-axis fixed
+    (2026-11-25, M175).** The canonical source exists and is
+    text-extractable: Kaplan's own saved Taprats design
+    `Water Rings.tap` (census over all 24 official Example Designs:
+    the only 3.12² design; parsed by a strict spec-compliant
+    Java-serialization parser, exact consumption 0xd46/0xd46, 69
+    objects, same parser consumes all 24 files). Dodecagon feature →
+    Star(12, d=3, s=1) with contacts at exactly 45°; triangle feature
+    → the 45° arm-continuation ExplicitFigure ≡ Star(3, 45°, 1)
+    (vertices to 4.3e-15, identical edge multiset). Both MISMATCH the
+    interim rosette reading (Rosette(12, 15°, s=3) / Rosette(3, 60°,
+    s=3)) — and Taprats' own default rule (n>4 → Rosette(n, 0, 3))
+    makes the saved star a deliberate Kaplan override. The fixed
+    θ=0 row partitions with 21 cells = the M99 registered face count
+    (error 0, p6m; all 7 offsets partition completely). Fix landed in
+    `sweep.rs` `classic_motifs_3_12_12()` only — the REGISTERED
+    hankin-3-12-12 / pic-3-12-12 tilings keep their own verified
+    geometry (separate landed works, not the θ-axis overlay).
   - **Exact-pin follow-up #1 ✅ STOP: already registered (2026-11-25,
     no new entry).** The leaderboard head (truncated-square δ=90°,
     score 0.686) is EXACTLY the registered Laves tiling

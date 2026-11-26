@@ -18,8 +18,10 @@
 //!   `closure_violation` — an honest finding, never silently dropped.
 //! * **θ axis** (`islamic` feature) — per-substrate motif-angle offsets
 //!   ∈ {−15°, …, +15°} relative to each class's classic motif angle, on
-//!   the two hankin substrates that carry the M163 motif assignment
-//!   (`hankin-4-8-8-motifs` and `hankin-3-12-12`). ONE offset is applied
+//!   the two hankin substrates that carry a classic motif assignment
+//!   (`hankin-4-8-8-motifs`: the landed M163 motifs; `hankin-3-12-12`:
+//!   the canonical Kaplan `Water Rings.tap` reading, Star 45°/s=1 per
+//!   class — see [`classic_motifs_3_12_12`]). ONE offset is applied
 //!   to every class's classic `theta_deg` (a documented interpretation
 //!   of "±{5,10,15}° per-class offsets": a single per-substrate offset,
 //!   not a per-class combination grid — 7 rows per substrate). Feasibility
@@ -877,17 +879,27 @@ fn classic_motifs_4_8_8() -> Vec<Option<Motif>> {
     hankin_4_8_8_base_motifs()
 }
 
-/// The classic (offset-0) motif assignment for `hankin-3-12-12` — MY documented
-/// choice (no landed classic assignment exists): dodecagon class Rosette(12,
-/// 180/12=15°, s=3, h=1, φ=0) — the Kaplan rosette reading at theta = π/n — and
-/// both congruent triangle classes Rosette(3, 180/3=60°, s=3, h=1, φ=0).
-/// Feasibility is panic-caught and reported honestly per row.
+/// The classic (offset-0) motif assignment for `hankin-3-12-12` — the
+/// **canonical Kaplan reading**, pinned by his own saved Taprats design
+/// `Water Rings.tap` (tiling `3.12^2`, one of the 24 official Taprats
+/// Example Designs; file parsed exactly, 2026-11-25): the dodecagon feature
+/// carries the classic `[12/3]s=1` star figure — chords joining successive
+/// edge-midpoint contacts, each leaving its contact at exactly 45° to the
+/// tile edge (dodecagon-class Star(12, 45°, s=1) in this vocabulary: the
+/// d_12-replicated figure equals the `Motif::Star` arm network as a segment
+/// multiset, 24/24) — and the triangle feature's saved ExplicitFigure is
+/// exactly the 45° arm continuation (both triangle classes Star(3, 45°,
+/// s=1): 6 arms cut at first crossings, vertex + edge-multiset match to
+/// 1e-15, both orientations). The reading also agrees with the registered
+/// M99 `hankin-3-12-12` design angle (θK = 45°, "classical shining
+/// twelve-pointed star"). Feasibility is panic-caught and reported honestly
+/// per row.
 #[cfg(feature = "islamic")]
 fn classic_motifs_3_12_12() -> Vec<Option<Motif>> {
     vec![
-        Some(Motif::Rosette { n: 12, theta_deg: 15.0, s: 3, h: 1.0, phi_deg: 0.0 }),
-        Some(Motif::Rosette { n: 3, theta_deg: 60.0, s: 3, h: 1.0, phi_deg: 0.0 }),
-        Some(Motif::Rosette { n: 3, theta_deg: 60.0, s: 3, h: 1.0, phi_deg: 0.0 }),
+        Some(Motif::Star { n: 12, theta_deg: 45.0, s: 1 }),
+        Some(Motif::Star { n: 3, theta_deg: 45.0, s: 1 }),
+        Some(Motif::Star { n: 3, theta_deg: 45.0, s: 1 }),
     ]
 }
 
@@ -1421,14 +1433,15 @@ mod tests {
     #[cfg(feature = "islamic")]
     #[test]
     fn theta_axis_3_12_12_records_feasibility_honestly() {
-        // The classic choice (dodecagon 15°, triangles 60°) is my documented
-        // pick — the test does not assume feasibility, it only requires
-        // honest accounting: every row exists and carries an explicit
-        // feasibility reason or a partition result.
+        // The canonical assignment (dodecagon Star 45°/s=1, triangles Star
+        // 45°/s=1 — pinned by Kaplan's saved `Water Rings.tap`) need not be
+        // feasible at every offset; the test does not assume feasibility, it
+        // only requires honest accounting: every row exists and carries an
+        // explicit feasibility reason or a partition result.
         let rows = run_theta_axis("hankin-3-12-12");
         assert_eq!(rows.len(), THETA_GRID.len());
         for r in &rows {
-            assert!(r.features.motifs.contains("Rosette(n=12"));
+            assert!(r.features.motifs.contains("Star(n=12"));
             match r.score {
                 Some(_) => {
                     assert!(!r.features.partition_complete || r.features.max_partition_error < 1e-6);
