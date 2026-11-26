@@ -1515,6 +1515,19 @@ impl GuiApp {
         // outline below is concave-safe.)
         let mut tri_cache: std::collections::HashMap<(u8, usize, u64), Vec<[u32; 3]>> =
             std::collections::HashMap::new();
+        // Two passes, all fills before all outlines (the same fix SVG
+        // export documents at `crates/tess-core/src/svg.rs` L15-31):
+        // egui paints shapes in add order, and a `closed_line` stroke
+        // (1.0 px) straddles its polygon edge — half a pixel pokes into
+        // EVERY neighbor — so an interleaved per-tile pass lets a
+        // later-drawn neighbor's fill cover the earlier tile's outline
+        // half along the shared edge. For taylor-socolar, whose hexagons
+        // are partitioned into 8 convex pieces including thin chord
+        // strips (the "straps"), a strip loses its grout border on
+        // every side shared with a later-drawn piece and visually merges
+        // into the surrounding hexagon. Emitting all outlines after all
+        // fills makes the border symmetric and order-independent.
+        let mut outline_pts: Vec<Vec<egui::Pos2>> = Vec::with_capacity(result.tiles.len());
         for tile in &result.tiles {
             let pts = &tile.poly.pts;
             if pts.len() < 3 {
@@ -1534,7 +1547,10 @@ impl GuiApp {
                 mesh.add_triangle(t[0], t[1], t[2]);
             }
             painter.add(egui::Shape::Mesh(mesh));
-            painter.add(egui::Shape::closed_line(screen, border));
+            outline_pts.push(screen);
+        }
+        for screen in &outline_pts {
+            painter.add(egui::Shape::closed_line(screen.clone(), border));
         }
     }
 
@@ -2723,6 +2739,93 @@ mod tests {
         );
         pass(&mut gui);
         assert_eq!(gui.render_cache_misses, 1, "refusal cached across frames");
+    }
+
+    /// Canvas z-order regression (the taylor-socolar "strap-eating" bug):
+    /// the painter must emit every tile fill before every outline. A
+    /// `closed_line` stroke (1.0 px) straddles its polygon edge — half a
+    /// pixel pokes into EVERY neighbor — so an interleaved per-tile pass
+    /// lets a later-drawn neighbor's fill cover the earlier tile's
+    /// outline half along their shared edge. For taylor-socolar, whose
+    /// hexagons are partitioned into 8 convex pieces including thin
+    /// chord strips (the "straps"), a strip loses its grout border on
+    /// every side shared with a later-drawn piece and visually merges
+    /// into the surrounding hexagon. The identical bug and two-pass fix
+    /// are documented for SVG export in
+    /// `crates/tess-core/src/svg.rs` (L15-31). Pinned headlessly for
+    /// taylor-socolar (the reported tiling) and chair (non-convex
+    /// L-tromino pieces).
+    #[test]
+    fn canvas_paints_all_fills_before_all_outlines() {
+        /// Walk a `ClippedShape` tree recursively, keeping everything in
+        /// order (the canvas emits no nested Vec shapes in this path,
+        /// but the walk mirrors `painted_text_rects` for robustness).
+        fn walk(shape: &egui::Shape, out: &mut Vec<egui::Shape>) {
+            match shape {
+                egui::Shape::Vec(inner) => inner.iter().for_each(|s| walk(s, out)),
+                s => out.push(s.clone()),
+            }
+        }
+
+        for id in ["taylor-socolar", "chair"] {
+            let ctx = egui::Context::default();
+            let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
+            let mut gui = super::GuiApp::new();
+            gui.app.select_id(id);
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            let out = ctx.run(input, |ctx| {
+                gui.draw_canvas(ctx);
+            });
+
+            let (message, expect) = {
+                let r = &gui.render_cache.as_ref().unwrap().result;
+                (
+                    r.message,
+                    r.tiles.iter().filter(|t| t.poly.pts.len() >= 3).count(),
+                )
+            };
+            assert!(
+                message.is_none(),
+                "{id}: default view refused: {message:?}"
+            );
+            assert!(expect >= 1, "{id}: expected at least one painted tile");
+
+            let mut shapes = Vec::new();
+            for cs in &out.shapes {
+                walk(&cs.shape, &mut shapes);
+            }
+
+            // (a) The two-pass invariant: once the first outline appears,
+            // no mesh may follow it (otherwise fills are interleaved with
+            // outlines and later fills eat earlier outlines).
+            let first_outline = shapes
+                .iter()
+                .position(|s| matches!(s, egui::Shape::Path(p) if p.closed));
+            if let Some(pos) = first_outline {
+                for s in shapes.iter().skip(pos + 1) {
+                    assert!(
+                        !matches!(s, egui::Shape::Mesh(_)),
+                        "{id}: mesh painted after the first closed outline — \
+                         fills and outlines are interleaved"
+                    );
+                }
+            }
+
+            // (b) One mesh and one outline per non-degenerate tile.
+            let meshes = shapes
+                .iter()
+                .filter(|s| matches!(s, egui::Shape::Mesh(_)))
+                .count();
+            let outlines = shapes
+                .iter()
+                .filter(|s| matches!(s, egui::Shape::Path(p) if p.closed))
+                .count();
+            assert_eq!(meshes, expect, "{id}: fill count != non-degenerate tile count");
+            assert_eq!(outlines, expect, "{id}: outline count != non-degenerate tile count");
+        }
     }
 
     /// `cache_key` is exactly the geometry the generator reads —
