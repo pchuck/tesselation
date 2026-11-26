@@ -1139,7 +1139,7 @@ mod tests {
 
     /// The cluster slot tables: sizes 45/64/136 with unique
     /// (kind, offset) slots per row, the child census
-    /// M = [[71,76,37],[86,77,43],[60,44,31]] (rows BOW/HEX/DEC parents,
+    /// M = [[19,19,7],[26,29,9],[60,45,31]] (rows BOW/HEX/DEC parents,
     /// columns BOW/HEX/DEC children), and the DEC flower's central slot
     /// (TY_D at offset 0 in the DEC row).
     #[test]

@@ -340,7 +340,7 @@ mod tests {
 
     /// RULES == the σ⊗σ derivation: the child at frame cell (c, r) of
     /// parent p = 2x + y has class 2·EXP[x][c] + EXP[y][r] — the full
-    /// (class, col, row) tuples, in frame-cell order (k = 2·r + c).
+    /// (class, col, row) tuples, in frame-cell order (k = 2·c + r).
     #[test]
     fn product_rule_pin() {
         for p in 0..4u8 {

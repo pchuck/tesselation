@@ -1032,7 +1032,7 @@ mod tests {
     }
 
     /// The P+ chirality marker: undo the twist on a P tile's P+ marker
-    /// corner (CANON_P[3]) and it lands exactly on the pinned P+
+    /// corner (CANON[4][3]) and it lands exactly on the pinned P+
     /// marker u-pair ((−1,0),(1,0)); every P tile ever emitted is P+
     /// (the P− mirror is unreachable from the pinned seed).
     #[test]

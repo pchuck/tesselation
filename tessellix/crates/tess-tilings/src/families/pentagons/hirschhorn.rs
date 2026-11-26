@@ -1125,7 +1125,7 @@ mod tests {
         );
     }
 
-    /// The seed flower: 6 petals, 12 shared + 18 boundary edges, a single
+    /// The seed flower: 6 petals, 6 shared + 18 boundary edges, a single
     /// 18-edge boundary cycle, no conflicts between petals.
     #[test]
     fn seed_flower_structure() {
@@ -1163,7 +1163,7 @@ mod tests {
         }
     }
 
-    /// Grow past the first left-handed tile (it appears at 186 tiles) and
+    /// Grow past the first left-handed tile (it appears at 60 tiles) and
     /// assert every invariant of a valid Hirschhorn patch.
     #[test]
     fn growth_invariants() {

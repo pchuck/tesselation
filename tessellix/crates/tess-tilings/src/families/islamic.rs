@@ -837,7 +837,7 @@ mod girih_qc_tests {
     }
 
     /// Seeded coverage generalizes across anchor regions: off-origin
-    /// views served at deeper depths (3 and 4) are covered exactly too.
+    /// views served at deeper depth (3) are covered exactly too.
     #[test]
     fn girih_qc_covers_distant_views() {
         let t = GirihQuasiperiodicTiling;

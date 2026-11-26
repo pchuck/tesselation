@@ -167,7 +167,7 @@ mod tests {
         );
     }
 
-    /// Battery: shoelace area sum == det to 1e-15; edge parity on a 7x7
+    /// Battery: shoelace area sum == det to 1e-14; edge parity on a 7x7
     /// lattice patch (pinned to the Python exact-field battery: 765
     /// interior + 136 boundary of (5+5+6+6+4+4+4) * 49 = 1666 edge
     /// occurrences); vertex wedges closed-or-boundary; irrational-offset

@@ -2898,8 +2898,9 @@ mod tests {
     /// 8 convex CCW pieces with exact area sum `3*sqrt(3)/2`, no pairwise
     /// overlap (Sutherland-Hodgman clipped-intersection area < 1e-12) and
     /// containment in the hexagon; a query over the whole patch returns
-    /// exactly `529 * 8` pieces and every recomputed placement, with its
-    /// predicted seed, is found in the emission by exact signature.
+    /// the `529 * 8` shipped-table pieces plus the plane-filling pieces
+    /// whose hexagons meet the region, and every recomputed placement,
+    /// with its predicted seed, is found in the emission by exact signature.
     #[test]
     fn taylor_socolar_partition_exact() {
         fn cross2(u: Vec2, v: Vec2) -> f64 {

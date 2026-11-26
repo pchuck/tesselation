@@ -1627,8 +1627,8 @@ mod tests {
     ///     is count-stable even where the window is not yet a fixed
     ///     point).
     /// (b) The CLI convention: a 20/scale·(2/3) × 10/scale world-unit
-    ///     origin-centered pane (2:3 aspect) — plane-covered at the
-    ///     depth-4 budget pick (measured 796 tiles).
+    ///     origin-centered pane (4:3 aspect) — plane-covered at the
+    ///     depth-3 budget pick (measured 796 tiles).
     #[test]
     fn default_view_fills_pane() {
         let t = GlbBinaryN7Tiling;

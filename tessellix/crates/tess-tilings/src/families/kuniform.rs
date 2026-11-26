@@ -583,7 +583,7 @@ mod kuniform_tests {
 
     /// The declared pmm generators act on the cell set: mirrors
     /// x = 0, y = 0, y = H and the half-turns at (1, 0) and (1, H).
-    /// Negative probes: no 6-, 9-, or 12-fold rotation about any of
+    /// Negative probes: no 6-, 4-, or 3-fold rotation about any of
     /// (0,0), (1,0), (1,H) — pmm has none (lattice argument: R60
     /// sends b1 = (2,0) to (1, √3) = b1/2 + b2, not a lattice
     /// vector).
