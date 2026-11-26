@@ -240,6 +240,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         center: None,
     };
     let mut i = 0;
+    let mut band_w_seen = false;
     let next = |i: &mut usize| -> Result<String, String> {
         if *i >= args.len() {
             return Err(format!(
@@ -286,7 +287,10 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
                     )
                 })?);
             }
-            "--band-w" => a.band_w = finite(&next(&mut i)?, "--band-w")?,
+            "--band-w" => {
+                band_w_seen = true;
+                a.band_w = finite(&next(&mut i)?, "--band-w")?;
+            }
             "--center" => {
                 let v = next(&mut i)?;
                 let (x_s, y_s) = v.split_once(',').ok_or_else(|| {
@@ -330,6 +334,9 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
             "--decoration requires --strapwork DEG or --deform PROFILE (the decoration decorates the strapwork walls)"
                 .into(),
         );
+    }
+    if band_w_seen && a.decoration.is_none() {
+        return Err("--band-w requires --decoration".into());
     }
     if a.band_w <= 0.0 {
         return Err("--band-w must be a positive number".into());
@@ -1683,11 +1690,12 @@ mod tests_explore_contract {
 // and the tile-budget constant. No CLI process spawn, no interactive TUI;
 // purely test-only. Deliberately NOT pinned here:
 //   - exact tile counts in the taylor-socolar examples (example-specific
-//     narrative, not a contract claim), and
-//   - the `--band-w` "requires `--decoration`" requirement: the doc states
-//     it, but parse_export silently accepts `--band-w` without `--decoration`
-//     (and the value is then inert). The default (0.1) IS pinned below; the
-//     mismatch is reported, not enshrined.
+//     narrative, not a contract claim)
+//
+// `--band-w` "requires `--decoration`" IS pinned
+// (usage_band_w_requires_decoration_matches_doc): the doc claim and the
+// enforcement are asserted together — parse_export errors with a named parse
+// error when `--band-w` is given without `--decoration`.
 #[cfg(test)]
 mod tests_export_contract {
     use super::{export, parse_export};
@@ -1923,7 +1931,7 @@ mod tests_export_contract {
             (&["--tiling", "square", "--strapwork", "45"], "--strapwork"),
             (&["--tiling", "square", "--deform", "sine", "60", "15", "1"], "--deform"),
             (&["--tiling", "square", "--strapwork", "45", "--decoration", "fill"], "--decoration"),
-            (&["--tiling", "square", "--band-w", "0.2"], "--band-w"),
+            (&["--tiling", "square", "--band-w", "0.2", "--strapwork", "45", "--decoration", "fill"], "--band-w"),
             (&["--tiling", "square", "--out", "a.svg"], "--out"),
             (&["--tiling", "square", "-o", "b.svg"], "-o"),
         ];
@@ -1931,6 +1939,54 @@ mod tests_export_contract {
             parse_export(&args(argv))
                 .unwrap_or_else(|e| panic!("docs/USAGE.md: documented flag {what} must parse: {e}"));
         }
+
+        // --band-w WITHOUT --decoration is a named parse error (the doc's
+        // "requires `--decoration`" requirement); it is not silently accepted.
+        let err = parse_export(&args(&["--tiling", "square", "--band-w", "0.2"])).unwrap_err();
+        assert!(
+            err.contains("--band-w requires --decoration"),
+            "docs/USAGE.md: --band-w without --decoration must be a named parse error, got {err:?}"
+        );
+    }
+
+    // ---- requirement claim: --band-w requires --decoration ---------------
+
+    /// The doc states that `--band-w` "requires `--decoration`"; parse_export
+    /// enforces it as a named parse error (not silently accepted). Failures
+    /// name the file + line + claim.
+    #[test]
+    fn usage_band_w_requires_decoration_matches_doc() {
+        let doc = usage_doc();
+        let claim = "docs/USAGE.md: --band-w requires --decoration pin";
+
+        // Doc side: the "(requires `--decoration`)" claim lives on the band-w row.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "band width in world units",
+            claim,
+        );
+        assert!(
+            cells[1].contains("--band-w"),
+            "docs/USAGE.md line {line_no} (--band-w row): flag cell {:?} should name --band-w",
+            cells[1]
+        );
+        assert!(
+            cells[3].contains("requires `--decoration`"),
+            "docs/USAGE.md line {line_no} (--band-w requires --decoration): meaning cell {:?} must claim \"requires `--decoration`\"",
+            cells[3]
+        );
+
+        // Code side: the claim is enforced — --band-w without --decoration is a
+        // named parse error, and the valid combination still parses.
+        let err = parse_export(&args(&["--tiling", "square", "--band-w", "0.2"])).unwrap_err();
+        assert!(
+            err.contains("--band-w requires --decoration"),
+            "docs/USAGE.md line {line_no} (--band-w requires --decoration): named parse error expected, got {err:?}"
+        );
+        parse_export(&args(&["--tiling", "square", "--band-w", "0.2", "--strapwork", "45", "--decoration", "fill"]))
+            .unwrap_or_else(|e| panic!("docs/USAGE.md line {line_no} (--band-w requires --decoration): --band-w WITH --decoration must parse: {e}"));
+        parse_export(&args(&["--tiling", "square", "--band-w", "0.2", "--deform", "sine", "60", "15", "1", "--decoration", "fill"]))
+            .unwrap_or_else(|e| panic!("docs/USAGE.md line {line_no} (--band-w requires --decoration): --band-w WITH --decoration (deform) must parse: {e}"));
     }
 
     // ---- flags documented as required ------------------------------------
