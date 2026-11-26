@@ -442,4 +442,127 @@ mod tests {
             assert_eq!(svg.matches(&format!(r#"data-deco="{tag}""#)).count(), 0, "{tag}");
         }
     }
+
+    #[test]
+    fn decorated_layer_blocks_maxima_precede_minima() {
+        // Document-order pin for the decorated renderer. The module docs
+        // (svg.rs, Kaplan section) claim:
+        //
+        //   paper → face0/face1 (fill) → band (band fill) → side (side
+        //   lines) → break (background-coloured breaks) → patch (over-
+        //   strand repaint) → over (over-strand side-line segments)
+        //
+        // Interlace never emits faces and Fill never emits anything but
+        // faces, so merge a Fill plan's face set with an Interlace plan's
+        // other geometry to exercise the full documented order in one
+        // render. The renderer treats the plan as pure data (it walks each
+        // layer's vec in fixed document order), so the merge is valid.
+        let ws = walls(&square_grid(4), 45.0);
+        let bbox = BBox::new(pt(-2.0, -2.0), pt(6.0, 6.0));
+        let core = BBox::new(pt(1.0, 1.0), pt(3.0, 3.0));
+        let mut plan = plan_decoration(&ws, 0.12, Decoration::Interlace, &core).unwrap();
+        let fill_faces = plan_decoration(&ws, 0.12, Decoration::Fill, &core)
+            .unwrap()
+            .faces;
+        assert!(!fill_faces.is_empty(), "need non-empty fill faces");
+        plan.faces = fill_faces;
+
+        let svg = render_svg_decorated(&bbox, &plan);
+
+        // Positions of each layer's elements in document order. The
+        // `face` tag matches both `face0` and `face1`, as in the
+        // existing layers test.
+        let positions = |tag: &str| -> Vec<usize> {
+            svg.match_indices(&format!(r#"data-deco="{tag}"#))
+                .map(|(i, _)| i)
+                .collect()
+        };
+        let paper = positions("paper");
+        let faces = positions("face");
+        let bands = positions("band");
+        let sides = positions("side");
+        let breaks = positions("break");
+        let patches = positions("patch");
+        let overs = positions("over");
+
+        // Counts per layer class, then per face class.
+        assert_eq!(paper.len(), 1, "one paper rect");
+        assert_eq!(
+            faces.len(),
+            plan.faces.len(),
+            "one face path per plan face"
+        );
+        assert_eq!(
+            bands.len(),
+            plan.band_fills.len(),
+            "one band path per band fill"
+        );
+        assert_eq!(
+            sides.len(),
+            plan.side_lines.len(),
+            "one side path per side line"
+        );
+        assert_eq!(
+            breaks.len(),
+            plan.break_quads.len(),
+            "one break path per break quad"
+        );
+        assert_eq!(
+            patches.len(),
+            plan.break_patch.len(),
+            "one patch path per break patch"
+        );
+        // Two over-side-line segments per crossing.
+        assert_eq!(
+            overs.len(),
+            plan.over_lines.len() * 2,
+            "two over segments per crossing"
+        );
+        assert!(
+            !faces.is_empty()
+                && !bands.is_empty()
+                && !sides.is_empty()
+                && !breaks.is_empty()
+                && !patches.is_empty()
+                && !overs.is_empty(),
+            "every non-paper layer must be non-empty for this setup"
+        );
+        let f0 = svg.matches(r#"data-deco="face0""#).count();
+        let f1 = svg.matches(r#"data-deco="face1""#).count();
+        assert!(f0 > 0 && f1 > 0, "both face colour classes must appear");
+
+        // Document order as blocks: every element of layer N precedes
+        // every element of layer N+1 (max(layer N) < min(layer N+1)) —
+        // the same pairing fills_precede_outlines_precede_walls uses,
+        // extended from fills/outlines to the deco classes. This is
+        // strictly stronger than the first-of-each-layer ordering the
+        // existing decorated_layers_and_zorder test asserts: it also
+        // catches, e.g., a band fill emitted late between side lines.
+        let last = |v: &Vec<usize>| *v.iter().max().unwrap();
+        let first = |v: &Vec<usize>| *v.iter().min().unwrap();
+        assert!(last(&paper) < first(&faces), "paper must precede faces");
+        assert!(last(&faces) < first(&bands), "faces must precede band fills");
+        assert!(last(&bands) < first(&sides), "band fills must precede side lines");
+        assert!(last(&sides) < first(&breaks), "side lines must precede breaks");
+        assert!(last(&breaks) < first(&patches), "breaks must precede patches");
+        assert!(last(&patches) < first(&overs), "patches must precede over lines");
+    }
+
+    #[test]
+    fn decorated_empty_plan_emits_only_paper() {
+        // Degenerate-claim pin: the decoration replaces the tile
+        // rendering ("only the paper and the woven/coloured wall
+        // pattern"), so an empty plan must emit the paper rect and
+        // nothing else — no stray decoration markup.
+        let bbox = BBox::new(pt(0.0, 0.0), pt(1.0, 1.0));
+        let svg = render_svg_decorated(&bbox, &DecorationPlan::default());
+        assert_eq!(svg.matches("data-deco=").count(), 1);
+        assert!(svg.contains(r#"data-deco="paper""#));
+        for tag in ["face", "band", "side", "break", "patch", "over"] {
+            assert!(
+                !svg.contains(&format!(r#"data-deco="{tag}"#)),
+                "empty plan must not emit the {tag} layer"
+            );
+        }
+    }
 }
