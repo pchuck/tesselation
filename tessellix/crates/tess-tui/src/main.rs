@@ -1673,6 +1673,894 @@ mod tests_explore_contract {
     }
 }
 
+// ---------------------------------------------------------------------------
+// USAGE.md export-section contract pins (audit IX doc-vs-code made permanent).
+// ---------------------------------------------------------------------------
+//
+// Same discipline as tests_explore_contract: doc claims are extracted from
+// docs/USAGE.md — zero-or-one match per anchor, failures naming the file +
+// line + claim — and compared against the live parse layer, the SVG writer
+// and the tile-budget constant. No CLI process spawn, no interactive TUI;
+// purely test-only. Deliberately NOT pinned here:
+//   - exact tile counts in the taylor-socolar examples (example-specific
+//     narrative, not a contract claim), and
+//   - the `--band-w` "requires `--decoration`" requirement: the doc states
+//     it, but parse_export silently accepts `--band-w` without `--decoration`
+//     (and the value is then inert). The default (0.1) IS pinned below; the
+//     mismatch is reported, not enshrined.
+#[cfg(test)]
+mod tests_export_contract {
+    use super::{export, parse_export};
+    use tess_core::strapwork::Decoration;
+    use tess_core::view::ColorMode;
+    use tess_tilings::lattice::MAX_TILES;
+
+    fn args(v: &[&str]) -> Vec<String> {
+        v.iter().map(|s| s.to_string()).collect()
+    }
+
+    fn usage_doc() -> String {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/USAGE.md");
+        std::fs::read_to_string(&path).unwrap_or_else(|e| {
+            panic!(
+                "docs/USAGE.md readable from crates/tess-tui ({}): {e}",
+                path.display()
+            )
+        })
+    }
+
+    /// The unique byte position of `anchor`; else panic loudly.
+    fn unique_anchor(text: &str, anchor: &str, what: &str) -> usize {
+        let positions: Vec<usize> = text.match_indices(anchor).map(|(i, _)| i).collect();
+        match positions.len() {
+            0 => panic!("{what}: anchor missing: {anchor:?}"),
+            1 => positions[0],
+            n => panic!("{what}: anchor ambiguous ({n} matches): {anchor:?}"),
+        }
+    }
+
+    /// 1-based line number of the anchor at `pos`.
+    fn anchor_line(text: &str, pos: usize) -> usize {
+        text[..pos].chars().filter(|&c| c == '\n').count() + 1
+    }
+
+    /// Whitespace-normalized single line containing `pos`.
+    fn line_region(text: &str, pos: usize) -> String {
+        let start = text[..pos].rfind('\n').map(|p| p + 1).unwrap_or(0);
+        let end = text[pos..].find('\n').map(|i| pos + i).unwrap_or(text.len());
+        text[start..end]
+            .chars()
+            .map(|c| if c.is_whitespace() { ' ' } else { c })
+            .collect()
+    }
+
+    /// The parsed digit run immediately following `marker` on `line`.
+    fn digits_after(line: &str, marker: &str, what: &str) -> usize {
+        let i = line
+            .find(marker)
+            .unwrap_or_else(|| panic!("{what}: marker {marker:?} missing on the anchor's line"));
+        let after = &line[i + marker.len()..];
+        let mut digits = String::new();
+        for c in after.chars() {
+            if c.is_ascii_digit() {
+                digits.push(c);
+            } else if !digits.is_empty() {
+                break;
+            }
+        }
+        digits.parse().unwrap_or_else(|_| panic!("{what}: no digit after {marker:?}"))
+    }
+
+    /// The (line number, whitespace-normalized line) of a unique anchor,
+    /// with a failure message naming the file + line + claim.
+    fn anchor_line_for(text: &str, anchor: &str, claim: &str) -> (usize, String) {
+        let pos = unique_anchor(text, anchor, &format!("docs/USAGE.md: {claim}"));
+        (anchor_line(text, pos), line_region(text, pos))
+    }
+
+    /// Split a table line into trimmed cells; cells[1] = flag, cells[2] =
+    /// default, cells[3] = meaning (cells[0] is the empty leading cell).
+    fn table_cells(line: &str, what: &str) -> Vec<String> {
+        let cells: Vec<String> = line.split('|').map(|c| c.trim().to_string()).collect();
+        assert!(
+            cells.len() >= 4,
+            "{what}: expected flag|default|meaning in {line:?}"
+        );
+        cells
+    }
+
+    /// Resolve a table-row anchor and return (line_no, line, cells).
+    fn export_table_row(
+        text: &str,
+        anchor: &str,
+        claim: &str,
+    ) -> (usize, String, Vec<String>) {
+        let (line_no, line) = anchor_line_for(text, anchor, claim);
+        let cells = table_cells(&line, &format!("docs/USAGE.md line {line_no} ({claim})"));
+        (line_no, line, cells)
+    }
+
+    /// Extract flag names from a flag cell: "`--width` / `--height`" →
+    /// ["--width", "--height"]; "`--out`, `-o`" → ["--out", "-o"].
+    fn flag_names(cell: &str) -> Vec<&str> {
+        let mut out: Vec<&str> = Vec::new();
+        for part in cell.split(['/', ',']) {
+            let part = part.trim().trim_start_matches('`').trim_end_matches('`').trim();
+            if part.is_empty() {
+                continue;
+            }
+            let word = part.split_whitespace().next().unwrap();
+            if word.starts_with("--") || word == "-o" {
+                out.push(word);
+            }
+        }
+        out
+    }
+
+    /// A unique temp SVG path (per test tag), removed on success by the caller.
+    fn temp_svg(tag: &str) -> std::path::PathBuf {
+        std::env::temp_dir().join(format!("tess_tui_export_contract_{tag}_{}.svg", std::process::id()))
+    }
+
+    /// The background rect attributes from a rendered SVG (world units).
+    fn background_rect(svg: &str) -> (f64, f64, f64, f64) {
+        let i = svg.find("<rect ").unwrap_or_else(|| panic!("SVG has no <rect>: {svg}"));
+        let rest = &svg[i..];
+        let end = rest.find("/>").unwrap_or(rest.len());
+        let tag = &rest[..end];
+        let get = |key: &str| -> f64 {
+            let needle = format!("{key}=\"");
+            let j = tag.find(&needle).unwrap_or_else(|| {
+                panic!("rect attribute {key}=\" missing in {tag}")
+            });
+            let after = &tag[j + needle.len()..];
+            let e = after.find('"').expect("rect attribute truncated");
+            after[..e].parse().unwrap_or_else(|_| panic!("rect attribute {key} not numeric: {tag}"))
+        };
+        (get("x"), get("y"), get("width"), get("height"))
+    }
+
+    /// Every numeric-looking token in the SVG parses as a finite f64,
+    /// and no NaN/inf literal appears anywhere in the document.
+    fn all_tokens_finite(svg: &str) -> bool {
+        if svg.contains("NaN") || svg.contains("inf") {
+            return false;
+        }
+        let mut tok = String::new();
+        let check = |t: &str| -> bool {
+            if t.chars().any(|c| c.is_ascii_digit()) {
+                match t.parse::<f64>() {
+                    Ok(f) => f.is_finite(),
+                    Err(_) => false,
+                }
+            } else {
+                true
+            }
+        };
+        for c in svg.chars() {
+            if c.is_ascii_digit() || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E' {
+                tok.push(c);
+            } else {
+                if !tok.is_empty() && !check(&tok) {
+                    return false;
+                }
+                tok.clear();
+            }
+        }
+        if !tok.is_empty() && !check(&tok) {
+            return false;
+        }
+        true
+    }
+
+    // ---- flag set -------------------------------------------------------
+
+    /// The export table documents exactly the flags the parse layer accepts;
+    /// every documented flag parses; an unknown option errors.
+    #[test]
+    fn usage_export_flag_set_matches_code() {
+        let doc = usage_doc();
+        let rows = [
+            ("tiling id, see `list` |", "--tiling"),
+            ("SVG canvas size in px", "--width"),
+            ("uniform scale", "--scale"),
+            ("rotation in degrees", "--rotation"),
+            ("center the view at world", "--center"),
+            ("override a tiling parameter", "--param"),
+            ("| `--mode` | pattern |", "--mode"),
+            ("Hankin PIC strapwork walls", "--strapwork"),
+            ("Islamic parquet deformation", "--deform"),
+            ("ornamentation style", "--decoration"),
+            ("band width in world units", "--band-w"),
+            ("output SVG file", "--out"),
+        ];
+        let mut documented: Vec<String> = Vec::new();
+        for (anchor, _flag) in rows {
+            let (line_no, _line, cells) =
+                export_table_row(&doc, anchor, "docs/USAGE.md: export flag-set pin");
+            let found = flag_names(&cells[1]);
+            assert!(
+                !found.is_empty(),
+                "docs/USAGE.md line {line_no} (flag set): no flag name in cells[1] {:?}",
+                cells[1]
+            );
+            documented.extend(found.into_iter().map(|s| s.to_string()));
+        }
+        let expected: &[&str] = &[
+            "--tiling", "--width", "--height", "--scale", "--rotation", "--center",
+            "--param", "--mode", "--strapwork", "--deform", "--decoration",
+            "--band-w", "--out", "-o",
+        ];
+        for flag in expected {
+            assert!(
+                documented.iter().any(|f| f == flag),
+                "docs/USAGE.md: flag {flag:?} missing from the documented set {documented:?}"
+            );
+        }
+        assert_eq!(
+            documented.len(),
+            expected.len(),
+            "docs/USAGE.md: documented flags must match exactly (documented {documented:?} vs expected {expected:?})"
+        );
+
+        // Unknown options are named parse errors.
+        for other in ["--bogus", "--bogus-two"] {
+            let err = parse_export(&args(&["--tiling", "square", other])).unwrap_err();
+            assert!(
+                err.contains("unknown option"),
+                "docs/USAGE.md: unknown option must be a named parse error, got {err:?}"
+            );
+        }
+
+        // Every documented flag parses successfully (values chosen valid).
+        let cases: Vec<(&[&str], &str)> = vec![
+            (&["--tiling", "square", "--width", "400", "--height", "300"], "--width/--height"),
+            (&["--tiling", "square", "--scale", "2.0"], "--scale"),
+            (&["--tiling", "square", "--rotation", "45"], "--rotation"),
+            (&["--tiling", "square", "--center", "1,2"], "--center"),
+            (&["--tiling", "square", "--param", "scale=2.0"], "--param"),
+            (&["--tiling", "square", "--mode", "pattern"], "--mode"),
+            (&["--tiling", "square", "--strapwork", "45"], "--strapwork"),
+            (&["--tiling", "square", "--deform", "sine", "60", "15", "1"], "--deform"),
+            (&["--tiling", "square", "--strapwork", "45", "--decoration", "fill"], "--decoration"),
+            (&["--tiling", "square", "--band-w", "0.2"], "--band-w"),
+            (&["--tiling", "square", "--out", "a.svg"], "--out"),
+            (&["--tiling", "square", "-o", "b.svg"], "-o"),
+        ];
+        for (argv, what) in cases {
+            parse_export(&args(argv))
+                .unwrap_or_else(|e| panic!("docs/USAGE.md: documented flag {what} must parse: {e}"));
+        }
+    }
+
+    // ---- flags documented as required ------------------------------------
+
+    #[test]
+    fn usage_tiling_is_required_matches_export_doc() {
+        let doc = usage_doc();
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "tiling id, see `list` |",
+            "docs/USAGE.md: --tiling required pin",
+        );
+        assert!(
+            cells[2].contains("required"),
+            "docs/USAGE.md line {line_no} (--tiling required): default cell {:?} should say required",
+            cells[2]
+        );
+        let err = parse_export(&args(&["--out", "x"])).unwrap_err();
+        assert!(
+            err.contains("--tiling"),
+            "docs/USAGE.md line {line_no} (--tiling required): named error expected, got {err:?}"
+        );
+    }
+
+    // ---- documented defaults asserted from parsed values ------------------
+
+    #[test]
+    fn usage_export_defaults_match_doc() {
+        let doc = usage_doc();
+        let defaults = parse_export(&args(&["--tiling", "square"])).expect("defaults parse");
+
+        // --width / --height default 1200 / 800.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "SVG canvas size in px",
+            "docs/USAGE.md: --width/--height default pin",
+        );
+        let mut it = cells[2].split('/').map(|s| s.trim().parse::<u32>());
+        let (dw, dh) = (it.next().unwrap().unwrap(), it.next().unwrap().unwrap());
+        assert_eq!(
+            defaults.width, dw,
+            "docs/USAGE.md line {line_no} (--width default): documented {dw} vs parsed {}",
+            defaults.width
+        );
+        assert_eq!(
+            defaults.height, dh,
+            "docs/USAGE.md line {line_no} (--height default): documented {dh} vs parsed {}",
+            defaults.height
+        );
+
+        // --scale default 1.0.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "uniform scale",
+            "docs/USAGE.md: --scale default pin",
+        );
+        let doc_scale: f64 = cells[2].parse().unwrap_or_else(|_| {
+            panic!("docs/USAGE.md line {line_no} (--scale default): cells[2] {:?}", cells[2])
+        });
+        assert_eq!(
+            defaults.scale, doc_scale,
+            "docs/USAGE.md line {line_no} (--scale default): documented {doc_scale} vs parsed {}",
+            defaults.scale
+        );
+
+        // --rotation default 0.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "rotation in degrees",
+            "docs/USAGE.md: --rotation default pin",
+        );
+        let doc_rot: f64 = cells[2].parse().unwrap_or_else(|_| {
+            panic!(
+                "docs/USAGE.md line {line_no} (--rotation default): cells[2] {:?}",
+                cells[2]
+            )
+        });
+        assert_eq!(
+            defaults.rotation, doc_rot,
+            "docs/USAGE.md line {line_no} (--rotation default): documented {doc_rot} vs parsed {}",
+            defaults.rotation
+        );
+
+        // --center default origin (no flag = origin centering).
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "center the view at world",
+            "docs/USAGE.md: --center default pin",
+        );
+        assert!(
+            cells[2].contains("origin"),
+            "docs/USAGE.md line {line_no} (--center default): default cell {:?} should name origin",
+            cells[2]
+        );
+        assert!(
+            defaults.center.is_none(),
+            "docs/USAGE.md line {line_no} (--center default): default should be origin (None), got {:?}",
+            defaults.center
+        );
+
+        // --param default — optional, empty.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "override a tiling parameter",
+            "docs/USAGE.md: --param default pin",
+        );
+        assert!(
+            cells[2].contains("optional"),
+            "docs/USAGE.md line {line_no} (--param default): default cell {:?} should say optional",
+            cells[2]
+        );
+        assert!(
+            defaults.params.is_empty(),
+            "docs/USAGE.md line {line_no} (--param default): default should be empty, got {:?}",
+            defaults.params
+        );
+
+        // --mode default pattern; the doc lists exactly the five modes the
+        // live parser accepts (escaped pipes in the doc mean the raw line
+        // is split on " | ", then the meaning cell on " \| ").
+        let (line_no, raw_line) = anchor_line_for(
+            &doc,
+            "| `--mode` | pattern |",
+            "docs/USAGE.md: --mode default pin",
+        );
+        let cells: Vec<&str> = raw_line.split(" | ").collect();
+        assert!(
+            cells.len() >= 3,
+            "docs/USAGE.md line {line_no} (--mode): expected flag|default|meaning in {raw_line:?}"
+        );
+        assert_eq!(
+            cells[1], "pattern",
+            "docs/USAGE.md line {line_no} (--mode default): documented default {:?}",
+            cells[1]
+        );
+        assert!(
+            matches!(defaults.mode, ColorMode::Pattern),
+            "docs/USAGE.md line {line_no} (--mode default): default should be pattern, got {:?}",
+            defaults.mode
+        );
+        let meaning = cells[2].trim_end_matches('|').trim();
+        let doc_modes: Vec<&str> = meaning
+            .split(" \\| ")
+            .map(|c: &str| c.trim().trim_start_matches('`').trim_end_matches('`').trim())
+            .filter(|s| !s.is_empty())
+            .collect();
+        let expected_modes = ["single", "pattern", "proto", "gray", "pattern-gray"];
+        assert_eq!(
+            doc_modes, expected_modes,
+            "docs/USAGE.md line {line_no} (--mode values): documented modes {doc_modes:?}, expected {expected_modes:?}"
+        );
+        for mode in expected_modes {
+            assert!(
+                ColorMode::parse(mode).is_some(),
+                "docs/USAGE.md line {line_no} (--mode values): mode {mode:?} documented but not parseable"
+            );
+        }
+
+        // --strapwork default off.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "Hankin PIC strapwork walls",
+            "docs/USAGE.md: --strapwork default pin",
+        );
+        assert_eq!(
+            cells[2], "off",
+            "docs/USAGE.md line {line_no} (--strapwork default): documented default {:?}",
+            cells[2]
+        );
+        assert!(
+            defaults.strapwork.is_none(),
+            "docs/USAGE.md line {line_no} (--strapwork default): default should be off (None), got {:?}",
+            defaults.strapwork
+        );
+
+        // --deform default off.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "Islamic parquet deformation",
+            "docs/USAGE.md: --deform default pin",
+        );
+        assert_eq!(
+            cells[2], "off",
+            "docs/USAGE.md line {line_no} (--deform default): documented default {:?}",
+            cells[2]
+        );
+        assert!(
+            defaults.deform.is_none(),
+            "docs/USAGE.md line {line_no} (--deform default): default should be off (None), got {:?}",
+            defaults.deform
+        );
+
+        // --decoration default off. (Deliberately NOT pinning the
+        // "requires --decoration" requirement — see the module note.)
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "ornamentation style",
+            "docs/USAGE.md: --decoration default pin",
+        );
+        assert_eq!(
+            cells[2], "off",
+            "docs/USAGE.md line {line_no} (--decoration default): documented default {:?}",
+            cells[2]
+        );
+        assert!(
+            defaults.decoration.is_none(),
+            "docs/USAGE.md line {line_no} (--decoration default): default should be off (None), got {:?}",
+            defaults.decoration
+        );
+
+        // --band-w default 0.1 (the "requires --decoration" requirement is
+        // deliberately not pinned here — doc/code mismatch, reported only).
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "band width in world units",
+            "docs/USAGE.md: --band-w default pin",
+        );
+        let doc_band_w: f64 = cells[2].parse().unwrap_or_else(|_| {
+            panic!("docs/USAGE.md line {line_no} (--band-w default): cells[2] {:?}", cells[2])
+        });
+        assert_eq!(
+            defaults.band_w, doc_band_w,
+            "docs/USAGE.md line {line_no} (--band-w default): documented {doc_band_w} vs parsed {}",
+            defaults.band_w
+        );
+
+        // --out default tessellix.svg.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "output SVG file",
+            "docs/USAGE.md: --out default pin",
+        );
+        assert_eq!(
+            cells[2], "tessellix.svg",
+            "docs/USAGE.md line {line_no} (--out default): documented default {:?}",
+            cells[2]
+        );
+        assert_eq!(
+            defaults.out, "tessellix.svg",
+            "docs/USAGE.md line {line_no} (--out default): default should be tessellix.svg, got {:?}",
+            defaults.out
+        );
+    }
+
+    // ---- flag behaviors ---------------------------------------------------
+
+    #[test]
+    fn usage_param_is_repeatable_matches_doc() {
+        let doc = usage_doc();
+        let (line_no, line) = anchor_line_for(
+            &doc,
+            "override a tiling parameter",
+            "docs/USAGE.md: --param repeatable pin",
+        );
+        assert!(
+            line.contains("repeatable"),
+            "docs/USAGE.md line {line_no} (--param repeatable): claim must say repeatable, line: {line}"
+        );
+        let a = parse_export(&args(&[
+            "--tiling", "square",
+            "--param", "scale=2.0",
+            "--param", "rotation=90",
+        ]))
+        .expect("two --param flags parse");
+        assert_eq!(a.params.len(), 2, "docs/USAGE.md line {line_no} (--param): two --param flags must each be recorded");
+        assert_eq!(a.params[0], ("scale".to_string(), "2.0".to_string()));
+        assert_eq!(a.params[1], ("rotation".to_string(), "90".to_string()));
+    }
+
+    // ---- the "1.0 → ~20 world units tall" coupling ----------------------
+
+    #[test]
+    fn usage_scale_world_units_claim_matches_export() {
+        let doc = usage_doc();
+        let (line_no, line) = anchor_line_for(
+            &doc,
+            "world units tall",
+            "docs/USAGE.md: --scale world-units pin",
+        );
+        let doc_h = digits_after(&line, "~", &format!("docs/USAGE.md line {line_no} (world units)"));
+        let svg_path = temp_svg("scale_world_units");
+        let mut argv = args(&[
+            "--tiling", "square", "--width", "1200", "--height", "800",
+        ]);
+        argv.push("--out".to_string());
+        argv.push(svg_path.to_string_lossy().into_owned());
+        export(&argv).expect("default export must succeed");
+        let svg = std::fs::read_to_string(&svg_path).expect("SVG readable");
+        let (_x, _y, w, h) = background_rect(&svg);
+        assert!(
+            (h - doc_h as f64).abs() < 1e-3,
+            "docs/USAGE.md line {line_no} (world units): documented ~{doc_h} world units tall vs emitted height {h}"
+        );
+        assert!(
+            (w / h - 1200.0 / 800.0).abs() < 1e-3,
+            "docs/USAGE.md line {line_no} (canvas size in px): SVG ratio {w}x{h} should match 1200/800"
+        );
+        assert!(
+            all_tokens_finite(&svg),
+            "docs/USAGE.md line {line_no} (world units): SVG tokens must be finite"
+        );
+        let _ = std::fs::remove_file(&svg_path);
+    }
+
+    // ---- --center: exact translation + finite values ----------------------
+
+    #[test]
+    fn usage_center_translation_and_finite_values_match_doc() {
+        let doc = usage_doc();
+        let (line_no, line) = anchor_line_for(
+            &doc,
+            "centers the frame at world",
+            "docs/USAGE.md: --center translation pin",
+        );
+        assert!(
+            line.contains("translated"),
+            "docs/USAGE.md line {line_no} (--center): claim must mention translation, line: {line}"
+        );
+
+        // Default-centered vs --center 60,0: the frame is translated exactly
+        // by (60, 0); frame size and scale are unchanged.
+        let origin = temp_svg("center_origin");
+        let centered = temp_svg("center_60_0");
+        let base = ["--tiling", "square", "--width", "1200", "--height", "900"];
+        let mut argv_a = args(&base);
+        argv_a.push("--out".to_string());
+        argv_a.push(origin.to_string_lossy().into_owned());
+        export(&argv_a).expect("origin-centered export succeeds");
+        let mut argv_b = args(&base);
+        argv_b.push("--center".to_string());
+        argv_b.push("60,0".to_string());
+        argv_b.push("--out".to_string());
+        argv_b.push(centered.to_string_lossy().into_owned());
+        export(&argv_b).expect("--center 60,0 export succeeds");
+        let svg_o = std::fs::read_to_string(&origin).expect("origin SVG readable");
+        let svg_c = std::fs::read_to_string(&centered).expect("centered SVG readable");
+        let (ox, oy, ow, oh) = background_rect(&svg_o);
+        let (cx, cy, cw, ch) = background_rect(&svg_c);
+        assert!(
+            (cx - ox - 60.0).abs() < 1e-3,
+            "docs/USAGE.md line {line_no} (--center): rect x should shift exactly by +60 ({ox} → {cx})"
+        );
+        assert!(
+            (cy - oy).abs() < 1e-3,
+            "docs/USAGE.md line {line_no} (--center): rect y should be unchanged ({oy} → {cy})"
+        );
+        assert!(
+            (cw - ow).abs() < 1e-3 && (ch - oh).abs() < 1e-3,
+            "docs/USAGE.md line {line_no} (--center): frame size must be unchanged ({ow}x{oh} → {cw}x{ch})"
+        );
+        // The doc's own far-field example: background rect at x = 26.67.
+        let example = temp_svg("center_far_field");
+        let mut argv_e = args(&["--tiling", "square", "--width", "1200", "--height", "900",
+                                 "--scale", "0.4", "--center", "60,0"]);
+        argv_e.push("--out".to_string());
+        argv_e.push(example.to_string_lossy().into_owned());
+        export(&argv_e).expect("far-field --center 60,0 export succeeds");
+        let svg_e = std::fs::read_to_string(&example).expect("far-field SVG readable");
+        let (ex, _ey, _ew, _eh) = background_rect(&svg_e);
+        assert!(
+            (ex - 26.67).abs() < 0.05,
+            "docs/USAGE.md (far-field rect x): rect should sit at x = 26.67, got {ex}"
+        );
+        let _ = std::fs::remove_file(&origin);
+        let _ = std::fs::remove_file(&centered);
+        let _ = std::fs::remove_file(&example);
+
+        // A malformed or non-finite --center is refused, and no SVG is written.
+        let nan_path = temp_svg("center_nan");
+        let mut argv_nan = args(&["--tiling", "square", "--center", "NaN,0"]);
+        argv_nan.push("--out".to_string());
+        argv_nan.push(nan_path.to_string_lossy().into_owned());
+        let err = export(&argv_nan).expect_err("--center NaN,0 must be refused");
+        assert!(
+            err.contains("finite"),
+            "docs/USAGE.md line {line_no} (--center finite): named parse error expected, got {err:?}"
+        );
+        assert!(
+            !nan_path.exists(),
+            "docs/USAGE.md line {line_no} (--center finite): no SVG may be written on a refusal"
+        );
+    }
+
+    // ---- finite patches beyond their domain ------------------------------
+
+    /// `--center 500,500` on wis-12-fold / golden-bee / girih-decagon-patch
+    /// writes a rect-only SVG (one background rect, zero shapes, all tokens
+    /// finite, exit 0). The exact tile counts are narrative, not contract.
+    #[test]
+    fn usage_rect_only_svg_matches_doc() {
+        let doc = usage_doc();
+        let (line_no, _line) = anchor_line_for(
+            &doc,
+            "rect-only SVG",
+            "docs/USAGE.md: rect-only SVG pin",
+        );
+        for tiling in ["wis-12-fold", "golden-bee", "girih-decagon-patch"] {
+            let svg_path = temp_svg("rect_only");
+            let mut argv = args(&[
+                "--tiling", tiling,
+                "--center", "500,500",
+            ]);
+            argv.push("--out".to_string());
+            argv.push(svg_path.to_string_lossy().into_owned());
+            export(&argv)
+                .unwrap_or_else(|e| panic!("docs/USAGE.md line {line_no} (rect-only {tiling}): export must succeed, got {e:?}"));
+            let svg = std::fs::read_to_string(&svg_path).expect("SVG readable");
+            let rects = svg.matches("<rect ").count();
+            let paths = svg.matches("<path ").count();
+            let lines = svg.matches("<line ").count();
+            assert_eq!(
+                rects, 1,
+                "docs/USAGE.md line {line_no} (rect-only {tiling}): expected exactly one background rect, got {rects}"
+            );
+            assert_eq!(
+                paths, 0,
+                "docs/USAGE.md line {line_no} (rect-only {tiling}): expected zero <path> elements, got {paths}"
+            );
+            assert_eq!(
+                lines, 0,
+                "docs/USAGE.md line {line_no} (rect-only {tiling}): expected zero <line> elements, got {lines}"
+            );
+            assert!(
+                all_tokens_finite(&svg),
+                "docs/USAGE.md line {line_no} (rect-only {tiling}): SVG tokens must be finite"
+            );
+            let (rx, ry, rw, rh) = background_rect(&svg);
+            assert!(
+                (rx - (500.0 - rw / 2.0)).abs() < 1e-3 && (ry - (500.0 - rh / 2.0)).abs() < 1e-3,
+                "docs/USAGE.md line {line_no} (rect-only {tiling}): rect [{rx},{ry}] {rw}x{rh} should be centered on (500,500)"
+            );
+            let _ = std::fs::remove_file(&svg_path);
+        }
+    }
+
+    // ---- rim behavior: partial subset, well-formed, never an error --------
+
+    #[test]
+    fn usage_rim_behavior_is_well_formed_never_an_error() {
+        let doc = usage_doc();
+        let (line_no, _line) = anchor_line_for(
+            &doc,
+            "still well-formed",
+            "docs/USAGE.md: rim behavior pin",
+        );
+        let svg_path = temp_svg("rim");
+        let mut argv = args(&[
+            "--tiling", "wis-12-fold",
+            "--center", "-14,0",
+        ]);
+        argv.push("--out".to_string());
+        argv.push(svg_path.to_string_lossy().into_owned());
+        export(&argv).expect("rim export must succeed (never an error)");
+        let svg = std::fs::read_to_string(&svg_path).expect("SVG readable");
+        assert!(
+            svg.contains("<path"),
+            "docs/USAGE.md line {line_no} (rim behavior): rim export must render a partial subset, got {svg}"
+        );
+        assert!(
+            all_tokens_finite(&svg),
+            "docs/USAGE.md line {line_no} (rim behavior): SVG tokens must be finite"
+        );
+        let _ = std::fs::remove_file(&svg_path);
+    }
+
+    // ---- tile budget: MAX_TILES constant + named refusal ------------------
+
+    #[test]
+    fn usage_max_tiles_budget_matches_doc() {
+        let doc = usage_doc();
+        let (line_no, _line) = anchor_line_for(
+            &doc,
+            "Every view is subject to the tile budget",
+            "docs/USAGE.md: MAX_TILES pin",
+        );
+        let pos = doc.match_indices("250,000").next().map(|(i, _)| i).expect("250,000 in doc");
+        // The budget constant and the doc's "250,000" must agree.
+        let after = &doc[pos..];
+        let mut digits = String::new();
+        for c in after.chars() {
+            if c.is_ascii_digit() || c == ',' {
+                digits.push(c);
+            } else {
+                break;
+            }
+        }
+        let doc_budget: usize = digits.replace(',', "").parse().expect("doc tile budget parses");
+        assert_eq!(
+            MAX_TILES, doc_budget,
+            "docs/USAGE.md line {line_no} (MAX_TILES): documented {doc_budget} vs live constant {MAX_TILES}"
+        );
+
+        // Behavior: a view whose window would exceed the budget is refused
+        // with the named error and no SVG written.
+        let svg_path = temp_svg("max_tiles");
+        let mut argv = args(&[
+            "--tiling", "square",
+            "--scale", "0.01",
+        ]);
+        argv.push("--out".to_string());
+        argv.push(svg_path.to_string_lossy().into_owned());
+        let err = export(&argv).expect_err("scale 0.01 must be refused by the tile budget");
+        assert!(
+            err.contains("too many tiles for this view — zoom in"),
+            "docs/USAGE.md (MAX_TILES refusal): named error expected, got {err:?}"
+        );
+        assert!(
+            !svg_path.exists(),
+            "docs/USAGE.md (MAX_TILES refusal): no SVG may be written on a refusal"
+        );
+    }
+
+    // ---- determinism: byte-identical across identical invocations --------
+
+    #[test]
+    fn usage_export_is_byte_deterministic_matches_doc() {
+        let doc = usage_doc();
+        let (line_no, _line) = anchor_line_for(
+            &doc,
+            "byte-identical across identical invocations",
+            "docs/USAGE.md: determinism pin",
+        );
+        // Two identical invocations must produce identical bytes (the
+        // mechanism behind the existing byte-determinism tests).
+        let a_path = temp_svg("det_a");
+        let b_path = temp_svg("det_b");
+        for out in [&a_path, &b_path] {
+            let mut argv = args(&["--tiling", "square", "--width", "400", "--height", "300"]);
+            argv.push("--out".to_string());
+            argv.push(out.to_string_lossy().into_owned());
+            export(&argv).expect("determinism run must succeed");
+        }
+        let bytes_a = std::fs::read(&a_path).expect("SVG A readable");
+        let bytes_b = std::fs::read(&b_path).expect("SVG B readable");
+        assert_eq!(
+            bytes_a, bytes_b,
+            "docs/USAGE.md line {line_no} (determinism): identical invocations must be byte-identical"
+        );
+        let _ = std::fs::remove_file(&a_path);
+        let _ = std::fs::remove_file(&b_path);
+    }
+
+    // ---- --strapwork/--deform mutual exclusion + the --decoration gate ----
+
+    #[test]
+    fn usage_strapwork_deform_exclusion_matches_doc() {
+        let doc = usage_doc();
+        let (line_no, _line) = anchor_line_for(
+            &doc,
+            "mutually exclusive with `--strapwork`",
+            "docs/USAGE.md: --deform exclusion pin",
+        );
+        let argv = args(&[
+            "--tiling", "square",
+            "--strapwork", "45",
+            "--deform", "sine", "60", "15", "1",
+        ]);
+        let err = parse_export(&argv).expect_err("--strapwork + --deform must be refused");
+        assert!(
+            err.contains("mutually exclusive"),
+            "docs/USAGE.md line {line_no} (--deform exclusion): named error expected, got {err:?}"
+        );
+
+        // --decoration without an overlay flag is refused (the doc states
+        // it requires `--strapwork` or `--deform`, one required).
+        let (line_no2, _line2) = anchor_line_for(
+            &doc,
+            "ornamentation style",
+            "docs/USAGE.md: --decoration gate pin",
+        );
+        let _ = line_no2;
+        let argv = args(&["--tiling", "square", "--decoration", "fill"]);
+        let err = parse_export(&argv).expect_err("decoration without overlay must be refused");
+        assert!(
+            err.contains("--decoration"),
+            "docs/USAGE.md line {line_no2} (--decoration gate): named error expected, got {err:?}"
+        );
+    }
+
+    // ---- --decoration styling claims --------------------------------------
+
+    #[test]
+    fn usage_decoration_claims_match_doc() {
+        let doc = usage_doc();
+        let (line_no, line) = anchor_line_for(
+            &doc,
+            "ignored under `--decoration`",
+            "docs/USAGE.md: --mode-ignored-under-decoration pin",
+        );
+        assert!(
+            line.contains("--mode"),
+            "docs/USAGE.md line {line_no} (--mode ignored): claim must name --mode, line: {line}"
+        );
+        // The doc lists exactly the four styles the live parser accepts.
+        let (styles_line, styles_line_text, _cells) = export_table_row(
+            &doc,
+            "ornamentation style",
+            "docs/USAGE.md: --decoration styles pin",
+        );
+        for style in ["fill", "outline", "interlace", "outline-interlace"] {
+            assert!(
+                Decoration::parse(style).is_some(),
+                "docs/USAGE.md line {styles_line} (--decoration styles): style {style:?} documented but not parseable"
+            );
+        }
+        assert!(
+            styles_line_text.contains("outline-interlace"),
+            "docs/USAGE.md line {styles_line} (--decoration styles): line should list outline-interlace: {styles_line_text}"
+        );
+        // The --mode-is-ignored claim: the doc promises --mode is ignored
+        // under --decoration (behavioral consequence is covered by the
+        // existing decoration smoke tests); the claim itself is doc-coupled here.
+        let _ = line_no;
+    }
+
+    // ---- no z-order claim --------------------------------------------------
+
+    #[test]
+    fn usage_no_z_order_claim_documented() {
+        let doc = usage_doc();
+        for claim in ["z-order", "paint order", "on top"] {
+            let n = doc.matches(claim).count();
+            assert_eq!(
+                n, 0,
+                "docs/USAGE.md: unexpected z-order-like claim {claim:?} ({n} match(es))"
+            );
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::parse_export;
