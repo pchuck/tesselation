@@ -268,14 +268,14 @@ impl SweepOutcome {
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn params_at_default(tiling: &dyn Tiling) -> ParamSet {
+pub(crate) fn params_at_default(tiling: &dyn Tiling) -> ParamSet {
     let mut params = ParamSet::default_for(tiling.params());
     params.set(SCALE_ID, ParamValue::Float(1.0));
     params.set(ROTATION_ID, ParamValue::Angle(0.0));
     params
 }
 
-fn bbox_area(r: &BBox) -> f64 {
+pub(crate) fn bbox_area(r: &BBox) -> f64 {
     r.size().x * r.size().y
 }
 
@@ -655,7 +655,7 @@ fn documented_theta_score(complete: bool, min_face_area: f64) -> f64 {
 /// envelope points (added even when outside 5°–85° — e.g. the 90° square
 /// envelope point — unless already on the grid, so the refined angles
 /// are scored).
-fn delta_grid(substrate_id: &str) -> Vec<f64> {
+pub(crate) fn delta_grid(substrate_id: &str) -> Vec<f64> {
     let mut grid = DELTA_GRID.to_vec();
     if let Some(env) = envelope_for(substrate_id) {
         for &a in env {
@@ -926,7 +926,7 @@ fn classic_motifs_4_8_8() -> Vec<Option<Motif>> {
 /// twelve-pointed star"). Feasibility is panic-caught and reported honestly
 /// per row.
 #[cfg(feature = "islamic")]
-fn classic_motifs_3_12_12() -> Vec<Option<Motif>> {
+pub(crate) fn classic_motifs_3_12_12() -> Vec<Option<Motif>> {
     vec![
         Some(Motif::Star { n: 12, theta_deg: 45.0, s: 1 }),
         Some(Motif::Star { n: 3, theta_deg: 45.0, s: 1 }),
@@ -1122,7 +1122,7 @@ fn theta_row(substrate_id: &str, offset_deg: f64) -> ThetaRow {
 }
 
 #[cfg(feature = "islamic")]
-fn panic_payload_message(payload: &Box<dyn std::any::Any + Send>) -> String {
+pub(crate) fn panic_payload_message(payload: &Box<dyn std::any::Any + Send>) -> String {
     if let Some(s) = payload.downcast_ref::<String>() {
         s.clone()
     } else if let Some(s) = payload.downcast_ref::<&'static str>() {

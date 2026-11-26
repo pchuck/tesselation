@@ -2002,6 +2002,21 @@ quasiperiodic hosts later).
   — where 24b documents freedom, search (θ, contact position) against
   an aesthetic objective (band-balance à la Castéra, crossing density);
   validate against Bonner's documented corrections before trusting it.
+  **Status: ✅ M177** — `theta_search.rs` shipped: three axes over
+  documented freedom (contact 2 substrates × 18-row δ grid = 36;
+  two-point θₑ×δ_frac 42×2 = 84; motif-θ 5²+5³ = 150; 270-row default
+  check run), objective = band balance B (population CV of face widths,
+  Castéra-style) at 100× with crossing-density D tie-break, ranked
+  top-k leaderboard `theta-search-leaderboard/v1` byte-deterministic
+  (two-run pinned). Validation: an independent Python reimplementation
+  of the strapwork pipeline reproduces all 36 contact-row Joint counts
+  exactly plus the closed forms (sq-90 400 = 20×20 centers; sq-45 840;
+  ts-90 145 = 64+81 with the tetrakis faces multiset-equal to the
+  registered tetrakis_square; ts-45 B = 0.2767532525240787 at 2.5e-16).
+  Honest finding: the hand-model "δ=90 tops both" is FALSIFIED for the
+  square — at B=1 the density tie-break selects δ=45 (840, D=2.1 over
+  400, D=1) — documented in-module, never tuned. Bonner-corrections leg
+  stays ⛔ book-gated (24g).
   - **Effort** L, **tier** strong, after 24b.
 - **24g. Bonner polygonal systems** — the *subdivision* path to
   multi-level patterns: nested polygonal systems (4-fold, 5-fold, …)

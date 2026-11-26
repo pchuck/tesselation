@@ -36,7 +36,11 @@ complementary strap pattern. Full dossier in
   75° contact corners lie outside the 24b alphabet, certified).
   Companion instances after 24b.
 - **24e Underdetermined-θ search** (22h partial) — after 24b maps the
-  freedom.
+  freedom. ✅ M177: `theta_search.rs` — contact δ grid (36 rows),
+  two-point θₑ×δ_frac (84), motif-θ 5²+5³ (150); band-balance objective
+  + density tie-break; byte-deterministic leaderboard/v1; Python battery
+  reproduces all 36 contact Joint counts + closed forms; hand-model
+  "δ=90 tops both" falsified for the square (honest finding).
 - **24g Bonner polygonal systems** — the subdivision path to multi-level
   patterns (nested 4-fold/5-fold systems); compared against 24b's
   inference path on the Darb-i Imam ground truth. Source-gated (Bonner's
