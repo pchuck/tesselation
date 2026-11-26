@@ -350,6 +350,57 @@ mod tests {
     }
 
     #[test]
+    fn fills_precede_outlines_precede_walls() {
+        // Document order pin (the two-pass discipline the module docs
+        // document): every tile fill is emitted before every tile outline,
+        // and every wall is emitted after every outline. A single
+        // interleaved pass would let a later tile's fill cover the earlier
+        // tile's stroke half; walls drawn before the outlines would drop
+        // the ribbons below the grout.
+        let tiles = square_grid(4);
+        let ws = walls(&tiles, 45.0);
+        assert!(!ws.is_empty(), "need a non-empty wall set");
+        let bbox = BBox::new(pt(-2.0, -2.0), pt(6.0, 6.0));
+        let svg = render_svg_with_walls(&tiles, &bbox, ColorMode::Pattern, &ws);
+
+        // Pass 1 fills: `<path d="..." fill="rgb(r,g,b)"/>` — the only
+        // paths carrying a fill attribute.
+        // Pass 2 outlines: `<path d="..."/>` — no fill attribute (stroke
+        // inherited from the `<g fill="none" ...>` wrapper).
+        let mut fill_pos = Vec::new();
+        let mut outline_pos = Vec::new();
+        for (i, _) in svg.match_indices("<path ") {
+            let rest = &svg[i..];
+            let tag_end = rest.find('>').unwrap();
+            if rest[..tag_end].contains("fill=\"rgb(") {
+                fill_pos.push(i);
+            } else {
+                outline_pos.push(i);
+            }
+        }
+        // Walls: `<line .../>` — unique to the wall pass (the decorated
+        // renderer's `<line data-deco="over">` belongs to a different
+        // function and is absent here).
+        let wall_pos: Vec<usize> = svg.match_indices("<line ").map(|(i, _)| i).collect();
+
+        assert_eq!(fill_pos.len(), tiles.len(), "every tile gets a fill");
+        assert_eq!(outline_pos.len(), tiles.len(), "every tile gets an outline");
+        assert_eq!(wall_pos.len(), ws.len(), "every wall gets a line");
+
+        let last_fill = *fill_pos.iter().max().unwrap();
+        let first_outline = *outline_pos.iter().min().unwrap();
+        let first_wall = *wall_pos.iter().min().unwrap();
+        assert!(
+            last_fill < first_outline,
+            "last fill at {last_fill} must precede first outline at {first_outline}"
+        );
+        assert!(
+            first_outline < first_wall,
+            "first outline at {first_outline} must precede first wall at {first_wall}"
+        );
+    }
+
+    #[test]
     fn decorated_layers_and_zorder() {
         let ws = walls(&square_grid(4), 45.0);
         let bbox = BBox::new(pt(-2.0, -2.0), pt(6.0, 6.0));
