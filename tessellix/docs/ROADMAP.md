@@ -21,7 +21,9 @@ complementary strap pattern. Full dossier in
   ✅ M174 sprint 1: WIS substrate + inference engine landed
   (6480/6480 exhaustive fills, 0 invalid; freedom `Report` output
   feeds 24e); M158 reproduced from the general path, M161 staged
-  (degree-4 field kernel gap documented). Un-gates 24d's inference
+  (gap reclassified 2026-11-25: NOT the field kernel — L10 shipped
+  since M139 — but engine-side: girih alphabet + L10//64 substrate
+  wiring). Un-gates 24d's inference
   addendum + 24e.
 - **24c (n,c)-monster medallion generator** (22e partial; {8,12},
   {9,12}, {9,18} first) — ✅ M169: six parallel-pair records with

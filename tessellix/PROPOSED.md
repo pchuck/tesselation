@@ -1953,8 +1953,13 @@ quasiperiodic hosts later).
     sets are first-class `Report` output — feeds 24e as designed).
     Ground-truth bar partially met: the shipped M158 cell table is
     reproduced from the general path; M161 (Darb-i Imam) NOT yet —
-    the 14-fold field Q(2cos π/10) is degree-4 and needs a new exact
-    order/sign kernel + re-derived candidate generator (clean STOP
+    the gap is ENGINE-side, not a field kernel (reclassified
+    2026-11-25): the degree-4 girih field L10 = Q(2cos(π/10)),
+    minpoly x⁴−5x²+5, shipped M139 (the "14-fold" label was an
+    error — L10 is the 10-fold decagon's girih field; girih-14 M159
+    runs on K₇, degree 3); infer.rs needs generalization onto the
+    shipped L10//64 coordinates + a girih-alphabet candidate
+    generator + an M161 substrate fixture (clean STOP
     with precise gap; transfers: frontier rule, C1–C4, rule-3 kill,
     freedom output, determinism skeleton). NO registry change; the
     landed census [16 TRI, 4 SQ, 6 RHO] is ground truth, never
