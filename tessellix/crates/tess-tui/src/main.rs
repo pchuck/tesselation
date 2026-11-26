@@ -1019,6 +1019,660 @@ mod tests_explore {
     }
 }
 
+// Doc-vs-code coupling pins for docs/USAGE.md's explore section (the
+// audit-X doc-vs-code checks made permanent). Each claim in the explore
+// section (flags, defaults, region, grids, schema key, row contract)
+// is extracted from the doc — zero-or-one match per anchor, failures
+// naming the file + line + claim — and compared against the live parse
+// layer, the sweep constants, the leaderboard builder, or the gallery
+// writer. No CLI process spawn, no interactive TUI; purely test-only.
+#[cfg(test)]
+mod tests_explore_contract {
+    use super::{explore_write_gallery, leaderboard_json, parse_explore};
+    use tess_tilings::sweep::{
+        run_sweep, DeltaRow, DELTA_GRID, REGION, SweepFeatures, SweepOutcome, ThetaFeatures,
+        ThetaRow, THETA_AXIS_IDS, THETA_GRID,
+    };
+
+    fn args(v: &[&str]) -> Vec<String> {
+        v.iter().map(|s| s.to_string()).collect()
+    }
+
+    fn usage_doc() -> String {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/USAGE.md");
+        std::fs::read_to_string(&path).unwrap_or_else(|e| {
+            panic!("docs/USAGE.md readable from crates/tess-tui ({}): {e}", path.display())
+        })
+    }
+
+    /// The unique byte position of `anchor`; else panic loudly.
+    fn unique_anchor(text: &str, anchor: &str, what: &str) -> usize {
+        let positions: Vec<usize> = text.match_indices(anchor).map(|(i, _)| i).collect();
+        match positions.len() {
+            0 => panic!("{what}: anchor missing: {anchor:?}"),
+            1 => positions[0],
+            n => panic!("{what}: anchor ambiguous ({n} matches): {anchor:?}"),
+        }
+    }
+
+    /// 1-based line number of the anchor at `pos`.
+    fn anchor_line(text: &str, pos: usize) -> usize {
+        text[..pos].chars().filter(|&c| c == '\n').count() + 1
+    }
+
+    /// Whitespace-normalized single line containing `pos`.
+    fn line_region(text: &str, pos: usize) -> String {
+        let start = text[..pos].rfind('\n').map(|p| p + 1).unwrap_or(0);
+        let end = text[pos..].find('\n').map(|i| pos + i).unwrap_or(text.len());
+        text[start..end]
+            .chars()
+            .map(|c| if c.is_whitespace() { ' ' } else { c })
+            .collect()
+    }
+
+    /// The parsed digit run immediately following `marker` on `line`.
+    fn digits_after(line: &str, marker: &str, what: &str) -> usize {
+        let i = line
+            .find(marker)
+            .unwrap_or_else(|| panic!("{what}: marker {marker:?} missing on the anchor's line"));
+        let after = &line[i + marker.len()..];
+        let mut digits = String::new();
+        for c in after.chars() {
+            if c.is_ascii_digit() {
+                digits.push(c);
+            } else if !digits.is_empty() {
+                break;
+            }
+        }
+        digits.parse().unwrap_or_else(|_| panic!("{what}: no digit after {marker:?}"))
+    }
+
+    /// The parsed digit run immediately preceding `suffix` on `line`.
+    fn digits_before(line: &str, suffix: &str, what: &str) -> usize {
+        let i = line
+            .find(suffix)
+            .unwrap_or_else(|| panic!("{what}: suffix {suffix:?} missing on the anchor's line"));
+        let mut digits = String::new();
+        for c in line[..i].chars().rev() {
+            if c.is_ascii_digit() {
+                digits.push(c);
+            } else if !digits.is_empty() {
+                break;
+            }
+        }
+        let digits: String = digits.chars().rev().collect();
+        digits
+            .parse()
+            .unwrap_or_else(|_| panic!("{what}: no number before {suffix:?}"))
+    }
+
+    /// The (line number, whitespace-normalized line) of a unique anchor,
+    /// with a failure message naming the file + line + claim.
+    fn anchor_line_for(text: &str, anchor: &str, claim: &str) -> (usize, String) {
+        let pos = unique_anchor(text, anchor, &format!("docs/USAGE.md: {claim}"));
+        (anchor_line(text, pos), line_region(text, pos))
+    }
+
+    /// Split a table line into trimmed cells; cells[1] = flag, cells[2] =
+    /// default, cells[3] = meaning.
+    fn table_cells(line: &str, what: &str) -> Vec<String> {
+        let cells: Vec<String> = line.split('|').map(|c| c.trim().to_string()).collect();
+        assert!(
+            cells.len() >= 4,
+            "{what}: expected flag|default|meaning in {line:?}"
+        );
+        cells
+    }
+
+    /// Resolve a table-row anchor and return (line_no, line, cells).
+    /// The 4th element (offset) is unused; the caller keeps the pieces
+    /// it needs.
+    fn explore_table_row(text: &str, anchor: &str, claim: &str) -> (usize, String, Vec<String>) {
+        let (line_no, line) = anchor_line_for(text, anchor, claim);
+        let cells = table_cells(&line, &format!("docs/USAGE.md line {line_no} ({claim})"));
+        (line_no, line, cells)
+    }
+
+    // ---- flag set ------------------------------------------------------
+
+    /// The explore table documents exactly the five flags the parse layer
+    /// accepts — every documented flag parses; an unknown option errors.
+    #[test]
+    fn usage_explore_flag_set_matches_code() {
+        let doc = usage_doc();
+        let rows = [
+            ("any registered substrate", "--tiling"),
+            ("write the leaderboard JSON to PATH instead of printing it", "--out"),
+            ("write a flat CSV variant", "--csv"),
+            ("one SVG per top-`--top-k` ranked row", "--gallery"),
+            ("must be ≥ 1", "--top-k"),
+        ];
+        for (anchor, flag) in rows {
+            let (line_no, _line, cells) =
+                explore_table_row(&doc, anchor, "docs/USAGE.md: explore flag-set pin");
+            let doc_flag = cells[1]
+                .trim_start_matches('`')
+                .trim_end_matches('`')
+                .split(' ')
+                .next()
+                .unwrap()
+                .to_string();
+            assert_eq!(
+                doc_flag, flag,
+                "docs/USAGE.md line {line_no} (flag set: explore row {flag}): documented flag {doc_flag:?}"
+            );
+        }
+        // Each documented flag parses successfully (with a valid tiling).
+        for (flag, value) in [
+            ("--out", "x"),
+            ("--csv", "x"),
+            ("--gallery", "x"),
+            ("--top-k", "1"),
+        ] {
+            let argv = args(&["--tiling", "square", flag, value]);
+            parse_explore(&argv)
+                .unwrap_or_else(|e| panic!("docs/USAGE.md: {flag} must parse ({e})"));
+        }
+        let argv = args(&["--tiling", "square", "--bogus"]);
+        let err = parse_explore(&argv).unwrap_err();
+        assert!(
+            err.contains("unknown option --bogus"),
+            "unknown option must be a named parse error, got {err:?}"
+        );
+    }
+
+    /// `--tiling ID` is documented as required; the parse layer rejects a
+    /// missing `--tiling` with a named error.
+    #[test]
+    fn usage_tiling_is_required_matches_doc() {
+        let doc = usage_doc();
+        let (line_no, _line, cells) =
+            explore_table_row(&doc, "any registered substrate", "docs/USAGE.md: --tiling required pin");
+        assert!(
+            cells[2].contains("required"),
+            "docs/USAGE.md line {line_no} (--tiling required): default cell {:?} should say required",
+            cells[2]
+        );
+        let err = parse_explore(&args(&["--top-k", "3"])).unwrap_err();
+        assert!(
+            err.contains("--tiling"),
+            "docs/USAGE.md line {line_no} (--tiling required): named error expected, got {err:?}"
+        );
+    }
+
+    /// `--out` documents a stdout default; the parse layer leaves `out`
+    /// as None (the CLI prints the JSON to stdout in that case).
+    #[test]
+    fn usage_out_default_is_stdout_matches_doc() {
+        let doc = usage_doc();
+        let (line_no, _line, cells) = explore_table_row(
+            &doc,
+            "write the leaderboard JSON to PATH instead of printing it",
+            "docs/USAGE.md: --out default pin",
+        );
+        assert!(
+            cells[2].contains("stdout"),
+            "docs/USAGE.md line {line_no} (--out default): default cell {:?} should say stdout",
+            cells[2]
+        );
+        let a = parse_explore(&args(&["--tiling", "square"]))
+            .expect("parse_explore accepts a bare --tiling");
+        assert!(
+            a.out.is_none(),
+            "docs/USAGE.md line {line_no} (--out default stdout): parsed out should be None (stdout), got {:?}",
+            a.out
+        );
+    }
+
+    /// `--csv` and `--gallery` are documented as defaults-off; the parse
+    /// layer leaves both as None by default.
+    #[test]
+    fn usage_csv_gallery_default_off_matches_doc() {
+        let doc = usage_doc();
+        let (line_no, _line, cells) = explore_table_row(
+            &doc,
+            "write a flat CSV variant",
+            "docs/USAGE.md: --csv default pin",
+        );
+        assert!(
+            cells[2].contains("off"),
+            "docs/USAGE.md line {line_no} (--csv default): default cell {:?} should say off",
+            cells[2]
+        );
+        let (line_no2, _line2, cells2) = explore_table_row(
+            &doc,
+            "one SVG per top-`--top-k` ranked row",
+            "docs/USAGE.md: --gallery default pin",
+        );
+        assert!(
+            cells2[2].contains("off"),
+            "docs/USAGE.md line {line_no2} (--gallery default): default cell {:?} should say off",
+            cells2[2]
+        );
+        let a = parse_explore(&args(&["--tiling", "square"]))
+            .expect("parse_explore accepts a bare --tiling");
+        assert!(
+            a.csv.is_none() && a.gallery.is_none(),
+            "docs/USAGE.md lines {line_no}/{line_no2} (--csv/--gallery default off): expected both None, got {:?}/{:?}",
+            a.csv,
+            a.gallery
+        );
+    }
+
+    /// `--top-k` documents default 10 and a must-be-≥ 1 constraint; the
+    /// parse layer parses the default, rejects 0/non-numeric with named
+    /// errors, and accepts 1.
+    #[test]
+    fn usage_top_k_default_and_constraint_match_code() {
+        let doc = usage_doc();
+        let (line_no, line, cells) =
+            explore_table_row(&doc, "must be ≥ 1", "docs/USAGE.md: --top-k default/constraint pin");
+        let doc_default: usize = cells[2].parse().unwrap_or_else(|_| {
+            panic!(
+                "docs/USAGE.md line {line_no} (--top-k default): default cell {:?} not parseable",
+                cells[2]
+            )
+        });
+        assert!(
+            line.contains("must be ≥ 1"),
+            "docs/USAGE.md line {line_no} (--top-k constraint): row {line:?} should state >= 1"
+        );
+        let a = parse_explore(&args(&["--tiling", "square"]))
+            .expect("parse_explore accepts a bare --tiling");
+        assert_eq!(
+            a.top_k, doc_default,
+            "docs/USAGE.md line {line_no} (--top-k default): documented {doc_default} vs parsed {}",
+            a.top_k
+        );
+        let err0 = parse_explore(&args(&["--tiling", "square", "--top-k", "0"])).unwrap_err();
+        assert!(
+            err0.contains("--top-k"),
+            "docs/USAGE.md line {line_no} (--top-k constraint): 0 must be a named error, got {err0:?}"
+        );
+        let errx = parse_explore(&args(&["--tiling", "square", "--top-k", "x"])).unwrap_err();
+        assert!(
+            errx.contains("--top-k"),
+            "docs/USAGE.md line {line_no} (--top-k constraint): non-numeric must be a named error, got {errx:?}"
+        );
+        let one = parse_explore(&args(&["--tiling", "square", "--top-k", "1"]))
+            .expect("--top-k 1 parses");
+        assert_eq!(
+            one.top_k, 1,
+            "docs/USAGE.md line {line_no} (--top-k constraint): 1 must parse as the documented minimum"
+        );
+    }
+
+    // ---- region --------------------------------------------------------
+
+    /// The region is documented as fixed at 20×20 world units centered on
+    /// the origin (±10); the sweep constant must match.
+    #[test]
+    fn usage_region_claim_matches_region() {
+        let doc = usage_doc();
+        let (line_no, line) = anchor_line_for(
+            &doc,
+            "20×20 world units centered on the origin",
+            "docs/USAGE.md: region pin",
+        );
+        let doc_size: usize = digits_before(
+            &line,
+            "×20 world units",
+            &format!("docs/USAGE.md line {line_no} (region size)"),
+        );
+        let doc_half: usize = digits_after(
+            &line,
+            "±",
+            &format!("docs/USAGE.md line {line_no} (region half-width)"),
+        );
+        assert_eq!(
+            REGION.min.x,
+            -(doc_half as f64),
+            "docs/USAGE.md line {line_no} (region): min.x should be -{doc_half}, got {}",
+            REGION.min.x
+        );
+        assert_eq!(
+            REGION.max.x,
+            doc_half as f64,
+            "docs/USAGE.md line {line_no} (region): max.x should be {doc_half}, got {}",
+            REGION.max.x
+        );
+        assert_eq!(
+            REGION.max.x - REGION.min.x,
+            doc_size as f64,
+            "docs/USAGE.md line {line_no} (region): width should be {doc_size}, got {}",
+            REGION.max.x - REGION.min.x
+        );
+        assert_eq!(
+            REGION.max.y - REGION.min.y,
+            doc_size as f64,
+            "docs/USAGE.md line {line_no} (region): height should be {doc_size}, got {}",
+            REGION.max.y - REGION.min.y
+        );
+    }
+
+    // ---- grids ----------------------------------------------------------
+
+    /// The δ axis is documented as the 17-point base grid, multiples of
+    /// 5° from 5° to 85°; the DELTA_GRID constant must match.
+    #[test]
+    fn usage_delta_grid_claim_matches_constant() {
+        let doc = usage_doc();
+        let (line_no, line) = anchor_line_for(&doc, "17-point base grid", "docs/USAGE.md: δ grid pin");
+        let doc_n: usize = digits_before(
+            &line,
+            "-point",
+            &format!("docs/USAGE.md line {line_no} (δ grid size)"),
+        );
+        let step: usize = digits_after(
+            &line,
+            "multiples of ",
+            &format!("docs/USAGE.md line {line_no} (δ grid step)"),
+        );
+        let start: usize = digits_after(
+            &line,
+            "from ",
+            &format!("docs/USAGE.md line {line_no} (δ grid start)"),
+        );
+        let end: usize = digits_after(
+            &line,
+            "to ",
+            &format!("docs/USAGE.md line {line_no} (δ grid end)"),
+        );
+        assert_eq!(
+            DELTA_GRID.len(),
+            doc_n,
+            "docs/USAGE.md line {line_no} (δ grid size): doc says {doc_n} points, constant has {}",
+            DELTA_GRID.len()
+        );
+        assert_eq!(
+            DELTA_GRID[0],
+            start as f64,
+            "docs/USAGE.md line {line_no} (δ grid start): doc says {start}°, constant starts at {}°",
+            DELTA_GRID[0]
+        );
+        assert_eq!(
+            DELTA_GRID[DELTA_GRID.len() - 1],
+            end as f64,
+            "docs/USAGE.md line {line_no} (δ grid end): doc says {end}°, constant ends at {}°",
+            DELTA_GRID[DELTA_GRID.len() - 1]
+        );
+        for w in DELTA_GRID.windows(2) {
+            assert_eq!(
+                w[1] - w[0],
+                step as f64,
+                "docs/USAGE.md line {line_no} (δ grid step): doc says step {step}°, found step {}° ({w:?})",
+                w[1] - w[0]
+            );
+        }
+    }
+
+    /// The θ axis is documented as 7 rows per substrate, offsets from
+    /// −15° to +15°, on the two classic hankin substrates; the constants
+    /// must match.
+    #[test]
+    fn usage_theta_grid_and_substrates_match_constants() {
+        let doc = usage_doc();
+        let (line_no, line) =
+            anchor_line_for(&doc, "7 rows per substrate", "docs/USAGE.md: θ grid pin");
+        let doc_n: usize = digits_before(
+            &line,
+            "rows per substrate",
+            &format!("docs/USAGE.md line {line_no} (θ grid size)"),
+        );
+        assert!(line.contains("−15°"), "docs/USAGE.md line {line_no}: line should state start −15°");
+        assert!(line.contains("+15°"), "docs/USAGE.md line {line_no}: line should state end +15°");
+        assert!(
+            line.contains("hankin-4-8-8-motifs") && line.contains("hankin-3-12-12"),
+            "docs/USAGE.md line {line_no}: line should name the two hankin substrates"
+        );
+        assert_eq!(
+            THETA_GRID.len(),
+            doc_n,
+            "docs/USAGE.md line {line_no} (θ grid size): doc says {doc_n} rows, constant has {}",
+            THETA_GRID.len()
+        );
+        assert_eq!(THETA_GRID[0], -15.0, "docs/USAGE.md line {line_no} (θ grid start): {:?}", THETA_GRID[0]);
+        assert_eq!(THETA_GRID[THETA_GRID.len() - 1], 15.0, "docs/USAGE.md line {line_no} (θ grid end): {:?}", THETA_GRID[THETA_GRID.len() - 1]);
+        assert_eq!(
+            THETA_AXIS_IDS,
+            ["hankin-4-8-8-motifs", "hankin-3-12-12"],
+            "docs/USAGE.md line {line_no} (θ substrates): θ-axis ids must be the documented two"
+        );
+    }
+
+    // ---- schema + determinism ------------------------------------------
+
+    /// The output is documented as a `pic-explorer-leaderboard/v1` JSON
+    /// document, byte-deterministic across runs; the leaderboard builder
+    /// must emit that schema key and produce identical bytes across calls.
+    #[test]
+    fn usage_schema_key_and_determinism_match_code() {
+        let doc = usage_doc();
+        let (line_no, line) =
+            anchor_line_for(&doc, "pic-explorer-leaderboard/v1", "docs/USAGE.md: schema key pin");
+        let schema = line
+            .split('`')
+            .find(|s| s.contains("pic-explorer-leaderboard"))
+            .expect("docs/USAGE.md: schema segment between backticks")
+            .trim()
+            .to_string();
+        assert!(
+            line.contains("byte-deterministic"),
+            "docs/USAGE.md line {line_no} (byte-determinism): line should claim byte-determinism"
+        );
+        let reg = tess_tilings::registry();
+        let tiling = reg.get("square").expect("square registered");
+        let outcome = run_sweep(tiling, &REGION);
+        let a = leaderboard_json(&outcome);
+        let b = leaderboard_json(&outcome);
+        assert_eq!(
+            a, b,
+            "docs/USAGE.md line {line_no} (byte-determinism): two leaderboard_json calls diverged"
+        );
+        assert!(
+            a.contains(&format!("\"schema\": \"{schema}\"")),
+            "docs/USAGE.md line {line_no} (schema key): JSON schema is not {schema:?}"
+        );
+    }
+
+    // ---- top-k effect ----------------------------------------------------
+
+    /// `--top-k` is documented as gallery rows per axis — its effect is
+    /// scoped to the gallery, not the JSON. Behaviorally: the gallery
+    /// SVG count is min(top-k, scored per axis), the skipped count is
+    /// refused rows (independent of top-k), and the JSON bytes are
+    /// unchanged.
+    #[test]
+    fn usage_top_k_affects_gallery_not_json() {
+        let doc = usage_doc();
+        let (line_no, line) =
+            anchor_line_for(&doc, "gallery rows per axis", "docs/USAGE.md: --top-k effect pin");
+        assert!(
+            line.contains("gallery"),
+            "docs/USAGE.md line {line_no} (--top-k effect): row {line:?} should name the gallery"
+        );
+        let reg = tess_tilings::registry();
+        let tiling = reg.get("square").expect("square registered");
+        let outcome = run_sweep(tiling, &REGION);
+        let scored = outcome.delta_rows.iter().filter(|r| r.rank > 0).count();
+        let refused = outcome.delta_rows.iter().filter(|r| r.rank == 0).count();
+        let json = leaderboard_json(&outcome);
+        let tmp = std::env::temp_dir();
+        let pid = std::process::id();
+        let dir1 = tmp.join(format!("tess_explore_contract_topk1_{pid}"));
+        let dir5 = tmp.join(format!("tess_explore_contract_topk5_{pid}"));
+        let _ = std::fs::remove_dir_all(&dir1);
+        let _ = std::fs::remove_dir_all(&dir5);
+        let (w1, s1) = explore_write_gallery(&outcome, dir1.to_str().unwrap(), 1)
+            .expect("gallery at top-k 1 must succeed");
+        let (w5, s5) = explore_write_gallery(&outcome, dir5.to_str().unwrap(), 5)
+            .expect("gallery at top-k 5 must succeed");
+        assert_eq!(
+            w1,
+            scored.min(1),
+            "docs/USAGE.md line {line_no} (--top-k effect): top-k 1 wrote {w1} SVGs, expected {}",
+            scored.min(1)
+        );
+        assert_eq!(
+            w5,
+            scored.min(5),
+            "docs/USAGE.md line {line_no} (--top-k effect): top-k 5 wrote {w5} SVGs, expected {}",
+            scored.min(5)
+        );
+        assert_eq!(
+            s1, refused,
+            "docs/USAGE.md line {line_no} (--top-k effect): top-k 1 skipped {s1}, expected {refused} refused rows"
+        );
+        assert_eq!(
+            s5, refused,
+            "docs/USAGE.md line {line_no} (--top-k effect): top-k 5 skipped {s5}, expected {refused} refused rows"
+        );
+        assert!(
+            w5 >= w1,
+            "docs/USAGE.md line {line_no} (--top-k effect): more top-k must not write fewer SVGs ({w1} vs {w5})"
+        );
+        // The JSON builder has no top-k input — the JSON bytes are the same
+        // across the two gallery writers.
+        assert_eq!(
+            json,
+            leaderboard_json(&outcome),
+            "docs/USAGE.md line {line_no} (--top-k effect): JSON must not depend on top-k"
+        );
+        // Gallery file naming: <substrate>-d<delta>-r<rank>.svg
+        let mut names: Vec<String> = std::fs::read_dir(&dir5)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+            .collect();
+        names.sort();
+        for n in &names {
+            assert!(
+                n.starts_with("square-d") && n.ends_with(".svg") && n.contains("-r"),
+                "docs/USAGE.md line {line_no} (gallery naming): {n:?} must match <substrate>-d<delta>-r<rank>.svg"
+            );
+        }
+        let _ = std::fs::remove_dir_all(&dir1);
+        let _ = std::fs::remove_dir_all(&dir5);
+    }
+
+    /// The sort contract is documented as "score ascending, ties by
+    /// angle, refused sink with rank 0"; the leaderboard's emitted sort
+    /// block must spell the same contract.
+    #[test]
+    fn usage_sort_contract_wording_matches_leaderboard() {
+        let doc = usage_doc();
+        let (line_no, line) = anchor_line_for(
+            &doc,
+            "the sort contract",
+            "docs/USAGE.md: sort contract pin",
+        );
+        assert!(
+            line.contains("score ascending")
+                && line.contains("ties by angle")
+                && line.contains("refused sink with rank 0"),
+            "docs/USAGE.md line {line_no} (sort contract): line {line:?} should state score ascending, ties by angle + refused sink with rank 0"
+        );
+        let reg = tess_tilings::registry();
+        let tiling = reg.get("square").expect("square registered");
+        let outcome = run_sweep(tiling, &REGION);
+        let json = leaderboard_json(&outcome);
+        assert!(
+            json.contains("\"delta\": \"score asc, delta_deg asc (refused sink, rank 0)\""),
+            "docs/USAGE.md line {line_no} (sort contract): JSON sort block must spell score asc, delta_deg asc (refused sink, rank 0), got: {json}"
+        );
+    }
+
+    // ---- refusal / violation row contract -------------------------------
+
+    /// Refusals and incomplete partitions are documented as named in
+    /// `feasibility` (`refused: <reason>` / `incomplete_partition`) and
+    /// closure violations as a `closure_violation` finding; the builder
+    /// must spell exactly those.
+    #[test]
+    fn usage_refusal_and_violation_row_contract_matches_builder() {
+        let doc = usage_doc();
+        let (line_no, line) = anchor_line_for(
+            &doc,
+            "incomplete_partition",
+            "docs/USAGE.md: refusal/violation row contract pin",
+        );
+        assert!(
+            line.contains("refused:"),
+            "docs/USAGE.md line {line_no}: line {line:?} should spell the refused refusal format"
+        );
+        assert!(
+            line.contains("incomplete_partition"),
+            "docs/USAGE.md line {line_no}: line {line:?} should spell incomplete_partition"
+        );
+        assert!(
+            line.contains("closure_violation"),
+            "docs/USAGE.md line {line_no}: line {line:?} should spell closure_violation"
+        );
+
+        // δ row with a generation refusal — feasibility spells the reason.
+        let mut f = SweepFeatures::default();
+        f.generation_message = Some("test-refused-reason");
+        let refused_row = DeltaRow {
+            substrate_id: "square".to_string(),
+            delta_deg: 45.0,
+            features: f,
+            score: None,
+            rank: 0,
+        };
+        let json = leaderboard_json(&SweepOutcome {
+            substrate_id: "square".to_string(),
+            delta_rows: vec![refused_row],
+            theta_rows: vec![],
+            delta_tiles: vec![],
+        });
+        assert!(
+            json.contains("refused: test-refused-reason"),
+            "docs/USAGE.md line {line_no} (refusal row contract): refused row must spell the reason, json={json}"
+        );
+
+        // δ row with a closure violation — recorded as a closure_violation finding.
+        let mut f2 = SweepFeatures::default();
+        f2.closure_violation = Some("test-violation".to_string());
+        let violation_row = DeltaRow {
+            substrate_id: "square".to_string(),
+            delta_deg: 90.0,
+            features: f2,
+            score: Some(0.5),
+            rank: 1,
+        };
+        let json = leaderboard_json(&SweepOutcome {
+            substrate_id: "square".to_string(),
+            delta_rows: vec![violation_row],
+            theta_rows: vec![],
+            delta_tiles: vec![],
+        });
+        assert!(
+            json.contains("\"closure_violation\": \"test-violation\""),
+            "docs/USAGE.md line {line_no} (violation row contract): violation row must be recorded, json={json}"
+        );
+
+        // θ row with an incomplete partition — feasibility spells incomplete_partition.
+        let mut tf = ThetaFeatures::default();
+        tf.partition_complete = false;
+        let theta_row = ThetaRow {
+            substrate_id: "hankin-4-8-8-motifs".to_string(),
+            theta_offset_deg: 0.0,
+            features: tf,
+            score: None,
+            rank: 0,
+        };
+        let json = leaderboard_json(&SweepOutcome {
+            substrate_id: "hankin-4-8-8-motifs".to_string(),
+            delta_rows: vec![],
+            theta_rows: vec![theta_row],
+            delta_tiles: vec![],
+        });
+        assert!(
+            json.contains("incomplete_partition"),
+            "docs/USAGE.md line {line_no} (partition contract): incomplete-partition row must be named, json={json}"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::parse_export;
