@@ -2231,6 +2231,121 @@ mod tests {
         assert_eq!(gui.card_target_w, super::CARD_W_MIN);
     }
 
+    /// PRUNE-ON-TARGET-CHANGE (phase-2a recon hardening): while target
+    /// A (the default 120x90 preview) is active, textures are generated
+    /// and cached; switching the target width prunes every stale-size
+    /// entry at the moment of the change (the `retain` in
+    /// `set_card_target_w_impl`) — the next generation under B never
+    /// reuses A's textures. Distinct from the headless-pass prune pin:
+    /// this one drives the production cache directly and pins the
+    /// synchronous (not lazy, not next-pass) prune semantics.
+    #[test]
+    fn card_texture_cache_pruned_on_target_change() {
+        let ctx = egui::Context::default();
+        let mut gui = super::GuiApp::new();
+        let card = card_fix(
+            "penrose",
+            tess_core::TilingCategory::Uniform,
+            None,
+            None,
+        );
+        // While target A is active: generate (the default 120x90 size).
+        let _a_handle = gui.card_texture(&ctx, &card, 120, 90);
+        assert_eq!(
+            gui.card_textures.len(), 1,
+            "A's texture generated and cached"
+        );
+        assert!(
+            gui.card_textures.keys().all(|k| k.ends_with("|120x90")),
+            "A-size textures under the default target"
+        );
+        // Switch target A → B (360.0 → 180x135): A's entries are dropped
+        // synchronously, before any regeneration pass runs.
+        gui.set_card_target_w(360.0);
+        assert_eq!(
+            gui.card_textures.len(), 0,
+            "A's entries pruned at the target-change moment"
+        );
+        // Generate under target B: only B-size entries exist; A's stay gone.
+        let _b_handle = gui.card_texture(&ctx, &card, 180, 135);
+        assert_eq!(gui.card_textures.len(), 1);
+        assert!(
+            gui.card_textures.keys().all(|k| k.ends_with("|180x135")),
+            "B's textures regenerated at the new size"
+        );
+    }
+
+    /// KEY SENSITIVITY (phase-2a recon hardening): the card-texture cache
+    /// is keyed by (id, params_str, size) — `card_key`. Same id + same
+    /// params + same size through the real production path = a HIT (no
+    /// regeneration; the same texture handle is reused). The same id at
+    /// the same size with a different params_str keys to a DIFFERENT
+    /// entry, so the cache never silently reuses a stale texture across
+    /// a params change. The production card path always renders at the
+    /// tiling's default params (the TUI card semantics), so the
+    /// params_str-change side is pinned via the production `card_key`
+    /// plus the real map entry count — no production counter is needed.
+    #[test]
+    fn card_texture_cache_key_sensitive_to_params_str() {
+        let ctx = egui::Context::default();
+        let mut gui = super::GuiApp::new();
+        let card = card_fix(
+            "star-cross",
+            tess_core::TilingCategory::Uniform,
+            None,
+            None,
+        );
+        // Same id + same params + same size → HIT.
+        let h1 = gui.card_texture(&ctx, &card, 120, 90);
+        let entries = gui.card_textures.len();
+        let h2 = gui.card_texture(&ctx, &card, 120, 90);
+        assert_eq!(
+            gui.card_textures.len(), entries,
+            "same key must hit (no regeneration)"
+        );
+        assert!(h1 == h2, "the hit reuses the same texture handle");
+        // Same id + same size + different params_str → different key.
+        let specs = gui
+            .app
+            .registry()
+            .get(card.id)
+            .expect("star-cross is registered")
+            .params();
+        let default_str = super::default_params_str(specs);
+        let changed_str = "scale=2,rotation=0°,star_radius=0.50";
+        assert_ne!(default_str, changed_str);
+        let k_default = super::card_key(card.id, &default_str, 120, 90);
+        let k_changed = super::card_key(card.id, &changed_str, 120, 90);
+        assert_ne!(
+            k_default, k_changed,
+            "params_str must be part of the cache key — otherwise a params change reuses a stale texture"
+        );
+    }
+
+    /// Per-size keying (phase-2a recon hardening): the same card id at
+    /// two sizes is two distinct map entries — the cache is keyed by the
+    /// exact pixel size, so one size never silently reuses another's
+    /// texture.
+    #[test]
+    fn card_texture_cache_keyed_per_size() {
+        let ctx = egui::Context::default();
+        let mut gui = super::GuiApp::new();
+        let card = card_fix(
+            "penrose",
+            tess_core::TilingCategory::Uniform,
+            None,
+            None,
+        );
+        let _h120 = gui.card_texture(&ctx, &card, 120, 90);
+        let _h180 = gui.card_texture(&ctx, &card, 180, 135);
+        assert_eq!(
+            gui.card_textures.len(), 2,
+            "one entry per exact (id, params, size)"
+        );
+        assert!(gui.card_textures.keys().any(|k| k.ends_with("|120x90")));
+        assert!(gui.card_textures.keys().any(|k| k.ends_with("|180x135")));
+    }
+
     /// `card_target_for_cols` is the exact inverse of
     /// `columns_for_width` at the regime edge: for a sweep of
     /// width/cols pairs the round trip reproduces `cols` — the
