@@ -2159,4 +2159,93 @@ mod tests {
             );
         }
     }
+
+    /// (4) the 44-element L₁₀ sign/order battery — the degree-4 girih
+    /// field's operating range, derived from its REAL consumers rather
+    /// than seeded noise (the K₇/K₉/K₁₅ `check_sign_order` precedent,
+    /// fields.rs:1627/:1753/:1912, re-pinned here for L₁₀). Every tuple
+    /// is a distinct numerator the shipped `medallion/girih_m161.rs`
+    /// consumer paths can produce:
+    ///   raw /64 hull grid coordinates (`HULL_TBL`, raw `Kp` /64 tuples);
+    ///   shipped ROTM /64 entries (the ANCHOR_ROTM validation target);
+    ///   the exactness pins — cos² 54° = (5−a²)/4, doubled area = 5a³−10a,
+    ///   circumradius² = a²−1, the unit element, a² and one(4);
+    ///   and the strap/exit-census/convexity/outward products (the gcd-reduced
+    ///   Kq numerators at the `sgn()` call sites of `medallion/girih_m161.rs`:
+    ///   the strap closure walk, `exit_direction_census`, the strict
+    ///   convexity and outward-exit checks).
+    ///
+    /// Coefficient-height certification (STOP-REPORT §3(a)): max |cᵢ| of
+    /// any battery element = 160 (raw); max |cᵢ| of any pairwise difference
+    /// (the exact-sort comparator inputs, ksign(ksub(a, b))) = 256;
+    /// 946 ordered distinct pairwise differences over the 44 distinct
+    /// numerators (raw /64 elements reach |cᵢ| = 128–160); 44/44
+    /// distinct floats (min |value| 1.0, min pairwise gap 1.719e-2); 0
+    /// exact-vs-float sign mismatches; and every element and every
+    /// comparator difference resolves in a single pass over [`ISO_L10`] —
+    /// no bisection needed, i.e. the whole battery sits comfortably inside
+    /// the deg-4 s₀ = 26 envelope ([`BISECT_CAP`]). Certified
+    /// independently (exact Fraction dyadic interval arithmetic as a second
+    /// path) in scratch `.scratch/l10-battery/derive_l10.py` — the same
+    /// discipline the K₇/K₉/K₁₅ batteries carry (`derive_k9k15l10.py`).
+    const BATTERY_L10: [L10; 44] = [
+        // raw /64 hull grid coordinates (Kp /64 tuples, max heights).
+        L10([160, 0, -64, 0]),   // raw hull raw[8].0
+        L10([0, -128, 0, 64]),   // raw hull raw[6].1
+        L10([-96, 0, 64, 0]),    // raw hull raw[3].0
+        L10([0, -32, 0, 32]),    // raw hull raw[7].1
+        L10([0, 0, 32, 0]),      // raw hull raw[4].0
+        L10([0, -64, 0, 32]),    // raw hull raw[8].1
+        // shipped ROTM /64 entries (the ANCHOR_ROTM validation target).
+        L10([64, 0, 0, 0]),      // ROTM entry [41]
+        L10([-64, 0, 0, 0]),     // ROTM entry [42]
+        L10([0, -32, 0, 0]),     // ROTM entry [45]
+        L10([64, 0, -32, 0]),    // ROTM entry [48]
+        L10([-64, 0, 32, 0]),    // ROTM entry [49]
+        L10([0, -96, 0, 32]),    // ROTM entry [50]
+        L10([0, 96, 0, -32]),    // ROTM entry [51]
+        L10([0, 32, 0, 0]),      // ROTM entry [52]
+        L10([-96, 0, 32, 0]),    // ROTM entry [53]
+        L10([96, 0, -32, 0]),    // ROTM entry [54]
+        // exactness pins at the girih_m161 consumer call sites.
+        L10([5, 0, -1, 0]),      // cos² 54° = (5 − a²)/4
+        L10([0, -10, 0, 5]),     // doubled area = 5a³ − 10a
+        L10([-1, 0, 1, 0]),      // circumradius² = a² − 1
+        L10([1, 0, 0, 0]),       // unit element (hull origins)
+        L10([0, 0, 1, 0]),       // a² — cos/sin 18° identity operand
+        L10([4, 0, 0, 0]),       // one(4) — 4·cos² cross-check
+        // strap / exit / convexity / outward / hull-reduced numerators.
+        L10([0, 17, 0, -12]),    // strap [9,2][6] ns
+        L10([0, 13, 0, -10]),    // strap [9,2][7] ns
+        L10([0, 7, 0, -6]),      // strap [9,2][8] ns
+        L10([0, 7, 0, -4]),      // strap [9,2][0] (den.sub(ns))
+        L10([0, 3, 0, -2]),      // strap [9,2][9] ns
+        L10([0, 1, 0, -1]),      // strap [9,2][8] den
+        L10([0, 2, 0, -1]),      // strap [9,2][6] den
+        L10([0, -3, 0, 1]),      // strap [9,2][8] nt
+        L10([0, -2, 0, 1]),      // strap [9,2][5] den
+        L10([0, -5, 0, 2]),      // strap [9,2][7] nt
+        L10([0, -1, 0, 1]),      // strap [9,2][3] den
+        L10([0, -3, 0, 2]),      // strap [9,2][6] nt
+        L10([0, -5, 0, 3]),      // strap [9,2][5] nt
+        L10([0, -7, 0, 4]),      // strap [9,2][1] ns
+        L10([5, 0, -4, 0]),      // exit[7].0 x-coordinate numerator
+        L10([5, 0, -3, 0]),      // exit[8].0 x-coordinate numerator
+        L10([-5, 0, 3, 0]),      // exit[3].0 x-coordinate numerator
+        L10([-5, 0, 4, 0]),      // exit[2].0 x-coordinate numerator
+        L10([-15, 0, 11, 0]),    // outward[9] (kdot(exit ray, contact − centre))
+        L10([5, 0, -2, 0]),      // hull[8].0 (gcd-reduced Kq numerator)
+        L10([2, 0, -1, 0]),      // hull[9].0 (gcd-reduced Kq numerator)
+        L10([-3, 0, 2, 0]),      // hull[3].0 (gcd-reduced Kq numerator)
+    ];
+
+    /// (4) exact signs match float signs; floats distinct; the exact
+    /// total order (comparator = sign(x − y), doc §5.4) matches the
+    /// float sort — the L₁₀ certificate for the consumer-derived
+    /// operating range above.
+    #[test]
+    fn l10_sign_order_battery_matches_float() {
+        let cells: [[i64; 4]; 44] = BATTERY_L10.map(|k| k.0);
+        check_sign_order(&cells, &ML10, &ISO_L10, kval10);
+    }
 }
