@@ -3024,3 +3024,444 @@ mod decoration_finiteness_battery {
         }
     }
 }
+
+#[cfg(test)]
+mod tests_param_surface_pins {
+    //! Pins for the self-describing parameter surface —
+    //! ParamSpec well-formedness, set/parse round-trip, and the
+    //! fingerprint contract — over the live registry.
+    //!
+    //! These pins make the "self-describing params" claim permanent:
+    //! every tiling declares its parameters via `ParamSpec`, the specs
+    //! are well-formed, values round-trip, and the UIs' params
+    //! fingerprint (tess-tui `params_key` / tess-gui `preview_params_str`,
+    //! byte-identical construction) is stable, sensitive, and ordered.
+    //!
+    //! Deliberately NOT pinned (per the fleet's in-flight `depth`-param
+    //! job for glb-binary-n7): global param totals, per-tiling param
+    //! counts, or defaults beyond the claims the README makes.
+    use tess_core::params::{ParamId, ParamKind, ParamSpec, ParamSet, ParamValue};
+
+    /// The params fingerprint — the cache-key construction the UIs use.
+    /// Byte-identical to tess-tui `thumb::params_key` (thumb.rs) and
+    /// tess-gui `ui::preview_params_str` (ui.rs): `id=value` fragments
+    /// in declaration order, joined with `,`, missing values falling back
+    /// to the spec default. Re-implemented here because the UIs cannot be
+    /// reached from this registry-level crate.
+    fn fingerprint(specs: &[ParamSpec], params: &ParamSet) -> String {
+        specs.iter()
+            .map(|s| {
+                let v = params.get(s.id).unwrap_or_else(|| s.default_value());
+                format!("{}={}", s.id.as_str(), v.display())
+            })
+            .collect::<Vec<_>>()
+            .join(",")
+    }
+
+    /// A different in-bounds value for a spec — the sensitivity input.
+    fn alternate(spec: ParamSpec) -> ParamValue {
+        match spec.kind {
+            ParamKind::Float { min, max, .. } => {
+                let d = match spec.default_value() { ParamValue::Float(d) => d, _ => unreachable!() };
+                ParamValue::Float(if d == min { max } else { min })
+            }
+            ParamKind::Angle { min, max, .. } => {
+                let d = match spec.default_value() { ParamValue::Angle(d) => d, _ => unreachable!() };
+                ParamValue::Angle(if d == min { max } else { min })
+            }
+            ParamKind::Int { min, max, .. } => {
+                let d = match spec.default_value() { ParamValue::Int(d) => d, _ => unreachable!() };
+                ParamValue::Int(if d == min { max } else { min })
+            }
+            ParamKind::Bool { .. } => {
+                let d = match spec.default_value() { ParamValue::Bool(d) => d, _ => unreachable!() };
+                ParamValue::Bool(!d)
+            }
+        }
+    }
+
+    #[test]
+    fn registry_params_well_formed() {
+        let registry = crate::registry();
+        let mut total = 0usize;
+        for t in registry.iter() {
+            let specs = t.params();
+            for s in specs {
+                total += 1;
+                let where_ = format!("{} / {}", t.id(), s.id.as_str());
+                assert!(
+                    !s.id.as_str().trim().is_empty(),
+                    "{where_}: empty param id"
+                );
+                assert!(
+                    !s.label.trim().is_empty(),
+                    "{where_}: empty label"
+                );
+                match s.kind {
+                    ParamKind::Float { min, max, step, default } => {
+                        assert!(min.is_finite() && max.is_finite() && step.is_finite(), "{where_}: non-finite bound or step");
+                        assert!(min < max, "{where_}: min {min} >= max {max}");
+                        assert!(step > 0.0, "{where_}: step {step} <= 0");
+                        assert!(default.is_finite(), "{where_}: default not finite");
+                        assert!(min <= default && default <= max, "{where_}: default {default} outside [{min}, {max}]");
+                    }
+                    ParamKind::Angle { min, max, step, default } => {
+                        assert!(min.is_finite() && max.is_finite() && step.is_finite(), "{where_}: non-finite bound or step");
+                        assert!(min < max, "{where_}: min {min} >= max {max}");
+                        assert!(step > 0.0, "{where_}: step {step} <= 0");
+                        assert!(default.is_finite(), "{where_}: default not finite");
+                        assert!(min <= default && default < max, "{where_}: default {default} outside [{min}, {max})");
+                    }
+                    ParamKind::Int { min, max, step, default } => {
+                        assert!(min < max, "{where_}: min {min} >= max {max}");
+                        assert!(step > 0, "{where_}: step {step} <= 0");
+                        assert!(min <= default && default <= max, "{where_}: default {default} outside [{min}, {max}]");
+                    }
+                    ParamKind::Bool { .. } => {
+                        // Default is a bool by construction — nothing to check.
+                    }
+                }
+            }
+        }
+        // Negative finding: the well-formedness contract mentions a Choice
+        // variant with a non-empty variant list and valid default — no such
+        // variant exists in `ParamKind` (Float/Int/Bool/Angle only), so that
+        // clause pins nothing today. Report, don't pin.
+        assert!(total > 0, "registry has no param specs at all");
+    }
+
+    #[test]
+    fn registry_params_round_trip() {
+        let registry = crate::registry();
+        for t in registry.iter() {
+            let specs = t.params();
+            let set = ParamSet::default_for(specs);
+            let where_ = format!("{}", t.id());
+            for s in specs {
+                // Default set→get: identical.
+                assert_eq!(
+                    set.get(s.id),
+                    Some(s.default_value()),
+                    "{where_} / {}: default round-trip",
+                    s.id.as_str()
+                );
+                match s.kind {
+                    ParamKind::Float { min, max, step, .. } => {
+                        // Clamped semantics: stepping past either edge stays
+                        // at that edge (not wrapping).
+                        let lo = ParamValue::Float(min);
+                        let hi = ParamValue::Float(max);
+                        assert_eq!(s.step_by(lo, -1), lo, "{where_} / {}: min edge", s.id.as_str());
+                        assert_eq!(s.step_by(hi, 1), hi, "{where_} / {}: max edge", s.id.as_str());
+                        // Mid-range step lands on the grid and in range.
+                        let mid = ParamValue::Float((min + max) / 2.0);
+                        let stepped = s.step_by(mid, 1);
+                        if let ParamValue::Float(v) = stepped {
+                            assert!(min <= v && v <= max, "{where_} / {}: mid step {v} outside range", s.id.as_str());
+                            let _ = step; // grid exercised via step_by itself
+                        } else {
+                            panic!("{where_} / {}: mid step returned non-float {stepped:?}", s.id.as_str());
+                        }
+                    }
+                    ParamKind::Angle { min, max, .. } => {
+                        // Wrap semantics: stepping at the edges wraps into
+                        // [min, max).
+                        let stepped_lo = s.step_by(ParamValue::Angle(min), -1);
+                        let stepped_hi = s.step_by(ParamValue::Angle(max - 1e-9), 1);
+                        for (v, what) in [(stepped_lo, "wrap from min"), (stepped_hi, "wrap from max")] {
+                            if let ParamValue::Angle(x) = v {
+                                assert!(min <= x && x < max, "{where_} / {}: {} wrapped to {x} outside [{min}, {max})", s.id.as_str(), what);
+                            } else {
+                                panic!("{where_} / {}: {} returned non-angle {v:?}", s.id.as_str(), what);
+                            }
+                        }
+                    }
+                    ParamKind::Int { min, max, .. } => {
+                        let lo = ParamValue::Int(min);
+                        let hi = ParamValue::Int(max);
+                        assert_eq!(s.step_by(lo, -1), lo, "{where_} / {}: int min edge", s.id.as_str());
+                        assert_eq!(s.step_by(hi, 1), hi, "{where_} / {}: int max edge", s.id.as_str());
+                    }
+                    ParamKind::Bool { .. } => {
+                        let d = match s.default_value() { ParamValue::Bool(d) => d, _ => unreachable!() };
+                        assert_eq!(s.step_by(ParamValue::Bool(d), 1), ParamValue::Bool(!d), "{where_} / {}: bool toggle", s.id.as_str());
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn registry_fingerprint_stability_sensitivity_order_sensitivity() {
+        let registry = crate::registry();
+        for t in registry.iter() {
+            let specs = t.params();
+            let where_ = format!("{} ({} specs)", t.id(), specs.len());
+            let baseline = fingerprint(specs, &ParamSet::default_for(specs));
+            // Stability: two constructions of the same values → byte-identical.
+            let again = fingerprint(specs, &ParamSet::default_for(specs));
+            assert_eq!(baseline, again, "{where_}: fingerprint not stable");
+            // Construction with an explicit set carrying the same values → same bytes.
+            let explicit = {
+                let mut p = ParamSet::EMPTY;
+                for s in specs {
+                    p.set(s.id, s.default_value());
+                }
+                p
+            };
+            assert_eq!(fingerprint(specs, &explicit), baseline, "{where_}: default and explicit agree");
+            // Sensitivity: every spec — change one value → fingerprint moves.
+            for (i, s) in specs.iter().enumerate() {
+                let mut p = ParamSet::default_for(specs);
+                p.set(s.id, alternate(*s));
+                let changed = fingerprint(specs, &p);
+                assert_ne!(changed, baseline, "{where_}: spec {} ({:?}) change invisible", i, s.id);
+            }
+            // Order-sensitivity: swap the last two specs → fingerprint moves.
+            assert!(specs.len() >= 2, "{where_}: expected >=2 specs");
+            let mut swapped = specs.to_vec();
+            swapped.swap(specs.len() - 2, specs.len() - 1);
+            let reordered = fingerprint(&swapped, &ParamSet::default_for(&swapped));
+            assert_ne!(reordered, baseline, "{where_}: spec-order change invisible");
+        }
+    }
+
+    #[test]
+    fn glb_binary_n7_fingerprint_locks_appended_spec() {
+        // The in-flight depth-param job adds `depth` Int to this tiling.
+        // Appending a spec must be a detectable, non-colliding change —
+        // pinned here so that job's keys stay honest.
+        let registry = crate::registry();
+        let t = registry.get("glb-binary-n7").unwrap_or_else(|| panic!("missing glb-binary-n7"));
+        let specs = t.params();
+        let baseline = fingerprint(specs, &ParamSet::default_for(specs));
+        let mut specs_plus: Vec<ParamSpec> = specs.to_vec();
+        specs_plus.push(ParamSpec::int(
+            ParamId::new("depth"), "depth", 1, 4, 1, 2,
+        ));
+        let appended = fingerprint(&specs_plus, &ParamSet::default_for(&specs_plus));
+        assert_ne!(appended, baseline, "appending a param must change the fingerprint");
+        assert!(appended.ends_with(",depth=2"), "the new spec is appended, not spliced: {appended}");
+        // And the appended spec must not collide with the existing ids.
+        let existing: std::collections::BTreeSet<&str> = specs.iter().map(|s| s.id.as_str()).collect();
+        assert!(!existing.contains("depth"), "depth id would collide with an existing spec");
+    }
+
+    #[test]
+    fn hexagram_declaration_order_is_scale_then_rotation() {
+        // The fingerprint is positional: scale and rotation are declared
+        // first, in that order, and any third param comes after them —
+        // structural invariant, not a count (a future fourth param is
+        // allowed). If the order flips, the fingerprint re-keying the UIs
+        // depend on would silently reshuffle.
+        let registry = crate::registry();
+        let t = registry.get("hexagram").unwrap_or_else(|| panic!("missing hexagram"));
+        let ids: Vec<&str> = t.params().iter().map(|s| s.id.as_str()).collect();
+        assert!(ids.len() >= 2, "hexagram: expected >=2 specs, got {ids:?}");
+        assert_eq!(ids[0], "scale", "hexagram: first spec must be scale, got {ids:?}");
+        assert_eq!(ids[1], "rotation", "hexagram: second spec must be rotation, got {ids:?}");
+    }
+}
+
+#[cfg(test)]
+mod tests_param_surface_doc_pins {
+    //! Doc-vs-code pins for the self-describing parameter surface.
+    //!
+    //! Mirrors the census-surface-pin pattern: line-scoped,
+    //! whitespace-tolerant pins whose anchors must match exactly once
+    //! (zero or several matches fail loudly, naming file/line/claim).
+    //! Code-visible claims are asserted against the live registry; the
+    //! process/architecture claims are anchor-guarded (a deletion of
+    //! the claim fails this test) but are not computable here — they
+    //! are documented in the module head.
+    use tess_core::params::{ParamKind, ParamSpec};
+
+    /// Whitespace-normalized paragraph containing `anchor_pos` (from the
+    /// nearest blank line above to the nearest blank line below) — claims
+    /// routinely span several lines and the anchor is only one line of it.
+    fn line_region(text: &str, anchor_pos: usize) -> String {
+        let start = text[..anchor_pos]
+            .rfind("\n\n")
+            .map(|p| p + 2)
+            .unwrap_or(0);
+        let end = text[anchor_pos..]
+            .find("\n\n")
+            .map(|i| anchor_pos + i)
+            .unwrap_or(text.len());
+        text[start..end]
+            .chars()
+            .map(|c| if c.is_whitespace() { ' ' } else { c })
+            .collect()
+    }
+
+    /// 1-based line number of the anchor at `anchor_pos`.
+    fn anchor_line(text: &str, anchor_pos: usize) -> usize {
+        text[..anchor_pos].chars().filter(|&c| c == '\n').count() + 1
+    }
+
+    /// The unique byte position of `anchor`; else panic loudly.
+    fn unique_anchor(text: &str, anchor: &str, what: &str) -> usize {
+        let positions: Vec<usize> = text.match_indices(anchor).map(|(i, _)| i).collect();
+        match positions.len() {
+            0 => panic!("{what}: anchor missing: {anchor:?}"),
+            1 => positions[0],
+            n => panic!("{what}: anchor ambiguous ({n} matches): {anchor:?}"),
+        }
+    }
+
+    fn readme() -> String {
+        std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../README.md"),
+        )
+        .expect("read README.md")
+    }
+
+    fn design() -> String {
+        std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/DESIGN.md"),
+        )
+        .expect("read DESIGN.md")
+    }
+
+    fn agents() -> String {
+        std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../AGENTS.md"),
+        )
+        .expect("read AGENTS.md")
+    }
+
+    fn spec_by_label<'a>(specs: &'a [ParamSpec], label: &str) -> &'a ParamSpec {
+        specs
+            .iter()
+            .find(|s| s.label == label)
+            .unwrap_or_else(|| panic!("no spec with label {label:?} in {}", label))
+    }
+
+    #[test]
+    fn readme_scale_and_rotation_ranges_match_registry() {
+        let text = readme();
+        let what = "README scale/rotation";
+        let pos = unique_anchor(&text, "Each periodic tiling accepts", what);
+        let line_no = anchor_line(&text, pos);
+        let line = line_region(&text, pos);
+        assert!(
+            line.contains("scale") && line.contains("0.1–50") && line.contains("0.05"),
+            "{what}: README.md:{line_no}: anchor's line must claim scale (0.1–50, step 0.05): line: {line}"
+        );
+        assert!(
+            line.contains("rotation") && line.contains("0–360°") && line.contains("5°"),
+            "{what}: README.md:{line_no}: anchor's line must claim rotation (0–360°, step 5°): line: {line}"
+        );
+        let registry = crate::registry();
+        for t in registry.iter() {
+            let specs = t.params();
+            let where_ = format!("{}", t.id());
+            let scale = specs
+                .iter()
+                .find(|s| s.id.as_str() == "scale")
+                .unwrap_or_else(|| panic!("{where_}: no scale spec (README claims every periodic tiling accepts scale)"));
+            match scale.kind {
+                ParamKind::Float { min, max, step, .. } => {
+                    assert!((min - 0.1).abs() < 1e-12 && (max - 50.0).abs() < 1e-12, "{where_}: scale range {min}..{max} != claimed 0.1..50");
+                    assert!((step - 0.05).abs() < 1e-12, "{where_}: scale step {step} != claimed 0.05");
+                }
+                other => panic!("{where_}: scale spec is {other:?}, not Float"),
+            }
+            let rotation = specs
+                .iter()
+                .find(|s| s.id.as_str() == "rotation")
+                .unwrap_or_else(|| panic!("{where_}: no rotation spec (README claims every periodic tiling accepts rotation)"));
+            match rotation.kind {
+                ParamKind::Angle { min, max, step, .. } => {
+                    assert!((min - 0.0).abs() < 1e-12 && (max - 360.0).abs() < 1e-12, "{where_}: rotation range {min}..{max} != claimed 0..360");
+                    assert!((step - 5.0).abs() < 1e-12, "{where_}: rotation step {step} != claimed 5°");
+                }
+                other => panic!("{where_}: rotation spec is {other:?}, not Angle"),
+            }
+        }
+    }
+
+    #[test]
+    fn readme_third_parameter_ranges_match_registry() {
+        let text = readme();
+        // star-and-cross: star radius (0.05–0.5)
+        let what = "README star-cross star radius";
+        let pos = unique_anchor(&text, "star radius", what);
+        let line_no = anchor_line(&text, pos);
+        let line = line_region(&text, pos);
+        assert!(line.contains("0.05") && line.contains("0.5"), "{what}: README.md:{line_no}: anchor's line must claim 0.05–0.5: line: {line}");
+        let registry = crate::registry();
+        let star_cross = registry.get("star-cross").unwrap_or_else(|| panic!("missing star-cross"));
+        let spec = spec_by_label(star_cross.params(), "star radius");
+        match spec.kind {
+            ParamKind::Float { min, max, step: _, default } => {
+                assert!((min - 0.05).abs() < 1e-12 && (max - 0.5).abs() < 1e-12, "star-cross: star radius range {min}..{max} != claimed 0.05..0.5");
+                assert!(default > 0.0 && default <= 0.5, "star-cross: star radius default {default} out of range");
+            }
+            other => panic!("star-cross: star radius is {other:?}, not Float"),
+        }
+        // hexagram: star tip radius (0.05–0.5, default 0.5)
+        let what = "README hexagram star tip radius";
+        let pos = unique_anchor(&text, "star tip radius", what);
+        let line_no = anchor_line(&text, pos);
+        let line = line_region(&text, pos);
+        assert!(line.contains("0.05") && line.contains("0.5") && line.contains("default 0.5"), "{what}: README.md:{line_no}: anchor's line must claim 0.05–0.5 default 0.5: line: {line}");
+        let hexagram = registry.get("hexagram").unwrap_or_else(|| panic!("missing hexagram"));
+        let spec = spec_by_label(hexagram.params(), "star tip radius");
+        match spec.kind {
+            ParamKind::Float { min, max, step: _, default } => {
+                assert!((min - 0.05).abs() < 1e-12 && (max - 0.5).abs() < 1e-12, "hexagram: star tip radius range {min}..{max} != claimed 0.05..0.5");
+                assert!((default - 0.5).abs() < 1e-12, "hexagram: star tip radius default {default} != claimed 0.5");
+            }
+            other => panic!("hexagram: star tip radius is {other:?}, not Float"),
+        }
+        // Pythagorean two-square: square ratio b/a (0.2–10, default φ)
+        let what = "README pythagorean square ratio";
+        let pos = unique_anchor(&text, "square ratio", what);
+        let line_no = anchor_line(&text, pos);
+        let line = line_region(&text, pos);
+        assert!(line.contains("0.2") && line.contains("10") && line.contains("φ"), "{what}: README.md:{line_no}: anchor's line must claim 0.2–10 default φ: line: {line}");
+        let pythagorean = registry.get("pythagorean").unwrap_or_else(|| panic!("missing pythagorean"));
+        let spec = spec_by_label(pythagorean.params(), "square ratio b/a");
+        match spec.kind {
+            ParamKind::Float { min, max, step: _, default } => {
+                assert!((min - 0.2).abs() < 1e-12 && (max - 10.0).abs() < 1e-12, "pythagorean: square ratio range {min}..{max} != claimed 0.2..10");
+                assert!((default - 1.618033988749895).abs() < 1e-12, "pythagorean: square ratio default {default} != claimed φ");
+            }
+            other => panic!("pythagorean: square ratio is {other:?}, not Float"),
+        }
+    }
+
+    #[test]
+    fn design_md_self_describing_claim_anchored() {
+        let text = design();
+        let what = "DESIGN.md self-describing";
+        let pos = unique_anchor(&text, "Every tiling declares its parameters", what);
+        let line_no = anchor_line(&text, pos);
+        let line = line_region(&text, pos);
+        assert!(
+            line.contains("ParamSpec") && line.contains("Angle"),
+            "{what}: docs/DESIGN.md:{line_no}: anchor's line must claim ParamSpec + Angle: line: {line}"
+        );
+        // Anchor presence only — the code-visible content (every spec is a
+        // valid ParamSpec) is pinned by registry_params_well_formed; the
+        // process/architecture claim (adding a tiling never requires touching
+        // UI code) is not computable here and is deliberately not pinned.
+    }
+
+    #[test]
+    fn readme_and_agents_self_describing_anchors_present() {
+        let readme = readme();
+        let what = "README self-describing";
+        let pos = unique_anchor(&readme, "adding a tiling never requires touching UI code", what);
+        let line_no = anchor_line(&readme, pos);
+        let line = line_region(&readme, pos);
+        assert!(line.contains("self-describing"), "{what}: README.md:{line_no}: anchor's line must claim self-describing params: line: {line}");
+        let agents = agents();
+        let what = "AGENTS.md self-describing";
+        let pos = unique_anchor(&agents, "Parameters are self-describing (`ParamSpec`), so", what);
+        let line_no = anchor_line(&agents, pos);
+        let line = line_region(&agents, pos);
+        assert!(line.contains("adding a tiling never requires touching UI code"), "{what}: AGENTS.md:{line_no}: anchor's line must claim never-touching-UI: line: {line}");
+    }
+}

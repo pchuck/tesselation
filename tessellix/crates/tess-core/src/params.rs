@@ -296,3 +296,99 @@ mod tests {
         assert_eq!(set.float(ParamId::new("missing"), 7.0), 7.0);
     }
 }
+
+#[cfg(test)]
+mod tests_param_surface_pins {
+    //! Registry-adjacent API-level pins — the self-describing param
+    //! surface — mirroring the tess-tilings registry-level pins.
+    //!
+    //! Covers what the existing API-level tests (default values, angle
+    //! wrap, float clamp, set/get roundtrip) do NOT: byte-exact value
+    //! formatting (the strings the UIs' cache-key fingerprints are
+    //! built from), Int step clamping, Bool toggling, mid-grid float
+    //! snapping, and the zero-step identity.
+    use super::*;
+
+    /// Byte-exact formatting pins — the strings the UIs' cache-key
+    /// fingerprints (tess-tui `params_key` / tess-gui `preview_params_str`)
+    /// are built from, in declaration order.
+    #[test]
+    fn display_is_stable_per_kind() {
+        assert_eq!(ParamValue::Float(1.0).display(), "1");
+        assert_eq!(ParamValue::Float(0.5).display(), "0.50");
+        assert_eq!(ParamValue::Float(0.05).display(), "0.05");
+        // The float-precision ladder collapses accumulated error.
+        assert_eq!(ParamValue::Float(0.30000000000000004).display(), "0.30");
+        assert_eq!(ParamValue::Int(3).display(), "3");
+        assert_eq!(ParamValue::Bool(true).display(), "on");
+        assert_eq!(ParamValue::Bool(false).display(), "off");
+        assert_eq!(ParamValue::Angle(90.0).display(), "90°");
+        assert_eq!(ParamValue::Angle(0.0).display(), "0°");
+    }
+
+    /// The zero-step direction is the identity — stepping never mutates
+    /// a value on demand.
+    #[test]
+    fn step_by_zero_dir_is_identity() {
+        let f = ParamSpec::float(ParamId::new("s"), "s", 0.0, 10.0, 0.5, 1.0);
+        assert_eq!(f.step_by(ParamValue::Float(3.3), 0), ParamValue::Float(3.3));
+        let a = ParamSpec::angle(ParamId::new("r"), "r", 0.0, 360.0, 5.0, 0.0);
+        assert_eq!(a.step_by(ParamValue::Angle(100.0), 0), ParamValue::Angle(100.0));
+        let i = ParamSpec::int(ParamId::new("i"), "i", 0, 2, 1, 1);
+        assert_eq!(i.step_by(ParamValue::Int(1), 0), ParamValue::Int(1));
+        let b = ParamSpec::bool(ParamId::new("b"), "b", false);
+        assert_eq!(b.step_by(ParamValue::Bool(false), 0), ParamValue::Bool(false));
+    }
+
+    /// Int stepping clamps at both edges (the registry has no Int specs,
+    /// so this semantics lives here, not at the registry level).
+    #[test]
+    fn int_step_clamps_at_edges() {
+        let i = ParamSpec::int(ParamId::new("i"), "i", 0, 2, 1, 1);
+        assert_eq!(i.step_by(ParamValue::Int(1), 1), ParamValue::Int(2));
+        assert_eq!(i.step_by(ParamValue::Int(2), 1), ParamValue::Int(2));
+        assert_eq!(i.step_by(ParamValue::Int(0), -1), ParamValue::Int(0));
+        assert_eq!(i.step_by(ParamValue::Int(1), -1), ParamValue::Int(0));
+    }
+
+    /// Bool stepping toggles — the one Bool spec in the registry
+    /// (penrose_p2's star seed) relies on this.
+    #[test]
+    fn bool_step_toggles() {
+        let b = ParamSpec::bool(ParamId::new("b"), "b", false);
+        assert_eq!(b.step_by(ParamValue::Bool(false), 1), ParamValue::Bool(true));
+        assert_eq!(b.step_by(ParamValue::Bool(true), -1), ParamValue::Bool(false));
+    }
+
+    /// Mid-grid float stepping lands on the snap grid, not raw arithmetic.
+    #[test]
+    fn float_step_snaps_to_grid_mid_range() {
+        let f = ParamSpec::float(ParamId::new("s"), "s", 0.0, 10.0, 0.5, 1.0);
+        // 2.7 + 0.5 = 3.2, snapped to the 0.5 grid => 3.0.
+        assert_eq!(f.step_by(ParamValue::Float(2.7), 1), ParamValue::Float(3.0));
+        // 0.2 - 0.5 = -0.3, snapped then clamped => 0.0.
+        assert_eq!(f.step_by(ParamValue::Float(0.2), -1), ParamValue::Float(0.0));
+    }
+
+    /// The default set round-trips through the typed accessors — the
+    /// primitive every registry consumer (UIs, browse, card meta) relies
+    /// on. Asserted at the API level since the registry-level round-trip
+    /// loop covers the same contract over live specs.
+    #[test]
+    fn default_for_round_trips_through_typed_accessors() {
+        let specs = [
+            ParamSpec::float(ParamId::new("s"), "s", 0.1, 50.0, 0.05, 1.0),
+            ParamSpec::angle(ParamId::new("r"), "r", 0.0, 360.0, 5.0, 0.0),
+            ParamSpec::bool(ParamId::new("b"), "b", false),
+        ];
+        let set = ParamSet::default_for(&specs);
+        assert_eq!(set.get(ParamId::new("s")), Some(ParamValue::Float(1.0)));
+        assert_eq!(set.float(ParamId::new("s"), -1.0), 1.0);
+        assert_eq!(set.angle(ParamId::new("r"), -1.0), 0.0);
+        assert_eq!(set.bool(ParamId::new("b"), true), false);
+        // Typed accessors fall back to the supplied default for absent ids.
+        assert_eq!(set.float(ParamId::new("absent"), 7.0), 7.0);
+        assert_eq!(set.angle(ParamId::new("absent"), 7.0), 7.0);
+        assert_eq!(set.bool(ParamId::new("absent"), true), true);
+    }
+}
