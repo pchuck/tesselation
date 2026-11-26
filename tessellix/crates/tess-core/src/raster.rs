@@ -345,6 +345,66 @@ mod tests {
         assert_eq!(r.at(7, 2), GAP);
     }
 
+    /// Designed explicit orientation pin: four 5x5 quadrant tiles covering a
+    /// 10x10 view (seeds 1/2/3/4 = pattern-mode pixel values 1/2/3/4), asserting
+    /// BOTH axes at the two screen corners plus interior cells. Unlike the
+    /// incidental flip pin in `cells_outside_the_tiles_stay_gap` (which covers a
+    /// single bottom-half cell and misses rows shifted by any amount), this fails
+    /// under a row flip AND under a row shift. Seam cells (screen column 5 and
+    /// screen row 5) render as grout — the two 5-unit splits land exactly on the
+    /// pixel grid boundary, so every quadrant interior cell is a single-candidate
+    /// fast-path fill, no supersampling.
+    #[test]
+    fn quadrant_layout_pins_both_axes_at_screen_corners() {
+        let tl = tile(0, 1, &[[0.0, 5.0], [5.0, 5.0], [5.0, 10.0], [0.0, 10.0]]);
+        let tr = tile(1, 2, &[[5.0, 5.0], [10.0, 5.0], [10.0, 10.0], [5.0, 10.0]]);
+        let bl = tile(2, 3, &[[0.0, 0.0], [5.0, 0.0], [5.0, 5.0], [0.0, 5.0]]);
+        let br = tile(3, 4, &[[5.0, 0.0], [10.0, 0.0], [10.0, 5.0], [5.0, 5.0]]);
+        let bbox = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(10.0, 10.0));
+        let r = raster(&[tl, tr, bl, br], &bbox, 10, 10, ColorMode::Pattern, &PAL);
+
+        // The documented fact, at both screen corners. Row 0 is top,
+        // column 0 is left: the tl quadrant must be at (0, 0).
+        assert_eq!(r.at(0, 0), 1, "screen (0, 0) must be world top-left");
+        assert_eq!(r.at(9, 9), 4, "screen (w-1, h-1) must be world bottom-right");
+
+        // Both axes, explicit screen coordinates (not just the corners).
+        assert_eq!(r.at(9, 0), 2, "screen (w-1, 0) must be world top-right");
+        assert_eq!(r.at(0, 9), 3, "screen (0, h-1) must be world bottom-left");
+
+        // Interior cells of each quadrant.
+        assert_eq!(r.at(2, 2), 1, "world top-left interior");
+        assert_eq!(r.at(7, 2), 2, "world top-right interior");
+        assert_eq!(r.at(2, 7), 3, "world bottom-left interior");
+        assert_eq!(r.at(7, 7), 4, "world bottom-right interior");
+
+        // The seams: column 5 and row 5 are the split lines — grout, not tile
+        // color, on both axes at the corner-adjacent cells.
+        assert_eq!(r.at(5, 0), BORDER, "vertical seam (screen col 5) must be grout");
+        assert_eq!(r.at(5, 9), BORDER, "vertical seam must be grout at the bottom");
+        assert_eq!(r.at(0, 5), BORDER, "horizontal seam (screen row 5) must be grout");
+        assert_eq!(r.at(9, 5), BORDER, "horizontal seam must be grout at the right");
+    }
+
+    /// Sentinel-value distinctness: BORDER (255) and GAP (254) must be distinct
+    /// from each other and from every possible index of the 8-entry palette space
+    /// (pattern/proto mode: pixel value = seed % 8, i.e. indices 0..=7). Front
+    /// ends match on exactly these two values — if a sentinel ever fell inside
+    /// the palette space, or duplicated the other sentinel, a real pixel would be
+    /// indistinguishable from a sentinel and every front end would silently
+    /// mismap it. Sentinels sit at the top of the u8 range (255/254), so no seed
+    /// index space up to 255 can collide with them; the pin here is against the
+    /// documented 8-entry space, so any future palette growth stays collision-free.
+    #[test]
+    fn border_gap_sentinels_distinct_from_seed_indices() {
+        const SEED_SPACE: u8 = 8; // seed % 8 → indices 0..=7
+        assert_eq!(BORDER, 255, "BORDER sentinel value");
+        assert_eq!(GAP, 254, "GAP sentinel value");
+        assert_ne!(BORDER, GAP, "BORDER and GAP must be distinct sentinels");
+        assert!(BORDER >= SEED_SPACE, "BORDER must exceed every seed index (0..=7)");
+        assert!(GAP >= SEED_SPACE, "GAP must exceed every seed index (0..=7)");
+    }
+
     #[test]
     fn raster_is_deterministic() {
         let tiles = vec![
