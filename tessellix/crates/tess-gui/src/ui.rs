@@ -223,6 +223,12 @@ pub struct GuiApp {
     /// The viewport zoom the app was constructed with — the 100%
     /// baseline for the zoom label and its click-to-reset.
     zoom_default: f64,
+    /// The About panel is open: app name + version, the data
+    /// attributions rendered content draws on, and the pointer at the
+    /// per-tiling source docs. Toggled by the H key and the title-bar
+    /// About button; closed by H again or the panel's × button.
+    /// Purely an overlay — it enters no RenderKey/cache key.
+    about_open: bool,
 }
 
 /// What determines the canvas `TilingResult`: the tiling id, the
@@ -591,6 +597,7 @@ impl GuiApp {
             card_grid_avail: 0.0,
             canvas_rect: None,
             zoom_default,
+            about_open: false,
         }
     }
 
@@ -641,6 +648,11 @@ impl eframe::App for GuiApp {
                 ui.heading("tessellix");
                 ui.separator();
                 ui.label(self.app.tiling().name());
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if ui.button("About").clicked() {
+                        self.about_open = !self.about_open;
+                    }
+                });
             });
         });
 
@@ -648,6 +660,58 @@ impl eframe::App for GuiApp {
             GuiMode::Browse => self.draw_browse(ctx),
             GuiMode::Render => self.draw_render(ctx),
         }
+
+        // The H key toggles the About panel. Guarded against text-field
+        // focus (Browse's search field) exactly like the +/- zoom keys —
+        // typing H there keeps its character.
+        if !ctx.wants_keyboard_input() && ctx.input(|i| i.key_pressed(egui::Key::H)) {
+            self.about_open = !self.about_open;
+        }
+        self.draw_about(ctx);
+    }
+}
+
+impl GuiApp {
+    /// The About panel: app name + version, the data attributions
+    /// rendered content actually draws on, and a one-line pointer at
+    /// the per-tiling source docs (`docs/tilings/*.md`). A centered,
+    /// non-modal, non-resizable egui window toggled by the H key and
+    /// the title-bar About button — purely an overlay, so it enters
+    /// no cache key or RenderKey. Closed by H again, the panel's ×
+    /// button, or the About button (which flips the state).
+    fn draw_about(&mut self, ctx: &egui::Context) {
+        if !self.about_open {
+            return;
+        }
+        egui::Window::new("About")
+            .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+            .movable(false)
+            .collapsible(false)
+            .resizable(false)
+            .fade_in(false)
+            .default_width(400.0)
+            .open(&mut self.about_open)
+            .show(ctx, |ui| {
+                ui.heading("tessellix");
+                ui.label(format!("v{}", env!("CARGO_PKG_VERSION")));
+                ui.separator();
+                ui.label(egui::RichText::new("Data attributions").strong());
+                // Kaplan/Tactile: the five shipped isohedral instances
+                // are transcribed Tactile incidence-symbol data (the
+                // credit lives here; the cards carry none). The five
+                // IH tiles each carry their own docs/tilings/*.md.
+                ui.label(
+                    "Kaplan/Tactile incidence-symbol data — the five shipped isohedral (IH) instances \
+                     (docs/families/isohedral.md)",
+                );
+                ui.label(
+                    "Jeandel–Rao 11-tile Wang tiles, arXiv:1506.06492 — the author's canonical \
+                     100×100 patch (docs/tilings/jeandel-rao.md)",
+                );
+                ui.separator();
+                ui.label("Per-tiling sources: docs/tilings/*.md");
+                ui.label("H toggles this panel · × closes");
+            });
     }
 }
 
@@ -1744,6 +1808,7 @@ mod tests {
             card_grid_avail: 0.0,
             canvas_rect: None,
             zoom_default,
+            about_open: false,
         }
     }
 
@@ -2791,6 +2856,26 @@ mod tests {
         out
     }
 
+    /// The full (un-elided) text of every painted galley, one entry
+    /// per text shape, following the same walk as
+    /// [`painted_text_rects`]. In egui 0.29 a galley's `text()` is
+    /// the full non-elided job text — exactly what an attribution
+    /// assertion wants (an ellipsis would hide the line's tail).
+    fn painted_text(shapes: &[egui::epaint::ClippedShape]) -> Vec<String> {
+        fn walk(shape: &egui::Shape, out: &mut Vec<String>) {
+            match shape {
+                egui::Shape::Text(ts) => out.push(ts.galley.text().to_string()),
+                egui::Shape::Vec(inner) => inner.iter().for_each(|s| walk(s, out)),
+                _ => {}
+            }
+        }
+        let mut out = Vec::new();
+        for cs in shapes {
+            walk(&cs.shape, &mut out);
+        }
+        out
+    }
+
     /// Run the real browse grid through real headless egui passes at
     /// `w`×`h`; return the LAST pass's `FullOutput` plus the card rects
     /// and column width that pass recorded.
@@ -3361,5 +3446,61 @@ mod tests {
 
         pass(&mut gui, 800.0, 600.0);
         assert_eq!(gui.render_cache_misses, 4, "both-axis restore regenerates");
+    }
+
+    /// The About panel's headless pin: closed, nothing attribution-flavored
+    /// paints; open, the app name + version, both attribution lines, and
+    /// the docs pointer all paint. Driven through the same
+    /// `draw_about` the render loop calls — attribution presence/absence
+    /// is the whole contract (the H toggle / title-bar button live in
+    /// `update`, untestable headlessly, as the other key handlers are).
+    ///
+    /// A window first does a sizing pass (invisible, no shapes painted)
+    /// and the real paint lands on a later pass, so each state is run
+    /// a few passes like the other headless window-adjacent tests —
+    /// `pass` drives one `ctx.run`, mirroring the `headless_grid_at`
+    /// loop.
+    #[test]
+    fn about_panel_attribution_text_toggles() {
+        let ctx = egui::Context::default();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(900.0, 700.0));
+        let input = egui::RawInput {
+            screen_rect: Some(screen),
+            ..Default::default()
+        };
+        let mut gui = fresh_gui();
+        // Open toggles the state; the panel itself is drawn from a
+        // fresh `draw_about` per pass. `out` is the last pass's output
+        // (egui paints only the newest pass's shapes).
+        let pass = |gui: &mut super::GuiApp, input: egui::RawInput| {
+            let mut last = egui::FullOutput::default();
+            for _ in 0..4 {
+                last = ctx.run(input.clone(), |ctx| gui.draw_about(ctx));
+            }
+            last
+        };
+        assert!(!gui.about_open);
+        let out = pass(&mut gui, input.clone());
+        let text = painted_text(&out.shapes).join("\n");
+        assert!(!text.contains("Tactile"), "closed panel painted a Tactile line: {text:?}");
+        assert!(!text.contains("Jeandel"), "closed panel painted a Jeandel–Rao line: {text:?}");
+        assert!(!text.contains("docs/tilings"), "closed panel painted the docs pointer: {text:?}");
+        assert!(!text.contains(env!("CARGO_PKG_VERSION")), "closed panel painted its version line: {text:?}");
+
+        // Open: every line paints.
+        gui.about_open = true;
+        let out = pass(&mut gui, input);
+        let text = painted_text(&out.shapes).join("\n");
+        for needle in [
+            "tessellix",
+            env!("CARGO_PKG_VERSION"),
+            "Kaplan/Tactile",
+            "isohedral",
+            "Jeandel–Rao",
+            "arXiv:1506.06492",
+            "docs/tilings/*.md",
+        ] {
+            assert!(text.contains(needle), "open panel missing {needle:?}: {text:?}");
+        }
     }
 }
