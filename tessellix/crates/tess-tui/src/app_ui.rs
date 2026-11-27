@@ -1195,11 +1195,11 @@ mod tests {
         assert_eq!(tui.tabs.len(), 11, "one tab per TilingCategory::ALL entry");
         // Multi-tab membership (M76): a tiling appears in its primary
         // tab plus every secondary tab, so the tab sizes sum to the
-        // 187 memberships of the 166 registered tilings, not to 166.
+        // 185 memberships of the 166 registered tilings, not to 166.
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
-        assert_eq!(total, 187, "166 tilings carry 187 tab memberships");
+        assert_eq!(total, 185, "166 tilings carry 185 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 20, 33, 17, 17, 5, 30, 8, 23, 11, 12]);
+        assert_eq!(counts, vec![11, 20, 33, 17, 15, 5, 30, 8, 23, 11, 12]);
     }
 
     #[test]
@@ -1270,7 +1270,7 @@ mod tests {
 ("Two-Uniform", 20),
             ("Laves (Catalan duals)", 33),
             ("Wallpaper", 17),
-("Pentagon Types", 17),
+("Pentagon Types", 15),
 ("Isohedral", 5),
 ("Islamic", 30),
             ("Arrangements", 8),
@@ -1895,12 +1895,11 @@ mod tests {
             .position(|t| t.category == TilingCategory::PentagonTypes)
             .unwrap()];
         let types: Vec<Option<u8>> = pent.cards.iter().map(|c| c.class.pentagon_type).collect();
-        // 1..=15 in sequence, then the two isohedral pentagon interlocks
-        // (M162: ih27/ih29 — classical type cross-reference unverified,
-        // pentagon_type None) sorted after the typed cards.
-        let expected: Vec<Option<u8>> =
-            (1u8..=15).map(Some).chain(std::iter::repeat(None).take(2)).collect();
-        assert_eq!(types, expected, "types 1..=15 in sequence, then the untyped isohedral pentagons");
+        // 1..=15 in sequence — the typed cards only: the two isohedral
+        // pentagon interlocks (ih27/ih29) are isohedral variants and no
+        // longer appear in this tab.
+        let expected: Vec<Option<u8>> = (1u8..=15).map(Some).collect();
+        assert_eq!(types, expected, "types 1..=15 in sequence");
     }
 
     /// The Two-Uniform tab sorts by vertex configuration: shared

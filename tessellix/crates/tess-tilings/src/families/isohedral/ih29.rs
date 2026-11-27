@@ -49,11 +49,11 @@ static DATA: TypeData = TypeData {
 
 pub(crate) const TILING: IhTiling = IhTiling {
     id: "ih29-p4g-pentagon",
-    name: "IH29 pentagon (p4g)",
+    name: "IH29 (p4g)",
     description: "Kaplan isohedral template IH29: pentagon whose base edge orbit pairs through \
                   both rotation and reflection (Klein group, forcing a straight edge) plus one \
                   freeform (J) orbit, wallpaper group p4g, four aspects; Cairo-net topology \
-                  (V3.3.4.3.4, dual of the snub square).",
+                  (V3.3.4.3.4, dual of the snub square). Isohedral variant — deliberate edge deformation (curved/notched), not a pentagon type.",
     data: &DATA,
     shape_ids: &SHAPE_IDS,
     defaults: &DEFAULTS,
@@ -61,9 +61,9 @@ pub(crate) const TILING: IhTiling = IhTiling {
     group: WallpaperGroup::P4g,
     lattice: LatticeKind::Square,
     category: TilingCategory::Isohedral,
-    secondary: &[TilingCategory::Laves, TilingCategory::PentagonTypes],
+    secondary: &[TilingCategory::Laves],
     symmetry_notes: "Kaplan IH29; p4g, straight base edge (Klein-paired orbit) + J orbit; \
-                     Tactile incidence-symbol data",
+                     curved/notched edges are deliberate deformations; Tactile incidence-symbol data",
 };
 
 #[cfg(test)]

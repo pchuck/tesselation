@@ -428,11 +428,11 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 20, 33, 17, 17, 5, 30, 8, 23, 11, 12],
+vec![11, 20, 33, 17, 15, 5, 30, 8, 23, 11, 12],
             "per-tab census (update when adding tilings)"
         );
 assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 187, "membership census (update when adding tilings)");
+        assert_eq!(memberships, 185, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely

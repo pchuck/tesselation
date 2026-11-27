@@ -48,9 +48,11 @@ pub fn register(mut r: Registry) -> Registry {
 /// type number lives in `method`). Topologies verified by dual census
 /// (design doc §6): IH1/6/7 on the 6³ honeycomb net (dual: triangular),
 /// IH27/29 on the Cairo net V3.3.4.3.4 (dual: snub square), so all five
-/// take primary Laves and the pentagons add secondary PentagonTypes
-/// (the `cairo-pentagonal` precedent). The Wallpaper tab is never
-/// touched — these are realizations, not group representatives.
+/// take primary Isohedral and a Laves secondary; the two Cairo-net
+/// templates (ih27/ih29) are isohedral variants — deliberate edge
+/// deformations, not pentagon types — so they carry no PentagonTypes
+/// secondary. The Wallpaper tab is never touched — these are
+/// realizations, not group representatives.
 pub(crate) fn classification(id: &str) -> Option<TilingClass> {
     use crate::classify::laves;
     Some(match id {
@@ -88,7 +90,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             cell_content: Some("4 tiles per translation cell"),
             prototiles: Some(1),
             source: Some("Kaplan (Tactile)"),
-            ..laves(&["Laves", "Pentagon"], "V3.3.4.3.4", "snub square")
+            ..laves(&["Laves"], "V3.3.4.3.4", "snub square")
         },
         "ih29-p4g-pentagon" => TilingClass {
             isohedral: Some(1),
@@ -97,7 +99,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             cell_content: Some("4 tiles per translation cell"),
             prototiles: Some(1),
             source: Some("Kaplan (Tactile)"),
-            ..laves(&["Laves", "Pentagon"], "V3.3.4.3.4", "snub square")
+            ..laves(&["Laves"], "V3.3.4.3.4", "snub square")
         },
         _ => return None,
     })

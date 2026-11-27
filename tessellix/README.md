@@ -90,7 +90,7 @@ text and the complete table — is in
 
 ## Supported tilings
 
-166 built-in tilings (187 tab memberships), all discoverable in both UIs
+166 built-in tilings (185 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
@@ -100,11 +100,12 @@ eleven tabs:
 25 primary + 3 self-dual secondaries + 5 isohedral-type realizations),
 **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
-**Pentagon Types** (17: types 1–3 and 6–15 as primary entries, plus
+**Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
 cairo-pentagonal (type 4), floret-pentagonal (type 5) as typed
-secondary members and the untyped isohedral pentagon interlocks
-ih27/ih29), **Isohedral** (5: Kaplan IH templates — IH1/IH6/IH7
-hexagons on the 6³ net, IH27/IH29 pentagons on the Cairo net),
+secondary members), **Isohedral** (5: Kaplan IH templates — IH1/IH6/IH7
+hexagons on the 6³ net, IH27/IH29 pentagons on the Cairo net; the
+two Cairo-net templates are isohedral variants — deliberate edge
+deformations, not pentagon types),
 **Islamic** (30), **Arrangements** (8),
 **Quasiperiodic** (23: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, golden rhomboid,
