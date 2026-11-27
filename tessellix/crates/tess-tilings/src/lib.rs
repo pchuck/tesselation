@@ -241,7 +241,7 @@ mod tests {
             r.len() + r.iter().map(|t| t.secondary_categories().len()).sum::<usize>();
         assert_eq!(memberships, expected_memberships, "membership census");
 
-// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations, M167 = 24a medallion interface, M168 = taylor-socolar plane-filling CHT presentation, M169 = 24c (n,c)-monster medallion catalog, M170 = 24h PIC explorer (sweep module + explore CLI, no registry change), M171 = 24c extension — (9,c)-monster records via the rotated odd-n family (no registry change) — all no census movement; M172 = 24d instance 1 — dodecagon-hexagram-honeycomb composition (Islamic 34 -> 35, built-ins 163 -> 164), M173 = Ammann A4 rectilinear chair set (Quasiperiodic 16 -> 17, built-ins 164 -> 165); M174 = 24b hole-inference engine sprint 1 (medallion layer only, no registry change), M175 = 24h exact-pin follow-up #2 — canonical 3.12.12 motif assignment (sweep theta-axis fix, no registry change); M176 = 24h exact-pin follow-up #3 — hankin-4-8-8 θ-axis host verified canonical (sweep pins + docs, no registry change), M177 = 24e underdetermined-θ search (theta_search.rs — deterministic ranked search over documented freedom sets, byte-deterministic leaderboard/v1, no registry change); M166 = CAP tiling, Aperiodic 11 -> 12); M180 = 24b hole-inference engine sprint 2 (girih_infer.rs — Plain-level generalization, medallion layer only, no registry change); M182 = odd-n cyclotomic K-layers — Field::K11 + Field::K13 fields.rs blocks (certified constants, RED towers, ISO brackets, 0-bisection batteries; option-C I192 endpoint certification; sign-engine envelope erratum + peak-bit wrap guard; no registry change)). 165 built-ins — 63 before
+// Census of today's taxonomy (M127+M128+M129+M131+M132+M133+M134+M135+M136+M138+M140+M141+M142+M143+M144+M145+M146+M147+M148+M149+M150+M151+M152+M153+M154+M155+M156+M157+M158+M159+M160+M161+M162+M163; M164 = 22g decoration styles, M165 = 22d parquet deformations, M167 = 24a medallion interface, M168 = taylor-socolar plane-filling CHT presentation, M169 = 24c (n,c)-monster medallion catalog, M170 = 24h PIC explorer (sweep module + explore CLI, no registry change), M171 = 24c extension — (9,c)-monster records via the rotated odd-n family (no registry change) — all no census movement; M172 = 24d instance 1 — dodecagon-hexagram-honeycomb composition (Islamic 34 -> 35, built-ins 163 -> 164), M173 = Ammann A4 rectilinear chair set (Quasiperiodic 16 -> 17, built-ins 164 -> 165); M174 = 24b hole-inference engine sprint 1 (medallion layer only, no registry change), M175 = 24h exact-pin follow-up #2 — canonical 3.12.12 motif assignment (sweep theta-axis fix, no registry change); M176 = 24h exact-pin follow-up #3 — hankin-4-8-8 θ-axis host verified canonical (sweep pins + docs, no registry change), M177 = 24e underdetermined-θ search (theta_search.rs — deterministic ranked search over documented freedom sets, byte-deterministic leaderboard/v1, no registry change); M166 = CAP tiling, Aperiodic 11 -> 12); M180 = 24b hole-inference engine sprint 2 (girih_infer.rs — Plain-level generalization, medallion layer only, no registry change); M182 = odd-n cyclotomic K-layers — Field::K11 + Field::K13 fields.rs blocks (certified constants, RED towers, ISO brackets, 0-bisection batteries; option-C I192 endpoint certification; sign-engine envelope erratum + peak-bit wrap guard; no registry change); M184 = per-tiling depth param on glb-binary-n7 (retires the e01fc76 scale override, closes the TUI-thumb depth-4 gap; depth 0 = budget rule byte-identical, 1..=5 pinned; no registry change); M186 = Ammann A3 non-edge-to-edge substitution (Quasiperiodic 17 -> 18, built-ins 165 -> 166)). 166 built-ins — 63 before
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the eleven tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
@@ -252,8 +252,8 @@ mod tests {
         //   catalog — one card per represented group; M85 completed it),
         //   Isohedral 5 (the Kaplan IH instances, primary since the
         //   2026-11-24 tab chore), PentagonTypes 17, Islamic 30,
-        //   Arrangements 8, Quasiperiodic 22, Aperiodic 12, Nonperiodic 11.
-        // Membership census 186 = 165 primaries + 21 secondaries
+        //   Arrangements 8, Quasiperiodic 23, Aperiodic 12, Nonperiodic 11.
+        // Membership census 187 = 166 primaries + 21 secondaries
         // (3 regular Laves + 5 isohedral->Laves + 9 Wallpaper
         // + 2 typed PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5), M122 + 2 untyped
@@ -428,11 +428,11 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 20, 33, 17, 17, 5, 30, 8, 22, 12, 11],
+vec![11, 20, 33, 17, 17, 5, 30, 8, 23, 12, 11],
             "per-tab census (update when adding tilings)"
         );
-assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 186, "membership census (update when adding tilings)");
+assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 187, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -852,10 +852,10 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
             "docs/INDEX.md (line {line_no}): eleven-families-with-doc-links word form"
         );
 
-        // "165 files" — the per-tiling-documents count.
+        // "166 files" — the per-tiling-documents count.
         let anchor_pos = unique_anchor(
             &index,
-            "165 files",
+            "166 files",
             "docs/INDEX.md: per-tiling-documents total pin",
         );
         let line_no = anchor_line(&index, anchor_pos);
@@ -951,7 +951,7 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
         )
         .expect("docs/families/aperiodic.md readable from crates/tess-tilings");
 
-        // "165 tilings, 186 memberships" — the M168 status-line census
+        // "166 tilings, 187 memberships" — the M168 status-line census
         // (not the historical M34/M37/M38/M93 status lines, which are
         // frozen history, not live census). The 1431 test-suite count
         // is NOT pinned: it is not a census claim, and this job adds
@@ -1013,10 +1013,10 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
             "docs/TAXONOMY.md (line {line_no}): eleven-since word form"
         );
 
-        // "186 memberships over the 165 implemented tilings; the 21 extra
+        // "187 memberships over the 166 implemented tilings; the 21 extra
         // are" — the live membership census and the derived "extra"
         // arithmetic: 21 extra == memberships - built-ins, both live
-        // values (186 - 165 = 21). The per-tab figures in the same file
+        // values (187 - 166 = 21). The per-tab figures in the same file
         // are already pinned against the registry by
         // registry_groups_are_complete_and_canonically_ordered (the
         // per-tab vector) and are intentionally not re-pinned.
@@ -1293,7 +1293,7 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
     /// both tokens. Pinned against the registry, never against a
     /// hand-maintained table: a doc that loses a token, an extra token, or a
     /// stale token (or a registry symmetry change that no doc reflects)
-    /// fails here with the id and the mismatch. Covers all 165 registered
+    /// fails here with the id and the mismatch. Covers all 166 registered
     /// tilings.
     #[test]
     fn tiling_docs_metadata_tokens_match_registry() {
@@ -1302,7 +1302,7 @@ assert_eq!(r.len(), 165, "built-in tiling count (update when adding tilings)");
         let r = super::registry();
         assert_eq!(
             r.len(),
-            165,
+            166,
             "registry census (this tier covers all registered docs)"
         );
         let n_docs = std::fs::read_dir(&docs_dir)

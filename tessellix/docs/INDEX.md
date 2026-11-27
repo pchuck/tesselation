@@ -11,7 +11,7 @@ tiling, shared cross-cutting reference docs, and frozen history.
    into the tiers below.
 2. **Per-family docs** (`docs/families/<family>.md`) — each family's
    catalog table + numbered build arcs + links to its members.
-3. **Per-tiling documents** (`docs/tilings/<id>.md`, 165 files) — each
+3. **Per-tiling documents** (`docs/tilings/<id>.md`, 166 files) — each
    tiling's full specification: algorithm, exact geometry, verification,
    sources.
 4. **Cross-cutting reference** — DESIGN (architecture), USAGE (TUI/CLI/
@@ -22,7 +22,7 @@ tiling, shared cross-cutting reference docs, and frozen history.
 | Family | Doc | Tilings | Arcs |
 |---|---|---|---|
 | uniform | [docs/families/uniform.md](families/uniform.md) | 11 | 0 |
-| quasiperiodic | [docs/families/quasiperiodic.md](families/quasiperiodic.md) | 17 | 15 |
+| quasiperiodic | [docs/families/quasiperiodic.md](families/quasiperiodic.md) | 18 | 15 |
 | arrangements | [docs/families/arrangements.md](families/arrangements.md) | 3 | 2 |
 | pentagons | [docs/families/pentagons.md](families/pentagons.md) | 14 | 13 |
 | laves | [docs/families/laves.md](families/laves.md) | 8 | 1 |

@@ -1461,7 +1461,13 @@ of these; each is a substitution or cut-and-project table.
   oriented states, λ = 1+√2, count matrix [[3,4],[2,3]], exact Z[√2]
   rule tables certified by an independent Python battery; non-edge-to-edge
   with intrinsic T-junctions; 8-fold model-set claim cited, not proven).
-  A3 still pending (φ-inflation, window uncomputed).
+  A3 ✅ **M186** — `ammann-a3` landed as a Quasiperiodic-family
+  non-edge-to-edge substitution (three rectilinear Z-chairs, 12 oriented
+  states, φ-inflation, count matrix [[1,1,0],[3,0,1],[2,0,1]], exact
+  Z[φ] rule tables + areas 402+641φ / 641+1043φ (= φ·A1) / 478+804φ
+  certified live from the banked derivation; T-junction census pinned
+  9/4 · 13/5 · 9/4). The A1–A4 arc: A2 ✅ M104, A4 ✅ M173, A3 ✅ M186;
+  A1 parked (no substitution structure).
 - **AB rhomb–triangle** — Ammann–Beenker with the triangle shown;
   effort S. ✅ landed M129 as `ammann-beenker-tri`.
 - **Octagonal 1225 tile** — single octagonal prototile, 8-fold;

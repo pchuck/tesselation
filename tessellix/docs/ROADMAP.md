@@ -203,8 +203,9 @@ the "mixed floret/cairo/prismatic" patterns.
   the wheel tiling (shield's MLD dual) is parked (M61) — see the
   Research entry below.*
 - 🔭 **Ammann sets A1–A4** — A4 ✅ M173 (`ammann-a4`, Quasiperiodic
-  family); A3 (φ-inflation) + A1 (parked: no substitution structure)
-  remain.
+  family); A3 ✅ M186 (`ammann-a3`, φ-inflation, non-edge-to-edge,
+  T-junction census pinned); A1 remains parked (no substitution
+  structure).
 - 🔭 **§23d limit-periodic substitutions** — ✅ **half-hex landed (M135)**
   (Socolar's half-hexagon substitution; closes the #17
   substitution-hierarchy gap; measured period hierarchy

@@ -27,6 +27,7 @@ pub mod fibonacci_fib;
 pub mod wis_12_fold;
 pub mod girih_14_fold;
 pub mod ammann_a4;
+pub mod ammann_a3;
 
 /// The family's registry slice, in within-tab order.
 pub fn register(mut r: Registry) -> Registry {
@@ -47,6 +48,7 @@ pub fn register(mut r: Registry) -> Registry {
         r = r.register(wis_12_fold::Wis12FoldTiling);
         r = r.register(girih_14_fold::Girih14FoldTiling);
         r = r.register(ammann_a4::AmmannA4Tiling);
+        r = r.register(ammann_a3::AmmannA3Tiling);
     r
 }
 
@@ -226,6 +228,16 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
+        "ammann-a3" => TilingClass {
+            families: &["Quasiperiodic"],
+            method: Some("substitution"),
+            inflation: Some("φ"),
+            prototiles: Some(3),
+            source: Some("Ammann"),
+            year: Some("1986"),
+            translational: Some("quasiperiodic"),
+            ..TilingClass::EMPTY
+        },
         _ => return None,
     })
 }
@@ -258,6 +270,7 @@ mod census {
         "wis-12-fold",
         "girih-14-fold",
         "ammann-a4",
+        "ammann-a3",
     ];
 
     #[test]
@@ -265,7 +278,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            17,
+            18,
             "quasiperiodic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();
