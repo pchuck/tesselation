@@ -795,6 +795,108 @@ pub fn kuniform_dual_n15() -> LatticeTiling {
     )
 }
 
+/// Face-centroid dual of `kuniform-n7` (2-uniform (3.4².6; 3.6.3.6)₁, pmm).
+///
+/// Same lattice as the primal, a1 = (2, 0), a2 = (0, 1+√3),
+/// |det| = 2+2√3 (rectangular). The cell holds the 5 dual faces of
+/// the primal's 5 vertex orbits: four congruent quadrilaterals
+/// (over the four 3.4².6 vertices; cyclic sides 1, (3+√3)/6,
+/// 2√3/3, (1+√3)/2; angles 90°, 90°, 120°, 60°; area (3+2√3)/6)
+/// and one rhombus (over the 3.6.3.6 vertex; side 2√3/3, angles
+/// 60°/120°; area 2√3/3). The areas sum to 4·(3+2√3)/6 + 2√3/3 =
+/// 2+2√3 = |det|, edge-to-edge. Measured symmetry pmm: the 2-fold
+/// centers (0, √3/2) and (0, −1/2) — one from each family, half a
+/// period apart in y — both sit on the horizontal and vertical
+/// mirrors, and the mirrors tile in two families each, half a
+/// period apart; no true glides.
+///
+/// Pattern seeds [3, 3, 1, 0, 0] (in cell order [quad, quad,
+/// rhombus, quad, quad]) — checker base plus per-cell offset
+/// (tile seed = cell seed + (i+j) mod 2) — are a proper coloring of
+/// the face adjacency, pinned by
+/// `dual_pattern_mode_is_proper_coloring`.
+pub fn kuniform_dual_n7() -> LatticeTiling {
+    with_checker_seeds(
+        build(
+            &kuniform::kuniform_n7(),
+            "kuniform-dual-n7",
+            "Dual of 2-uniform (3.4².6; 3.6.3.6)₁",
+            "Face-centroid dual of the 2-uniform (3.4².6; 3.6.3.6)₁ tiling (pmm) — four quadrilaterals plus one rhombus per cell.",
+        )
+        .expect("kuniform-n7 dual: non-degenerate lattice"),
+        &[3, 3, 1, 0, 0],
+    )
+}
+
+/// Face-centroid dual of `kuniform-n6` (2-uniform (3.4².6; 3.6.3.6)₂, cmm).
+///
+/// Same lattice as the primal, a1 = (2, 0), a2 = (1, 1+√3),
+/// |det| = 2+2√3 (centered rectangular). The face multiset is
+/// identical to [`kuniform_dual_n7`] — four congruent quadrilaterals
+/// (over the 3.4².6 vertices; cyclic sides 1, (3+√3)/6, 2√3/3,
+/// (1+√3)/2; angles 90°, 90°, 120°, 60°; area (3+2√3)/6) plus one
+/// rhombus (over the 3.6.3.6 vertex; side 2√3/3; area 2√3/3), here
+/// in cell order [quad, rhombus, quad, quad, quad] — and the areas
+/// again sum to 2+2√3 = |det|, edge-to-edge. Measured symmetry cmm:
+/// 2mm points where the horizontal and vertical mirrors cross at
+/// (1/2, √3/2) and (3/2, √3/2), plus off-mirror 2-fold centers at
+/// (1, −1/2) (and its translate (2, −1/2)) — the cmm-vs-pmm
+/// discriminator.
+///
+/// Pattern seeds [3, 3, 2, 0, 0] (checker base plus per-cell
+/// offset) are a proper coloring of the face adjacency, pinned by
+/// `dual_pattern_mode_is_proper_coloring`.
+pub fn kuniform_dual_n6() -> LatticeTiling {
+    with_checker_seeds(
+        build(
+            &kuniform::kuniform_n6(),
+            "kuniform-dual-n6",
+            "Dual of 2-uniform (3.4².6; 3.6.3.6)₂",
+            "Face-centroid dual of the 2-uniform (3.4².6; 3.6.3.6)₂ tiling (cmm) — four quadrilaterals plus one rhombus per cell.",
+        )
+        .expect("kuniform-n6 dual: non-degenerate lattice"),
+        &[3, 3, 2, 0, 0],
+    )
+}
+
+/// Face-centroid dual of `kuniform-n17` (2-uniform (3³.4²; 3².4.3.4)₂, pgg).
+///
+/// Lattice b1 = (1/2, 1+√3/2), b2 = (−2−√3, 1) — orthogonal,
+/// |b2| = 2|b1|, |det| = 4+2√3 (rectangular). The cell holds the 8
+/// dual faces of the primal's 8 vertex orbits, in two congruence
+/// classes of 4: pentagons over the 3².4.3.4 vertices (sides 1/√3
+/// ×1, (3+√3)/6 ×4) and pentagons over the 3³.4² vertices (sides
+/// 1/√3 ×2, (3+√3)/6 ×2, 1 ×1); both classes have angles 90°, 90°,
+/// 120°, 120°, 120° and per-face area (2+√3)/4. The eight areas sum
+/// to 2(2+√3) = 4+2√3 = |det|, edge-to-edge. (The side lengths read
+/// off the dual edges crossing each primal edge class: triangle–
+/// triangle 1/√3, triangle–square (3+√3)/6, square–square 1, which
+/// is what matches class to vertex figure.) Measured symmetry pgg:
+/// 2-fold centers at c = (19/6, 7/3) and c + (b1+b2)/2 (plus the
+/// two half-lattice classes c + b1/2, c + b2/2 — four classes, two
+/// group orbits); glide g1 with axis direction b1 through
+/// c + b2/4, translation b1/2, and glide g2 with axis direction b2
+/// through c − b1/4, translation b2/2 — both true glides (the pure
+/// mirrors in their axes fail, as do the axis mirrors through c);
+/// no reflections anywhere.
+///
+/// Pattern seeds [1, 3, 0, 2, 3, 1, 3, 0] (in cell order
+/// [A, B, B, A, A, B, B, A]; checker base plus per-cell offset) are
+/// a proper coloring of the face adjacency, pinned by
+/// `dual_pattern_mode_is_proper_coloring`.
+pub fn kuniform_dual_n17() -> LatticeTiling {
+    with_checker_seeds(
+        build(
+            &kuniform::kuniform_n17(),
+            "kuniform-dual-n17",
+            "Dual of 2-uniform (3³.4²; 3².4.3.4)₂",
+            "Face-centroid dual of the 2-uniform (3³.4²; 3².4.3.4)₂ tiling (pgg) — eight pentagons per cell.",
+        )
+        .expect("kuniform-n17 dual: non-degenerate lattice"),
+        &[1, 3, 0, 2, 3, 1, 3, 0],
+    )
+}
+
 #[cfg(test)]
 mod dual_tests {
     use super::*;
@@ -1113,6 +1215,63 @@ mod dual_tests {
                 // Measured 2-fold on the horizontal mirror (cmm).
                 center: v2(0.5, 0.5),
                 lattice_kind: LatticeKind::CenteredRectangular,
+                mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
+            },
+            Case {
+                id: "kuniform-dual-n7",
+                make: kuniform_dual_n7,
+                primal: kuniform::kuniform_n7,
+                classes: [
+                    // Quadrilaterals over the four 3.4².6 vertex orbits.
+                    (4, 4, (3.0 + 2.0 * S3) / 6.0),
+                    // Rhombus over the 3.6.3.6 vertex orbit.
+                    (4, 1, 2.0 * S3 / 3.0),
+                ],
+                group: WallpaperGroup::Pmm,
+                // Measured 2-fold on the mirror intersection (pmm).
+                center: v2(0.0, H),
+                lattice_kind: LatticeKind::Rectangular,
+                mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
+            },
+            Case {
+                id: "kuniform-dual-n6",
+                make: kuniform_dual_n6,
+                primal: kuniform::kuniform_n6,
+                classes: [
+                    // Quadrilaterals over the four 3.4².6 vertex orbits.
+                    (4, 4, (3.0 + 2.0 * S3) / 6.0),
+                    // Rhombus over the 3.6.3.6 vertex orbit.
+                    (4, 1, 2.0 * S3 / 3.0),
+                ],
+                group: WallpaperGroup::Cmm,
+                // Measured 2mm point: horizontal and vertical mirrors
+                // both pass (3/2, √3/2).
+                center: v2(1.5, H),
+                lattice_kind: LatticeKind::CenteredRectangular,
+                mirror_dirs: axis_mirrors,
+                axis_pt: Vec2::ZERO,
+            },
+            Case {
+                id: "kuniform-dual-n17",
+                make: kuniform_dual_n17,
+                primal: kuniform::kuniform_n17,
+                classes: [
+                    // Pentagons over the four 3².4.3.4 vertex orbits
+                    // (sides 1/√3 ×1, (3+√3)/6 ×4).
+                    (5, 4, (2.0 + S3) / 4.0),
+                    // Pentagons over the four 3³.4² vertex orbits
+                    // (sides 1/√3 ×2, (3+√3)/6 ×2, 1 ×1) — same
+                    // per-face area; the two classes share arity and
+                    // area, distinguished by side multiset (census).
+                    (5, 4, (2.0 + S3) / 4.0),
+                ],
+                group: WallpaperGroup::Pgg,
+                // Measured 2-fold center; the pgg mirrors are glides,
+                // so no mirror passes it.
+                center: v2(19.0 / 6.0, 7.0 / 3.0),
+                lattice_kind: LatticeKind::Rectangular,
                 mirror_dirs: axis_mirrors,
                 axis_pt: Vec2::ZERO,
             },
@@ -1702,6 +1861,84 @@ mod dual_tests {
         check_det(
             &kuniform_dual_n15(),
             "kuniform-dual-n15",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+    #[test]
+    fn kuniform_dual_n7_covers_region() {
+        check_covers(
+            &kuniform_dual_n7(),
+            "kuniform-dual-n7",
+            BBox::new(v2(-5.0, -4.0), v2(9.0, 8.0)),
+        );
+    }
+    #[test]
+    fn kuniform_dual_n7_rotated_scaled() {
+        check_rotated(
+            &kuniform_dual_n7(),
+            "kuniform-dual-n7(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+    #[test]
+    fn kuniform_dual_n7_deterministic() {
+        check_det(
+            &kuniform_dual_n7(),
+            "kuniform-dual-n7",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+    #[test]
+    fn kuniform_dual_n6_covers_region() {
+        check_covers(
+            &kuniform_dual_n6(),
+            "kuniform-dual-n6",
+            BBox::new(v2(-5.0, -4.0), v2(9.0, 8.0)),
+        );
+    }
+    #[test]
+    fn kuniform_dual_n6_rotated_scaled() {
+        check_rotated(
+            &kuniform_dual_n6(),
+            "kuniform-dual-n6(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+    #[test]
+    fn kuniform_dual_n6_deterministic() {
+        check_det(
+            &kuniform_dual_n6(),
+            "kuniform-dual-n6",
+            BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
+        );
+    }
+    #[test]
+    fn kuniform_dual_n17_covers_region() {
+        check_covers(
+            &kuniform_dual_n17(),
+            "kuniform-dual-n17",
+            BBox::new(v2(-5.0, -4.0), v2(9.0, 8.0)),
+        );
+    }
+    #[test]
+    fn kuniform_dual_n17_rotated_scaled() {
+        check_rotated(
+            &kuniform_dual_n17(),
+            "kuniform-dual-n17(rot30,scale0.7)",
+            BBox::new(v2(-4.0, -4.0), v2(6.0, 6.0)),
+            0.7,
+            30.0,
+        );
+    }
+    #[test]
+    fn kuniform_dual_n17_deterministic() {
+        check_det(
+            &kuniform_dual_n17(),
+            "kuniform-dual-n17",
             BBox::new(v2(-3.0, -3.0), v2(10.0, 10.0)),
         );
     }
@@ -2324,6 +2561,88 @@ mod dual_tests {
                         &format!("{} R180 off-center (negative probe)", c.id),
                     );
                 }
+                WallpaperGroup::Pgg => {
+                    // C2 rotation subgroup: R180 about the measured
+                    // 2-fold center positive; R30/R60/R90/R120 all
+                    // fail (this is what separates pgg from p4g).
+                    probe_dual_symmetry(
+                        &dual,
+                        |p| ctr + (ctr - p),
+                        true,
+                        &format!("{} R180 (2-fold center)", c.id),
+                    );
+                    for k in [30.0, 60.0, 90.0, 120.0] {
+                        probe_dual_symmetry(
+                            &dual,
+                            |p| ctr + (p - ctr).rotated(k * deg),
+                            false,
+                            &format!("{} R{} (negative probe)", c.id, k as i32),
+                        );
+                    }
+                    // The two measured glides: g1 reflects in the
+                    // axis through ctr + b2/4 with direction b1 and
+                    // translates b1/2; g2 reflects in the axis
+                    // through ctr − b1/4 with direction b2 and
+                    // translates b2/2.
+                    let (b1, b2) = (dual.lattice[0], dual.lattice[1]);
+                    let u1 = b1 / b1.length();
+                    let u2 = b2 / b2.length();
+                    let q1 = ctr + b2 * 0.25;
+                    let q2 = ctr - b1 * 0.25;
+                    probe_dual_symmetry(
+                        &dual,
+                        move |p| q1 + u1 * (2.0 * (p - q1).dot(u1)) - (p - q1) + b1 * 0.5,
+                        true,
+                        &format!("{} glide g1 (axis b1 through ctr + b2/4)", c.id),
+                    );
+                    probe_dual_symmetry(
+                        &dual,
+                        move |p| q2 + u2 * (2.0 * (p - q2).dot(u2)) - (p - q2) + b2 * 0.5,
+                        true,
+                        &format!("{} glide g2 (axis b2 through ctr − b1/4)", c.id),
+                    );
+                    // The pure mirrors in the glide axes fail — the
+                    // glides are true glides — and no axis-parallel
+                    // mirror passes the 2-fold center (a pg/pmm
+                    // signature absent here; measured).
+                    probe_dual_symmetry(
+                        &dual,
+                        move |p| q1 + u1 * (2.0 * (p - q1).dot(u1)) - (p - q1),
+                        false,
+                        &format!("{} mirror in g1 axis (negative probe)", c.id),
+                    );
+                    probe_dual_symmetry(
+                        &dual,
+                        move |p| q2 + u2 * (2.0 * (p - q2).dot(u2)) - (p - q2),
+                        false,
+                        &format!("{} mirror in g2 axis (negative probe)", c.id),
+                    );
+                    let h = v2(1.0, 0.0);
+                    let v = v2(0.0, 1.0);
+                    probe_dual_symmetry(
+                        &dual,
+                        move |p| ctr + h * (2.0 * (p - ctr).dot(h)) - (p - ctr),
+                        false,
+                        &format!("{} h mirror through 2-fold center (negative probe)", c.id),
+                    );
+                    probe_dual_symmetry(
+                        &dual,
+                        move |p| ctr + v * (2.0 * (p - ctr).dot(v)) - (p - ctr),
+                        false,
+                        &format!("{} v mirror through 2-fold center (negative probe)", c.id),
+                    );
+                    // R180 about c + (b1+b2)/4 fails — not one of the
+                    // four measured center classes.
+                    probe_dual_symmetry(
+                        &dual,
+                        move |p| {
+                            let c2 = ctr + (b1 + b2) * 0.25;
+                            c2 + (c2 - p)
+                        },
+                        false,
+                        &format!("{} R180 off-center (negative probe)", c.id),
+                    );
+                }
                 other => panic!("{}: unhandled group {:?} in symmetry probes", c.id, other),
             }
         }
@@ -2400,7 +2719,6 @@ mod dual_tests {
             }
         }
     }
-
 
     // ------------------------------------------------------------------
     // Oracle: dual() on each Archimedean primal must reproduce the

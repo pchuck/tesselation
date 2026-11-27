@@ -3,10 +3,10 @@
 M76 restructured the browse gallery into ten tabs
 (`TilingCategory::ALL`) — eleven since 2026-11-24, when the Isohedral
 tab was added for the Kaplan IH instances —: **Uniform** (11) · **Two-Uniform** (20) ·
-**Duals & variants** (33) · **Wallpaper** (17) · **Pentagon
-Types** (15) · **Isohedral** (5) · **Islamic** (30) · **Bonds & dissections** (8) ·
-**Quasiperiodic** (23) · **Aperiodic** (11) · **Nonperiodic** (12) —
-185 memberships over the 166 implemented tilings; the 19 extra are
+**Duals & variants** (36) · **Wallpaper** (17) · **Pentagon
+Types** (15) · **Isohedral** (5) · **Islamic** (29) · **Bonds & dissections** (8) ·
+**Quasiperiodic** (23) · **Aperiodic** (11) · **Nonperiodic** (13) —
+190 memberships over the 169 implemented tilings; the 21 extra are
 secondary memberships. (Counts at this commit; the per-tab figures
 are pinned by `registry_groups_are_complete_and_canonically_ordered`.)
 

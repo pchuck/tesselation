@@ -50,7 +50,7 @@ generically — **adding a tiling never requires touching UI code**.
 
 ## The `LatticeTiling` framework (`tess-tilings`)
 
-All 104 lattice tilings are **data tables**, not code. A
+All 107 lattice tilings are **data tables**, not code. A
 `LatticeTiling` is:
 
 - a lattice basis (two cell-space vectors),

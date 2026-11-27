@@ -245,9 +245,9 @@ mod tests {
         // the cairo-collinear merge into cairo-pentagonal (M76) —
         // across the eleven tabs, in TilingCategory::ALL order:
         //   Uniform 11 (8 Archimedean + triangle/square/hexagon),
-        //   TwoUniform 20, Laves 33 (25 primary: 8 incl. cairo-pentagonal
-        //   + 17 machine-dualized k-uniform duals (M98, M102, M106, M120,
-        //   M121, M145, M147) + 3 regular secondaries + 5 isohedral-type
+        //   TwoUniform 20, Laves 36 (28 primary: 8 incl. cairo-pentagonal
+        //   + 20 machine-dualized k-uniform duals (M98, M102, M106, M120,
+        //   M121, M145, M147, review A3) + 3 regular secondaries + 5 isohedral-type
         //   secondaries), Wallpaper 17 (the group
         //   catalog — one card per represented group; M85 completed it),
         //   Isohedral 5 (the Kaplan IH instances, primary since the
@@ -255,7 +255,7 @@ mod tests {
         //   Arrangements 8, Quasiperiodic 23, Aperiodic 12, Nonperiodic 12
         //   (girih-decagon-patch moved Islamic -> Nonperiodic, review
         //   E17/A12: a finite patch must not render a wallpaper group).
-        // Membership census 187 = 166 primaries + 21 secondaries
+        // Membership census 190 = 169 primaries + 21 secondaries
         // (3 regular Laves + 5 isohedral->Laves + 9 Wallpaper
         // + 2 typed PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5), M122 + 2 untyped
@@ -427,14 +427,23 @@ mod tests {
         // composition family's first instance)
         // -> M173 Quasiperiodic 21 -> 22 (ammann-a4, the rectilinear
         // chair set)
+        // -> review A12 Islamic 30 -> 29, Nonperiodic 11 -> 12 (girih-decagon-patch
+        //   re-categorised: a finite patch must not render a wallpaper group)
+        // -> review A3 Laves 33 -> 36, built-ins 166 -> 169, memberships 187 -> 190
+        //   (the last three 2-uniform face-centroid duals: kuniform-dual-n7/n6/n17)
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 20, 33, 17, 15, 5, 29, 8, 23, 11, 13],
+vec![11, 20, 36, 17, 15, 5, 29, 8, 23, 11, 13],
             "per-tab census (update when adding tilings)"
         );
-assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 185, "membership census (update when adding tilings)");
+        assert_eq!(r.len(), 169, "built-in tiling count (update when adding tilings)");
+        assert_eq!(memberships, 190, "membership census (update when adding tilings)");
+        assert_eq!(
+            memberships, 190,
+            "membership census (update when adding tilings)"
+        );
+>>>>>>> eae0593 (feat(review): A3 - the last three 2-uniform duals (kuniform-dual n7/n6/n17))
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -853,10 +862,10 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
             "docs/INDEX.md (line {line_no}): eleven-families-with-doc-links word form"
         );
 
-        // "166 files" — the per-tiling-documents count.
+        // "169 files" — the per-tiling-documents count.
         let anchor_pos = unique_anchor(
             &index,
-            "166 files",
+            "169 files",
             "docs/INDEX.md: per-tiling-documents total pin",
         );
         let line_no = anchor_line(&index, anchor_pos);
@@ -952,11 +961,11 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
         )
         .expect("docs/families/aperiodic.md readable from crates/tess-tilings");
 
-        // "166 tilings, 187 memberships" — the M168 status-line census
+        // "169 tilings, 190 memberships" — the M168 status-line census
         // (not the historical M34/M37/M38/M93 status lines, which are
-        // frozen history, not live census). The 1431 test-suite count
-        // is NOT pinned: it is not a census claim, and this job adds
-        // test fns which would move it.
+        // frozen history, not live census). The test-suite count on the
+        // same line is NOT pinned: it is not a census claim, and every
+        // job adds test fns which would move it.
         let anchor_pos = unique_anchor(
             &aperiodic,
             "presentation (M168). ",
@@ -1014,10 +1023,10 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
             "docs/TAXONOMY.md (line {line_no}): eleven-since word form"
         );
 
-        // "187 memberships over the 166 implemented tilings; the 21 extra
+        // "190 memberships over the 169 implemented tilings; the 21 extra
         // are" — the live membership census and the derived "extra"
         // arithmetic: 21 extra == memberships - built-ins, both live
-        // values (187 - 166 = 21). The per-tab figures in the same file
+        // values (190 - 169 = 21). The per-tab figures in the same file
         // are already pinned against the registry by
         // registry_groups_are_complete_and_canonically_ordered (the
         // per-tab vector) and are intentionally not re-pinned.
@@ -1294,7 +1303,7 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
     /// both tokens. Pinned against the registry, never against a
     /// hand-maintained table: a doc that loses a token, an extra token, or a
     /// stale token (or a registry symmetry change that no doc reflects)
-    /// fails here with the id and the mismatch. Covers all 166 registered
+    /// fails here with the id and the mismatch. Covers all 169 registered
     /// tilings.
     #[test]
     fn tiling_docs_metadata_tokens_match_registry() {
@@ -1303,7 +1312,7 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
         let r = super::registry();
         assert_eq!(
             r.len(),
-            166,
+            169,
             "registry census (this tier covers all registered docs)"
         );
         let n_docs = std::fs::read_dir(&docs_dir)
@@ -1606,10 +1615,10 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
     fn kuniform_dual_doc_claims_match_constructors() {
         use crate::families::kuniform::dual::{
             kuniform_dual_n1, kuniform_dual_n2, kuniform_dual_n3, kuniform_dual_n4,
-            kuniform_dual_n5, kuniform_dual_n8, kuniform_dual_n9, kuniform_dual_n12,
-            kuniform_dual_n13, kuniform_dual_n14, kuniform_dual_n15, kuniform_dual_n16,
-            kuniform_dual_n18, kuniform_dual_n19, kuniform_dual_n20, kuniform_dual_p6m,
-            kuniform_dual_pmm,
+            kuniform_dual_n5, kuniform_dual_n6, kuniform_dual_n7, kuniform_dual_n8,
+            kuniform_dual_n9, kuniform_dual_n12, kuniform_dual_n13, kuniform_dual_n14,
+            kuniform_dual_n15, kuniform_dual_n16, kuniform_dual_n17, kuniform_dual_n18,
+            kuniform_dual_n19, kuniform_dual_n20, kuniform_dual_p6m, kuniform_dual_pmm,
         };
         use crate::lattice::LatticeTiling;
 
@@ -1749,12 +1758,15 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
             ("kuniform-dual-n4", kuniform_dual_n4),
             ("kuniform-dual-n5", kuniform_dual_n5),
             ("kuniform-dual-n8", kuniform_dual_n8),
+            ("kuniform-dual-n6", kuniform_dual_n6),
+            ("kuniform-dual-n7", kuniform_dual_n7),
             ("kuniform-dual-n9", kuniform_dual_n9),
             ("kuniform-dual-n12", kuniform_dual_n12),
             ("kuniform-dual-n13", kuniform_dual_n13),
             ("kuniform-dual-n14", kuniform_dual_n14),
             ("kuniform-dual-n15", kuniform_dual_n15),
             ("kuniform-dual-n16", kuniform_dual_n16),
+            ("kuniform-dual-n17", kuniform_dual_n17),
             ("kuniform-dual-n18", kuniform_dual_n18),
             ("kuniform-dual-n19", kuniform_dual_n19),
             ("kuniform-dual-n20", kuniform_dual_n20),
@@ -2126,14 +2138,14 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
 
     // -----------------------------------------------------------------
     // Doc-structure pin, lattice-determinant tier (kuniform + hankin
-    // families). For each of the 42 docs that state a lattice-basis
-    // determinant token — 18 kuniform 2-uniform primals + 17 kuniform
+    // families). For each of the 45 docs that state a lattice-basis
+    // determinant token — 18 kuniform 2-uniform primals + 20 kuniform
     // face-centroid duals + 7 hankin family docs — the token is parsed
     // and compared against `|lattice[0].cross(lattice[1])|` of the live
     // constructor at 1e-9 relative tolerance.
     //
     // The value-carrying "det " token (trailing space — NOT "|det|",
-    // which appears once more in 16 of 17 dual docs as the "sum ...
+    // which appears once more in 19 of 20 dual docs as the "sum ...
     // = |det|" tail) must occur exactly once per doc (fail loudly on
     // zero or more than one occurrence). Value-carrying grammar
     // (limited to the forms present in the scoped docs): plain integer
@@ -2155,10 +2167,10 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
         use crate::families::islamic::hankin_square_two_point::hankin_square_two_point;
         use crate::families::kuniform::dual::{
             kuniform_dual_n1, kuniform_dual_n2, kuniform_dual_n3, kuniform_dual_n4,
-            kuniform_dual_n5, kuniform_dual_n8, kuniform_dual_n9, kuniform_dual_n12,
-            kuniform_dual_n13, kuniform_dual_n14, kuniform_dual_n15, kuniform_dual_n16,
-            kuniform_dual_n18, kuniform_dual_n19, kuniform_dual_n20, kuniform_dual_p6m,
-            kuniform_dual_pmm,
+            kuniform_dual_n5, kuniform_dual_n6, kuniform_dual_n7, kuniform_dual_n8,
+            kuniform_dual_n9, kuniform_dual_n12, kuniform_dual_n13, kuniform_dual_n14,
+            kuniform_dual_n15, kuniform_dual_n16, kuniform_dual_n17, kuniform_dual_n18,
+            kuniform_dual_n19, kuniform_dual_n20, kuniform_dual_p6m, kuniform_dual_pmm,
         };
         use crate::families::kuniform::kuniform::{
             kuniform_n1, kuniform_n2, kuniform_n3, kuniform_n4, kuniform_n5, kuniform_n6,
@@ -2252,18 +2264,21 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
             ("kuniform-dual-n4", kuniform_dual_n4),
             ("kuniform-dual-n5", kuniform_dual_n5),
             ("kuniform-dual-n8", kuniform_dual_n8),
+            ("kuniform-dual-n6", kuniform_dual_n6),
+            ("kuniform-dual-n7", kuniform_dual_n7),
             ("kuniform-dual-n9", kuniform_dual_n9),
             ("kuniform-dual-n12", kuniform_dual_n12),
             ("kuniform-dual-n13", kuniform_dual_n13),
             ("kuniform-dual-n14", kuniform_dual_n14),
             ("kuniform-dual-n15", kuniform_dual_n15),
             ("kuniform-dual-n16", kuniform_dual_n16),
+            ("kuniform-dual-n17", kuniform_dual_n17),
             ("kuniform-dual-n18", kuniform_dual_n18),
             ("kuniform-dual-n19", kuniform_dual_n19),
             ("kuniform-dual-n20", kuniform_dual_n20),
         ];
 
-        assert_eq!(cases.len(), 42, "det pin: expected 42 scoped docs");
+        assert_eq!(cases.len(), 45, "det pin: expected 45 scoped docs");
 
         for (id, make) in cases {
             let tiling = make();
@@ -2307,8 +2322,8 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
 
     // -----------------------------------------------------------------
     // Doc-structure pin, per-cell shape-composition tier (kuniform +
-    // hankin families). For each of the 27 docs that state a per-cell
-    // shape composition — 9 kuniform 2-uniform primals + 17 kuniform
+    // hankin families). For each of the 30 docs that state a per-cell
+    // shape composition — 9 kuniform 2-uniform primals + 20 kuniform
     // face-centroid duals + 1 hankin family doc (hankin-square-two-point) —
     // the noun multiset is parsed (side counts: triangle→3,
     // square/quadrilateral/kite/rhombus/quad→4, pentagon/pentagonal→5,
@@ -2343,10 +2358,10 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
         use crate::families::islamic::hankin_square_two_point::hankin_square_two_point;
         use crate::families::kuniform::dual::{
             kuniform_dual_n1, kuniform_dual_n2, kuniform_dual_n3, kuniform_dual_n4,
-            kuniform_dual_n5, kuniform_dual_n8, kuniform_dual_n9, kuniform_dual_n12,
-            kuniform_dual_n13, kuniform_dual_n14, kuniform_dual_n15, kuniform_dual_n16,
-            kuniform_dual_n18, kuniform_dual_n19, kuniform_dual_n20, kuniform_dual_p6m,
-            kuniform_dual_pmm,
+            kuniform_dual_n5, kuniform_dual_n6, kuniform_dual_n7, kuniform_dual_n8,
+            kuniform_dual_n9, kuniform_dual_n12, kuniform_dual_n13, kuniform_dual_n14,
+            kuniform_dual_n15, kuniform_dual_n16, kuniform_dual_n17, kuniform_dual_n18,
+            kuniform_dual_n19, kuniform_dual_n20, kuniform_dual_p6m, kuniform_dual_pmm,
         };
         use crate::families::kuniform::kuniform::{
             kuniform_n2, kuniform_n3, kuniform_n4, kuniform_n6, kuniform_n7, kuniform_n12,
@@ -2458,18 +2473,21 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
             ("kuniform-dual-n4", kuniform_dual_n4, "dual"),
             ("kuniform-dual-n5", kuniform_dual_n5, "dual"),
             ("kuniform-dual-n8", kuniform_dual_n8, "dual"),
+            ("kuniform-dual-n6", kuniform_dual_n6, "dual"),
+            ("kuniform-dual-n7", kuniform_dual_n7, "dual"),
             ("kuniform-dual-n9", kuniform_dual_n9, "dual"),
             ("kuniform-dual-n12", kuniform_dual_n12, "dual"),
             ("kuniform-dual-n13", kuniform_dual_n13, "dual"),
             ("kuniform-dual-n14", kuniform_dual_n14, "dual"),
             ("kuniform-dual-n15", kuniform_dual_n15, "dual"),
             ("kuniform-dual-n16", kuniform_dual_n16, "dual"),
+            ("kuniform-dual-n17", kuniform_dual_n17, "dual"),
             ("kuniform-dual-n18", kuniform_dual_n18, "dual"),
             ("kuniform-dual-n19", kuniform_dual_n19, "dual"),
             ("kuniform-dual-n20", kuniform_dual_n20, "dual"),
         ];
 
-        assert_eq!(cases.len(), 27, "composition pin: expected 27 scoped docs");
+        assert_eq!(cases.len(), 30, "composition pin: expected 30 scoped docs");
 
         for (id, make, class) in cases {
             let tiling = make();
@@ -2709,7 +2727,7 @@ mod lattice_culling_tests {
     /// This is the exact identity the doc-determinant pin
     /// (`doc_lattice_determinants_match_constructors`, end of `mod tests`)
     /// asserts against; this pin makes the per-cell-count × prototile-area half
-    /// permanent over the WHOLE data-table class (all 104 lattice tilings),
+    /// permanent over the WHOLE data-table class (all 107 lattice tilings),
     /// parameter-independently (the cell polygons and the basis live in cell
     /// space), instead of only at the two 42- and 27-doc doc-pin scopes.
     ///
@@ -2738,8 +2756,8 @@ mod lattice_culling_tests {
 
         assert_eq!(
             lattices.len(),
-            104,
-            "DESIGN.md claims \"All 104 lattice tilings\" — the lattice class enumerates {}",
+            107,
+            "DESIGN.md claims \"All 107 lattice tilings\" — the lattice class enumerates {}",
             lattices.len()
         );
         // Cross-check: the enumeration is a subset of the registry — every

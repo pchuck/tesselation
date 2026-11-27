@@ -90,14 +90,14 @@ text and the complete table — is in
 
 ## Supported tilings
 
-166 built-in tilings (185 tab memberships), all discoverable in both UIs
+169 built-in tilings (190 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 eleven tabs:
-**Uniform** (11), **Two-Uniform** (20), **Duals & variants** (33,
-25 primary + 3 self-dual secondaries + 5 isohedral-type realizations),
+**Uniform** (11), **Two-Uniform** (20), **Duals & variants** (36,
+28 primary + 3 self-dual secondaries + 5 isohedral-type realizations),
 **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
 **Pentagon Types** (15: types 1–3 and 6–15 as primary entries, plus
@@ -151,7 +151,7 @@ ih27 (p1–p3), ih1 (p1–p4), ih6 (p1–p5).
 | Family (tab) | Tilings | Doc |
 |---|---|---|
 | [Uniform](docs/families/uniform.md) | 11 | the three regular + eight semiregular (Archimedean) patterns — a closed set |
-| [Two-Uniform](docs/families/kuniform.md) | 37 | k-uniform tilings: 20 two-uniform forms + 17 face-centroid duals (the duals' primary tab is Laves) |
+| [Two-Uniform](docs/families/kuniform.md) | 40 | k-uniform tilings: 20 two-uniform forms + 20 face-centroid duals (the duals' primary tab is Laves) |
 | [Laves / Catalan duals](docs/families/laves.md) | 8 | the eight Laves (Catalan-dual) tilings — a closed set; hosts the two-uniform duals |
 | [Wallpaper](docs/families/pavers.md) | 14 | paver bonds + the wallpaper-catalog completers (first realizers of p1, pm, pg, pmg, cm, p3, p31m, p3m1) |
 | [Pentagon Types](docs/families/pentagons.md) | 14 | pentagonal types 1–15 (the 15-type census; types 4–5 dual-typed) |
@@ -179,7 +179,7 @@ gallery taxonomy: [docs/TAXONOMY.md](docs/TAXONOMY.md).
 Four crates: `tess-core` holds the `Tiling` trait — generate exactly the
 tiles intersecting a query bbox, no gaps/overlaps/outside tiles — plus
 self-describing parameters, the browse model, and software rendering;
-`tess-tilings` holds the 166 built-ins in eleven families (periodic tilings
+`tess-tilings` holds the 169 built-ins in eleven families (periodic tilings
 are `LatticeTiling` **data tables**, aperiodic/nonperiodic ones direct
 substitution generators with exact-arithmetic anchors); `tess-tui`
 (ratatui) and `tess-gui` (egui) are thin front ends over the shared
