@@ -3,8 +3,9 @@
 //!
 //! * **Browse** — the whole window is the card grid: a tab band (the
 //!   ten category tabs + a search field, one wrapping row) over
-//!   crystal-system section headers and cards with lazily generated
-//!   previews (shared `tess_core::raster`). The Wallpaper tab opens
+//!   section headers (crystal systems on the Wallpaper tab, rank bands
+//!   on the Laves tab) and cards with lazily generated previews
+//!   (shared `tess_core::raster`). The Wallpaper tab opens
 //!   with a catalog note (since M85 all 17 groups are represented, the
 //!   note reports the completed catalog).
 //!   Clicking a card opens Render mode.
@@ -374,8 +375,9 @@ fn first_matching_tab(tabs: &[tess_core::Tab], query: &str) -> Option<usize> {
 }
 
 /// One maximal run of a card list sharing one `section_key`.
-/// `header` is `""` for runs without a header (every non-Wallpaper
-/// card, and any Wallpaper card without a lattice).
+/// `header` is `""` for runs without a header: cards in tabs with no
+/// sections, and cards without the declared facts behind their tab's
+/// sections (e.g. a Wallpaper card with no declared group).
 struct CardSection<'a> {
     header: &'static str,
     cards: &'a [tess_core::CardMeta],
@@ -384,11 +386,13 @@ struct CardSection<'a> {
 /// Split a card list into maximal runs of equal
 /// [`tess_core::section_key`], in first-appearance order. On the
 /// Wallpaper tab this yields the crystal-system sections
-/// (oblique/rectangular/centered/square/hexagonal, in that order);
-/// every other tab is a single headerless run. `tab_category` is the
-/// tab the cards are displayed in — the section key is a property of
-/// the (tab, card) pair, since the Wallpaper tab's cards are
-/// secondary members whose primary category is their own family.
+/// (oblique/rectangular/centered/square/hexagonal, in that order); on
+/// the Laves tab it yields the three rank bands (self-dual regulars &
+/// Catalan duals, isohedral variants, 2-uniform duals); every other
+/// tab is a single headerless run. `tab_category` is the tab the
+/// cards are displayed in — the section key is a property of the
+/// (tab, card) pair, since the Wallpaper tab's cards are secondary
+/// members whose primary category is their own family.
 fn sectionize<'a>(
     tab_category: tess_core::TilingCategory,
     cards: &'a [tess_core::CardMeta],
@@ -1161,8 +1165,9 @@ impl GuiApp {
         }
     }
 
-    /// The card grid filling the window: crystal-system section
-    /// headers (from `tess_core::section_key`) between rows of cards,
+    /// The card grid filling the window: section headers (from
+    /// `tess_core::section_key` — the crystal systems on the Wallpaper
+    /// tab, the rank bands on the Laves tab) between rows of cards,
     /// each card = preview image + name + truncated description +
     /// small "group · lattice" line. Responsive column count
     /// ([`columns_for_width`]) with the cards stretched to fill: the

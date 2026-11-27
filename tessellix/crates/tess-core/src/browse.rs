@@ -189,32 +189,75 @@ pub fn nonperiodic_rank(c: &CardMeta) -> u8 {
     }
 }
 
-/// The crystal-system section key for a card displayed in the tab
-/// `tab_category`: the header text a card grid should draw above the
-/// first card of each section. Only the Wallpaper tab has sections —
-/// the group catalog is sorted by crystal system, and the key is the
-/// card's *conventional* lattice (see
-/// [`WallpaperGroup::conventional_lattice`]): the textbook mapping
-/// p1/p2 → oblique, pm/pg/pmm/pgg/pmg → rectangular, cm/cmm →
-/// centered, p4* → square, p3*/p6* → hexagonal. This is deliberately
-/// a display convention derived from the declared group, not from the
-/// representative's measured lattice: a p1 tiling realized on a
-/// centered-rectangular primitive cell (the stepped hexominoes)
-/// still displays under oblique, together with p2, as the textbooks
-/// lay out the 17 groups. The measured per-tiling lattice kind stays
-/// on the card (it is the data-honest attribute line). Cards in every
-/// other tab, and cards with no declared group, return `""` (no
-/// header).
+/// The section key for a card displayed in the tab `tab_category`:
+/// the header text a card grid should draw above the first card of
+/// each section. The Wallpaper and Laves tabs have sections:
+///
+/// * **Wallpaper** — the group catalog is sorted by crystal system,
+///   and the key is the card's *conventional* lattice (see
+///   [`WallpaperGroup::conventional_lattice`]): the textbook mapping
+///   p1/p2 → oblique, pm/pg/pmm/pgg/pmg → rectangular, cm/cmm →
+///   centered, p4* → square, p3*/p6* → hexagonal. This is deliberately
+///   a display convention derived from the declared group, not from the
+///   representative's measured lattice: a p1 tiling realized on a
+///   centered-rectangular primitive cell (the stepped hexominoes)
+///   still displays under oblique, together with p2, as the textbooks
+///   lay out the 17 groups. The measured per-tiling lattice kind stays
+///   on the card (it is the data-honest attribute line). Cards with
+///   no declared group return `""`.
+/// * **Laves** — the tab is sorted by the declared `laves_rank`
+///   (self-dual regulars, then the Laves proper, then the 2-uniform
+///   duals), and the key is derived from the same declared facts,
+///   never the card id (see [`laves_section_key`]).
+///
+/// Cards in every other tab return `""` (no header).
 pub fn section_key(tab_category: TilingCategory, card: &CardMeta) -> &'static str {
-    if tab_category != TilingCategory::Wallpaper {
-        return "";
+    match tab_category {
+        TilingCategory::Wallpaper => match card.group.map(WallpaperGroup::conventional_lattice) {
+            Some(LatticeKind::Oblique) => "oblique",
+            Some(LatticeKind::Rectangular) => "rectangular",
+            Some(LatticeKind::CenteredRectangular) => "centered",
+            Some(LatticeKind::Square) => "square",
+            Some(LatticeKind::Hexagonal) => "hexagonal",
+            _ => "",
+        },
+        TilingCategory::Laves => laves_section_key(card),
+        _ => "",
     }
-    match card.group.map(WallpaperGroup::conventional_lattice) {
-        Some(LatticeKind::Oblique) => "oblique",
-        Some(LatticeKind::Rectangular) => "rectangular",
-        Some(LatticeKind::CenteredRectangular) => "centered",
-        Some(LatticeKind::Square) => "square",
-        Some(LatticeKind::Hexagonal) => "hexagonal",
+}
+
+/// The Laves-tab section key for a card: the header text a card grid
+/// should draw above the first card of each section, derived from the
+/// declared classification facts (`laves_rank`, `dual_of`), never the
+/// card id. The tab keeps its rank banding, with one split carved out
+/// of the rank-1 band:
+///
+/// * **isohedral variants** — rank-1 cards that declare no dual
+///   partner (`dual_of: None`): the five isohedral-family secondaries
+///   (ih1/ih6/ih7/ih27/ih29). They must take precedence over the rank
+///   banding because they carry rank 1; a rank-1 card that declares a
+///   dual partner is a Catalan dual, not an isohedral variant.
+/// * **self-dual regulars & Catalan duals** — rank 0 (the self-dual
+///   regular trio) and rank 1 (the Laves proper / Catalan primaries),
+///   merged into one band.
+/// * **2-uniform duals** — rank 2.
+///
+/// Cards with no declared rank return `""` (no header), matching the
+/// Wallpaper arm's honesty rule.
+///
+/// Note the discriminator is `dual_of: None`, not the `isohedral`
+/// class field: `isohedral: Some(1)` is the *k-isohedral class*
+/// (one transitivity class of tiles) of the face-transitive cairo and
+/// floret pentagons, a uniformity fact — it is not an isohedral-family
+/// membership claim, and the isohedral-family secondaries declare no
+/// `isohedral` field at all.
+fn laves_section_key(card: &CardMeta) -> &'static str {
+    if card.class.laves_rank == Some(1) && card.class.dual_of.is_none() {
+        return "isohedral variants";
+    }
+    match card.class.laves_rank {
+        Some(0) | Some(1) => "self-dual regulars & Catalan duals",
+        Some(2) => "2-uniform duals",
         _ => "",
     }
 }
@@ -818,6 +861,173 @@ mod tests {
             seen,
             vec!["oblique", "rectangular", "centered", "hexagonal"],
             "sections must appear in conventional crystal-system order"
+        );
+    }
+
+    /// A fixture mirroring the real Laves tab's shape (not the same
+    /// tilings): 3 rank-0 self-dual regulars, 8 rank-1 Catalan
+    /// primaries (dual partner declared), 5 rank-1 isohedral-family
+    /// secondaries (no dual partner declared) and 20 rank-2 2-uniform
+    /// duals — 36 cards in within-tab order, so the stable rank sort
+    /// yields rank 0, then rank-1 primaries, then the isohedral
+    /// variants, then rank 2. Synthetic ids, leaked once per fixture
+    /// (never shown to the user).
+    fn laves_card(r: Registry, kind: &'static str, i: usize) -> (Registry, &'static str, TilingClass) {
+        let id: &'static str = Box::leak(format!("{kind}-{i}").into_boxed_str());
+        let class = match kind {
+            "self" => TilingClass {
+                laves_rank: Some(0),
+                dual_of: Some("self-dual"),
+                ..TilingClass::EMPTY
+            },
+            "catalan" => TilingClass {
+                laves_rank: Some(1),
+                dual_of: Some("dual"),
+                ..TilingClass::EMPTY
+            },
+            "ih" => TilingClass {
+                laves_rank: Some(1),
+                dual_of: None,
+                method: Some("IH incidence symbol"),
+                ..TilingClass::EMPTY
+            },
+            "u2" => TilingClass {
+                laves_rank: Some(2),
+                dual_of: Some("dual"),
+                ..TilingClass::EMPTY
+            },
+            _ => unreachable!("unknown fixture kind"),
+        };
+        let r = r.register(Fixed {
+            id,
+            cat: TilingCategory::Laves,
+            secondary: &[],
+            group: WallpaperGroup::P6m,
+            lattice: LatticeKind::Hexagonal,
+            params: 0,
+        });
+        (r, id, class)
+    }
+
+    fn laves_fixture() -> (Registry, Vec<(&'static str, TilingClass)>) {
+        let mut r = Registry::new();
+        let mut facts: Vec<(&'static str, TilingClass)> = Vec::new();
+        for i in 0..3 {
+            let (r_out, id, class) = laves_card(r, "self", i);
+            r = r_out;
+            facts.push((id, class));
+        }
+        for i in 0..8 {
+            let (r_out, id, class) = laves_card(r, "catalan", i);
+            r = r_out;
+            facts.push((id, class));
+        }
+        for i in 0..5 {
+            let (r_out, id, class) = laves_card(r, "ih", i);
+            r = r_out;
+            facts.push((id, class));
+        }
+        for i in 0..20 {
+            let (r_out, id, class) = laves_card(r, "u2", i);
+            r = r_out;
+            facts.push((id, class));
+        }
+        (r, facts)
+    }
+
+    /// The sorted Laves tab for the fixture, with the declared facts
+    /// injected through the classification lookup (the same seam both
+    /// UIs use).
+    fn laves_tabs(
+        r: &Registry,
+        facts: &[(&'static str, TilingClass)],
+    ) -> Vec<Tab> {
+        browse_tabs_with(r, |id| {
+            facts
+                .iter()
+                .find(|(i, _)| *i == id)
+                .map(|(_, c)| *c)
+                .unwrap_or(TilingClass::EMPTY)
+        })
+    }
+
+    #[test]
+    fn section_keys_follow_laves_declared_facts() {
+        // Mirrors `section_keys_follow_crystal_systems`: walk the
+        // sorted Laves tab and assert each declared-fact class maps to
+        // exactly its header, with exact counts.
+        let (r, facts) = laves_fixture();
+        let tabs = laves_tabs(&r, &facts);
+        let lv = tabs
+            .iter()
+            .find(|t| t.category == TilingCategory::Laves)
+            .unwrap();
+        let mut isohedral = 0usize;
+        let mut band = 0usize;
+        let mut duals = 0usize;
+        for c in &lv.cards {
+            match section_key(TilingCategory::Laves, c) {
+                "isohedral variants" => isohedral += 1,
+                "self-dual regulars & Catalan duals" => band += 1,
+                "2-uniform duals" => duals += 1,
+                "" => panic!("{}: no section header despite declared facts", c.id),
+                k => panic!("{}: unexpected section header {k}", c.id),
+            }
+        }
+        assert_eq!(isohedral, 5, "the five isohedral-family secondaries");
+        assert_eq!(band, 11, "3 self-dual regulars + 8 Catalan primaries");
+        assert_eq!(duals, 20, "the 2-uniform duals");
+        assert_eq!(lv.cards.len(), 36);
+    }
+
+    #[test]
+    fn laves_section_keys_appear_in_first_appearance_order() {
+        // Mirrors `section_keys_appear_in_first_appearance_order`:
+        // the distinct keys come out in first-appearance order, and the
+        // tab is exactly three contiguous runs.
+        let (r, facts) = laves_fixture();
+        let tabs = laves_tabs(&r, &facts);
+        let lv = tabs
+            .iter()
+            .find(|t| t.category == TilingCategory::Laves)
+            .unwrap();
+        let mut seen: Vec<&'static str> = Vec::new();
+        for c in &lv.cards {
+            let k = section_key(TilingCategory::Laves, c);
+            if !k.is_empty() && !seen.contains(&k) {
+                seen.push(k);
+            }
+        }
+        assert_eq!(
+            seen,
+            vec![
+                "self-dual regulars & Catalan duals",
+                "isohedral variants",
+                "2-uniform duals"
+            ],
+            "sections must appear in first-appearance order"
+        );
+        // Exactly three contiguous runs, in that order, with the exact
+        // widths of the real tab.
+        let mut runs: Vec<(&'static str, usize)> = Vec::new();
+        let mut i = 0;
+        while i < lv.cards.len() {
+            let k = section_key(TilingCategory::Laves, &lv.cards[i]);
+            let mut j = i + 1;
+            while j < lv.cards.len() && section_key(TilingCategory::Laves, &lv.cards[j]) == k {
+                j += 1;
+            }
+            runs.push((k, j - i));
+            i = j;
+        }
+        assert_eq!(
+            runs,
+            vec![
+                ("self-dual regulars & Catalan duals", 11),
+                ("isohedral variants", 5),
+                ("2-uniform duals", 20),
+            ],
+            "exactly three contiguous runs, in first-appearance order"
         );
     }
 
