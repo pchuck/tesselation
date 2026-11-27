@@ -46,8 +46,11 @@ complementary strap pattern. Full dossier in
   engine-side — seven rotated-family records ((11,2..4), (13,2..5))
   census-/window-/outline-certified, all contact_cos2 = None
   ([docs/medallion-24c-odd-n-design.md](medallion-24c-odd-n-design.md));
-  implementation queued (strong tier, after the K₁₁/K₁₃ fields);
-  {8,12}/{9,12} deferred.
+  ✅ **M187: implemented** — rotodd.rs Core/Nq genericization over D
+  (the n9 hardcode retired, byte-identity held by the full suite) + the
+  seven rung records with 14 mandate batteries (0 bisections, dirty=0,
+  purity `mixed()==0`, K11/K13 product-rule regressions); {8,12}/{9,12}
+  deferred.
 - **24d Composition families on periodic nets** — instance 1 ✅ M172
   (dual-net fill, reduced scope; inference-fill NOT APPLICABLE —
   75° contact corners lie outside the 24b alphabet, certified).

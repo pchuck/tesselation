@@ -2036,7 +2036,18 @@ quasiperiodic hosts later).
   [docs/medallion-24c-odd-n-design.md](docs/medallion-24c-odd-n-design.md)
   (M181) — seven rotated-family rungs ((11,2..4), (13,2..5)),
   census-, window- and outline-certified, all `contact_cos2 = None`.
-  The implementation job remains open.
+  **Status: ✅ implemented M187 (2026-11-26)** — `medallion/monster/rotodd.rs`
+  genericizes the engine over D (`Core` trait + two-level `Nq<F>`
+  coordinates over K₉/K₁₁/K₁₃; n9 slimmed to the K9 instance, byte-identity
+  held by the full suite) and ships the seven rung records (n11.rs,
+  n13.rs) with 14 §8-mandate batteries: pin exactness, crossings at
+  t = s = 1/2, the (13,2) 7→6 fold, full-degree cos² orbits
+  (`contact_cos2 = None` ×7), exact-K window census with midpoint
+  verdicts + shared σ_hi at Δ=1 rungs, outline formulas, κ maps,
+  dirty = 0, purity `mixed() == 0`, M163 θ-checks, n² 2-to-1 pin
+  census (66/91 distinct). Live spike re-verified every M181 constant
+  before the engine landed (no certified constant touched, no
+  bisection).
   - **Effort** M each, **tier** strong.
 - **24d. Composition families on periodic nets** — unit cells with 2–3
   medallion classes (dodecagon medallions at hexagon centers +

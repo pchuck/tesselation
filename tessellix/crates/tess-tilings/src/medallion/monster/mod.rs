@@ -9,12 +9,13 @@
 //! displacements for every legal (n, c). This module catalogues the
 //! family by a representative pair — one convex n-gon Medallion record
 //! placed twice, at `A = U` and `B = R·A + P` with `U` the normalized
-//! unit-edge regular n-gon — over n ∈ {8, 9, 10, 12} and every legal
-//! `c` (8 → {2}; 9 → {2, 3}; 10 → {2, 3}; 12 → {2, 3, 4}, i.e.
-//! 2 ≤ c ≤ ⌈n/2⌉ − 2, the band the displacement censuses realize). For
-//! even n the rotation `R` is the identity (a **parallel** pair); for
-//! odd n = 9 it is `rot(π/9)` — the parallel family cannot pin an odd
-//! polygon at all ("Why the parallel pair"). The
+//! unit-edge regular n-gon — over n ∈ {8, 9, 10, 11, 12, 13} and every
+//! legal `c` (8 → {2}; 9 → {2, 3}; 10 → {2, 3}; 11 → {2, 3, 4}; 12 →
+//! {2, 3, 4}; 13 → {2, 3, 4, 5}, i.e. 2 ≤ c ≤ ⌈n/2⌉ − 2, the band the
+//! displacement censuses realize). For even n the rotation `R` is the
+//! identity (a **parallel** pair); for odd n ∈ {9, 11, 13} it is
+//! `rot(π/n)` — the parallel family cannot pin an odd polygon at all
+//! ("Why the parallel pair"). The
 //! union is non-convex, so a monster is *not* one hull record (the 24a
 //! schema requires a strictly convex hull, doc §1.2): each entry is the
 //! record PAIR plus the exact placement record below, exactly as the
@@ -49,8 +50,10 @@
 //!   anywhere: the same band `2 ≤ c ≤ ⌈n/2⌉ − 2`. Rotated placements
 //!   with other contact angles (e.g. 45°/75° for (12,2)) need `cos Δ
 //!   ∉ Q(√3)` — a shipped-field gap, documented, not forced (brief
-//!   STOP list). n = 11 stays blocked on its degree-5 field
-//!   (unshipped).
+//!   STOP list). The degree-5/-6 fields for n = 11/13 shipped as
+//!   M178/M179, and the exact `n²` census of the rotated pin map
+//!   (M181 §4, battery re-run per record) realizes the FULL band at
+//!   both: (11,2..4) and (13,2..5).
 //!
 //! # Pinning: crossing-midpoint coincidence
 //!
@@ -75,7 +78,12 @@
 //! (9,3) — through 1/2 only at the pin (exact samples `t(63/64) =
 //! 63/128`, `t(65/64) = 65/128` resp. `t(63/64) = 65/128`, `t(65/64)
 //! = 63/128`). The (9,2) pin is again the exact window midpoint
-//! (`σ_lo + σ_hi = 2`); the (9,3) pin is not.
+//! (`σ_lo + σ_hi = 2`); the (9,3) pin is not. On the n = 11/13 ladder
+//! the verdict is Δ-specific (M181 §3, deviation D3): every Δ ≥ 2
+//! rung pins at the exact window midpoint, while the two Δ = 1 rungs
+//! (11,4) and (13,5) pin OFF-midpoint and share their `σ_hi` with the
+//! same-n Δ = 2 rung — the adjacent c-windows meet at that
+//! relabeling event.
 //!
 //! # Catalog
 //!
@@ -84,7 +92,13 @@
 //! battery asserting `P = M_i − M_j` against it). The two nonagon rows
 //! use `b = 2cos(2π/9)` and `w = 2sin20°` (`w² = 2 − b`), elements
 //! `(u + v·w)/den` over the basis `(1, b, b²)` ([`n9::Nq`], [`K9`]);
-//! there `P` is the pin itself (`σ = 1`, no axis diagonal).
+//! there `P` is the pin itself (`σ = 1`, no axis diagonal). The three
+//! hendecagon and four tridecagon rows use the same two-level shape
+//! with `b = 2cos(2π/n)`, `w = 2sin(π/n)`, `w² = 2 − b` over the
+//! power bases `(1, …, b⁴)` / `(1, …, b⁵)` ([`n11::Nq`],
+//! [`n13::Nq`], [`K11`], [`K13`], M178/M179); `a = 2cos(π/n)` lies
+//! INSIDE `Kₙ` there (odd prime n), and the pin below is again `P`
+//! itself at `σ = 1`.
 //!
 //! | pair   | axis     | ρ              | P (exact)                       | eAB       | eBA        | crossings (A_i, B_j) | d | cos²(cross) |
 //! |--------|----------|----------------|---------------------------------|-----------|------------|----------------------|---|-------------|
@@ -96,6 +110,21 @@
 //! | (12,4) | vertex   | 1/4            | (1/4, (2+√3)/4)                 | [4,5,6,7] | [0,1,10,11]| (3,2), (8,9)         | 2 | 3/4         |
 //! | (9,2)  | rot π/9  | 1 (σ)          | ((4+b)/4, w(−6+3b+3b²)/4)      | [3,4]     | [7,8]      | (2,0), (5,6)         | 3 | 1/4         |
 //! | (9,3)  | rot π/9  | 1 (σ)          | ((6−b²)/4, w(−3+b+b²)/4)       | [2,3,4]   | [6,7,8]    | (1,0), (5,5)         | 1 | (2+b)/4      |
+//! | (11,2) | rot π/11 | 1 (σ)          | ((−1+b+5b²−b⁴)/4, w(−2−7b−3b²+4b³+2b⁴)/4) | [4,5] | [9,10] | (3,0), (6,8) | 5 | (1+2b+3b²−b³−b⁴)/4 |
+//! | (11,3) | rot π/11 | 1 (σ)          | ((1+4b+4b²−b³−b⁴)/4, w(−6−5b²+3b³+2b⁴)/4) | [3,4,5] | [8,9,10] | (2,0), (6,7) | 3 | (2−3b+b³)/4 |
+//! | (11,4) | rot π/11 | 1 (σ)          | ((3+3b+3b²−b³−b⁴)/4, w(−2−3b²+b³+b⁴)/4) | [2,3,4,5] | [7,8,9,10] | (1,0), (6,6) | 1 | (2+b)/4 |
+//! | (13,2) | rot π/13 | 1 (σ)          | ((1−7b+b²+6b³−b⁵)/4, w(−b−9b²−4b³+4b⁴+2b⁵)/4) | [5,6] | [11,12] | (4,0), (7,10) | 6† | (1−3b+3b²+4b³−b⁴−b⁵)/4 |
+//! | (13,3) | rot π/13 | 1 (σ)          | ((−1−4b+5b²+5b³−b⁴−b⁵)/4, w(2−11b²−5b³+4b⁴+2b⁵)/4) | [4,5,6] | [10,11,12] | (3,0), (7,9) | 5 | (2+5b−5b³+b⁵)/4 |
+//! | (13,4) | rot π/13 | 1 (σ)          | ((1−b+4b²+4b³−b⁴−b⁵)/4, w(2+4b−9b²−7b³+3b⁴+2b⁵)/4) | [3,4,5,6] | [9,10,11,12] | (2,0), (7,8) | 3 | (2−3b+b³)/4 |
+//! | (13,5) | rot π/13 | 1 (σ)          | ((3−2b+3b²+4b³−b⁴−b⁵)/4, w(3b−3b²−4b³+b⁴+b⁵)/4) | [2,3,4,5,6] | [8,9,10,11,12] | (1,0), (7,7) | 1 | (2+b)/4 |
+//!
+//! † the (13,2) raw step `2·Δ − 1 = 7` folds to `6` — `{13/7} =
+//! {13/6}` is the same star polygon (M181 deviation D2). For the
+//! odd-n rungs the certified crossing pair is the ladder labeling
+//! `(Δ, 0)` and `(h + 1, Δ + h)` with `Δ = h − c` — every record
+//! canonicalizes to its `(Δ, 0)` census pin `P = M_Δ − R·M₀` (M181
+//! §1/§4, deviation D2: the rotated pin map is 2-to-1 with partner
+//! `(i, j) → (j + h + 1, i + h)`).
 //!
 //! `d` is *forced* per (n, c) inside each family: the 2-D
 //! displacement census of the dodecagon (`.scratch/monster-24c/
@@ -141,6 +170,20 @@
 //! (12+6b+2b²)/19)` — below each lower end FOUR extra transversals
 //! appear at the contacts (six crossings; exact probe), above each
 //! upper end the absorbed run drops one edge per side (exact probe).
+//! The n = 11 rungs (b = 2cos(2π/11)) certify `(4+2b−8b²+2b⁴,
+//! −2−2b+8b²−2b⁴)` for (11,2), `((12+16b+14b²−10b³−2b⁴)/23,
+//! (34−16b−14b²+10b³+2b⁴)/23)` for (11,3) and `((22−8b+86b²−2b³−
+//! 26b⁴)/43, (34−16b−14b²+10b³+2b⁴)/23)` for (11,4); the n = 13 rungs
+//! (b = 2cos(2π/13)) `(272+304b−72b²−426b³+22b⁴+96b⁵, −10−304b+72b²+
+//! 426b³−22b⁴−96b⁵)/131` for (13,2), `((1442−516b−218b²+426b³+14b⁴−
+//! 96b⁵)/911, (380+516b+218b²−426b³−14b⁴+96b⁵)/911)` for (13,3),
+//! `((52−110b−22b²+160b³+2b⁴−38b⁵)/53, (54+110b+22b²−160b³−2b⁴+38b⁵)/
+//! 53)` for (13,4) and `((78−98b+62b²+96b³−26b⁴−18b⁵)/79, (54+110b+
+//! 22b²−160b³−2b⁴+38b⁵)/53)` for (13,5) — the same event semantics,
+//! re-derived EXACTLY inside every constructor (the hub census in
+//! [`rotodd::verify_pair_rot`]) and tabulated per record in the §8.6
+//! batteries (σ-event counts 123/121/123 and 175/175/173/173, none
+//! persistent).
 //!
 //! # The (12,2) entry and the {12/6} figure
 //!
@@ -165,23 +208,30 @@
 //! cross-checks (9,3) like the others. Its `cos² 20° = (2+b)/4` is
 //! cubic — outside the trait's integer quadruple, so
 //! [`Medallion::contact_cos2`] returns `None` (dec10/L10 precedent)
-//! while the exact battery pins `(2 + b)/4` (`n9::cos293`).
+//! while the exact battery pins `(2 + b)/4` (`n9::cos293`). The Δ = 1
+//! rungs {11/1} (`n11::cos2114`) and {13/1} (`n13::cos2135`) record
+//! the identical two facts — `θ = π/n` on the guard boundary, `cos² =
+//! (2 + b)/4` of degree ⌈n/2⌉ − 1 pinned in the battery, `None` in
+//! the trait.
 //!
 //! # M163 consistency
 //!
 //! [`Motif::Star`] on a regular n-gon emits, per edge midpoint, the
 //! two arms `rot(edge tangent, ±θ)` (both chiralities) — the same
 //! lines as the record's exit rays with `θ = d·180/n`. The battery
-//! matches segment lines to record exit lines for all eight records; a
-//! mismatch would be a STOP, the check passes (the two nonagon checks
-//! exercise `Motif::Star` at `θ = 60°` and the boundary `θ = π/n`).
+//! matches segment lines to record exit lines for all fifteen records; a
+//! mismatch would be a STOP, the check passes (the odd-n checks
+//! exercise `Motif::Star` at interior θ and at the boundary `θ = π/n`
+//! for n = 9, 11, 13).
 //!
 //! # Consumed by 24d / documented gaps
 //!
 //! 24d (the fused ornament) consumes first the placement records
 //! ([`oct8::pair82`], [`dec10::pair102`], [`dec10::pair103`],
 //! [`dod12::pair122`], [`dod12::pair123`], [`dod12::pair124`],
-//! [`n9::pair92`], [`n9::pair93`]) —
+//! [`n9::pair92`], [`n9::pair93`], [`n11::pair112`], [`n11::pair113`],
+//! [`n11::pair114`], [`n13::pair132`], [`n13::pair133`],
+//! [`n13::pair134`], [`n13::pair135`]) —
 //! displacement, inside-edge tables, crossings, union/lens outlines —
 //! and the per-record exits. The Bonner/Castéra/menagerie
 //! *overlap-motif* content (Figure 3.40's cell drawings are not
@@ -201,10 +251,18 @@
 //! `w² = 2 − b` (`n9::Nq`); supporting them added one variant
 //! `Field::K9` to the shared field tag — a disclosed exception to
 //! this module's file ownership, with zero other consumers
-//! (grep-verified at landing).
+//! (grep-verified at landing). The n = 11 and n = 13 rungs are the
+//! consumers of the certified degree-5/-6 fields `K₁₁`/`K₁₃`
+//! ([`K11`], [`K13`], M178/M179) through the shared generic engine
+//! [`rotodd`] (N-layer `Nq = Kₙ(w)`, `w² = 2 − b`); the M178 §6.2 /
+//! M179 §4.3 two-level sign-rule regressions (mandated mixed-sign
+//! elements, wrong-shortcut burden pinned exactly) are re-run per n
+//! in the `n11`/`n13` batteries.
 //!
 //! [`L10`]: crate::fields::L10
 //! [`K9`]: crate::fields::K9
+//! [`K11`]: crate::fields::K11
+//! [`K13`]: crate::fields::K13
 //! [`Medallion::contact_cos2`]: crate::medallion::Medallion::contact_cos2
 //! [`Motif::Star`]: crate::families::islamic::hankin_motifs::Motif::Star
 //! [`extended_segments`]: crate::families::islamic::hankin_motifs
@@ -213,7 +271,10 @@
 pub mod dec10;
 pub mod dod12;
 pub mod n9;
+pub mod n11;
+pub mod n13;
 pub mod oct8;
+pub mod rotodd;
 
 use std::cmp::Ordering;
 
@@ -1071,8 +1132,10 @@ fn hom_reflect<F: FieldEl>(h: &Hom<F>, n: i64, sum: Gp<F>, dvec: Gp<F>, dd: F) -
 }
 
 /// The catalog's (name, n, c, d) table: every legal (n, c) for
-/// n in {8, 9, 10, 12}, each once (the legality band `c <=
-/// ceil(n / 2) - 2` is re-derived in the catalog test).
+/// n in {8, 9, 10, 11, 12, 13}, each once (the legality band `c <=
+/// ceil(n / 2) - 2` is re-derived in the catalog test; odd n = 9, 11,
+/// 13 are the rotated `pi/n` family — parallel pairs cannot pin odd n,
+/// and the exact n² census found each band exactly realized).
 pub fn catalog_pairs() -> Vec<(&'static str, usize, usize, usize)> {
     vec![
         ("(8,2)", 8, 2, 2),
@@ -1080,9 +1143,16 @@ pub fn catalog_pairs() -> Vec<(&'static str, usize, usize, usize)> {
         ("(9,3)", 9, 3, 1),
         ("(10,2)", 10, 2, 4),
         ("(10,3)", 10, 3, 2),
+        ("(11,2)", 11, 2, 5),
+        ("(11,3)", 11, 3, 3),
+        ("(11,4)", 11, 4, 1),
         ("(12,2)", 12, 2, 6),
         ("(12,3)", 12, 3, 4),
         ("(12,4)", 12, 4, 2),
+        ("(13,2)", 13, 2, 6),
+        ("(13,3)", 13, 3, 5),
+        ("(13,4)", 13, 4, 3),
+        ("(13,5)", 13, 5, 1),
     ]
 }
 
@@ -1101,21 +1171,28 @@ mod tests {
     use crate::medallion::monster::dec10::{Monster102, Monster104};
     use crate::medallion::monster::dod12::{Monster122, Monster126};
     use crate::medallion::monster::n9::{Monster91, Monster93};
+    use crate::medallion::monster::n11::{Monster111, Monster113, Monster115};
+    use crate::medallion::monster::n13::{Monster131, Monster133, Monster135, Monster136};
     use crate::medallion::Medallion;
     use tess_core::Vec2;
 
     #[test]
     fn catalog_is_the_legal_band_exactly_once() {
         // Legal band c in [2, ceil(n/2) - 2] (= n/2 - 2 for even n);
-        // the catalog realizes each (n, c) in n in {8, 9, 10, 12}
-        // exactly once, and no other n. n = 9 is the odd entry: the
-        // rotated pi/9 family (parallel pairs cannot pin odd n), and
-        // its exact census found exactly c in {2, 3}.
+        // the catalog realizes each (n, c) in n in {8, 9, 10, 11, 12,
+        // 13} exactly once, and no other n. n = 9, 11, 13 are the odd
+        // entries: the rotated pi/n family (parallel pairs cannot pin
+        // odd n), and the exact n² census found the full band for
+        // each — c in {2, 3} at n = 9, c in {2, 3, 4} at n = 11, c in
+        // {2, 3, 4, 5} at n = 13.
         let cat = catalog_pairs();
-        assert_eq!(cat.len(), 8);
+        assert_eq!(cat.len(), 15);
         let mut seen: Vec<(usize, usize)> = Vec::new();
         for (_, n, c, d) in &cat {
-            assert!([8usize, 9, 10, 12].contains(n), "n = {n} out of scope");
+            assert!(
+                [8usize, 9, 10, 11, 12, 13].contains(n),
+                "n = {n} out of scope"
+            );
             assert!(
                 *c >= 2 && *c <= (n + 1) / 2 - 2,
                 "(n, c) = ({n}, {c}) illegal"
@@ -1125,21 +1202,31 @@ mod tests {
             assert!(!seen.contains(&probe), "(n, c) = {probe:?} duplicated");
             seen.push(probe);
         }
-        for n in [8usize, 9, 10, 12] {
+        for n in [8usize, 9, 10, 11, 12, 13] {
             for c in 2..=((n + 1) / 2 - 2) {
                 assert!(seen.contains(&(n, c)), "({n}, {c}) missing");
             }
         }
-        // Forced d per (n, c), from the 2-D crossing-angle census:
+        // Forced d per (n, c), from the 2-D crossing-angle census (at
+        // odd n: d = 2(Delta) - 1 for the (Delta, 0) crossing, folded
+        // to min(d, n - d) — the (13,2) rung is the first record whose
+        // raw step 7 folds to 6):
         let want = [
             ((8, 2), 2),
             ((9, 2), 3),
             ((9, 3), 1),
             ((10, 2), 4),
             ((10, 3), 2),
+            ((11, 2), 5),
+            ((11, 3), 3),
+            ((11, 4), 1),
             ((12, 2), 6),
             ((12, 3), 4),
             ((12, 4), 2),
+            ((13, 2), 6),
+            ((13, 3), 5),
+            ((13, 4), 3),
+            ((13, 5), 1),
         ];
         for (nc, d) in want {
             let got = cat.iter().find(|(_, n, c, _)| (*n, *c) == nc).unwrap();
@@ -1148,7 +1235,7 @@ mod tests {
     }
 
     #[test]
-    fn all_eight_placements_verify_their_certified_tables() {
+    fn all_fifteen_placements_verify_their_certified_tables() {
         // Each constructor runs the full exact battery (asserts); the
         // per-entry data checks live in the entry modules.
         let e = oct8::pair82();
@@ -1167,6 +1254,20 @@ mod tests {
         assert_eq!(e.e_ab.len(), 2);
         let e = n9::pair93();
         assert_eq!(e.e_ab.len(), 3);
+        let e = n11::pair112();
+        assert_eq!(e.e_ab.len(), 2);
+        let e = n11::pair113();
+        assert_eq!(e.e_ab.len(), 3);
+        let e = n11::pair114();
+        assert_eq!(e.e_ab.len(), 4);
+        let e = n13::pair132();
+        assert_eq!(e.e_ab.len(), 2);
+        let e = n13::pair133();
+        assert_eq!(e.e_ab.len(), 3);
+        let e = n13::pair134();
+        assert_eq!(e.e_ab.len(), 4);
+        let e = n13::pair135();
+        assert_eq!(e.e_ab.len(), 5);
     }
 
     /// M163 cross-check: the landed standalone [`Motif::Star`] at
@@ -1219,7 +1320,7 @@ mod tests {
     }
 
     #[test]
-    fn m163_star_matches_all_eight_catalog_records() {
+    fn m163_star_matches_all_fifteen_catalog_records() {
         m163_star_matches::<KhatamM53>("(8,2) KhatamM53 {8/2}", 8, 2);
         m163_star_matches::<Monster104>("(10,2) {10/4}", 10, 4);
         m163_star_matches::<Monster102>("(10,3) {10/2}", 10, 2);
@@ -1235,6 +1336,20 @@ mod tests {
         // at pi/2); motif_segments has no guard and emits the
         // midpoint-nonagon arms, matching the record exits.
         m163_star_matches::<Monster91>("(9,3) {9/1}", 9, 1);
+        // n = 11 rungs (the rotated pi/11 family).
+        m163_star_matches::<Monster115>("(11,2) {11/5}", 11, 5);
+        m163_star_matches::<Monster113>("(11,3) {11/3}", 11, 3);
+        // (11,4): theta = pi/11 is exactly on the EXTENSION guard
+        // boundary (the {9/1} precedent).
+        m163_star_matches::<Monster111>("(11,4) {11/1}", 11, 1);
+        // n = 13 rungs (the rotated pi/13 family; (13,2) at the
+        // folded step 6).
+        m163_star_matches::<Monster136>("(13,2) {13/6}", 13, 6);
+        m163_star_matches::<Monster135>("(13,3) {13/5}", 13, 5);
+        m163_star_matches::<Monster133>("(13,4) {13/3}", 13, 3);
+        // (13,5): theta = pi/13 is exactly on the EXTENSION guard
+        // boundary (the {9/1} precedent).
+        m163_star_matches::<Monster131>("(13,5) {13/1}", 13, 1);
     }
 
     fn zq_ok(name: &str, z: Zq, disc: i64) {
@@ -1356,6 +1471,84 @@ mod tests {
         for ex in [Monster93::exit_rays_f64(), Monster91::exit_rays_f64()] {
             for (_, d) in &ex {
                 assert!(d[0].is_finite() && d[1].is_finite(), "n9 exit_rays_f64 finite");
+            }
+        }
+        // n = 11 and n = 13: the same M164 lesson for the generic
+        // K11(w) / K13(w) coordinate types (positive denominator,
+        // gcd-canonical, finite f64 view) across every emitted exact
+        // table: pins, windows, cos^2 constants, crossing points and
+        // hulls, plus the f64 emission surfaces.
+        fn nq_f<F: rotodd::Core>(name: &str, q: rotodd::Nq<F>) {
+            assert!(q.den > 0, "{name}: non-positive denominator");
+            assert!(q.is_canonical(), "{name}: not gcd-canonical");
+            assert!(q.fl().is_finite(), "{name}: non-finite float view");
+        }
+        for pt in [n11::pin112(), n11::pin113(), n11::pin114()] {
+            nq_f("n11 pin", pt.0);
+            nq_f("n11 pin", pt.1);
+        }
+        for (lo, hi) in [n11::win112(), n11::win113(), n11::win114()] {
+            nq_f("n11 window", lo);
+            nq_f("n11 window", hi);
+        }
+        for c in [n11::cos2112(), n11::cos2113(), n11::cos2114()] {
+            nq_f("cos2 n11", c);
+        }
+        for q in [n11::pair112(), n11::pair113(), n11::pair114()] {
+            for pt in [q.p].iter().chain(q.cross_pts.iter()) {
+                nq_f("n11 P/X", pt.0);
+                nq_f("n11 P/X", pt.1);
+            }
+        }
+        for p in n11::hull() {
+            nq_f("n11 hull", p.0);
+            nq_f("n11 hull", p.1);
+        }
+        for pt in [n13::pin132(), n13::pin133(), n13::pin134(), n13::pin135()] {
+            nq_f("n13 pin", pt.0);
+            nq_f("n13 pin", pt.1);
+        }
+        for (lo, hi) in [n13::win132(), n13::win133(), n13::win134(), n13::win135()] {
+            nq_f("n13 window", lo);
+            nq_f("n13 window", hi);
+        }
+        for c in [n13::cos2132(), n13::cos2133(), n13::cos2134(), n13::cos2135()] {
+            nq_f("cos2 n13", c);
+        }
+        for q in [n13::pair132(), n13::pair133(), n13::pair134(), n13::pair135()] {
+            for pt in [q.p].iter().chain(q.cross_pts.iter()) {
+                nq_f("n13 P/X", pt.0);
+                nq_f("n13 P/X", pt.1);
+            }
+        }
+        for p in n13::hull() {
+            nq_f("n13 hull", p.0);
+            nq_f("n13 hull", p.1);
+        }
+        for h in [
+            Monster115::hull_f64(),
+            Monster113::hull_f64(),
+            Monster111::hull_f64(),
+            Monster136::hull_f64(),
+            Monster135::hull_f64(),
+            Monster133::hull_f64(),
+            Monster131::hull_f64(),
+        ] {
+            for p in &h {
+                assert!(p[0].is_finite() && p[1].is_finite(), "n11/n13 hull_f64 finite");
+            }
+        }
+        for ex in [
+            Monster115::exit_rays_f64(),
+            Monster113::exit_rays_f64(),
+            Monster111::exit_rays_f64(),
+            Monster136::exit_rays_f64(),
+            Monster135::exit_rays_f64(),
+            Monster133::exit_rays_f64(),
+            Monster131::exit_rays_f64(),
+        ] {
+            for (_, d) in &ex {
+                assert!(d[0].is_finite() && d[1].is_finite(), "n11/n13 exit_rays_f64 finite");
             }
         }
     }

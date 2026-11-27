@@ -59,16 +59,16 @@ pub enum Field {
     /// [`monster::n9`](monster::n9)).
     K9,
     /// Q(b), b = 2cos(2pi/11), b^5 + b^4 - 4b^3 - 3b^2 + 3b + 1 = 0 —
-    /// the hendecagon field [`K11`](crate::fields::K11) (record
-    /// coordinates would live in its quadratic extension by
-    /// w = 2sin(pi/11), w^2 = 2 - b; the `monster::n11` module is
-    /// design-gated on M178/M169 — additive infrastructure today).
+    /// the hendecagon field [`K11`](crate::fields::K11) (the record
+    /// coordinates live in its quadratic extension by
+    /// w = 2sin(pi/11), w^2 = 2 - b; consumed by
+    /// [`monster::n11`](monster::n11), the three band rungs at n = 11).
     K11,
     /// Q(b), b = 2cos(2pi/13), b^6 + b^5 - 5b^4 - 4b^3 + 6b^2 + 3b - 1
     /// = 0 — the tridecagon field [`K13`](crate::fields::K13) (same
-    /// two-level shape, w^2 = 2 - b; `monster::n13` design-gated on
-    /// M179 — additive infrastructure today, isolating interval at the
-    /// certified s0 = 20, M179 §2.2).
+    /// two-level shape, w^2 = 2 - b; consumed by
+    /// [`monster::n13`](monster::n13), the four band rungs at n = 13;
+    /// isolating interval at the certified s0 = 20, M179 §2.2).
     K13,
 }
 
