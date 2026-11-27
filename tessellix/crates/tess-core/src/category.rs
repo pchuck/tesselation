@@ -48,7 +48,7 @@ pub enum TilingCategory {
     /// Kaplan isohedral (IH) templates: parameterized incidence-symbol
     /// realizations of the 93 isohedral types over the Laves topologies
     /// (the Escher arc). Members also appear under their topology's tab
-    /// (Laves; the pentagon interlocks also under Pentagon Types).
+    /// (Laves; the IH27/IH29 Cairo-net variants also under Laves).
     Isohedral,
     /// Girih, star-and-cross and related Islamic geometric patterns.
     Islamic,
