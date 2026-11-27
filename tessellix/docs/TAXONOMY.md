@@ -58,9 +58,10 @@ are pinned by `registry_groups_are_complete_and_canonically_ordered`.)
 - **Cairo merge.** `cairo-collinear` was the same Laves pattern
   (V3.3.4.3.4, dual of snub-square) as `cairo-pentagonal` with a
   different pentagon shape, so it was dropped as a separate card;
-  `cairo-pentagonal` is named "Type 4 · Cairo" (was "Cairo Pentagonal
-  (V3.3.4.3.4)" before M200; the floret dual is likewise "Type 5 ·
-  Floret")
+  `cairo-pentagonal` is named "Type 4 · Cairo (V3.3.4.3.4)" (was "Cairo
+  Pentagonal (V3.3.4.3.4)" before M200, then "Type 4 · Cairo" after it;
+  E5 restored the V-config alongside the Type-N name; the floret dual is
+  likewise "Type 5 · Floret (V3.3.3.3.6)")
   and its description documents the collinear-vertex variant
   (143.13/108.43/108.43/90/90°, edges 4×√10 + 4, integral vertices,
   square 72-area cell). 62 → 61 tilings.
