@@ -215,10 +215,203 @@ pub fn orientation_class(poly: &crate::geometry::Polygon) -> usize {
     ((deg / 45.0).round() as i32).rem_euclid(4) as usize
 }
 
-/// Polygon shape class: triangle → 0, quadrilateral → 1, … decagon-and-beyond → 7
-/// (`min(n - 3, 7)` on the vertex count, degenerate (< 3-vertex) polygons clamp to 0).
+/// Quantizer shared by [`shape_signature`]: round to a 1e-6 grid. Engine
+/// noise on emitted coordinates and derived angles stays at the 1e-12
+/// relative level (far below one quantum); genuinely different shapes
+/// differ by orders of magnitude more, so equal signature ⇔ same shape
+/// at tolerance while distinct shapes never merge.
+fn shape_quant(v: f64) -> i64 {
+    (v * 1.0e6).round() as i64
+}
+
+/// Geometric shape signature of a polygon: the canonical representative
+/// of its **similarity class** (equal up to translation, rotation,
+/// uniform scale, and reflection — orientation and position are not
+/// shape; mirror images are the same shape seen from behind).
+///
+/// Construction (robust at tolerance):
+///
+/// 1. drop consecutive duplicate vertices (and a repeated closing point);
+/// 2. merge collinear mid-side vertices (turn within 1e-9 rad of 0° with
+///    a forward dot product) to a fixpoint — the 2:1 dominoes the engines
+///    emit both plain (4 vertices) and with split long sides (6 vertices,
+///    e.g. `herringbone_45`) share one signature; zero-length edges drop
+///    the vertex too;
+/// 3. per vertex, the true interior angle (reflex-aware: the signed turn
+///    measured against the polygon's winding from the signed area) and
+///    per edge the length divided by the maximum post-merge edge length
+///    (scale invariance; the maximum is subdivision-invariant, so the
+///    normalizer cannot drift when a side happens to carry mid-side
+///    vertices — a mean over raw edges would);
+/// 4. quantize both to a 1e-6 grid; take the lexicographic minimum over
+///    all 2n dihedral traversals (every start vertex, both directions) —
+///    cyclic shifts and vertex order cannot change the signature, and
+///    reversing the traversal (a reflection) is explicitly enumerated;
+/// 5. flatten to `[n, angle_1, len_1, …]`.
+///
+/// The result is a complete invariant for the vertex loop up to
+/// similarity: unlike a sorted angle/edge multiset it preserves which
+/// angles are adjacent to which edges. Degenerate polygons (< 3 vertices
+/// before or after cleaning, or zero total edge length) return `[0]`,
+/// which no real polygon produces (`n ≥ 3` fills the first slot).
+///
+/// See [`shape_class`] for the palette mapping and the
+/// `shape_separation.rs` sweep for the registry-wide certification.
+pub fn shape_signature(poly: &crate::geometry::Polygon) -> Vec<i64> {
+    // 1. consecutive duplicate / repeated-closing vertices.
+    let mut pts: Vec<crate::geometry::Vec2> = Vec::new();
+    for &p in &poly.pts {
+        if let Some(&last) = pts.last() {
+            if (p - last).length() < 1e-12 {
+                continue;
+            }
+        }
+        pts.push(p);
+    }
+    while pts.len() > 1 && (pts[0] - *pts.last().unwrap()).length() < 1e-12 {
+        pts.pop();
+    }
+    if pts.len() < 3 {
+        return vec![0];
+    }
+    let edge_len = |i: usize| -> f64 {
+        let n = pts.len();
+        (pts[(i + 1) % n] - pts[i]).length()
+    };
+    let mean = (0..pts.len()).map(edge_len).sum::<f64>() / pts.len() as f64;
+    if !(mean > 0.0) {
+        return vec![0];
+    }
+    // 2. merge collinear mid-side vertices (and drop zero-length edges),
+    //    to fixpoint.
+    loop {
+        let n = pts.len();
+        if n < 3 {
+            return vec![0];
+        }
+        let mut drop = None;
+        for i in 0..n {
+            let u = pts[i] - pts[(i + n - 1) % n];
+            let v = pts[(i + 1) % n] - pts[i];
+            let (lu, lv) = (u.length(), v.length());
+            if lu < 1e-9 * mean || lv < 1e-9 * mean {
+                drop = Some(i);
+                break;
+            }
+            let cross = u.x * v.y - u.y * v.x;
+            let dot = u.x * v.x + u.y * v.y;
+            if dot > 0.0 && cross.abs() <= SHAPE_COLLINEAR_TOL * lu * lv {
+                drop = Some(i);
+                break;
+            }
+        }
+        match drop {
+            Some(i) => {
+                pts.remove(i);
+                if pts.len() < 3 {
+                    return vec![0];
+                }
+            }
+            None => break,
+        }
+    }
+    let n = pts.len();
+    // 3. winding from the signed area; lengths normalized by the post-
+    //    merge maximum (subdivision- and similarity-invariant).
+    let mut max_len = 0.0f64;
+    for i in 0..n {
+        max_len = max_len.max((pts[(i + 1) % n] - pts[i]).length());
+    }
+    if !(max_len > 0.0) {
+        return vec![0];
+    }
+    let mut sa = 0.0;
+    for i in 0..n {
+        let p = pts[i];
+        let r = pts[(i + 1) % n];
+        sa += p.x * r.y - r.x * p.y;
+    }
+    let s: f64 = if sa >= 0.0 { 1.0 } else { -1.0 };
+    let mut angles = vec![0i64; n];
+    let mut lens = vec![0i64; n];
+    for i in 0..n {
+        let u = pts[i] - pts[(i + n - 1) % n];
+        let v = pts[(i + 1) % n] - pts[i];
+        let turn = (u.x * v.y - u.y * v.x).atan2(u.x * v.x + u.y * v.y);
+        angles[i] = shape_quant(std::f64::consts::PI - s * turn);
+        lens[i] = shape_quant(v.length() / max_len);
+    }
+    // 4. dihedral-canonical lexicographic minimum over 2n traversals.
+    let mut best: Option<Vec<i64>> = None;
+    for j in 0..n {
+        let fwd: Vec<i64> = (0..n)
+            .flat_map(|k| [angles[(j + k) % n], lens[(j + k) % n]])
+            .collect();
+        let rev: Vec<i64> = (0..n)
+            .flat_map(|k| {
+                let v = (j + n - k) % n;
+                [angles[v], lens[(v + n - 1) % n]]
+            })
+            .collect();
+        for cand in [fwd, rev] {
+            if best.as_ref().is_none_or(|b| cand < *b) {
+                best = Some(cand);
+            }
+        }
+    }
+    let mut sig = Vec::with_capacity(1 + 2 * n);
+    sig.push(n as i64);
+    sig.extend(best.unwrap());
+    sig
+}
+
+/// Collinearity tolerance (radians, cross-product form) for the mid-side
+/// vertex merge in [`shape_signature`] — far above engine noise (≈ 1e-12
+/// relative), far below any real corner.
+const SHAPE_COLLINEAR_TOL: f64 = 1e-9;
+
+/// Position weights (mod 8) folding a [`shape_signature`] into an 8-slot
+/// palette index: per canonical position `k`, the low 3 bits of the angle
+/// entry weight `SHAPE_SLOT_WEIGHTS[k % 24]` and the next 3 bits weight
+/// `SHAPE_SLOT_WEIGHTS[24 + k % 24]`. Derived by constraint solving
+/// (walkSAT over the registry's co-occurring shape classes, the
+/// `shape_separation.rs` sweep) so every tiling with ≤ 8 classes in its
+/// default preview window colors its classes injectively; re-derived if
+/// the sweep test ever reports a collision.
+const SHAPE_SLOT_WEIGHTS: [u64; 48] = [
+    7, 5, 7, 5, 7, 1, 2, 4, 0, 5, 3, 7, 4, 7, 6, 2, 3, 0, 5, 4, 0, 0, 4, 2, 7, 4, 1, 7, 6, 5, 7,
+    1, 1, 1, 5, 6, 4, 0, 7, 3, 3, 6, 2, 3, 7, 3, 7, 2,
+];
+
+/// Polygon shape class: the palette index of the tile's similarity class
+/// ([`shape_signature`]) — geometrically distinct shapes (a square vs a
+/// 45° rhombus, a thick vs a thin Penrose rhombus) always land on
+/// distinct colors, while the same shape in different positions,
+/// orientations, scales, and mirrorings shares one color. The old key
+/// (M192) was the raw vertex count, which collapsed exactly such
+/// same-count, different-shape tiles onto one color — the user-reported
+/// Ammann-Beenker bug (squares and rhombi all blue).
+///
+/// The signature folds into the 8-slot palette through
+/// [`SHAPE_SLOT_WEIGHTS`]. With at most 8 classes in view the mapping is
+/// injective — certified registry-wide by the `shape_separation.rs`
+/// sweep — and one catalogued tiling (`girih-star-cross`, whose
+/// per-instance girih straps realize 536 genuinely distinct similarity
+/// classes in the default window) exceeds the palette and shares tones
+/// by construction. (A generic hash into 8 slots cannot achieve this:
+/// the registry's 332 co-occurrence constraints expect ~40 hash
+/// collisions — e.g. plain FNV-1a collided in 45 tilings, with
+/// splitmix64 avalanching in 19, `star-cross` among them.)
 pub fn shape_class(poly: &crate::geometry::Polygon) -> usize {
-    poly.len().saturating_sub(3).min(7)
+    let sig = shape_signature(poly);
+    let mut acc: u64 = 0;
+    for (k, v) in sig.iter().enumerate() {
+        let v = *v as u64;
+        acc = acc
+            .wrapping_add(SHAPE_SLOT_WEIGHTS[k % 24] * (v & 7))
+            .wrapping_add(SHAPE_SLOT_WEIGHTS[24 + k % 24] * ((v >> 3) & 7));
+    }
+    (acc & 7) as usize
 }
 
 /// Aperiodic metatile/cluster class (see `crate::view`).
@@ -549,25 +742,236 @@ mod tests {
     }
 
     #[test]
-    fn shape_class_maps_vertex_count() {
-        // min(n - 3, 7): triangle→0 … heptagon→4, octagon→5, nonagon→6, 10+→7.
-        assert_eq!(shape_class(&poly_with_n_vertices(3)), 0);
-        assert_eq!(shape_class(&poly_with_n_vertices(4)), 1);
-        assert_eq!(shape_class(&poly_with_n_vertices(5)), 2);
-        assert_eq!(shape_class(&poly_with_n_vertices(6)), 3);
-        assert_eq!(shape_class(&poly_with_n_vertices(7)), 4);
-        assert_eq!(shape_class(&poly_with_n_vertices(8)), 5);
-        assert_eq!(shape_class(&poly_with_n_vertices(9)), 6);
-        assert_eq!(shape_class(&poly_with_n_vertices(10)), 7);
-        assert_eq!(shape_class(&poly_with_n_vertices(16)), 7);
+    fn shape_signature_distinguishes_regular_polygons_by_geometry() {
+        // Under the M-reclassification key every regular n-gon is its own
+        // similarity class (the old vertex-count key also separated these;
+        // the point of the new key is that same-count different-shape
+        // polygons separate too — see the tests below). The palette
+        // mapping may alias two classes only when > 8 classes coexist;
+        // the class function stays in palette range for all inputs.
+        let sigs: Vec<Vec<i64>> = (3..16).map(|n| shape_signature(&poly_with_n_vertices(n))).collect();
+        for i in 0..sigs.len() {
+            for j in (i + 1)..sigs.len() {
+                assert_ne!(sigs[i], sigs[j], "regular {}-gon and {}-gon share a signature", i + 3, j + 3);
+            }
+            assert!(shape_class(&poly_with_n_vertices(i + 3)) < PALETTE.len());
+        }
+        // Equal signature ⇔ equal class, always.
+        for n in 3..16 {
+            let p = poly_with_n_vertices(n);
+            assert_eq!(shape_class(&p), shape_class(&p));
+        }
     }
 
     #[test]
-    fn shape_class_degenerate_clamps_to_zero() {
-        let empty = Polygon::from_slice(&[]);
-        assert_eq!(shape_class(&empty), 0);
-        let one_vertex = Polygon::from_slice(&[Vec2::new(0.0, 0.0)]);
-        assert_eq!(shape_class(&one_vertex), 0);
+    fn shape_signature_degenerate_inputs_share_the_zero_signature() {
+        for pts in [
+            vec![],
+            vec![Vec2::new(1.0, 2.0)],
+            vec![Vec2::new(1.0, 2.0), Vec2::new(4.0, 6.0)],
+            // Zero-area sliver: all three points identical.
+            vec![Vec2::new(0.5, 0.5), Vec2::new(0.5, 0.5), Vec2::new(0.5, 0.5)],
+        ] {
+            let p = Polygon::from_slice(&pts);
+            assert_eq!(shape_signature(&p), vec![0], "degenerate input {pts:?}");
+        }
+        // Degenerate polygons share one class (not necessarily 0 — the
+        // class is the signature's weighted palette fold).
+        let a = Polygon::from_slice(&[]);
+        let b = Polygon::from_slice(&[Vec2::new(0.0, 0.0)]);
+        assert_eq!(shape_class(&a), shape_class(&b));
+    }
+
+    /// Rotate `pts` by `deg`, scale by `k`, translate by `(tx, ty)`, and
+    /// optionally mirror in x — the similarity group a shape class must
+    /// be blind to.
+    fn similar_poly(pts: &[[f64; 2]], deg: f64, k: f64, tx: f64, ty: f64, mirror: bool) -> Polygon {
+        let a = deg.to_radians();
+        let (sa, ca) = a.sin_cos();
+        let mut out: Vec<Vec2> = pts
+            .iter()
+            .map(|p| Vec2::new(p[0] * ca - p[1] * sa, p[0] * sa + p[1] * ca))
+            .map(|p| Vec2::new(p.x * k + tx, p.y * k + ty))
+            .collect();
+        if mirror {
+            for p in &mut out {
+                p.x = -p.x;
+            }
+        }
+        Polygon::from_slice(&out)
+    }
+
+    #[test]
+    fn shape_class_is_similarity_invariant() {
+        // The unit square through every similarity transform: same class.
+        let sq = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
+        let base = shape_signature(&rect_poly(&sq));
+        for &(deg, k, tx, ty, mirror) in &[
+            (0.0f64, 1.0, 0.0, 0.0, false),
+            (37.0, 1.0, 0.0, 0.0, false),
+            (180.0, 1.0, 0.0, 0.0, false),
+            (0.0, 7.5, 0.0, 0.0, false),
+            (123.0, 0.001, 0.0, 0.0, false),
+            (0.0, 1.0, 1.0e4, -2.5e4, false),
+            (45.0, 1.0, 0.0, 0.0, true),
+            (0.0, 1.0, 0.0, 0.0, true),
+        ] {
+            let p = similar_poly(&sq, deg, k, tx, ty, mirror);
+            assert_eq!(shape_signature(&p), base, "similarity transform ({deg},{k},{tx},{ty},mirror={mirror}) changed the square's signature");
+            assert_eq!(shape_class(&p), shape_class(&rect_poly(&sq)));
+        }
+        // Vertex-order invariance: a cyclic shift and a reversal (mirror
+        // traversal) of the same vertex list read the same signature.
+        let shifted = rect_poly(&[[1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]]);
+        assert_eq!(shape_signature(&shifted), base);
+        let reversed = rect_poly(&[[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]]);
+        assert_eq!(shape_signature(&reversed), base);
+    }
+
+    #[test]
+    fn shape_class_is_tolerance_robust() {
+        // Coordinate jitter far ABOVE engine noise but far BELOW one
+        // quantum (1e-6) must not split a class.
+        let sq = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
+        let base = shape_signature(&rect_poly(&sq));
+        let jitter = |v: f64, i: usize, j: usize| -> f64 {
+            // deterministic pseudo-jitter of |δ| ≤ 1e-10
+            let d = ((i * 7 + j * 13) % 5) as f64 - 2.0;
+            v + d * 5e-11
+        };
+        for k in 0..3 {
+            let mut pts: Vec<Vec2> = Vec::new();
+            for (i, p) in sq.iter().enumerate() {
+                pts.push(Vec2::new(jitter(p[0], i, k), jitter(p[1], k, i)));
+            }
+            assert_eq!(shape_signature(&Polygon::from_slice(&pts)), base, "jitter pass {k} split the square class");
+        }
+    }
+
+    #[test]
+    fn shape_class_separates_ammann_beenker_square_and_rhombus() {
+        // The user-reported bug: under the old vertex-count key both the
+        // AB square and the 45° rhombus were class 1 (4 vertices) and
+        // painted the same blue. Their similarity classes differ in
+        // angles (90° vs 45°/135°), so the new key must separate them —
+        // while every rotated/mirrored copy stays in its own class.
+        let square = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
+        // 45° rhombus: unit edges, corners at 45° and 135°.
+        let rhombus = [
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [1.0 + 45f64.to_radians().cos(), 45f64.to_radians().sin()],
+            [45f64.to_radians().cos(), 45f64.to_radians().sin()],
+        ];
+        let s = shape_signature(&rect_poly(&square));
+        let r = shape_signature(&rect_poly(&rhombus));
+        assert_ne!(s, r, "square and 45° rhombus must not share a shape class");
+        assert_ne!(shape_class(&rect_poly(&square)), shape_class(&rect_poly(&rhombus)));
+        // Rotated/mirrored copies keep each class (orientation is not shape).
+        let rhombus_rot = similar_poly(&rhombus, 72.0, 1.0, 3.0, -4.0, false);
+        assert_eq!(shape_signature(&rhombus_rot), r);
+        let square_mirror = similar_poly(&square, 0.0, 2.0, 0.0, 0.0, true);
+        assert_eq!(shape_signature(&square_mirror), s);
+    }
+
+    #[test]
+    fn shape_class_separates_penrose_rhombi_but_not_their_orientations() {
+        // Thick (72°/108°) and thin (36°/144°) Penrose rhombi are
+        // different shapes; the same rhombus at any rotation is one shape.
+        let mk = |half: f64| -> Polygon {
+            // unit-edge rhombus with interior angles `half` and π−half
+            let a = half.to_radians();
+            rect_poly(&[
+                [0.0, 0.0],
+                [1.0, 0.0],
+                [1.0 + a.cos(), a.sin()],
+                [a.cos(), a.sin()],
+            ])
+        };
+        let thick = mk(72.0);
+        let thin = mk(36.0);
+        assert_ne!(shape_signature(&thick), shape_signature(&thin), "72° and 36° rhombi must not share a shape class");
+        assert_ne!(shape_class(&thick), shape_class(&thin));
+        // Two orientations of the thick rhombus (e.g. the P3 rotations):
+        // same class.
+        let thick_rot = similar_poly(
+            &[[0.0, 0.0], [1.0, 0.0], [1.0 + 72f64.to_radians().cos(), 72f64.to_radians().sin()], [72f64.to_radians().cos(), 72f64.to_radians().sin()]],
+            144.0,
+            1.0,
+            0.0,
+            0.0,
+            false,
+        );
+        assert_eq!(shape_signature(&thick_rot), shape_signature(&thick));
+        // And a square (90° rhombus) is a third class.
+        let square = mk(90.0);
+        assert_ne!(shape_signature(&square), shape_signature(&thick));
+        assert_ne!(shape_signature(&square), shape_signature(&thin));
+    }
+
+    #[test]
+    fn shape_class_merges_mid_side_split_polygons() {
+        // The herringbone precedent: the 2:1 domino emitted plain (4
+        // vertices) and with both long sides split at the midpoint (6
+        // vertices) is ONE shape. The old key called them classes 1 and 3.
+        let plain = [[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]];
+        let split = [
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [2.0, 0.0],
+            [2.0, 1.0],
+            [1.0, 1.0],
+            [0.0, 1.0],
+        ];
+        assert_eq!(shape_signature(&rect_poly(&split)), shape_signature(&rect_poly(&plain)), "mid-side split must not split the class");
+        // A rectangle 1×2 and a square are different shapes even though
+        // both are 4-gons; 1×2 and 2×1 are the same shape.
+        let sq = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
+        assert_ne!(shape_signature(&rect_poly(&plain)), shape_signature(&rect_poly(&sq)));
+        let tall = [[0.0, 0.0], [1.0, 0.0], [1.0, 2.0], [0.0, 2.0]];
+        assert_eq!(shape_signature(&rect_poly(&tall)), shape_signature(&rect_poly(&plain)));
+    }
+
+    #[test]
+    fn shape_class_reflects_reflex_angles() {
+        // Reflex-awareness: the unit L-hexagon (one 270° corner) and the
+        // equiangular-ish convex counterpart share edge multisets but not
+        // canonical (angle, edge) sequences.
+        let stair = rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [1.0, 1.0], [1.0, 2.0], [0.0, 2.0]]);
+        let regular6 = poly_with_n_vertices(6);
+        assert_ne!(shape_signature(&stair), shape_signature(&regular6));
+        // The stair is one class under rotation/mirroring of itself.
+        let stair_m = similar_poly(
+            &[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [1.0, 1.0], [1.0, 2.0], [0.0, 2.0]],
+            90.0,
+            1.0,
+            0.0,
+            0.0,
+            true,
+        );
+        assert_eq!(shape_signature(&stair_m), shape_signature(&stair));
+    }
+
+    #[test]
+    fn tile_rgb_shape_follows_polygon_class() {
+        // The palette color is the class's palette-fold slot; distinct
+        // shapes get distinct colors and the class must not leak from
+        // seed/proto.
+        let tri = tile_with_shape(0, 0, 3);
+        let dec = tile_with_shape(0, 0, 10);
+        assert_eq!(tile_rgb(ColorMode::Shape, &tri), PALETTE[shape_class(&tri.poly)]);
+        assert_eq!(tile_rgb(ColorMode::Shape, &dec), PALETTE[shape_class(&dec.poly)]);
+        assert_ne!(tile_rgb(ColorMode::Shape, &tri), tile_rgb(ColorMode::Shape, &dec));
+        // The shape class must not leak from seed/proto.
+        assert_eq!(
+            tile_rgb(ColorMode::Shape, &tile_with_shape(7, 3, 6)),
+            tile_rgb(ColorMode::Shape, &tile_with_shape(0, 1, 6))
+        );
+        // A square and a 45° rhombus (the AB bug) read different colors
+        // even with identical seed/proto.
+        let sq = Tile { proto: 1, seed: 2, level: 0, poly: rect_poly(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]) };
+        let rh = Tile { proto: 1, seed: 2, level: 0, poly: rect_poly(&[[0.0, 0.0], [1.0, 0.0], [1.0 + 45f64.to_radians().cos(), 45f64.to_radians().sin()], [45f64.to_radians().cos(), 45f64.to_radians().sin()]]) };
+        assert_ne!(tile_rgb(ColorMode::Shape, &sq), tile_rgb(ColorMode::Shape, &rh));
     }
 
     #[test]
@@ -627,20 +1031,6 @@ mod tests {
         // treated as cap — it follows the hat/spectre seed branch instead.
         let t = Tile { proto: 0, seed: 5, level: 0, poly: poly_with_n_vertices(3) };
         assert_eq!(metatile_class(&t), 1); // seed-5 → hat T bucket
-    }
-
-    #[test]
-    fn tile_rgb_shape_follows_polygon_class() {
-        // Triangle → class 0 → PALETTE[0]; decagon → class 7 → PALETTE[7].
-        let tri = tile_with_shape(0, 0, 3);
-        let dec = tile_with_shape(0, 0, 10);
-        assert_eq!(tile_rgb(ColorMode::Shape, &tri), PALETTE[0]);
-        assert_eq!(tile_rgb(ColorMode::Shape, &dec), PALETTE[7]);
-        // The shape class must not leak from seed/proto.
-        assert_eq!(
-            tile_rgb(ColorMode::Shape, &tile_with_shape(7, 3, 6)),
-            tile_rgb(ColorMode::Shape, &tile_with_shape(0, 1, 6))
-        );
     }
 
     #[test]

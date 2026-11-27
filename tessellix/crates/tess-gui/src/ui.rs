@@ -181,8 +181,9 @@ pub struct GuiApp {
     /// scrolling would be snapped back on every render).
     last_highlighted: (usize, String),
     /// Lazily built card preview textures, keyed by (id, params-string,
-    /// size). Textures are generated in the draw pass for visible cards
-    /// only — generating all 63 up front would stall the first frame.
+    /// effective preview mode, size). Textures are generated in the draw
+    /// pass for visible cards only — generating all 63 up front would
+    /// stall the first frame.
     card_textures: HashMap<String, egui::TextureHandle>,
     /// Current card target width for the browse grid (1.0× =
     /// [`CARD_TARGET_W`]). Ctrl+wheel / trackpad pinch (egui's
@@ -229,6 +230,27 @@ pub struct GuiApp {
     /// About button; closed by H again or the panel's × button.
     /// Purely an overlay — it enters no RenderKey/cache key.
     about_open: bool,
+    /// The Browse preview color mode override (the preview band's mode
+    /// selector): `None` = each card previews in its tiling's own
+    /// default preview mode (the historical behavior); `Some(m)` =
+    /// every preview renders in `m`. One shared state with the Render
+    /// detail selector — both selectors write through
+    /// [`GuiApp::set_preview_mode`], which also drives `app.color_mode`
+    /// (the canvas's live mode), so Browse→Render and Render→Browse
+    /// stay in sync. `select_id` resets `app.color_mode` to the
+    /// selected tiling's default (the tess-core App behavior the TUI
+    /// shares); while an override is set, the GUI re-applies it at
+    /// every selection so an explicit choice sticks across card clicks
+    /// until the band's `default` clears it.
+    preview_mode: Option<ColorMode>,
+    /// Diagnostics for the headless selector test: each preview-band
+    /// mode label's `(mode, rect)` recorded by the last
+    /// `draw_preview_mode_row` pass (`None` = the `default` label).
+    /// Production code never reads these — the `allow(dead_code)`
+    /// keeps the 0-warning bar outside `cfg(test)` (the card_rects
+    /// precedent).
+    #[cfg_attr(not(test), allow(dead_code))]
+    preview_mode_rects: Vec<(Option<ColorMode>, egui::Rect)>,
 }
 
 /// What determines the canvas `TilingResult`: the tiling id, the
@@ -472,9 +494,44 @@ fn walk_index(n: usize, cur: Option<usize>, step: i32) -> Option<usize> {
     Some(((cur + step).rem_euclid(n as i32)) as usize)
 }
 
-/// Card-preview cache key: (id, params-string, size).
-fn card_key(id: &str, params: &str, w: u32, h: u32) -> String {
-    format!("{id}|{params}|{w}x{h}")
+/// The shared color-mode selector row: all ten modes in
+/// [`ColorMode::ALL`] order as selectable labels, `Some(current)`
+/// highlighting the active one, optionally led by a `default` label
+/// (option `None`) — the Browse band's "follow each tiling's own
+/// default" choice. Both mode-selection sites draw through here — the
+/// Render detail panel and the Browse preview band — so the option
+/// list and click semantics cannot drift; each caller applies the
+/// clicked option through [`GuiApp::set_preview_mode`], the single
+/// state funnel (canvas `app.color_mode` + preview override together).
+/// Returns each option's `(mode, rect, clicked)`; the rects feed the
+/// headless click test (the `card_rects` precedent).
+fn mode_selector_row(
+    ui: &mut egui::Ui,
+    current: Option<ColorMode>,
+    include_default: bool,
+) -> Vec<(Option<ColorMode>, egui::Rect, bool)> {
+    let mut out = Vec::with_capacity(ColorMode::ALL.len() + 1);
+    ui.horizontal(|ui| {
+        if include_default {
+            let r = ui.selectable_label(current.is_none(), "default");
+            out.push((None, r.rect, r.clicked()));
+        }
+        for m in ColorMode::ALL {
+            let r = ui.selectable_label(current == Some(m), m.label());
+            out.push((Some(m), r.rect, r.clicked()));
+        }
+    });
+    out
+}
+
+/// Card-preview cache key: (id, params-string, effective preview mode,
+/// size). The mode is part of the key so a preview-band mode change
+/// regenerates the textures (the old keys simply miss; the stale ones
+/// are dropped in [`GuiApp::set_preview_mode`]). The size stays the
+/// last segment — [`GuiApp::set_card_target_w_impl`] prunes on its
+/// `|WxH` suffix.
+fn card_key(id: &str, params: &str, mode: ColorMode, w: u32, h: u32) -> String {
+    format!("{id}|{params}|{}|{w}x{h}", mode.label())
 }
 
 /// `glb-binary-n7` id — the only tiling whose card preview changes.
@@ -598,6 +655,8 @@ impl GuiApp {
             canvas_rect: None,
             zoom_default,
             about_open: false,
+            preview_mode: None,
+            preview_mode_rects: Vec::new(),
         }
     }
 
@@ -751,6 +810,7 @@ impl GuiApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             self.search_jump();
             self.draw_tab_row(ui);
+            self.draw_preview_mode_row(ui);
             ui.separator();
             egui::ScrollArea::vertical().id_salt("browser").show(ui, |ui| {
                 self.draw_card_grid(ctx, ui);
@@ -806,6 +866,69 @@ impl GuiApp {
         if next != cur {
             self.set_card_target_w_exact(card_target_for_cols(avail, next));
         }
+    }
+
+    /// The single funnel for both color-mode selector sites (the
+    /// Render detail panel, the Browse preview band). Sets the preview
+    /// override (`None` = each tiling's own default preview mode) and
+    /// drives `app.color_mode` — the mode the canvas paints with — in
+    /// lockstep, so the two views share one state:
+    ///
+    /// * `Some(m)`: previews and canvas show `m` (previews additionally
+    ///   pass through [`ColorMode::preview_mode`], keeping the
+    ///   Single→Proto thumbnail fallback);
+    /// * `None`: previews revert to each tiling's `default_color_mode`
+    ///   and the canvas to the mode the current selection opened with.
+    ///
+    /// A real override change clears the card-texture cache (keys embed
+    /// the effective mode), so previews regenerate lazily in the new
+    /// colors; the canvas needs no invalidation — painting reads
+    /// `color_mode` live every frame (the RenderKey invariant).
+    fn set_preview_mode(&mut self, m: Option<ColorMode>) {
+        if self.preview_mode != m {
+            self.preview_mode = m;
+            self.card_textures.clear();
+        }
+        self.app.color_mode = m.unwrap_or_else(|| self.app.tiling().default_color_mode());
+    }
+
+    /// The effective preview color mode for `tiling`: the explicit
+    /// override while one is set, else the tiling's own default.
+    /// [`GuiApp::card_texture`] renders in this mode's
+    /// [`ColorMode::preview_mode`].
+    fn card_preview_mode(&self, tiling: &dyn tess_core::tiling::Tiling) -> ColorMode {
+        self.preview_mode.unwrap_or_else(|| tiling.default_color_mode())
+    }
+
+    /// `App::select_id` plus the preview-override re-application:
+    /// `select_id` resets `app.color_mode` to the newly selected
+    /// tiling's default (the shared tess-core behavior), but an
+    /// explicit mode choice made in either selector is meant to
+    /// survive card navigation, so while an override is set the canvas
+    /// returns to it. With no override the historical per-tiling
+    /// default behavior is untouched.
+    fn select_id_synced(&mut self, id: &str) {
+        self.app.select_id(id);
+        if let Some(m) = self.preview_mode {
+            self.app.color_mode = m;
+        }
+    }
+
+    /// The Browse preview band's color-mode row: `default` (follow
+    /// each tiling's own preview mode) plus the same ten options as
+    /// the Render detail panel, through the shared
+    /// [`mode_selector_row`]. Records every option's rect for the
+    /// headless click test (the `card_rects` precedent).
+    fn draw_preview_mode_row(&mut self, ui: &mut egui::Ui) {
+        ui.horizontal(|ui| {
+            ui.label("Color mode");
+            let picks = mode_selector_row(ui, self.preview_mode, true);
+            self.preview_mode_rects =
+                picks.iter().map(|(m, r, _)| (*m, *r)).collect();
+            if let Some((m, _, true)) = picks.iter().find(|(_, _, c)| *c) {
+                self.set_preview_mode(*m);
+            }
+        });
     }
 
     /// Render mode: Escape/arrow handling, the top strip (back / prev /
@@ -883,27 +1006,14 @@ impl GuiApp {
                 self.draw_params(ui);
                 ui.separator();
                 ui.label("Color mode");
-                ui.horizontal(|ui| {
-                    for m in [
-                        ColorMode::Single,
-                        ColorMode::Pattern,
-                        ColorMode::Proto,
-                        ColorMode::Gray,
-                        ColorMode::PatternGray,
-                        ColorMode::Shape,
-                        ColorMode::Role,
-                        ColorMode::Metatile,
-                        ColorMode::Orientation,
-                        ColorMode::Level,
-                    ] {
-                        if ui
-                            .selectable_label(self.app.color_mode == m, m.label())
-                            .clicked()
-                        {
-                            self.app.color_mode = m;
-                        }
-                    }
-                });
+                let picks = mode_selector_row(ui, Some(self.app.color_mode), false);
+                if let Some((m, _, true)) = picks.iter().find(|(_, _, c)| *c) {
+                    // Same funnel as the Browse preview band: the
+                    // canvas recolors live (paint reads `color_mode`)
+                    // and the preview override follows, so Browse
+                    // previews recolor to the detail view's choice.
+                    self.set_preview_mode(*m);
+                }
                 ui.separator();
                 let m = self.metadata();
                 ui.horizontal(|ui| {
@@ -1007,7 +1117,7 @@ impl GuiApp {
             None => return,
         };
         let id = tab.cards[next].id;
-        self.app.select_id(id);
+        self.select_id_synced(id);
         self.tab_selected[ci] = Some(id.to_string());
     }
 
@@ -1031,7 +1141,7 @@ impl GuiApp {
     /// TUI's `open_render` (cursor kept in sync so `Esc` returns to
     /// this card).
     fn select_card(&mut self, id: &str) {
-        self.app.select_id(id);
+        self.select_id_synced(id);
         self.tab_selected[self.active_tab] = Some(id.to_string());
         self.mode = GuiMode::Render;
         self.params_open = true;
@@ -1046,7 +1156,7 @@ impl GuiApp {
         }
         self.active_tab = idx;
         if let Some(id) = entry_selection(&self.tabs[idx], self.tab_selected[idx].as_deref()) {
-            self.app.select_id(id);
+            self.select_id_synced(id);
             self.tab_selected[idx] = Some(id.to_string());
         }
     }
@@ -1324,9 +1434,12 @@ impl GuiApp {
     /// Rasterization uses the shared `tess_core::raster` with the
     /// identity palette, so pixel indices are positions in
     /// `paint::PALETTE` (full 8-bit colors; the TUI maps the same
-    /// indices to xterm-256). Colors follow the tiling's default
-    /// preview mode (proto fallback for `Single`, which would render a
-    /// featureless slab) — the TUI thumb semantics.
+    /// indices to xterm-256). Colors follow the effective preview mode
+    /// ([`GuiApp::card_preview_mode`]: the preview band's override
+    /// while one is set, else the tiling's default) through
+    /// [`ColorMode::preview_mode`] (`Single` falls back to `Proto`,
+    /// which would render a featureless slab) — the TUI thumb
+    /// semantics when no override is active.
     ///
     /// `glb-binary-n7` is the one tiling whose preview is rendered
     /// with overridden params (see `preview_params`): at its default
@@ -1360,7 +1473,8 @@ impl GuiApp {
         let params = ParamSet::default_for(tiling.params());
         let preview_params = preview_params(&params, tiling.id());
         let params_str = preview_params_str(tiling.params(), &preview_params);
-        let key = card_key(card.id, &params_str, w, h);
+        let mode = self.card_preview_mode(tiling).preview_mode();
+        let key = card_key(card.id, &params_str, mode, w, h);
         if let Some(t) = self.card_textures.get(&key) {
             return t.clone();
         }
@@ -1390,7 +1504,6 @@ impl GuiApp {
             result = tiling.generate(&preview_params, &tess_core::Query { region: window });
             shrink *= 0.4;
         }
-        let mode = tiling.default_color_mode().preview_mode();
         let raster = if result.tiles.is_empty() {
             None
         } else {
@@ -1810,6 +1923,8 @@ mod tests {
             canvas_rect: None,
             zoom_default,
             about_open: false,
+            preview_mode: None,
+            preview_mode_rects: Vec::new(),
         }
     }
 
@@ -2202,16 +2317,24 @@ mod tests {
         assert_eq!(super::entry_selection(&tab, None), None);
     }
 
-    /// The texture cache key distinguishes (id, params, size).
+    /// The texture cache key distinguishes (id, params, mode, size).
+    /// The mode component (the preview band's recolor) must not let a
+    /// mode change reuse a stale texture, and the size stays the last
+    /// `|WxH` segment the col-pruning relies on.
     #[test]
-    fn card_key_distinguishes_id_params_size() {
+    fn card_key_distinguishes_id_params_mode_size() {
+        use tess_core::view::ColorMode;
         assert_eq!(
-            super::card_key("chair", "scale=1", 120, 90),
-            "chair|scale=1|120x90"
+            super::card_key("chair", "scale=1", ColorMode::Proto, 120, 90),
+            "chair|scale=1|proto|120x90"
         );
-        assert_ne!(super::card_key("chair", "scale=1", 120, 90), super::card_key("chair", "scale=2", 120, 90));
-        assert_ne!(super::card_key("chair", "scale=1", 120, 90), super::card_key("chair", "scale=1", 121, 90));
-        assert_ne!(super::card_key("chair", "scale=1", 120, 90), super::card_key("other", "scale=1", 120, 90));
+        assert_ne!(super::card_key("chair", "scale=1", ColorMode::Proto, 120, 90), super::card_key("chair", "scale=2", ColorMode::Proto, 120, 90));
+        assert_ne!(super::card_key("chair", "scale=1", ColorMode::Proto, 120, 90), super::card_key("chair", "scale=1", ColorMode::Proto, 121, 90));
+        assert_ne!(super::card_key("chair", "scale=1", ColorMode::Proto, 120, 90), super::card_key("other", "scale=1", ColorMode::Proto, 120, 90));
+        // The new mode axis: same id/params/size, different mode → different key.
+        assert_ne!(super::card_key("chair", "scale=1", ColorMode::Proto, 120, 90), super::card_key("chair", "scale=1", ColorMode::Shape, 120, 90));
+        // The `|WxH` suffix contract the prune relies on survives the new segment.
+        assert!(super::card_key("chair", "scale=1", ColorMode::Orientation, 120, 90).ends_with("|120x90"));
     }
 
     /// The params component of the cache key is the preview's actual
@@ -2463,7 +2586,7 @@ mod tests {
     }
 
     /// KEY SENSITIVITY (phase-2a recon hardening): the card-texture cache
-    /// is keyed by (id, params_str, size) — `card_key`. Same id + same
+    /// is keyed by (id, params_str, mode, size) — `card_key`. Same id + same
     /// params + same size through the real production path = a HIT (no
     /// regeneration; the same texture handle is reused). The same id at
     /// the same size with a different params_str keys to a DIFFERENT
@@ -2504,8 +2627,8 @@ mod tests {
         );
         let changed_str = "scale=2,rotation=0°,star_radius=0.50";
         assert_ne!(default_str, changed_str);
-        let k_default = super::card_key(card.id, &default_str, 120, 90);
-        let k_changed = super::card_key(card.id, &changed_str, 120, 90);
+        let k_default = super::card_key(card.id, &default_str, tess_core::view::ColorMode::Proto, 120, 90);
+        let k_changed = super::card_key(card.id, &changed_str, tess_core::view::ColorMode::Proto, 120, 90);
         assert_ne!(
             k_default, k_changed,
             "params_str must be part of the cache key — otherwise a params change reuses a stale texture"
@@ -3503,5 +3626,218 @@ mod tests {
         ] {
             assert!(text.contains(needle), "open panel missing {needle:?}: {text:?}");
         }
+    }
+
+    // ---- preview color-mode band (the Browse selector re-color job) ----
+
+    /// Drive one egui pass of the preview band's mode row through the
+    /// production `draw_preview_mode_row`, optionally injecting a
+    /// primary-button press+release at `click_at` (hovered first) —
+    /// the headless click recipe; the M199 About test's pass-loop
+    /// pattern, single pass per state.
+    fn preview_row_pass(
+        gui: &mut super::GuiApp,
+        ectx: &egui::Context,
+        screen: egui::Rect,
+        click_at: Option<egui::Pos2>,
+    ) -> egui::FullOutput {
+        let mut events: Vec<egui::Event> = Vec::new();
+        if let Some(pos) = click_at {
+            events.push(egui::Event::PointerMoved(pos));
+            events.push(egui::Event::PointerButton {
+                pos,
+                button: egui::PointerButton::Primary,
+                pressed: true,
+                modifiers: egui::Modifiers::NONE,
+            });
+            events.push(egui::Event::PointerButton {
+                pos,
+                button: egui::PointerButton::Primary,
+                pressed: false,
+                modifiers: egui::Modifiers::NONE,
+            });
+        }
+        let input = egui::RawInput {
+            screen_rect: Some(screen),
+            events,
+            ..Default::default()
+        };
+        ectx.run(input, |ectx| {
+            egui::CentralPanel::default().show(ectx, |ui| gui.draw_preview_mode_row(ui));
+        })
+    }
+
+    /// The band paints `default` plus the ten [`ColorMode::ALL`] labels
+    /// and records eleven hit rects — the same option list as the
+    /// Render detail panel through the shared `mode_selector_row`
+    /// (whose render variant, without `include_default`, pins ten).
+    #[test]
+    fn preview_mode_row_lists_default_plus_ten_modes() {
+        use tess_core::view::ColorMode;
+        let ectx = egui::Context::default();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 700.0));
+        let mut gui = fresh_gui();
+        let out = preview_row_pass(&mut gui, &ectx, screen, None);
+        assert_eq!(gui.preview_mode_rects.len(), ColorMode::ALL.len() + 1);
+        let text = painted_text(&out.shapes).join(" ");
+        assert!(text.contains("default"), "band missing the default label: {text:?}");
+        for m in ColorMode::ALL {
+            assert!(text.contains(m.label()), "band missing mode label {:?}: {text:?}", m.label());
+        }
+        // The shared row's render-site variant (include_default = false,
+        // as `draw_render` calls it) offers exactly the ten modes.
+        let out = ectx.run(
+            egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            },
+            |_ectx| {
+                egui::CentralPanel::default().show(_ectx, |ui| {
+                    let picks = super::mode_selector_row(ui, None, false);
+                    assert_eq!(picks.len(), ColorMode::ALL.len());
+                    assert!(picks.iter().all(|(m, ..)| m.is_some()), "render variant must not offer default");
+                });
+            },
+        );
+        let text = painted_text(&out.shapes).join(" ");
+        assert!(!text.contains("default"), "render variant offered a default label: {text:?}");
+    }
+
+    /// Real headless clicks on the band drive the shared state: picking
+    /// `shape` sets the override AND the canvas mode (`app.color_mode`),
+    /// picking `default` clears the override and returns the canvas to
+    /// the selected tiling's own default mode.
+    #[test]
+    fn preview_mode_row_clicks_drive_shared_state() {
+        use tess_core::view::ColorMode;
+        let ectx = egui::Context::default();
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 700.0));
+        let mut gui = fresh_gui();
+        // Pass 1: record the hit rects.
+        preview_row_pass(&mut gui, &ectx, screen, None);
+        let pos_of = |want: Option<ColorMode>| -> egui::Pos2 {
+            gui.preview_mode_rects
+                .iter()
+                .find(|(m, _)| *m == want)
+                .map(|(_, r)| *r)
+                .expect("label rect recorded")
+                .center()
+        };
+        let p_shape = pos_of(Some(ColorMode::Shape));
+        let p_role = pos_of(Some(ColorMode::Role));
+        let p_default = pos_of(None);
+        let tiling_default = gui.app.tiling().default_color_mode();
+        // Click "shape": preview override + canvas move together.
+        preview_row_pass(&mut gui, &ectx, screen, Some(p_shape));
+        assert_eq!(gui.preview_mode, Some(ColorMode::Shape));
+        assert_eq!(gui.app.color_mode, ColorMode::Shape);
+        // Click "role": the override follows, canvas stays in lockstep.
+        preview_row_pass(&mut gui, &ectx, screen, Some(p_role));
+        assert_eq!(gui.preview_mode, Some(ColorMode::Role));
+        assert_eq!(gui.app.color_mode, ColorMode::Role);
+        // Click "default": override cleared, canvas back to the
+        // selected tiling's default mode.
+        preview_row_pass(&mut gui, &ectx, screen, Some(p_default));
+        assert_eq!(gui.preview_mode, None);
+        assert_eq!(gui.app.color_mode, tiling_default);
+    }
+
+    /// The funnel's state contract, headless and direct (the click
+    /// wiring above already proves the band reaches it):
+    /// * `set_preview_mode(Some(m))` drives `app.color_mode = m`;
+    /// * a real change clears the card-texture cache (keys embed the
+    ///   effective mode, so previews regenerate in the new colors);
+    /// * `card_preview_mode` is the override while set, else the
+    ///   tiling's own default;
+    /// * `select_id_synced` keeps an override across selection (where
+    ///   bare `select_id` would reset the canvas mode), and with no
+    ///   override reproduces the historical per-tiling default.
+    #[test]
+    fn preview_mode_funnel_state_and_selection_flow() {
+        use tess_core::view::ColorMode;
+        let mut gui = fresh_gui();
+        let penrose_default = gui
+            .app
+            .registry()
+            .get("penrose")
+            .expect("penrose registered")
+            .default_color_mode();
+        let square_default = gui
+            .app
+            .registry()
+            .get("square")
+            .expect("square registered")
+            .default_color_mode();
+        // No override: each tiling previews in its own default mode.
+        let penrose = gui.app.registry().get("penrose").expect("penrose");
+        let square = gui.app.registry().get("square").expect("square");
+        assert_eq!(gui.card_preview_mode(penrose), penrose_default);
+        assert_eq!(gui.card_preview_mode(square), square_default);
+        // Override: every tiling previews in the chosen mode, and the
+        // canvas reads it live.
+        gui.set_preview_mode(Some(ColorMode::Orientation));
+        let penrose = gui.app.registry().get("penrose").expect("penrose");
+        let square = gui.app.registry().get("square").expect("square");
+        assert_eq!(gui.card_preview_mode(penrose), ColorMode::Orientation);
+        assert_eq!(gui.card_preview_mode(square), ColorMode::Orientation);
+        assert_eq!(gui.app.color_mode, ColorMode::Orientation);
+        // Selection must NOT drop an explicit override (bare
+        // `App::select_id` resets the canvas mode; the synced wrapper
+        // re-applies it).
+        gui.select_id_synced("square");
+        assert_eq!(gui.app.selected_id(), "square");
+        assert_eq!(gui.app.color_mode, ColorMode::Orientation);
+        // Clearing the override returns the canvas to the CURRENT
+        // tiling's default...
+        gui.set_preview_mode(None);
+        assert_eq!(gui.app.color_mode, square_default);
+        // ...and selection then behaves historically (per-tiling default).
+        gui.select_id_synced("penrose");
+        assert_eq!(gui.app.color_mode, penrose_default);
+    }
+
+    /// End-to-end recolor through the production `card_texture` path:
+    /// the default preview keys under the tiling's own default mode;
+    /// picking Shape re-keys (and, by the funnel's clear, regenerates)
+    /// the texture in shape colors — the user's report that previews
+    /// could not be re-colored at all.
+    #[test]
+    fn card_texture_rekeys_under_preview_mode_override() {
+        use tess_core::view::ColorMode;
+        let ectx = egui::Context::default();
+        let mut gui = fresh_gui();
+        let card = card_fix(
+            "penrose",
+            tess_core::TilingCategory::Uniform,
+            None,
+            None,
+        );
+        let default_mode = gui
+            .app
+            .registry()
+            .get("penrose")
+            .expect("penrose registered")
+            .default_color_mode()
+            .preview_mode();
+        let _h = gui.card_texture(&ectx, &card, 120, 90);
+        assert_eq!(gui.card_textures.len(), 1);
+        let key0 = super::card_key("penrose", "", default_mode, 120, 90);
+        // Whatever the default, it is NOT shape mode here (penrose's
+        // default is not Shape, else this test's contrast collapses).
+        assert_ne!(default_mode, ColorMode::Shape);
+        assert!(
+            gui.card_textures.keys().any(|k| k.split('|').last() == key0.split('|').last()
+                && k.split('|').nth(2) == Some(default_mode.label())),
+            "default preview keyed under the default mode: {:?}",
+            gui.card_textures.keys().collect::<Vec<_>>()
+        );
+        // Picking Shape clears the cache and re-keys the next generation.
+        gui.set_preview_mode(Some(ColorMode::Shape));
+        assert_eq!(gui.card_textures.len(), 0, "override change drops stale-mode textures");
+        let _h2 = gui.card_texture(&ectx, &card, 120, 90);
+        assert_eq!(gui.card_textures.len(), 1);
+        let k = gui.card_textures.keys().next().unwrap().clone();
+        assert_eq!(k.split('|').nth(2), Some(ColorMode::Shape.label()));
+        assert!(k.ends_with("|120x90"), "size stays the final |WxH segment for pruning");
     }
 }
