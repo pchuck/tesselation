@@ -25,7 +25,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--rotation` | 0 | rotation in degrees |
 | `--center X,Y` | origin | center the view at world (X, Y) — finite values |
 | `--param ID=VALUE` | — (optional) | override a tiling parameter for this run (see `list` for the parameter's id/type); repeatable |
-| `--mode` | pattern | `single` \| `pattern` \| `proto` \| `gray` \| `pattern-gray` |
+| `--mode` | pattern | `single` \| `pattern` \| `proto` \| `gray` \| `pattern-gray` \| `shape` \| `role` \| `metatile` |
 | `--strapwork DEG` | off | overlay the Hankin PIC strapwork walls at contact angle DEG (measured from each tile edge) on any tiling — layer mode of the polygons-in-contact engine (`tess-core::strapwork`) |
 | `--deform NAME PARAMS…` | off | Islamic parquet deformation (diss. §3.4.1): the contact angle varies as a function of point; NAME is `linear` (`linear a b x0 x1` — ramp along x: a at x0 → b at x1), `radial` (`radial a b cx cy r0 r1` — ramp along distance from centre (cx, cy): a at r0 → b at r1) or `sine` (`sine mid amp k` — oscillation along x: mid + amp·sin(k·x)); mutually exclusive with `--strapwork` |
 | `--decoration STYLE` | off | over the strapwork walls (`--strapwork` or `--deform`, one required), render a Kaplan §3.7 ornamentation style — `fill` \| `outline` \| `interlace` \| `outline-interlace`; `--mode` is ignored under `--decoration`. See [rendering.md](rendering.md) |
@@ -196,7 +196,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
   **Escape** and `← back` both return to
   Browse exactly as left (same tab + selection). A collapsible bottom
   panel (expanded by default on entry) holds the parameter editors,
-  the color-mode selector (single / pattern / proto / gray / pattern-gray), and the
+  the color-mode selector (single / pattern / proto / gray / pattern-gray / shape / role / metatile), and the
   symmetry readout (wallpaper group, lattice kind, basis vectors,
   notes) — the readout is cached per tiling + parameter values and
   refreshed through a tiny fixed probe region, so panel rendering

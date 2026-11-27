@@ -20,15 +20,38 @@ pub enum ColorMode {
     /// the color palette — pattern structure without hue. Appended after
     /// `Gray` (not before) so the existing ALL-index pins stay stable.
     PatternGray,
+    /// Color by the polygon shape class derived from the tile's polygon:
+    /// the vertex count mapped into the palette index space (triangle → 0,
+    /// quadrilateral → 1, … decagon-and-beyond → 7). Polygonal shape, NOT
+    /// the prototile class — the geometric counterpart of `Proto`, shared by
+    /// every family. Appended after `PatternGray` so the existing ALL-index
+    /// pins stay stable.
+    Shape,
+    /// Color by the shape role already encoded in the tile's `seed` — the
+    /// islamic-family star/petal/background distinction (and the same seed
+    /// for any family whose seeds carry a class) — drawn from a dedicated
+    /// warm/earth ramp (`paint::ROLE_PALETTE`) instead of the rainbow
+    /// palette. Appended after `Shape` so the existing ALL-index pins stay
+    /// stable.
+    Role,
+    /// Color by the aperiodic metatile / cluster classification: cap
+    /// metatile type (0..=3), hat cluster role (H/T/P/F, seeds 1..=9),
+    /// turtle + spectre matching-rule label (0..=8), with a proto-
+    /// class fallback for non-aperiodic tiles. Appended last so the
+    /// existing ALL-index pins stay stable.
+    Metatile,
 }
 
 impl ColorMode {
-    pub const ALL: [ColorMode; 5] = [
+    pub const ALL: [ColorMode; 8] = [
         ColorMode::Single,
         ColorMode::Pattern,
         ColorMode::Proto,
         ColorMode::Gray,
         ColorMode::PatternGray,
+        ColorMode::Shape,
+        ColorMode::Role,
+        ColorMode::Metatile,
     ];
 
     pub fn next(self) -> ColorMode {
@@ -38,8 +61,11 @@ impl ColorMode {
             ColorMode::Proto => 2,
             ColorMode::Gray => 3,
             ColorMode::PatternGray => 4,
+            ColorMode::Shape => 5,
+            ColorMode::Role => 6,
+            ColorMode::Metatile => 7,
         };
-        ColorMode::ALL[(idx + 1) % 5]
+        ColorMode::ALL[(idx + 1) % 8]
     }
 
     pub fn label(self) -> &'static str {
@@ -49,6 +75,9 @@ impl ColorMode {
             ColorMode::Proto => "proto",
             ColorMode::Gray => "gray",
             ColorMode::PatternGray => "pattern-gray",
+            ColorMode::Shape => "shape",
+            ColorMode::Role => "role",
+            ColorMode::Metatile => "metatile",
         }
     }
 
@@ -59,6 +88,9 @@ impl ColorMode {
             "proto" => Some(ColorMode::Proto),
             "gray" => Some(ColorMode::Gray),
             "pattern-gray" => Some(ColorMode::PatternGray),
+            "shape" => Some(ColorMode::Shape),
+            "role" => Some(ColorMode::Role),
+            "metatile" => Some(ColorMode::Metatile),
             _ => None,
         }
     }
@@ -160,23 +192,45 @@ mod tests {
         assert_eq!(ColorMode::Pattern.next(), ColorMode::Proto);
         assert_eq!(ColorMode::Proto.next(), ColorMode::Gray);
         assert_eq!(ColorMode::Gray.next(), ColorMode::PatternGray);
-        assert_eq!(ColorMode::PatternGray.next(), ColorMode::Single);
+        assert_eq!(ColorMode::PatternGray.next(), ColorMode::Shape);
+        assert_eq!(ColorMode::Shape.next(), ColorMode::Role);
+        assert_eq!(ColorMode::Role.next(), ColorMode::Metatile);
+        assert_eq!(ColorMode::Metatile.next(), ColorMode::Single);
         assert_eq!(ColorMode::parse("gray"), Some(ColorMode::Gray));
         assert_eq!(ColorMode::parse("pattern-gray"), Some(ColorMode::PatternGray));
+        assert_eq!(ColorMode::parse("shape"), Some(ColorMode::Shape));
+        assert_eq!(ColorMode::parse("role"), Some(ColorMode::Role));
+        assert_eq!(ColorMode::parse("metatile"), Some(ColorMode::Metatile));
         assert_eq!(ColorMode::parse("nope"), None);
         assert_eq!(ColorMode::Gray.label(), "gray");
         assert_eq!(ColorMode::PatternGray.label(), "pattern-gray");
+        assert_eq!(ColorMode::Shape.label(), "shape");
+        assert_eq!(ColorMode::Role.label(), "role");
+        assert_eq!(ColorMode::Metatile.label(), "metatile");
         assert_eq!(
             ColorMode::parse(ColorMode::PatternGray.label()),
             Some(ColorMode::PatternGray)
         );
+        assert_eq!(
+            ColorMode::parse(ColorMode::Metatile.label()),
+            Some(ColorMode::Metatile)
+        );
         assert_eq!(ColorMode::Gray.preview_mode(), ColorMode::Gray);
         assert_eq!(ColorMode::PatternGray.preview_mode(), ColorMode::PatternGray);
+        // The three new modes are structure modes and preview as
+        // themselves (like Gray/PatternGray) — thumbnails keep their
+        // structure and are NOT switched onto a legacy mode.
+        assert_eq!(ColorMode::Shape.preview_mode(), ColorMode::Shape);
+        assert_eq!(ColorMode::Role.preview_mode(), ColorMode::Role);
+        assert_eq!(ColorMode::Metatile.preview_mode(), ColorMode::Metatile);
     }
 
     #[test]
-    fn color_mode_all_len_is_five() {
-        assert_eq!(ColorMode::ALL.len(), 5);
+    fn color_mode_all_len_is_eight() {
+        assert_eq!(ColorMode::ALL.len(), 8);
         assert_eq!(ColorMode::ALL[4], ColorMode::PatternGray);
+        assert_eq!(ColorMode::ALL[5], ColorMode::Shape);
+        assert_eq!(ColorMode::ALL[6], ColorMode::Role);
+        assert_eq!(ColorMode::ALL[7], ColorMode::Metatile);
     }
 }

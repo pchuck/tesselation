@@ -124,7 +124,15 @@ the shared `tess-core::raster` (the TUI to character cells over its
   lightness ramp — the print/e-ink mode; browse thumbnails keep their
   color previews), `pattern-gray` (monochrome: the pattern index space
   drawn from the Rec.709 luma of the color palette — the print/e-ink
-  variant of `pattern`).
+  variant of `pattern`), `shape` (color by polygon shape class —
+  the vertex count mapped into the palette index space (triangle → 0 …
+  decagon-and-beyond → 7); the geometric counterpart of `proto`), `role` (color by the shape role carried in
+  the tile's `seed` — the islamic-family star/petal/background
+  distinction and the same index for any family whose seeds carry a
+  class — drawn from a dedicated warm/earth ramp), and `metatile`
+  (color by the aperiodic metatile/cluster classification — hat cluster
+  role (H/T/P/F, seeds 1..=9), cap metatile type (proto class 0..=3) and
+  turtle/spectre matching-rule label, with a proto-class fallback).
   Shared 8-color palette; the TUI maps it to the nearest xterm-256
   indices and rasterizes to character cells, the GUI draws convex
   polygons directly, and the CLI writes SVG paths (y-axis flipped to

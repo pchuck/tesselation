@@ -2118,7 +2118,7 @@ mod tests_export_contract {
             defaults.params
         );
 
-        // --mode default pattern; the doc lists exactly the five modes the
+        // --mode default pattern; the doc lists exactly the eight modes the
         // live parser accepts (escaped pipes in the doc mean the raw line
         // is split on " | ", then the meaning cell on " \| ").
         let (line_no, raw_line) = anchor_line_for(
@@ -2147,7 +2147,7 @@ mod tests_export_contract {
             .map(|c: &str| c.trim().trim_start_matches('`').trim_end_matches('`').trim())
             .filter(|s| !s.is_empty())
             .collect();
-        let expected_modes = ["single", "pattern", "proto", "gray", "pattern-gray"];
+        let expected_modes = ["single", "pattern", "proto", "gray", "pattern-gray", "shape", "role", "metatile"];
         assert_eq!(
             doc_modes, expected_modes,
             "docs/USAGE.md line {line_no} (--mode values): documented modes {doc_modes:?}, expected {expected_modes:?}"

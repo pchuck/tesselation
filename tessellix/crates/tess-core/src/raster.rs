@@ -91,6 +91,15 @@ fn color_index(mode: ColorMode, tile: &Tile) -> usize {
         // `Gray` shares `Proto`'s index space; the front end picks the
         // gray ramp (`paint::GRAY_PALETTE`) instead of the color palette.
         ColorMode::Proto | ColorMode::Gray => (tile.proto as usize) % 8,
+        // `Shape` is polygon-derived exactly like `tile_rgb`; the front end
+        // maps the class through the shared color palette.
+        ColorMode::Shape => crate::paint::shape_class(&tile.poly),
+        // `Role` shares `Pattern`'s seed-index space; the front end picks
+        // the warm/earth ramp (`paint::ROLE_PALETTE`) instead of the color palette.
+        ColorMode::Role => (tile.seed as usize) % 8,
+        // `Metatile` uses the aperiodic classification directly; the front
+        // end picks the categorical ramp (`paint::METATILE_PALETTE`).
+        ColorMode::Metatile => crate::paint::metatile_class(tile),
     }
 }
 
