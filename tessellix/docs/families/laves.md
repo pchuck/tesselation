@@ -15,7 +15,7 @@ every dual is the face-centroid dual of an exact primal table.
 
 | id | face config | group | primal | notes |
 |---|---|---|---|---|
-| `cairo-pentagonal` | Cairo Pentagonal (V3.3.4.3.4) | p4g | snub-square | tangential pentagons; minimum-perimeter pentagonal tiling; the collinear-vertex variant (143.13/108.43/108.43/90/90°, edges 4×√10 + 4, integral vertices, square 72-area cell) is documented in the card description (M76) |
+| `cairo-pentagonal` | V3.3.4.3.4 | p4g | snub-square | "Type 4 · Cairo"; tangential pentagons; minimum-perimeter pentagonal tiling; the collinear-vertex variant (143.13/108.43/108.43/90/90°, edges 4×√10 + 4, integral vertices, square 72-area cell) is documented in the card description (M76) |
 | `tetrakis-square` | V4.8.8 | p4m | truncated-square | right isosceles triangles, 45°×8 at octagon centers; 4 proper pattern colors |
 | `rhombille` | V3.6.3.6 | p6m | trihexagonal | 60°/120° rhombi, 3 per cell; pattern 3-colors by orientation (cube illusion) |
 | `triakis-triangular` | V3.12.12 | p6m | truncated-hexagonal | 120°-apex isosceles triangles; triangular lattice of dodecagon centers, each cell split three ways |
@@ -63,14 +63,14 @@ battery) with Rust-ready literal emission (`--rust` flag).
 
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
 
-- [`cairo-pentagonal`](../tilings/cairo-pentagonal.md) — Cairo Pentagonal (V3.3.4.3.4)
+- [`cairo-pentagonal`](../tilings/cairo-pentagonal.md) — Type 4 · Cairo (V3.3.4.3.4)
 - [`tetrakis-square`](../tilings/tetrakis-square.md) — Tetrakis Square (V4.8.8)
 - [`rhombille`](../tilings/rhombille.md) — Rhombille (V3.6.3.6)
 - [`triakis-triangular`](../tilings/triakis-triangular.md) — Triakis Triangular (V3.12.12)
 - [`deltoidal-trihexagonal`](../tilings/deltoidal-trihexagonal.md) — Deltoidal Trihexagonal (V3.4.6.4)
 - [`kisrhombille`](../tilings/kisrhombille.md) — Kisrhombille (V4.6.12)
 - [`prismatic-pentagonal`](../tilings/prismatic-pentagonal.md) — Prismatic Pentagonal (V3.3.3.4.4)
-- [`floret-pentagonal`](../tilings/floret-pentagonal.md) — Floret Pentagonal (V3.3.3.3.6)
+- [`floret-pentagonal`](../tilings/floret-pentagonal.md) — Type 5 · Floret (V3.3.3.3.6)
 
 ---
 
