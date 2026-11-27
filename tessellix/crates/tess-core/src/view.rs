@@ -20,12 +20,16 @@ pub enum ColorMode {
     /// the color palette — pattern structure without hue. Appended after
     /// `Gray` (not before) so the existing ALL-index pins stay stable.
     PatternGray,
-    /// Color by the polygon shape class derived from the tile's polygon:
-    /// the vertex count mapped into the palette index space (triangle → 0,
-    /// quadrilateral → 1, … decagon-and-beyond → 7). Polygonal shape, NOT
-    /// the prototile class — the geometric counterpart of `Proto`, shared by
-    /// every family. Appended after `PatternGray` so the existing ALL-index
-    /// pins stay stable.
+    /// Color by the polygon's geometric shape class: the canonical
+    /// representative of the polygon's similarity class (reflex-aware
+    /// interior angles + edge lengths normalized by the post-merge maximum,
+    /// quantized and taken lexicographic-min over all dihedral traversals —
+    /// invariant to rotation, translation, scale, mirror, and vertex order),
+    /// folded into the palette index space by constraint-solved weights so
+    /// genuinely-distinct co-occurring shapes get distinct tones. Polygonal
+    /// shape, NOT the prototile class — the geometric counterpart of
+    /// `Proto`, shared by every family. Appended after `PatternGray` so the
+    /// existing ALL-index pins stay stable.
     Shape,
     /// Color by the shape role already encoded in the tile's `seed` — the
     /// islamic-family star/petal/background distinction (and the same seed
