@@ -1,6 +1,6 @@
 //! SVG rendering of a tiling (shared by CLI export).
 
-use crate::geometry::{BBox, Vec2};
+use crate::geometry::{BBox, Polygon, Vec2};
 use crate::paint::{rgb, tile_rgb, BORDER, BACKGROUND};
 use crate::strapwork::{DecorationPlan, Wall};
 use crate::tiling::Tile;
@@ -52,8 +52,93 @@ fn path_d(tile: &Tile) -> Option<String> {
     Some(d)
 }
 
+/// Reflection about the frame center x (`x → 2·cx − x`, y unchanged) —
+/// the enantiomorph transform (C6). The reflection axis is the vertical
+/// line through the frame center: every emitted coordinate is
+/// mirrored, not the view or an SVG `<g transform>`.
+fn mirror_point(p: Vec2, cx: f64) -> Vec2 {
+    Vec2::new(2.0 * cx - p.x, p.y)
+}
+
+/// The mirror images of every tile of the render: polygon vertices
+/// reflected about the frame center, everything else untouched.
+fn mirror_tiles(tiles: &[Tile], cx: f64) -> Vec<Tile> {
+    tiles
+        .iter()
+        .map(|t| Tile {
+            proto: t.proto,
+            seed: t.seed,
+            level: t.level,
+            poly: Polygon::from_slice(
+                &t.poly.pts.iter().map(|&p| mirror_point(p, cx)).collect::<Vec<_>>(),
+            ),
+        })
+        .collect()
+}
+
+/// The mirror images of every wall segment (endpoints reflected).
+fn mirror_walls(walls: &[Wall], cx: f64) -> Vec<Wall> {
+    walls
+        .iter()
+        .map(|w| Wall {
+            a: mirror_point(w.a, cx),
+            b: mirror_point(w.b, cx),
+        })
+        .collect()
+}
+
 /// Render tiles plus an optional strapwork wall overlay, with an
 /// optional supertile highlight.
+///
+/// [mirror = false]: the pre-C6 export byte-for-byte. Supertile
+/// highlight (`highlight_supertiles = true`): the outline pass splits
+/// into up to two groups by substitution depth — level-0 cells at the
+/// base stroke, supertile members (`tile.level > 0`) at the heavy
+/// stroke — so the heavier grout paints over shared edges. Empty
+/// groups are skipped: a flat tiling emits exactly the legacy single
+/// group. Walls are stroked last, on top of the grout.
+pub fn render_svg_with_walls_highlight(
+    tiles: &[Tile],
+    bbox: &BBox,
+    mode: ColorMode,
+    walls: &[Wall],
+    highlight_supertiles: bool,
+) -> String {
+    render_svg_core(tiles, bbox, mode, walls, highlight_supertiles, false)
+}
+
+/// Mirror-image export (C6): identical to
+/// [`render_svg_with_walls_highlight`] except every emitted geometry —
+/// tile polygon vertices and strapwork wall endpoints — is reflected
+/// about the frame center (`x → 2·cx − x`, y unchanged) BEFORE path
+/// stringification. The y-axis flip transform and all stroke/fill
+/// rules are untouched: the on-state is a congruent copy of the
+/// off-state with the pattern mirrored, never an SVG-level `transform`
+/// attribute on the `<g>`.
+///
+/// Registry-wide: the flag works for every tiling. The meaningful use
+/// is chiral tilings (e.g. `snub-trihexagonal`, p6), whose reflected
+/// pattern is the enantiomorph; achiral tilings render a visibly
+/// different but geometrically congruent copy. The decoration render
+/// ([`render_svg_decorated`]) is not covered — it replaces the tiling
+/// render entirely (CLI: named conflict).
+pub fn render_svg_with_walls_highlight_mirrored(
+    tiles: &[Tile],
+    bbox: &BBox,
+    mode: ColorMode,
+    walls: &[Wall],
+    highlight_supertiles: bool,
+) -> String {
+    render_svg_core(tiles, bbox, mode, walls, highlight_supertiles, true)
+}
+
+/// The two-pass emitter behind both public rendering entry points (the
+/// [`render_svg_with_walls_highlight_mirrored`] variant reflects every
+/// emitted coordinate about the frame center first). Every tile fill is
+/// emitted first, then every tile outline (SVG paints each element fill/stroke
+/// in document order, so interleaving lets a later tile's fill cover an
+/// earlier tile's stroke half — the discipline below), then strapwork walls
+/// (round caps, on top).
 ///
 /// Drawing is two-pass: every tile fill is emitted first, then every tile
 /// outline. SVG paints each element's fill and stroke in document order,
@@ -80,13 +165,24 @@ fn path_d(tile: &Tile) -> Option<String> {
 /// stroke, which keeps the ribbons clearly readable above the fills at
 /// any export size without swallowing thin cells. They are drawn last, so
 /// ribbons stay on top of the grout.
-pub fn render_svg_with_walls_highlight(
+fn render_svg_core(
     tiles: &[Tile],
     bbox: &BBox,
     mode: ColorMode,
     walls: &[Wall],
     highlight_supertiles: bool,
+    mirror: bool,
 ) -> String {
+    let cx = bbox.center().x;
+    let owned_tiles;
+    let owned_walls;
+    let (tiles, walls): (&[Tile], &[Wall]) = if mirror {
+        owned_tiles = mirror_tiles(tiles, cx);
+        owned_walls = mirror_walls(walls, cx);
+        (&owned_tiles, &owned_walls)
+    } else {
+        (tiles, walls)
+    };
     let w = bbox.size().x;
     let h = bbox.size().y;
     let stroke = (0.004 * w.min(h)).max(0.001);
@@ -845,5 +941,232 @@ mod tests {
                 "empty plan must not emit the {tag} layer"
             );
         }
+    }
+    // ---- mirror (render_svg_with_walls_highlight_mirrored) ----------
+
+    /// Every `<path ...>` tag of the SVG, as (d, filled_with_rgb_fill) in
+    /// document order (fills first, then outlines).
+    fn path_tags(svg: &str) -> Vec<(String, bool)> {
+        svg.match_indices("<path ")
+            .filter_map(|(i, _)| {
+                let rest = &svg[i..];
+                let tag_end = rest.find('>')?;
+                let tag = &rest[..tag_end];
+                let d_start = tag.find("d=\"")? + 3;
+                let d_end = tag[d_start..].find('"')?;
+                let filled = tag.contains("fill=\"rgb(");
+                Some((tag[d_start..d_start + d_end].to_string(), filled))
+            })
+            .collect()
+    }
+
+    /// Points of a path `d` ("M x yL x yL x y...Z").
+    fn d_points(d: &str) -> Vec<(f64, f64)> {
+        let body = d.strip_suffix('Z').unwrap_or(d);
+        let mut pts = Vec::new();
+        for seg in body.split(|c| c == 'M' || c == 'L') {
+            let seg = seg.trim();
+            if seg.is_empty() {
+                continue;
+            }
+            let mut toks = seg.split_whitespace();
+            let x: f64 = toks.next().unwrap().parse().unwrap();
+            let y: f64 = toks.next().unwrap().parse().unwrap();
+            pts.push((x, y));
+        }
+        pts
+    }
+
+    /// Wall `<line .../>` endpoints (x1, y1, x2, y2) in document order.
+    fn line_endpoints(svg: &str) -> Vec<(f64, f64, f64, f64)> {
+        svg.match_indices("<line ")
+            .filter_map(|(i, _)| {
+                let rest = &svg[i..];
+                let tag_end = rest.find('>')?;
+                let tag = &rest[..tag_end];
+                let get = |attr: &str| -> f64 {
+                    let at = tag.find(attr).unwrap() + attr.len();
+                    let rest = &tag[at..];
+                    let end = rest.find('"').unwrap();
+                    rest[..end].parse().unwrap()
+                };
+                Some((get("x1=\""), get("y1=\""), get("x2=\""), get("y2=\"")))
+            })
+            .collect()
+    }
+
+    /// Assert the `on` state is exactly the `off` state reflected about the
+    /// vertical axis through `cx`: identical path/line census and order,
+    /// every x mirrored (`x -> 2*cx - x`), every y unchanged.
+    fn assert_reflected(off: &str, on: &str, cx: f64) {
+        let off_paths = path_tags(off);
+        let on_paths = path_tags(on);
+        assert_eq!(
+            on_paths.len(),
+            off_paths.len(),
+            "on/off path count must match"
+        );
+        for (i, ((od, of), (nd, nf))) in off_paths.iter().zip(on_paths.iter()).enumerate() {
+            assert_eq!(of, nf, "path {i}: fill/outline role must match");
+            let op = d_points(od);
+            let np = d_points(nd);
+            assert_eq!(op.len(), np.len(), "path {i}: vertex count must match");
+            for ((ox, oy), (nx, ny)) in op.iter().zip(np.iter()) {
+                let want = 2.0 * cx - ox;
+                assert!(
+                    (nx - want).abs() < 1e-3,
+                    "path {i}: x {ox} mirrored to {nx}, expected {want}"
+                );
+                assert!(
+                    (ny - oy).abs() < 1e-3,
+                    "path {i}: y must be unchanged ({oy} -> {ny})"
+                );
+            }
+        }
+        let off_lines = line_endpoints(off);
+        let on_lines = line_endpoints(on);
+        assert_eq!(
+            on_lines.len(),
+            off_lines.len(),
+            "on/off wall line count must match"
+        );
+        for ((ax, ay, bx, by), (kx, ky, dx, dy)) in off_lines.iter().zip(on_lines.iter()) {
+            assert!(
+                (kx - (2.0 * cx - ax)).abs() < 1e-3,
+                "wall endpoint x must mirror: {ax} -> {kx}"
+            );
+            assert!(
+                (ky - ay).abs() < 1e-3,
+                "wall endpoint y must be unchanged: {ay} -> {ky}"
+            );
+            assert!(
+                (dx - (2.0 * cx - bx)).abs() < 1e-3,
+                "wall endpoint x must mirror: {bx} -> {dx}"
+            );
+            assert!(
+                (dy - by).abs() < 1e-3,
+                "wall endpoint y must be unchanged: {by} -> {dy}"
+            );
+        }
+    }
+
+    #[test]
+    fn mirror_off_render_is_byte_identical_to_pre_c6_output() {
+        // The mirror refactor must leave the flag-off path exactly as it
+        // was: render_svg_with_walls_highlight(.., false) == the legacy
+        // render_svg_with_walls (the golden pin above it is one of the
+        // pre-C6 full-string tests in this file).
+        let tiles = square_grid(3);
+        let bbox = BBox::new(pt(-2.0, -2.0), pt(4.0, 4.0));
+        let legacy = render_svg_with_walls(&tiles, &bbox, ColorMode::Pattern, &[]);
+        assert_eq!(
+            legacy,
+            render_svg_with_walls_highlight(&tiles, &bbox, ColorMode::Pattern, &[], false),
+            "flag-off must be the legacy bytes"
+        );
+    }
+
+    #[test]
+    fn mirror_on_reflects_fill_and_outline_and_preamble() {
+        let tiles = mixed_level_tiles();
+        let bbox = BBox::new(pt(-1.0, -1.0), pt(3.0, 2.0));
+        let cx = bbox.center().x;
+        let off = render_svg_with_walls(&tiles, &bbox, ColorMode::Pattern, &[]);
+        let on = render_svg_with_walls_highlight_mirrored(&tiles, &bbox, ColorMode::Pattern, &[], false);
+        assert_ne!(on, off, "mirror must change at least one coordinate");
+        assert_reflected(&off, &on, cx);
+        // The preamble (viewBox / flip transform / paper rect) is byte-identical.
+        let cut = off.find("<path ").unwrap();
+        assert_eq!(
+            &off[..cut],
+            &on[..cut],
+            "the preamble must be byte-identical"
+        );
+        // The closing tag is unchanged too (same total size).
+        assert!(on.ends_with("</g></svg>"), "{on}");
+    }
+
+    #[test]
+    fn mirror_on_flat_tiling_is_the_reflected_copy() {
+        let tiles = square_grid(3);
+        let bbox = BBox::new(pt(-2.0, -2.0), pt(4.0, 4.0));
+        let cx = bbox.center().x;
+        let off = render_svg_with_walls(&tiles, &bbox, ColorMode::Pattern, &[]);
+        let on = render_svg_with_walls_highlight_mirrored(&tiles, &bbox, ColorMode::Pattern, &[], false);
+        assert_reflected(&off, &on, cx);
+        // Mirroring the flat tiling does move real bytes (the grid is not
+        // symmetric about the frame center).
+        assert_ne!(on, off, "the flat copy must differ from the off-state");
+    }
+
+    #[test]
+    fn mirror_on_with_walls_reflects_line_endpoints() {
+        let mut tiles = square_grid(4);
+        for t in &mut tiles {
+            t.level = 2;
+        }
+        let ws = walls(&tiles, 45.0);
+        assert!(!ws.is_empty(), "need a non-empty wall set");
+        let bbox = BBox::new(pt(-2.0, -2.0), pt(6.0, 6.0));
+        let cx = bbox.center().x;
+        let off = render_svg_with_walls(&tiles, &bbox, ColorMode::Pattern, &ws);
+        let on = render_svg_with_walls_highlight_mirrored(&tiles, &bbox, ColorMode::Pattern, &ws, false);
+        assert_reflected(&off, &on, cx);
+    }
+
+    #[test]
+    fn mirror_on_composes_with_highlight_supertiles() {
+        // highlight=true splits the outline pass into base + heavy groups;
+        // the mirrored on-state must reflect every path of both groups,
+        // keep both groups and the stroke weights, and leave the preamble
+        // and the closing tag byte-identical.
+        let tiles = mixed_level_tiles();
+        let bbox = BBox::new(pt(-1.0, -1.0), pt(3.0, 2.0));
+        let cx = bbox.center().x;
+        let off = render_svg_with_walls_highlight(&tiles, &bbox, ColorMode::Pattern, &[], true);
+        let on = render_svg_with_walls_highlight_mirrored(&tiles, &bbox, ColorMode::Pattern, &[], true);
+        assert_reflected(&off, &on, cx);
+        let spans = outline_group_spans(&on);
+        assert_eq!(spans.len(), 2, "base + heavy group: {on}");
+        let base = &on[spans[0].0..spans[0].1];
+        let heavy = &on[spans[1].0..spans[1].1];
+        assert!(base.contains(r#"stroke-width="0.0120""#), "{base}");
+        assert!(heavy.contains(r#"stroke-width="0.0240""#), "{heavy}");
+        assert!(!base.contains(r#"stroke-width="0.0240""#), "{base}");
+        assert!(!heavy.contains(r#"stroke-width="0.0120""#), "{heavy}");
+        let cut = off.find("<path ").unwrap();
+        assert_eq!(&off[..cut], &on[..cut], "the preamble must be byte-identical");
+    }
+
+    #[test]
+    fn mirror_on_flat_tiling_under_highlight_is_the_reflected_single_group() {
+        // Flat tiling + highlight = the legacy single group; mirroring it
+        // must reflect every path and keep exactly one group.
+        let tiles = square_grid(2);
+        let bbox = BBox::new(pt(0.0, 0.0), pt(2.0, 2.0));
+        let cx = bbox.center().x;
+        let off = render_svg_with_walls_highlight(&tiles, &bbox, ColorMode::Pattern, &[], true);
+        let on = render_svg_with_walls_highlight_mirrored(&tiles, &bbox, ColorMode::Pattern, &[], true);
+        assert_reflected(&off, &on, cx);
+        assert_eq!(on.matches("<g fill=\"none\"").count(), 1, "single group");
+    }
+
+    #[test]
+    fn mirror_on_degenerate_tiles_stay_degenerate() {
+        let mut tiles = mixed_level_tiles();
+        tiles.push(Tile {
+            proto: 2,
+            seed: 2,
+            level: 0,
+            poly: Polygon::from_slice(&[pt(2.0, 0.0), pt(3.0, 0.0)]),
+        });
+        let bbox = BBox::new(pt(-1.0, -1.0), pt(4.0, 2.0));
+        let cx = bbox.center().x;
+        let off = render_svg_with_walls(&tiles, &bbox, ColorMode::Pattern, &[]);
+        let on = render_svg_with_walls_highlight_mirrored(&tiles, &bbox, ColorMode::Pattern, &[], false);
+        assert_reflected(&off, &on, cx);
+        // Degenerate tiles emit no path anywhere (fill or outline).
+        assert_eq!(path_tags(&on).len(), path_tags(&off).len());
+        assert_eq!(path_tags(&on).iter().filter(|(_, f)| *f).count(), 2, "only the two non-degenerate tiles carry a fill");
     }
 }

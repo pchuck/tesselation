@@ -53,6 +53,16 @@
 //!                                  Mutually exclusive with --decoration
 //!                                  (the decoration replaces the tiling
 //!                                  render).
+//!     [--mirror]                   mirror-image (enantiomorph) export:
+//!                                  every emitted tile vertex and strapwork
+//!                                  wall endpoint is reflected about the
+//!                                  frame center (x → 2·cx − x, y unchanged)
+//!                                  BEFORE path stringification — the pattern
+//!                                  mirrored, never an SVG transform.
+//!                                  Composes with --strapwork / --deform /
+//!                                  --medallion-weave / --highlight-supertiles.
+//!                                  Mutually exclusive with --decoration
+//!                                  (the decoration replaces the tiling render).
 //!   tess-tui explore --tiling ID  deterministic δ/θ sweep + leaderboard
 //!     (docs/briefs/pic-explorer.md). Emits a JSON leaderboard plus an
 //!     optional CSV and a top-K SVG gallery.
@@ -114,6 +124,7 @@ struct ExportArgs {
     medallion_weave: bool,
     center: Option<(f64, f64)>,
     highlight_supertiles: bool,
+    mirror: bool,
 }
 
 /// Parse a float CLI value, rejecting NaN and infinities: they would
@@ -251,6 +262,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         medallion_weave: false,
         center: None,
         highlight_supertiles: false,
+        mirror: false,
     };
     let mut i = 0;
     let mut band_w_seen = false;
@@ -306,6 +318,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
             }
 "--highlight-supertiles" => a.highlight_supertiles = true,
             "--medallion-weave" => a.medallion_weave = true,
+            "--mirror" => a.mirror = true,
             "--center" => {
                 let v = next(&mut i)?;
                 let (x_s, y_s) = v.split_once(',').ok_or_else(|| {
@@ -367,6 +380,12 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
     if a.highlight_supertiles && a.decoration.is_some() {
         return Err(
             "--highlight-supertiles is not applicable with --decoration (the decoration replaces the tiling render)"
+                .into(),
+        );
+    }
+    if a.mirror && a.decoration.is_some() {
+        return Err(
+            "--mirror is not applicable with --decoration (the decoration replaces the tiling render)"
                 .into(),
         );
     }
@@ -486,6 +505,13 @@ fn export(args: &[String]) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
             tess_core::svg::render_svg_decorated(&region, &plan)
         }
+        None if a.mirror => tess_core::svg::render_svg_with_walls_highlight_mirrored(
+            &result.tiles,
+            &region,
+            a.mode,
+            &walls,
+            a.highlight_supertiles,
+        ),
         None => tess_core::svg::render_svg_with_walls_highlight(
             &result.tiles,
             &region,
@@ -2975,6 +3001,223 @@ mod tests {
         // All of these fire inside parse_export — before any registry or
         // filesystem access (unknown tiling `square` never reached).
     }
+    // ──────────────────────────────────────────────────────────────────
+    // Mirror (C6): --mirror parse policy + end-to-end reflection evidence.
+    // ──────────────────────────────────────────────────────────────────
+
+    fn mirror_tmp(tag: &str) -> std::path::PathBuf {
+        std::env::temp_dir().join(format!("tess_tui_mirror_{tag}_{}.svg", std::process::id()))
+    }
+
+    /// Every `<path .../>` tag: (parsed `d` points, is_filled). A tag is
+    /// filled iff it carries a `fill="rgb(` attribute; the outline pass's
+    /// bare `<path d="..."/>` carries none.
+    fn svg_paths(svg: &str) -> Vec<(Vec<(f64, f64)>, bool)> {
+        svg.match_indices("<path ")
+            .filter_map(|(i, _)| {
+                let rest = &svg[i..];
+                let end = rest.find('>')?;
+                let tag = &rest[..end];
+                let d_start = tag.find("d=\"")? + 3;
+                let d_end = tag[d_start..].find('"')?;
+                let d = &tag[d_start..d_start + d_end];
+                let mut pts = Vec::new();
+                for seg in d.split(|c| c == 'M' || c == 'L') {
+                    let seg = seg.trim();
+                    if seg.is_empty() {
+                        continue;
+                    }
+                    let mut toks = seg.split_whitespace();
+                    let x: f64 = toks.next()?.parse().ok()?;
+                    let y: f64 = toks.next()?.parse().ok()?;
+                    pts.push((x, y));
+                }
+                Some((pts, tag.contains("fill=\"rgb(")))
+            })
+            .collect()
+    }
+
+    /// Every `<line .../>` tag: (x1, y1, x2, y2).
+    fn svg_lines(svg: &str) -> Vec<(f64, f64, f64, f64)> {
+        svg.match_indices("<line ")
+            .filter_map(|(i, _)| {
+                let rest = &svg[i..];
+                let end = rest.find('>')?;
+                let tag = &rest[..end];
+                let get = |key: &str| -> Option<f64> {
+                    let needle = format!("{key}=\"");
+                    let j = tag.find(&needle)?;
+                    let after = &tag[j + needle.len()..];
+                    let e = after.find('"')?;
+                    after[..e].parse().ok()
+                };
+                Some((get("x1")?, get("y1")?, get("x2")?, get("y2")?))
+            })
+            .collect()
+    }
+
+    /// The frame center x of an exported SVG: the preamble `<rect>` carries
+    /// the world-space region (`x="min.x" y="min.y" width="w" height="h"`).
+    fn frame_cx(svg: &str) -> f64 {
+        let i = svg.find("<rect ").expect("SVG has no <rect>");
+        let rest = &svg[i..];
+        let end = rest.find("/>").expect("rect not closed");
+        let tag = &rest[..end];
+        let get = |key: &str| -> f64 {
+            let needle = format!("{key}=\"");
+            let j = tag.find(&needle).unwrap_or_else(|| panic!("rect missing {key}: {tag}"));
+            let after = &tag[j + needle.len()..];
+            let e = after.find('"').expect("rect attribute truncated");
+            after[..e].parse().unwrap()
+        };
+        get("x") + get("width") / 2.0
+    }
+
+    /// Assert the on-state is exactly the off-state reflected about the
+    /// vertical axis through the frame center: identical preamble, identical
+    /// path/line census and order, every x mirrored (`x → 2·cx − x`), every
+    /// y unchanged.
+    fn assert_mirrored(off: &str, on: &str, what: &str) {
+        assert_ne!(on, off, "{what}: the mirror must change at least one coordinate");
+        let cut = off.find("<path ").expect("no paths");
+        assert_eq!(&off[..cut], &on[..cut], "{what}: the preamble must be byte-identical");
+        let cx = frame_cx(off);
+        let off_paths = svg_paths(off);
+        let on_paths = svg_paths(on);
+        assert_eq!(on_paths.len(), off_paths.len(), "{what}: path census must match");
+        for (i, ((op, of), (np, nf))) in off_paths.iter().zip(on_paths.iter()).enumerate() {
+            assert_eq!(of, nf, "{what}: path {i}: filled/outline role must match");
+            assert_eq!(op.len(), np.len(), "{what}: path {i}: vertex count must match");
+            for ((ox, oy), (nx, ny)) in op.iter().zip(np.iter()) {
+                assert!(
+                    (nx - (2.0 * cx - ox)).abs() < 1e-3,
+                    "{what}: path {i}: x {ox} mirrored to {nx}, expected {}",
+                    2.0 * cx - ox
+                );
+                assert!((ny - oy).abs() < 1e-3, "{what}: path {i}: y must be unchanged ({oy} -> {ny})");
+            }
+        }
+        let off_lines = svg_lines(off);
+        let on_lines = svg_lines(on);
+        assert_eq!(on_lines.len(), off_lines.len(), "{what}: wall line census must match");
+        for ((ax, ay, bx, by), (kx, ky, dx, dy)) in off_lines.iter().zip(on_lines.iter()) {
+            assert!((kx - (2.0 * cx - ax)).abs() < 1e-3, "{what}: wall a.x must mirror");
+            assert!((ky - ay).abs() < 1e-3, "{what}: wall a.y must be unchanged");
+            assert!((dx - (2.0 * cx - bx)).abs() < 1e-3, "{what}: wall b.x must mirror");
+            assert!((dy - by).abs() < 1e-3, "{what}: wall b.y must be unchanged");
+        }
+    }
+
+    #[test]
+    fn mirror_flag_parses_and_excludes_decoration() {
+        let a = parse_export(&args(&["--tiling", "square", "--mirror"])).expect("flag parses");
+        assert!(a.mirror, "the flag must set the export arg");
+        let d = parse_export(&args(&["--tiling", "square"])).expect("defaults");
+        assert!(!d.mirror, "the flag defaults off");
+        // Mutually exclusive with --decoration: a named parse error, not a
+        // silent no-op.
+        let e = parse_export(&args(&[
+            "--tiling",
+            "square",
+            "--strapwork",
+            "45",
+            "--decoration",
+            "fill",
+            "--mirror",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("--mirror"), "{e}");
+        assert!(e.contains("--decoration"), "the error must name the collision: {e}");
+    }
+
+    #[test]
+    fn mirror_export_reflects_chiral_tiling_end_to_end() {
+        // The chiral archimedean tiling (p6): the flag-on export is the
+        // flag-off export reflected about the frame center — the enantiomorph.
+        let off_path = mirror_tmp("chiral_off");
+        let on_path = mirror_tmp("chiral_on");
+        let base = ["--tiling", "snub-trihexagonal"];
+        let mut off: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        off.extend(["--out".to_string(), off_path.to_string_lossy().to_string()]);
+        super::export(&off).expect("off export");
+        let mut on: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        on.extend(["--mirror".to_string(), "--out".to_string(), on_path.to_string_lossy().to_string()]);
+        super::export(&on).expect("on export");
+        let off_svg = std::fs::read_to_string(&off_path).expect("SVG readable");
+        let on_svg = std::fs::read_to_string(&on_path).expect("SVG readable");
+        assert_mirrored(&off_svg, &on_svg, "snub-trihexagonal");
+        let _ = std::fs::remove_file(&off_path);
+        let _ = std::fs::remove_file(&on_path);
+    }
+
+    #[test]
+    fn mirror_export_reflects_walls_end_to_end() {
+        // Walls ride the same render pass: --strapwork walls must be
+        // reflected too (endpoints only, construction untouched).
+        let off_path = mirror_tmp("walls_off");
+        let on_path = mirror_tmp("walls_on");
+        let base = ["--tiling", "square", "--strapwork", "45"];
+        let mut off: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        off.extend(["--out".to_string(), off_path.to_string_lossy().to_string()]);
+        super::export(&off).expect("off export");
+        let mut on: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        on.extend(["--mirror".to_string(), "--out".to_string(), on_path.to_string_lossy().to_string()]);
+        super::export(&on).expect("on export");
+        let off_svg = std::fs::read_to_string(&off_path).expect("SVG readable");
+        let on_svg = std::fs::read_to_string(&on_path).expect("SVG readable");
+        assert!(svg_lines(&off_svg).len() > 0, "strapwork walls must be present");
+        assert_mirrored(&off_svg, &on_svg, "square + strapwork 45");
+        let _ = std::fs::remove_file(&off_path);
+        let _ = std::fs::remove_file(&on_path);
+    }
+
+    #[test]
+    fn mirror_export_composes_with_highlight_supertiles_end_to_end() {
+        // --highlight-supertiles --mirror: both groups reflect, the
+        // heavy stroke stays heavy, the preamble is byte-identical.
+        let off_path = mirror_tmp("highlight_off");
+        let on_path = mirror_tmp("highlight_on");
+        let base = ["--tiling", "chair", "--highlight-supertiles"];
+        let mut off: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        off.extend(["--out".to_string(), off_path.to_string_lossy().to_string()]);
+        super::export(&off).expect("off export");
+        let mut on: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        on.extend(["--mirror".to_string(), "--out".to_string(), on_path.to_string_lossy().to_string()]);
+        super::export(&on).expect("on export");
+        let off_svg = std::fs::read_to_string(&off_path).expect("SVG readable");
+        let on_svg = std::fs::read_to_string(&on_path).expect("SVG readable");
+        assert_mirrored(&off_svg, &on_svg, "chair + highlight + mirror");
+        // Chair is a uniform supertile view (every tile level > 0): the base
+        // group is empty and correctly skipped, leaving exactly one heavy
+        // outline group.
+        let groups = on_svg.matches("<g fill=\"none\"").count();
+        assert_eq!(groups, 1, "one heavy outline group: {on_svg}");
+        assert!(on_svg.contains(r#"stroke-width="0.1600""#), "the heavy group must survive: {on_svg}");
+        let _ = std::fs::remove_file(&off_path);
+        let _ = std::fs::remove_file(&on_path);
+    }
+
+    #[test]
+    fn mirror_export_of_achiral_tiling_is_the_reflected_copy() {
+        // Achiral (square grid, p4m): the flag still produces the exact
+        // reflected copy; a non-symmetric view (--center offset) makes that
+        // visibly differ from the off-state bytes.
+        let off_path = mirror_tmp("achiral_off");
+        let on_path = mirror_tmp("achiral_on");
+        let base = ["--tiling", "square", "--center", "2,1"];
+        let mut off: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        off.extend(["--out".to_string(), off_path.to_string_lossy().to_string()]);
+        super::export(&off).expect("off export");
+        let mut on: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        on.extend(["--mirror".to_string(), "--out".to_string(), on_path.to_string_lossy().to_string()]);
+        super::export(&on).expect("on export");
+        let off_svg = std::fs::read_to_string(&off_path).expect("SVG readable");
+        let on_svg = std::fs::read_to_string(&on_path).expect("SVG readable");
+        assert_mirrored(&off_svg, &on_svg, "square + center (achiral)");
+        let _ = std::fs::remove_file(&off_path);
+        let _ = std::fs::remove_file(&on_path);
+    }
+
     // ──────────────────────────────────────────────────────────────────
     // Parquet deformation (22d): --deform parse policy + resolve_deform.
     // ──────────────────────────────────────────────────────────────────
