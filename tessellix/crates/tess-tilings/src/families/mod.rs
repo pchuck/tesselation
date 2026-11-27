@@ -9,10 +9,15 @@
 //! here, one line in the `registry()` chain in `lib.rs`, one in
 //! `classify_into` below, one feature in `Cargo.toml`.
 //!
-//! The chain order in `lib.rs::registry()` is also the within-tab card
-//! order contract: cards inside a tab appear in family-chain order, then
-//! in the family's own registration order. Do not reorder without
-//! updating the docs' catalog tables.
+//! The chain order in `lib.rs::registry()` is the within-tab card order
+//! base: cards inside a tab appear in family-chain order, then in the
+//! family's own registration order — EXCEPT where a browse.rs per-tab
+//! stable sort reorders them (E9/M207: Arrangements, Quasiperiodic,
+//! Aperiodic, Nonperiodic rank by a declared-field key with
+//! registry-stable order inside each bucket). The family chain remains
+//! the registration backbone and the docs' catalog tables still follow
+//! it; do not reorder the chain without updating the docs' catalog
+//! tables.
 #[cfg(feature = "uniform")]
 pub mod uniform;
 #[cfg(feature = "quasiperiodic")]
