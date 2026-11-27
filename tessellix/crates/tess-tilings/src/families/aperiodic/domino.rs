@@ -195,7 +195,7 @@ impl Tiling for DominoTiling {
     }
 
     fn category(&self) -> TilingCategory {
-        TilingCategory::Aperiodic
+        TilingCategory::Nonperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

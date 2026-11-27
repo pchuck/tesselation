@@ -1257,7 +1257,7 @@ mod tests {
         let total: usize = tui.tabs.iter().map(|t| t.cards.len()).sum();
         assert_eq!(total, 188, "169 tilings carry 188 tab memberships");
         let counts: Vec<usize> = tui.tabs.iter().map(|t| t.cards.len()).collect();
-        assert_eq!(counts, vec![11, 20, 36, 17, 15, 5, 29, 8, 23, 11, 13]);
+        assert_eq!(counts, vec![11, 20, 36, 17, 15, 5, 29, 8, 23, 6, 18]);
     }
 
     #[test]
@@ -1333,8 +1333,8 @@ mod tests {
 ("Islamic", 29),
             ("Bonds & dissections", 8),
             ("Quasiperiodic", 23),
-            ("Aperiodic", 11),
-            ("Nonperiodic", 13),
+            ("Aperiodic", 6),
+            ("Nonperiodic", 18),
         ] {
             assert!(
                 row0.contains(&format!("{} ({n})", label)),
@@ -2012,6 +2012,157 @@ mod tests {
         assert!(sorted, "laves_rank must be non-decreasing: {ranks:?}");
         assert_eq!(ranks[0], Some(0), "self-dual regulars first");
         assert_eq!(*ranks.last().unwrap(), Some(2), "2-uniform duals last");
+    }
+
+    /// The Arrangements tab sorts the paver-bond catalog ahead of the
+    /// Pythagorean section (the six bonds first, then the two
+    /// dissections). Registry order is preserved within each bucket
+    /// (stable sort).
+    #[test]
+    fn arrangements_tab_orders_paver_bond_first() {
+        let tabs = shared_tabs();
+        let arr = &tabs[tabs
+            .iter()
+            .position(|t| t.category == TilingCategory::Arrangements)
+            .unwrap()];
+        let ids: Vec<&str> = arr.cards.iter().map(|c| c.id).collect();
+        assert_eq!(
+            ids,
+            vec![
+                "basketweave",
+                "herringbone",
+                "running-bond",
+                "stack-bond",
+                "herringbone-45",
+                "basketweave-3",
+                "pythagorean",
+                "windmill",
+            ]
+        );
+    }
+
+    /// The Quasiperiodic tab sorts by declared fold order: the fourfold
+    /// entry first, then the five/tenfold families, then sevenfold,
+    /// fourteenfold, twelvefold and eightfold, and the point-order-less
+    /// cards last (stable within each rank).
+    #[test]
+    fn quasiperiodic_tab_sorts_by_fold_order() {
+        let tabs = shared_tabs();
+        let qp = &tabs[tabs
+            .iter()
+            .position(|t| t.category == TilingCategory::Quasiperiodic)
+            .unwrap()];
+        let ids: Vec<&str> = qp.cards.iter().map(|c| c.id).collect();
+        assert_eq!(
+            ids,
+            vec![
+                "fibonacci-fibonacci",
+                "penrose",
+                "penrose-p1",
+                "penrose_p2",
+                "penrose-pentagon",
+                "girih-quasiperiodic",
+                "andritz-bowtie-hexagon",
+                "andritz-bowtie-hexagon-10gon-1",
+                "andritz-bowtie-hexagon-10gon-2",
+                "andritz-bowtie-hexagon-10gon-3",
+                "glb-binary-n7",
+                "girih-14-fold",
+                "shield",
+                "stampfli",
+                "fractalizing-3-12-12",
+                "wis-12-fold",
+                "ammann-beenker",
+                "ammann-beenker-tri",
+                "ammann-a4",
+                "golden-bee",
+                "golden-triangle",
+                "golden-rhomboid",
+                "ammann-a3",
+            ]
+        );
+    }
+
+    /// The Aperiodic tab sorts the one-dimensional einstein monotiles
+    /// first, then the cap, then the strongly aperiodic forcing/Wang
+    /// realizations (registry order preserved within each rank).
+    #[test]
+    fn aperiodic_tab_orders_einstein_then_cap_then_strongly_aperiodic() {
+        let tabs = shared_tabs();
+        let ap = &tabs[tabs
+            .iter()
+            .position(|t| t.category == TilingCategory::Aperiodic)
+            .unwrap()];
+        let ids: Vec<&str> = ap.cards.iter().map(|c| c.id).collect();
+        assert_eq!(
+            ids,
+            vec![
+                "hat",
+                "turtle",
+                "spectre",
+                "cap",
+                "taylor-socolar",
+                "jeandel-rao",
+            ]
+        );
+    }
+
+    /// The Nonperiodic tab sorts the square-lattice rep-tiles first,
+    /// then the triangular-lattice rep-tiles, then the remaining
+    /// cards (registry order preserved within each rank).
+    #[test]
+    fn nonperiodic_tab_orders_ominoes_then_iamonds_then_the_rest() {
+        let tabs = shared_tabs();
+        let np = &tabs[tabs
+            .iter()
+            .position(|t| t.category == TilingCategory::Nonperiodic)
+            .unwrap()];
+        let ids: Vec<&str> = np.cards.iter().map(|c| c.id).collect();
+        assert_eq!(
+            ids,
+            vec![
+                "armchair",
+                "chair",
+                "p-pentomino",
+                "pregnant-chair",
+                "octiamond-reptile",
+                "sphinx",
+                "pentiamond-ac-factor-2",
+                "pentiamond-ac-factor-3",
+                "pentiamond-ad-factor-2",
+                "pinwheel",
+                "hirschhorn",
+                "tangram",
+                "half-hex",
+                "domino",
+                "period-doubling",
+                "thue-morse",
+                "period-tripling",
+                "girih-decagon-patch",
+            ]
+        );
+    }
+
+    /// The golden-rhomboid card name echoes every declared schema
+    /// segment (method, inflation, source), so its line 2 falls back
+    /// to the description fragment — cut at the last word boundary
+    /// within the one-line budget, never a mid-word cut past the GUI
+    /// window (the E13 exception; the name stays untouched).
+    #[test]
+    fn golden_rhomboid_line2_is_word_boundary_truncated_fragment() {
+        let tabs = shared_tabs();
+        for tab in tabs {
+            if let Some(c) = tab.cards.iter().find(|c| c.id == "golden-rhomboid") {
+                let line2 = browse::attr_lines(c).1;
+                assert_eq!(line2, "Bielefeld golden-rhomboid-triangle…");
+                assert!(
+                    line2.chars().count() <= 40,
+                    "fallback fragment must fit the one-line budget"
+                );
+                return;
+            }
+        }
+        panic!("golden-rhomboid not found in any tab");
     }
 
     // ---- misc --------------------------------------------------------------

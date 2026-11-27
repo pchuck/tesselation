@@ -244,7 +244,7 @@ impl Tiling for PeriodTriplingTiling {
     }
 
     fn category(&self) -> TilingCategory {
-        TilingCategory::Aperiodic
+        TilingCategory::Nonperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

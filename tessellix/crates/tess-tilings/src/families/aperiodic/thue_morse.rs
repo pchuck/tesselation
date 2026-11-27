@@ -198,7 +198,7 @@ impl Tiling for ThueMorseTiling {
     }
 
     fn category(&self) -> TilingCategory {
-        TilingCategory::Aperiodic
+        TilingCategory::Nonperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

@@ -115,41 +115,41 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             ..TilingClass::EMPTY
         },
         "half-hex" => TilingClass {
-            families: &["Aperiodic"],
+            families: &["Nonperiodic"],
             method: Some("substitution"),
             source: Some("Grünbaum & Shephard; Frettlöh"),
             year: Some("1987"),
-            translational: Some("limit-periodic"),
+            translational: Some("non-periodic"),
             ..TilingClass::EMPTY
         },
         "domino" => TilingClass {
-            families: &["Aperiodic"],
+            families: &["Nonperiodic"],
             method: Some("substitution"),
             source: Some("Lançon"),
-            translational: Some("limit-periodic"),
+            translational: Some("non-periodic"),
             ..TilingClass::EMPTY
         },
         "period-doubling" => TilingClass {
-            families: &["Aperiodic"],
+            families: &["Nonperiodic"],
             method: Some("substitution"),
             source: Some("Frettlöh & Sing"),
-            translational: Some("limit-periodic"),
+            translational: Some("non-periodic"),
             ..TilingClass::EMPTY
         },
         "thue-morse" => TilingClass {
-            families: &["Aperiodic"],
+            families: &["Nonperiodic"],
             method: Some("substitution"),
             source: Some("Allouche & Shallit"),
-            translational: Some("aperiodic"),
+            translational: Some("non-periodic"),
             ..TilingClass::EMPTY
         },
         // The Bielefeld entry "Period Tripling 2D" has an EMPTY Info
         // section — no references, nothing citable: source None.
         "period-tripling" => TilingClass {
-            families: &["Aperiodic"],
+            families: &["Nonperiodic"],
             method: Some("substitution"),
             source: None,
-            translational: Some("limit-periodic"),
+            translational: Some("non-periodic"),
             ..TilingClass::EMPTY
         },
         _ => return None,

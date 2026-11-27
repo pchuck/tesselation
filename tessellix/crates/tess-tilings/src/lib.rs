@@ -434,7 +434,7 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 20, 36, 17, 15, 5, 29, 8, 23, 11, 13],
+vec![11, 20, 36, 17, 15, 5, 29, 8, 23, 6, 18],
             "per-tab census (update when adding tilings)"
         );
         assert_eq!(r.len(), 169, "built-in tiling count (update when adding tilings)");

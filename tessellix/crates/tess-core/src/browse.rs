@@ -13,6 +13,14 @@
 //! generation: the same ±10-world-unit probe [`App::preview_region`]
 //! uses, so no probe can trigger view-sized generation.
 //!
+//! One display note: when the schema adds nothing to a card's line 2
+//! (every declared fact is already echoed by the name), the summary
+//! falls back to the description fragment. The fragment is cut at the
+//! last word boundary within the one-line card budget (with an
+//! ellipsis), never mid-word — a hard character cut overflowed the
+//! ~35-char GUI window for cards like the golden-rhomboid-triangle,
+//! whose name echoes every declared segment.
+//!
 //! [`Tiling`]: crate::tiling::Tiling
 //! [`App::preview_region`]: crate::app::App::preview_region
 
@@ -113,6 +121,74 @@ pub fn group_rank(g: Option<WallpaperGroup>) -> u8 {
     }
 }
 
+/// The Arrangements tab rank: the paver-bond cards (the bond catalog
+/// and its variants) first, then the Pythagorean section (the
+/// windmill dissection and the Pythagorean square packing). The bucket
+/// is derived from the declared `method` — the paver-bond cards are
+/// exactly the ones whose method is the paver bond. Cards with no
+/// declared method keep registry order at the end of the section.
+pub fn arrangements_rank(c: &CardMeta) -> u8 {
+    match c.class.method {
+        Some("paver bond") => 0,
+        _ => 1,
+    }
+}
+
+/// The Quasiperiodic tab rank: by fold/point order (the four-fold 3-12-12-family
+/// entry first, then the five-fold and ten-fold families, then the
+/// seven-fold, then the fourteen-fold, then the twelve-fold, then the
+/// eight-fold; cards with no declared point order keep registry order
+/// at the end). This is the fold-symmetry presentation order, not a
+/// family-order presentation.
+pub fn quasiperiodic_rank(c: &CardMeta) -> u8 {
+    match c.class.point_order {
+        Some(4) => 1,
+        Some(5) | Some(10) => 2,
+        Some(7) => 3,
+        Some(14) => 4,
+        Some(12) => 5,
+        Some(8) => 6,
+        _ => 7,
+    }
+}
+
+/// The Aperiodic tab rank: the einstein monotiles (hat, turtle, spectre)
+/// first, then the cap, then the strongly-aperiodic forcing/Wang
+/// realizations (Taylor-Socolar, Jeandel-Rao). The bucket is derived
+/// from the declared `aperiodic_status` — the epoch-establishing
+/// einstein realizations, the pure-point-spectrum cap, then the
+/// strongly aperiodic realizations.
+pub fn aperiodic_rank(c: &CardMeta) -> u8 {
+    match c.class.aperiodic_status.unwrap_or("") {
+        s if s.contains("einstein") => 0,
+        s if s.contains("pure point") => 1,
+        s if s.contains("strongly aperiodic") => 2,
+        _ => 3,
+    }
+}
+
+/// The Nonperiodic tab rank: the square-lattice rep-tile ominoes
+/// (polyominoes — armchair, chair, P-pentomino, pregnant-chair) first,
+/// then the triangular-lattice rep-tile ominoes (polyiamonds — sphinx,
+/// octiamond reptile, the pentiamond factor-2/3 variants), then the
+/// remaining non-repeating cards (the substitutions, the pinwheel,
+/// the Hirschhorn pentagon, the tangram and the girih decagon patch).
+/// The bucket is derived from the declared tile set's omino kind —
+/// "iamond"/"triangular" mark the triangular lattice, "omino"/"chair"
+/// the square lattice. Cards with no declared tile set (the
+/// substitution arms and the Hirschhorn pentagon) keep registry
+/// order at the end.
+pub fn nonperiodic_rank(c: &CardMeta) -> u8 {
+    let t = c.class.tile_set.unwrap_or("");
+    if t.contains("iamond") || t.contains("triangular") {
+        1
+    } else if t.contains("omino") || t.contains("chair") {
+        0
+    } else {
+        2
+    }
+}
+
 /// The crystal-system section key for a card displayed in the tab
 /// `tab_category`: the header text a card grid should draw above the
 /// first card of each section. Only the Wallpaper tab has sections —
@@ -183,7 +259,9 @@ pub fn wallpaper_gap_note() -> String {
 ///   "Truncated Square (4.8²)" card does not repeat "4.8²") so the
 ///   line adds information instead of echoing the title. When the
 ///   schema adds nothing (or the card is unclassified) the line falls
-///   back to the description fragment. Chirality shows only when it
+///   back to the description fragment, truncated at the last word
+///   boundary within the one-line budget (never a mid-word cut).
+///   Chirality shows only when it
 ///   is the notable fact (homochiral / mixed) — "achiral" is the
 ///   default expectation and stays off the card.
 pub fn attr_lines(c: &CardMeta) -> (String, String) {
@@ -211,7 +289,7 @@ fn symmetry_line(c: &CardMeta) -> String {
 fn summary_line(c: &CardMeta) -> String {
     let class = &c.class;
     if class.is_empty() {
-        let frag: String = c.description.chars().take(40).collect();
+        let frag = description_fragment(c);
         return if frag.is_empty() {
             c.notes.unwrap_or("").to_string()
         } else {
@@ -277,7 +355,7 @@ fn summary_line(c: &CardMeta) -> String {
     if segs.is_empty() {
         // The schema added nothing (every declared field is already
         // echoed by the name): fall back to the description fragment.
-        let frag: String = c.description.chars().take(40).collect();
+        let frag = description_fragment(c);
         return if frag.is_empty() {
             c.notes.unwrap_or("").to_string()
         } else {
@@ -285,6 +363,35 @@ fn summary_line(c: &CardMeta) -> String {
         };
     }
     segs.join(" · ")
+}
+
+/// The description fragment used when the schema adds nothing: the
+/// card's description truncated to the one-line card budget. The cut
+/// lands at the last word boundary within the budget (with an
+/// ellipsis), never mid-word, so the line fits the card's one-line
+/// budget in both UIs (the GUI truncates the summary at its label
+/// width; the TUI wraps it into two rows). A description with no
+/// word boundary inside the budget is hard-cut at the ellipsis.
+fn description_fragment(c: &CardMeta) -> String {
+    const BUDGET: usize = 40;
+    let chars: Vec<char> = c.description.chars().collect();
+    if chars.len() <= BUDGET {
+        return c.description.to_string();
+    }
+    // Cut at the last word boundary that leaves room for the ellipsis.
+    let mut cut = BUDGET - 1;
+    while cut > 0 && chars[cut] != ' ' {
+        cut -= 1;
+    }
+    if cut == 0 {
+        // No word boundary inside the budget: hard-cut with ellipsis.
+        let mut out: Vec<char> = chars[..BUDGET - 1].to_vec();
+        out.push('…');
+        return out.into_iter().collect();
+    }
+    let mut out: String = chars[..cut].iter().collect();
+    out.push('…');
+    out
 }
 
 /// Capture a tiling's declared metadata as card data. Symmetry facts are
@@ -352,9 +459,22 @@ pub fn browse_tabs(registry: &Registry) -> Vec<Tab> {
 ///   order at the end).
 /// * **Laves** — by the declared `laves_rank` (self-dual regulars, then
 ///   the Laves proper, then the 2-uniform duals).
+/// * **Arrangements** — the paver-bond catalog first, then the
+///   Pythagorean section ([`arrangements_rank`]).
+/// * **Quasiperiodic** — by the declared point order: the fourfold
+///   entry, then the five/tenfold families, then the sevenfold,
+///   fourteenfold, twelvefold and eightfold, then the point-order-less
+///   cards ([`quasiperiodic_rank`]).
+/// * **Aperiodic** — the einstein monotiles, then the cap, then the
+///   strongly aperiodic forcing/Wang realizations
+///   ([`aperiodic_rank`]).
+/// * **Nonperiodic** — the square-lattice rep-tile ominoes, then the
+///   triangular-lattice rep-tile ominoes, then the remaining cards
+///   ([`nonperiodic_rank`]).
 ///
 /// Every other tab keeps membership order (primary cards in registry
-/// order, then secondaries). All sorts are stable.
+/// order, then secondaries). All sorts are stable: within one bucket,
+/// registry order is preserved.
 pub fn browse_tabs_with(
     registry: &Registry,
     classify: impl Fn(&str) -> TilingClass,
@@ -392,6 +512,18 @@ pub fn browse_tabs_with(
             }
             TilingCategory::Laves => {
                 cards.sort_by_key(|c| c.class.laves_rank.unwrap_or(u8::MAX));
+            }
+            TilingCategory::Arrangements => {
+                cards.sort_by_key(|c| arrangements_rank(c));
+            }
+            TilingCategory::Quasiperiodic => {
+                cards.sort_by_key(|c| quasiperiodic_rank(c));
+            }
+            TilingCategory::Aperiodic => {
+                cards.sort_by_key(|c| aperiodic_rank(c));
+            }
+            TilingCategory::Nonperiodic => {
+                cards.sort_by_key(|c| nonperiodic_rank(c));
             }
             _ => {}
         }
