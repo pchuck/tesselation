@@ -425,3 +425,27 @@ the "mixed floret/cairo/prismatic" patterns.
 8. **Performance envelope** — MAX_TILES = 250_000 guards the GUI;
    spatial indexing or incremental generation could push it; measure
    per-tiling generation cost and record budgets in README.
+
+## App review backlog (2026-11-26 user review, F-bucket — recorded M209)
+
+Backlog features from the 2026-11-26 app review, recorded here at the
+review's next docs landing (the working program lives in
+`.scratch/app-review-2026-11-26/REVIEW.md`):
+
+1. **F1 Detail view** — per-card detail surface: prototiles, data
+   sources, parameter sliders, substitution stepper (user-requested
+   backlog feature). Would also receive F3's relocated Islamic
+   parameters.
+2. **F2 Islamic strapwork mode** — bands + over-under interlacing
+   rendering (pairs with the B3 restrained palette: fills by shape
+   role — star/petal/background). Bigger feature; see the medallion
+   third layer (M206) for the fused-wall-map precedent.
+3. **F3 Islamic parameters to detail view** — move θK, δ, library
+   section numbers, and data sources out of the card/param surface
+   into F1's detail view.
+4. **F4 Isohedral expansion** — grow from the shipped subset to all
+   81 IH types grouped by topology (same as D2, LARGE: frontier
+   scoping + strong/worker impl); Tactile credit in the About panel
+   (panel exists since M199); incidence symbol on its own line,
+   never truncated (partially landed via M194/M202 — verify the
+   remainder at dispatch).
