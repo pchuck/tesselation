@@ -51,41 +51,41 @@ pub mod rosette_transform;
 
 /// The family's registry slice, in within-tab order.
 pub fn register(mut r: Registry) -> Registry {
-        r = r.register(hexagram::HexagramTiling);
         r = r.register(zellige::StarCrossTiling);
+        r = r.register(hexagram::HexagramTiling);
+        r = r.register(khatam_girih::khatam_girih());
+        r = r.register(dodecagon_hexagram_honeycomb::dodecagon_hexagram_honeycomb());
+        r = r.register(girih_w85::girih_w85());
         r = r.register(girih::girih_shesh_band());
+        r = r.register(girih_sc::girih_star_cross());
+        r = r.register(girih_bowtie::girih_bowtie());
+        r = r.register(girih_decagon::girih_decagon());
+        r = r.register(girih_pentagon::girih_pentagon());
+        r = r.register(girih_rhombus::girih_rhombus());
         r = r.register(girih_qc::GirihQuasiperiodicTiling);
         r = r.register(girih_decagon_patch::GirihDecagonPatchTiling);
-        r = r.register(andritz_bowtie_hexagon::AndritzBowtieHexagonTiling);
-        r = r.register(andritz_bowtie_hexagon_10gon_1::AndritzBowtieHexagon10gon1Tiling);
-        r = r.register(andritz_bowtie_hexagon_10gon_2::AndritzBowtieHexagon10gon2Tiling);
-        r = r.register(andritz_bowtie_hexagon_10gon_3::AndritzBowtieHexagon10gon3Tiling);
-        r = r.register(girih_sc::girih_star_cross());
-        r = r.register(girih_w85::girih_w85());
         r = r.register(pic_4_8_8::pic_4_8_8());
         r = r.register(pic_3_6_3_6::pic_3_6_3_6());
         r = r.register(pic_3_12_12::pic_3_12_12());
         r = r.register(hankin_4_8_8::hankin_4_8_8_rosette());
         r = r.register(hankin_4_6_12::hankin_4_6_12());
-        r = r.register(hankin_hex::hankin_hex_two_point());
         r = r.register(hankin_3_12_12::hankin_3_12_12());
-        r = r.register(hankin_square_two_point::hankin_square_two_point());
-        r = r.register(hankin_4_8_8_rosette_transform::hankin_4_8_8_rosette_transform());
         r = r.register(hankin_3_6_3_6::hankin_3_6_3_6());
         r = r.register(hankin_3_4_6_4::hankin_3_4_6_4());
         r = r.register(hankin_3_3_3_4_4::hankin_3_3_3_4_4());
         r = r.register(hankin_3_3_4_3_4::hankin_3_3_4_3_4());
+        r = r.register(hankin_hex::hankin_hex_two_point());
+        r = r.register(hankin_square_two_point::hankin_square_two_point());
+        r = r.register(hankin_4_8_8_rosette_transform::hankin_4_8_8_rosette_transform());
         r = r.register(hankin_4_8_8_motifs::hankin_4_8_8_motifs());
         r = r.register(hankin_hex_motifs::hankin_hex_motifs());
-        r = r.register(khatam_girih::khatam_girih());
-        r = r.register(dodecagon_hexagram_honeycomb::dodecagon_hexagram_honeycomb());
         r = r.register(najm::najm_63_2e_0_3e_ac());
-        r = r.register(najm_63_motifs::najm_63_motifs());
         r = r.register(najm::najm_44_3e_0_0_a());
-        r = r.register(girih_bowtie::girih_bowtie());
-        r = r.register(girih_decagon::girih_decagon());
-        r = r.register(girih_pentagon::girih_pentagon());
-        r = r.register(girih_rhombus::girih_rhombus());
+        r = r.register(najm_63_motifs::najm_63_motifs());
+        r = r.register(andritz_bowtie_hexagon::AndritzBowtieHexagonTiling);
+        r = r.register(andritz_bowtie_hexagon_10gon_1::AndritzBowtieHexagon10gon1Tiling);
+        r = r.register(andritz_bowtie_hexagon_10gon_2::AndritzBowtieHexagon10gon2Tiling);
+        r = r.register(andritz_bowtie_hexagon_10gon_3::AndritzBowtieHexagon10gon3Tiling);
     r
 }
 
