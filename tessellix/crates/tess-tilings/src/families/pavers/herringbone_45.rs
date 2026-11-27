@@ -140,7 +140,7 @@ pub fn herringbone_45() -> LatticeTiling {
     LatticeTiling {
         id: "herringbone-45",
         name: "Herringbone 45° (2:1 dominoes)",
-        description: "Herringbone paver bond in its 45°-laid canonical frame: chiral single-direction L-pairs of 2:1 dominoes on the rectangular lattice <(0,2√2),(√2,0)>, 2 split dominoes per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group pgg: 2-fold centers at (√2/4 + k√2/2, 3√2/4 + ℓ√2), vertical glide axes x = k√2/2 (glide √2), horizontal glide axes y = ℓ√2 + √2/4 (glide √2/2), no mirrors.",
+        description: "Herringbone paver bond in its 45°-laid canonical frame: chiral single-direction L-pairs of 2:1 dominoes on the rectangular lattice <(0,2√2),(√2,0)>, 2 split dominoes per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group pgg: 2-fold centers at (√2/4 + k√2/2, 3√2/4 + ℓ√2), vertical glide axes x = k√2/2 (glide √2), horizontal glide axes y = ℓ√2 + √2/4 (glide √2/2), no mirrors. Same tiling as herringbone rotated 45° — same lattice, see herringbone.",
         lattice: [Vec2::new(0.0, 2.0 * SQRT_2), Vec2::new(SQRT_2, 0.0)],
         cells,
         offset: Vec2::ZERO,
