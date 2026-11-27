@@ -48,8 +48,8 @@ pub fn truncated_square() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "truncated-square",
-        name: "Truncated Square (4.8.8)",
-        description: "Uniform tiling 4.8.8 — regular octagons and squares (p4m).",
+        name: "Truncated Square (4.8²)",
+        description: "Uniform tiling 4.8² — regular octagons and squares (p4m).",
         lattice: [Vec2::new(A, 0.0), Vec2::new(0.0, A)],
         cells: vec![
             Cell { poly: octagon, seed: 0 },
@@ -181,8 +181,8 @@ pub fn snub_trihexagonal() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "snub-trihexagonal",
-        name: "Snub Trihexagonal (3.3.3.3.6)",
-        description: "Uniform tiling 3.3.3.3.6 (snub hexagonal tiling) — hexagons and triangles (p6, chiral).",
+        name: "Snub Trihexagonal (3⁴.6)",
+        description: "Uniform tiling 3⁴.6 (snub hexagonal tiling) — hexagons and triangles (p6, chiral).",
         lattice: [Vec2::new(2.5, -H), Vec2::new(2.0, 2.0 * H)],
         cells: vec![
             Cell { poly: hex, seed: 0 },
@@ -237,8 +237,8 @@ pub fn elongated_triangular() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "elongated-triangular",
-        name: "Elongated Triangular (3.3.3.4.4)",
-        description: "Uniform tiling 3.3.3.4.4 (elongated triangular tiling) — triangle rows and square rows (cmm).",
+        name: "Elongated Triangular (3³.4²)",
+        description: "Uniform tiling 3³.4² (elongated triangular tiling) — triangle rows and square rows (cmm). No standard Wythoff operation — built directly as alternating rows of equilateral triangles and unit squares (Conway's isosnub quadrille).",
         lattice: [Vec2::new(1.0, 0.0), Vec2::new(0.5, 1.0 + H)],
         cells: vec![
             Cell { poly: t_up, seed: 1 },
@@ -472,8 +472,8 @@ pub fn truncated_hexagonal() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "truncated-hexagonal",
-        name: "Truncated Hexagonal (3.12.12)",
-        description: "Uniform tiling 3.12.12 (truncated hexagonal tiling) — dodecagons and triangles (p6m).",
+        name: "Truncated Hexagonal (3.12²)",
+        description: "Uniform tiling 3.12² (truncated hexagonal tiling) — dodecagons and triangles (p6m).",
         lattice: [
             Vec2::new(1.5 + 2.0 * H, 1.0 + H),
             Vec2::new(0.0, 2.0 + 2.0 * H),

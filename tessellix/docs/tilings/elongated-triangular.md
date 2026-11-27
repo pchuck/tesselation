@@ -1,8 +1,8 @@
-# Elongated Triangular (3.3.3.4.4)
+# Elongated Triangular (3³.4²)
 
 `elongated-triangular` · family [Uniform](../families/uniform.md) (`uniform`) · wallpaper group `cmm` · centered lattice
 
-Uniform tiling 3.3.3.4.4 (elongated triangular tiling) — triangle rows and square rows (cmm).
+Uniform tiling 3³.4² (elongated triangular tiling) — triangle rows and square rows (cmm). No standard Wythoff operation — built directly as alternating rows of equilateral triangles and unit squares (Conway's isosnub quadrille).
 
 Catalog type: Archimedean.
 

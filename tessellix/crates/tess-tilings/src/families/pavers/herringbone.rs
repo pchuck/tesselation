@@ -112,7 +112,7 @@ pub fn herringbone() -> LatticeTiling {
     LatticeTiling {
         id: "herringbone",
         name: "Herringbone (2:1 dominoes)",
-        description: "Herringbone paver bond: chiral single-direction L-pairs of 2:1 dominoes on the rectangular lattice <(2,2),(1,−1)>, 2 split dominoes per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group pgg: 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal and anti-diagonal axes), no mirrors.",
+        description: "Herringbone paver bond: chiral single-direction L-pairs of 2:1 dominoes on the rectangular lattice <(2,2),(1,−1)>, 2 split dominoes per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group pgg: 16 2-fold centers per 4×4 period, two perpendicular glide families (diagonal and anti-diagonal axes), no mirrors. In the default Pattern fill the cell seed stores the tile's orientation class (0 = horizontal, 1 = vertical), so the bond colors by tile orientation — the axis-aligned 0° and 90° buckets {0,2} in the Orientation mode (M196), never the 45°/135° diagonal buckets.",
         lattice: [Vec2::new(2.0, 2.0), Vec2::new(1.0, -1.0)],
         cells,
         offset: Vec2::ZERO,

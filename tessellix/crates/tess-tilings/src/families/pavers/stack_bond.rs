@@ -103,7 +103,7 @@ pub fn stack_bond() -> LatticeTiling {
     LatticeTiling {
         id: "stack-bond",
         name: "Stack bond (2:1 dominoes)",
-        description: "Stack-bond paver pattern: rows of 2:1 dominoes stacked directly on top of one another with no offset. Rectangular lattice <(2,0),(0,1)>, one split domino per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group pmm: mirrors at x = k and y = n/2, 2-folds at (k, n/2), no glides.",
+        description: "Stack-bond paver pattern: rows of 2:1 dominoes stacked directly on top of one another with no offset. Rectangular lattice <(2,0),(0,1)>, one split domino per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group pmm: mirrors at x = k and y = n/2, 2-folds at (k, n/2), no glides. In the default Pattern fill the pattern seed alternates with the lattice row index j (SeedPattern::Rows, M200), so the bond colors by row parity — alternate courses get alternate fills — not by tile orientation; every domino is a horizontal stretcher (a single orientation class), so all tiles fall in the 0° bucket of the Orientation mode.",
         lattice: [Vec2::new(2.0, 0.0), Vec2::new(0.0, 1.0)],
         cells,
         offset: Vec2::ZERO,

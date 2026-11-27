@@ -25,8 +25,8 @@ pub fn spec() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "triangle",
-        name: "Triangular",
-        description: "Uniform tiling 3.3.3.3.3.3 — equilateral triangles (p6m).",
+        name: "Triangular (3⁶)",
+        description: "Uniform tiling 3⁶ — equilateral triangles (p6m).",
         lattice: [Vec2::new(1.0, 0.0), Vec2::new(0.5, H)],
         cells: vec![
             Cell { poly: up, seed: 0 },

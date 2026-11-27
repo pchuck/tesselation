@@ -1,8 +1,8 @@
-# Snub Trihexagonal (3.3.3.3.6)
+# Snub Trihexagonal (3⁴.6)
 
 `snub-trihexagonal` · family [Uniform](../families/uniform.md) (`uniform`) · wallpaper group `p6` · hexagonal lattice
 
-Uniform tiling 3.3.3.3.6 (snub hexagonal tiling) — hexagons and triangles (p6, chiral).
+Uniform tiling 3⁴.6 (snub hexagonal tiling) — hexagons and triangles (p6, chiral).
 
 Catalog type: Archimedean, chiral.
 

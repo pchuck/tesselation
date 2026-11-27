@@ -1,8 +1,8 @@
-# Square grid
+# Square grid (4⁴)
 
 `square` · family [Uniform](../families/uniform.md) (`uniform`) · wallpaper group `p4m` · square lattice
 
-Uniform tiling 4.4.4.4 — the classic square grid (p4m).
+Uniform tiling 4⁴ — the classic square grid (p4m).
 
 Catalog type: uniform.
 

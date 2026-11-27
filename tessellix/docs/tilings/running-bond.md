@@ -4,6 +4,8 @@
 
 paver bond: stretcher rows of 2:1 dominoes, each row offset by half a brick; long sides split into unit edges
 
+> Color-fill rule: the pattern seed alternates with the lattice row index j (`SeedPattern::Rows`), so the default Pattern fill colors by row parity — alternate courses get alternate fills — not by tile orientation; every domino is a horizontal stretcher (a single orientation class), so all tiles fall in the 0° bucket of the Orientation mode.
+
 ## See also
 
 - Family doc (catalog table + build arcs): [docs/families/pavers.md](../families/pavers.md)

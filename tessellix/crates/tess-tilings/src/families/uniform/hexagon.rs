@@ -21,8 +21,8 @@ pub fn spec() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "hexagon",
-        name: "Hexagonal",
-        description: "Uniform tiling 6.6.6 — regular hexagons (p6m).",
+        name: "Hexagonal (6³)",
+        description: "Uniform tiling 6³ — regular hexagons (p6m).",
         lattice: [Vec2::new(1.5, H), Vec2::new(1.5, -H)],
         cells: vec![Cell { poly: hex, seed: 0 }],
         offset: Vec2::ZERO,

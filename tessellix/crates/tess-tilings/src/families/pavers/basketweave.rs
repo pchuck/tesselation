@@ -130,7 +130,7 @@ pub fn basketweave() -> LatticeTiling {
     LatticeTiling {
         id: "basketweave",
         name: "Basketweave (2:1 dominoes)",
-        description: "Basketweave paver bond: 2×2 blocks of two parallel 2:1 dominoes, checkerboard orientation. 45°-rotated square lattice <(2,2),(2,−2)>, 4 split dominoes per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group p4g: 4-folds at the even-even points, mirrors at the odd axes (offset from the 4-fold centers — not p4m), six glide families.",
+        description: "Basketweave paver bond: 2×2 blocks of two parallel 2:1 dominoes, checkerboard orientation. 45°-rotated square lattice <(2,2),(2,−2)>, 4 split dominoes per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group p4g: 4-folds at the even-even points, mirrors at the odd axes (offset from the 4-fold centers — not p4m), six glide families. In the default Pattern fill the cell seed stores the tile's orientation class (0 = horizontal, 1 = vertical), so the bond colors by tile orientation — the axis-aligned 0° and 90° buckets {0,2} in the Orientation mode (M196), never the 45°/135° diagonal buckets.",
         lattice: [Vec2::new(2.0, 2.0), Vec2::new(2.0, -2.0)],
         cells,
         offset: Vec2::ZERO,

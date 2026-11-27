@@ -1868,13 +1868,13 @@ mod tests {
             }
             panic!("{id} not found in any tab");
         };
-        // Uniform: vertex config that is NOT in the name, Schläfli,
-        // uniformity, dual.
+        // Uniform: the vertex config is in the name, so the summary
+        // skips it; Schläfli, uniformity, dual remain.
         assert_eq!(
             line2("square"),
-            "4.4.4.4 · {4,4} · regular · self-dual"
+            "{4,4} · regular · self-dual"
         );
-        // "(4.8.8)" is already in the card name — the summary skips it.
+        // "(4.8²)" is already in the card name — the summary skips it.
         assert_eq!(
             line2("truncated-square"),
             "t{4,4} · semiregular · dual: tetrakis square"

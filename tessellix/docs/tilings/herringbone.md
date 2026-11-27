@@ -4,6 +4,8 @@
 
 paver bond: chiral L-pairs of 2:1 dominoes, single-direction; long sides split into unit edges
 
+> Color-fill rule: the cell seed stores the tile's orientation class (0 = horizontal, 1 = vertical), so the default Pattern fill colors by tile orientation — the axis-aligned 0° and 90° buckets {0,2} in the Orientation mode (M196), never the 45°/135° diagonal buckets.
+
 ## See also
 
 - Same tiling as `herringbone-45` — the same herringbone bond rotated 45°: [herringbone-45](herringbone-45.md)

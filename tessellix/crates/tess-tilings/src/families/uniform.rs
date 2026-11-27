@@ -39,7 +39,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
     Some(match id {
         "square" => TilingClass {
             families: &["Uniform", "Laves"],
-            vertex_config: Some("4.4.4.4"),
+            vertex_config: Some("4⁴"),
             schlafli: Some("{4,4}"),
             uniformity: Some("regular"),
             dual_of: Some("self-dual"),
@@ -49,7 +49,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "triangle" => TilingClass {
             families: &["Uniform", "Laves"],
-            vertex_config: Some("3.3.3.3.3.3"),
+            vertex_config: Some("3⁶"),
             schlafli: Some("{3,6}"),
             uniformity: Some("regular"),
             dual_of: Some("self-dual"),
@@ -59,7 +59,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "hexagon" => TilingClass {
             families: &["Uniform", "Laves", "Wallpaper"],
-            vertex_config: Some("6.6.6"),
+            vertex_config: Some("6³"),
             schlafli: Some("{6,3}"),
             uniformity: Some("regular"),
             dual_of: Some("self-dual"),
@@ -69,7 +69,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "truncated-square" => TilingClass {
             families: &["Uniform", "Wallpaper"],
-            vertex_config: Some("4.8.8"),
+            vertex_config: Some("4.8²"),
             schlafli: Some("t{4,4}"),
             uniformity: Some("semiregular"),
             dual_of: Some("tetrakis square"),
@@ -78,7 +78,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "truncated-hexagonal" => TilingClass {
             families: &["Uniform"],
-            vertex_config: Some("3.12.12"),
+            vertex_config: Some("3.12²"),
             schlafli: Some("t{6,3}"),
             uniformity: Some("semiregular"),
             dual_of: Some("triakis triangular"),
@@ -114,7 +114,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "elongated-triangular" => TilingClass {
             families: &["Uniform", "Wallpaper"],
-            vertex_config: Some("3.3.3.4.4"),
+            vertex_config: Some("3³.4²"),
             uniformity: Some("semiregular"),
             dual_of: Some("prismatic pentagonal"),
             k: Some(1),
@@ -131,7 +131,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "snub-trihexagonal" => TilingClass {
             families: &["Uniform", "Wallpaper"],
-            vertex_config: Some("3.3.3.3.6"),
+            vertex_config: Some("3⁴.6"),
             schlafli: Some("sr{3,6}"),
             uniformity: Some("semiregular"),
             dual_of: Some("floret pentagonal"),

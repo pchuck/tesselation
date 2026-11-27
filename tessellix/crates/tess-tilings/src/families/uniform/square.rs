@@ -16,8 +16,8 @@ pub fn spec() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "square",
-        name: "Square grid",
-        description: "Uniform tiling 4.4.4.4 — the classic square grid (p4m).",
+        name: "Square grid (4⁴)",
+        description: "Uniform tiling 4⁴ — the classic square grid (p4m).",
         lattice: [Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)],
         cells: vec![Cell { poly: unit, seed: 0 }],
         offset: Vec2::ZERO,

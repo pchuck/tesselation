@@ -1,8 +1,8 @@
-# Truncated Square (4.8.8)
+# Truncated Square (4.8²)
 
 `truncated-square` · family [Uniform](../families/uniform.md) (`uniform`) · wallpaper group `p4m` · square lattice
 
-Uniform tiling 4.8.8 — regular octagons and squares (p4m).
+Uniform tiling 4.8² — regular octagons and squares (p4m).
 
 Catalog type: Archimedean.
 

@@ -1,8 +1,8 @@
-# Truncated Hexagonal (3.12.12)
+# Truncated Hexagonal (3.12²)
 
 `truncated-hexagonal` · family [Uniform](../families/uniform.md) (`uniform`) · wallpaper group `p6m` · hexagonal lattice
 
-Uniform tiling 3.12.12 (truncated hexagonal tiling) — dodecagons and triangles (p6m).
+Uniform tiling 3.12² (truncated hexagonal tiling) — dodecagons and triangles (p6m).
 
 Catalog type: Archimedean.
 

@@ -107,7 +107,7 @@ pub fn running_bond() -> LatticeTiling {
     LatticeTiling {
         id: "running-bond",
         name: "Running bond (2:1 dominoes)",
-        description: "Running-bond paver pattern: stretcher rows of 2:1 dominoes, each row offset by half a brick. Centered rectangular lattice <(2,0),(1,1)>, one split domino per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group cmm: mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions.",
+        description: "Running-bond paver pattern: stretcher rows of 2:1 dominoes, each row offset by half a brick. Centered rectangular lattice <(2,0),(1,1)>, one split domino per cell (long sides split into unit edges, 180° vertex figures at the split midpoints). Wallpaper group cmm: mirrors at the integer x-axes and half-integer y-axes, 2-folds at (k, l+1/2) and (k+1/2, l), glides in both directions. In the default Pattern fill the pattern seed alternates with the lattice row index j (SeedPattern::Rows), so the bond colors by row parity — alternate courses get alternate fills — not by tile orientation; every domino is a horizontal stretcher (a single orientation class), so all tiles fall in the 0° bucket of the Orientation mode.",
         lattice: [Vec2::new(2.0, 0.0), Vec2::new(1.0, 1.0)],
         cells,
         offset: Vec2::ZERO,

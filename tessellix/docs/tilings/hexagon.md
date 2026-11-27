@@ -1,8 +1,8 @@
-# Hexagonal
+# Hexagonal (6³)
 
 `hexagon` · family [Uniform](../families/uniform.md) (`uniform`) · wallpaper group `p6m` · hexagonal lattice
 
-Uniform tiling 6.6.6 — regular hexagons (p6m).
+Uniform tiling 6³ — regular hexagons (p6m).
 
 Catalog type: uniform.
 

@@ -1,8 +1,8 @@
-# Triangular
+# Triangular (3⁶)
 
 `triangle` · family [Uniform](../families/uniform.md) (`uniform`) · wallpaper group `p6m` · hexagonal lattice
 
-Uniform tiling 3.3.3.3.3.3 — equilateral triangles (p6m).
+Uniform tiling 3⁶ — equilateral triangles (p6m).
 
 Catalog type: uniform.
 
