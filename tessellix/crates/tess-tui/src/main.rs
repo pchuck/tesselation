@@ -63,6 +63,22 @@
 //!                                  --medallion-weave / --highlight-supertiles.
 //!                                  Mutually exclusive with --decoration
 //!                                  (the decoration replaces the tiling render).
+//!     [--dual-overlay]           overlay the card's centroid dual in the
+//!                                  same frame: two named groups
+//!                                  (<g id="primal"> then <g id="dual">),
+//!                                  sharing the scaffolding.
+//!                                  Available for the 31 Laves/dual-and-
+//!                                  regular LatticeTiling cards; everything
+//!                                  else is a named refusal. Composes with
+//!                                  --strapwork / --deform / --mirror /
+//!                                  --highlight-supertiles. Mutually
+//!                                  exclusive with --decoration and with
+//!                                  --medallion-weave (the weave fuses the
+//!                                  medallion layer into the wall map, which
+//!                                  the two-group overlay does not support).
+//!                                  Self-dual "square" is not an error: a
+//!                                  render-level note is emitted and the SVG
+//!                                  is still written.
 //!   tess-tui explore --tiling ID  deterministic δ/θ sweep + leaderboard
 //!     (docs/briefs/pic-explorer.md). Emits a JSON leaderboard plus an
 //!     optional CSV and a top-K SVG gallery.
@@ -76,6 +92,7 @@ mod raster;
 mod thumb;
 
 use tess_core::geometry::Vec2;
+use tess_core::Tiling;
 use tess_core::params::{ParamKind, ParamValue};
 use tess_core::strapwork::{BuiltInProfile, Decoration, snap_to_envelope};
 use tess_core::view::ColorMode;
@@ -125,6 +142,7 @@ struct ExportArgs {
     center: Option<(f64, f64)>,
     highlight_supertiles: bool,
     mirror: bool,
+    dual_overlay: bool,
 }
 
 /// Parse a float CLI value, rejecting NaN and infinities: they would
@@ -263,6 +281,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         center: None,
         highlight_supertiles: false,
         mirror: false,
+        dual_overlay: false,
     };
     let mut i = 0;
     let mut band_w_seen = false;
@@ -319,6 +338,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
 "--highlight-supertiles" => a.highlight_supertiles = true,
             "--medallion-weave" => a.medallion_weave = true,
             "--mirror" => a.mirror = true,
+            "--dual-overlay" => a.dual_overlay = true,
             "--center" => {
                 let v = next(&mut i)?;
                 let (x_s, y_s) = v.split_once(',').ok_or_else(|| {
@@ -389,7 +409,79 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
                 .into(),
         );
     }
+    if a.dual_overlay && a.decoration.is_some() {
+        return Err(
+            "--dual-overlay is not applicable with --decoration (the decoration replaces the tiling render)"
+                .into(),
+        );
+    }
+    if a.dual_overlay && a.medallion_weave {
+        return Err(
+            "--dual-overlay is not applicable with --medallion-weave (the weave fuses the medallion third layer into the wall map, which the two-group overlay render does not support)"
+                .into(),
+        );
+    }
     Ok(a)
+}
+
+/// The dual-overlay export (C2): the card and its centroid dual, two
+/// named groups in one frame — the primal (the card's own table, generated
+/// by the caller above) painted first over the dual, which paints on top.
+/// The dual is generated with the same params and region as the primal,
+/// and the two groups share the scaffolding (paper, y-flip, viewBox).
+/// The strapwork walls come from the primal render; they are painted
+/// once on top of both groups (never re-derived from the dual).
+/// `mirror` and `highlight_supertiles` compose with the overlay exactly
+/// as with the plain render — each group mirrors/highlights itself.
+///
+/// Named refusals: the card is not in the 31-id dualizable set (the 5
+/// isohedral cards and every other non-lattice card), the dual is
+/// degenerate for the query, or generation refused. The overlay never
+/// silently drops a dual.
+fn render_dual_overlay(
+    a: &ExportArgs,
+    region: &tess_core::BBox,
+    primal_tiles: &[tess_core::Tile],
+    walls: &[tess_core::strapwork::Wall],
+    params: &tess_core::params::ParamSet,
+) -> Result<(String, usize), String> {
+    let card = tess_tilings::dual::dual_primal_for(&a.tiling).ok_or_else(|| {
+        format!(
+            "card '{}' is not dualizable: --dual-overlay renders a card + its centroid dual, available for the 31 Laves/dual-and-regular LatticeTiling cards (see `tess-tui list`); the 5 isohedral cards and non-lattice cards carry no centroid dual",
+            a.tiling
+        )
+    })?;
+    let dual_tiling = tess_tilings::dual::dual(&card).ok_or_else(|| {
+        format!(
+            "card '{}': centroid dual is degenerate (no dual cells); refusing to emit a partial overlay",
+            a.tiling
+        )
+    })?;
+    let dual_result = dual_tiling.generate(
+        params,
+        &tess_core::Query { region: *region },
+    );
+    if let Some(msg) = dual_result.message {
+        return Err(msg.to_string());
+    }
+    // Self-dual regular: square is self-dual — the dual (a half-cell
+    // shift of the same grid) paints on top of the primal, nearly
+    // identical geometry. Note, never a refusal; the SVG is written.
+    if a.tiling == "square" {
+        eprintln!(
+            "note: 'square' is self-dual — the dual overlay double-paints nearly identical geometry (the dual is the same grid shifted by half a cell); the SVG is still written"
+        );
+    }
+    let svg = tess_core::svg::render_svg_dual_overlay(
+        primal_tiles,
+        &dual_result.tiles,
+        region,
+        a.mode,
+        walls,
+        a.highlight_supertiles,
+        a.mirror,
+    );
+    Ok((svg, dual_result.tiles.len()))
 }
 
 fn export(args: &[String]) -> Result<(), String> {
@@ -485,7 +577,7 @@ fn export(args: &[String]) -> Result<(), String> {
     // the coverage contract keeps every unshared host edge (the source
     // of rim artefacts) outside it, so only genuine openings fail. The
     // hairline inset drops vertices that sit exactly on the region edge.
-    let svg = match a.decoration {
+    let (svg, dual_n) = match a.decoration {
         Some(style) => {
             let plan = match &med {
                 None => tess_core::strapwork::plan_decoration(
@@ -503,25 +595,38 @@ fn export(args: &[String]) -> Result<(), String> {
                 ),
             }
             .map_err(|e| e.to_string())?;
-            tess_core::svg::render_svg_decorated(&region, &plan)
+            (tess_core::svg::render_svg_decorated(&region, &plan), 0)
         }
-        None if a.mirror => tess_core::svg::render_svg_with_walls_highlight_mirrored(
-            &result.tiles,
-            &region,
-            a.mode,
-            &walls,
-            a.highlight_supertiles,
+        None if a.dual_overlay => {
+            render_dual_overlay(&a, &region, &result.tiles, &walls, &params)?
+        }
+        None if a.mirror => (
+            tess_core::svg::render_svg_with_walls_highlight_mirrored(
+                &result.tiles,
+                &region,
+                a.mode,
+                &walls,
+                a.highlight_supertiles,
+            ),
+            0,
         ),
-        None => tess_core::svg::render_svg_with_walls_highlight(
-            &result.tiles,
-            &region,
-            a.mode,
-            &walls,
-            a.highlight_supertiles,
+        None => (
+            tess_core::svg::render_svg_with_walls_highlight(
+                &result.tiles,
+                &region,
+                a.mode,
+                &walls,
+                a.highlight_supertiles,
+            ),
+            0,
         ),
     };
     std::fs::write(&a.out, svg).map_err(|e| format!("failed to write {}: {e}", a.out))?;
-    println!("wrote {} ({} tiles)", a.out, result.tiles.len());
+    if a.dual_overlay {
+        println!("wrote {} ({} tiles, +{} dual)", a.out, result.tiles.len(), dual_n);
+    } else {
+        println!("wrote {} ({} tiles)", a.out, result.tiles.len());
+    }
     Ok(())
 }
 
@@ -1984,6 +2089,7 @@ mod tests_export_contract {
             ("medallion third layer", "--medallion-weave"),
             ("supertile-member tiles", "--highlight-supertiles"),
             ("enantiomorph", "--mirror"),
+            ("centroid dual", "--dual-overlay"),
             ("output SVG file", "--out"),
         ];
         let mut documented: Vec<String> = Vec::new();
@@ -2002,7 +2108,7 @@ mod tests_export_contract {
             "--tiling", "--width", "--height", "--scale", "--rotation", "--center",
             "--param", "--mode", "--strapwork", "--deform", "--decoration",
             "--band-w", "--medallion-weave", "--highlight-supertiles", "--mirror",
-            "--out", "-o",
+            "--dual-overlay", "--out", "-o",
         ];
         for flag in expected {
             assert!(
@@ -2040,6 +2146,7 @@ mod tests_export_contract {
             (&["--tiling", "square", "--strapwork", "45", "--medallion-weave"], "--medallion-weave"),
             (&["--tiling", "square", "--highlight-supertiles"], "--highlight-supertiles"),
             (&["--tiling", "square", "--mirror"], "--mirror"),
+            (&["--tiling", "square", "--dual-overlay"], "--dual-overlay"),
             (&["--tiling", "square", "--out", "a.svg"], "--out"),
             (&["--tiling", "square", "-o", "b.svg"], "-o"),
         ];
@@ -2059,7 +2166,7 @@ mod tests_export_contract {
         // --highlight-supertiles and --mirror are documented as mutually
         // exclusive with --decoration (the decoration replaces the tiling
         // render); both must be named parse errors, not silent no-ops.
-        for flag in ["--highlight-supertiles", "--mirror"] {
+        for flag in ["--highlight-supertiles", "--mirror", "--dual-overlay"] {
             let err = parse_export(&args(&[
                 "--tiling", "square", "--strapwork", "45", "--decoration", "fill", flag,
             ]))
@@ -2355,6 +2462,23 @@ mod tests_export_contract {
             !defaults.mirror,
             "docs/USAGE.md line {line_no} (--mirror default): default should be off, got {}",
             defaults.mirror
+        );
+
+        // --dual-overlay default off.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "centroid dual",
+            "docs/USAGE.md: --dual-overlay default pin",
+        );
+        assert_eq!(
+            cells[2], "off",
+            "docs/USAGE.md line {line_no} (--dual-overlay default): documented default {:?}",
+            cells[2]
+        );
+        assert!(
+            !defaults.dual_overlay,
+            "docs/USAGE.md line {line_no} (--dual-overlay default): default should be off, got {}",
+            defaults.dual_overlay
         );
 
         // --band-w default 0.1 (the "requires --decoration" requirement is
@@ -3589,5 +3713,253 @@ mod tests {
         let _ = std::fs::remove_file(&svg_a);
         let _ = std::fs::remove_file(&svg_b);
         let _ = std::fs::remove_file(&svg_c);
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    // Dual overlay (C2): --dual-overlay parse policy, named errors and
+    // the two-group render. The off-state is byte-identical to the plain
+    // render (guaranteed by construction — the plain arm never touches
+    // the overlay), and the on-state emits two named groups whose fills
+    // equal the tile counts.
+    // ──────────────────────────────────────────────────────────────────
+
+    fn dual_tmp(tag: &str) -> std::path::PathBuf {
+        std::env::temp_dir().join(format!("tess_tui_dual_{tag}_{}.svg", std::process::id()))
+    }
+
+    /// The balanced-tag interior of the first `<g id="NAME">` group in the
+    /// SVG: everything between the marker and the matching `</g>`.
+    fn dual_group_slice<'a>(svg: &'a str, marker: &str) -> &'a str {
+        let start = svg.find(marker).unwrap_or_else(|| panic!("missing {marker}")) + marker.len();
+        let mut depth = 1usize;
+        let mut pos = start;
+        loop {
+            let next_open = svg[pos..].find("<g ").map(|i| pos + i);
+            let next_close = svg[pos..].find("</g>").map(|i| pos + i);
+            match (next_open, next_close) {
+                (Some(o), Some(c)) if c < o => { depth -= 1; pos = c + 4; }
+                (Some(o), _) => { depth += 1; pos = o + 3; }
+                (None, Some(c)) => { depth -= 1; pos = c + 4; }
+                (None, None) => panic!("unbalanced group {marker:?}"),
+            }
+            if depth == 0 {
+                return &svg[start..pos - 4];
+            }
+        }
+    }
+
+    /// The (primal, dual) tile counts for `tiling_id` at the default export
+    /// view (400×400px, scale 1, rotation 0) — the same params and region
+    /// the CLI builds, replicated here so the test can pin the per-group
+    /// fill census against the generator's output.
+    fn dual_expected_tile_counts(tiling_id: &str) -> (usize, usize) {
+        use tess_core::Tiling;
+        let registry = tess_tilings::registry();
+        let tiling = registry.get(tiling_id).expect("tiling registered");
+        let mut params = tess_core::params::ParamSet::default_for(tiling.params());
+        params.set(
+            tess_tilings::lattice::SCALE_ID,
+            tess_core::params::ParamValue::Float(1.0),
+        );
+        params.set(
+            tess_tilings::lattice::ROTATION_ID,
+            tess_core::params::ParamValue::Angle(0.0),
+        );
+        let world_h = 20.0f64;
+        let world_w = world_h * 400.0 / 400.0;
+        let region = tess_core::BBox::new(
+            tess_core::Vec2::new(-world_w / 2.0, -world_h / 2.0),
+            tess_core::Vec2::new(world_w / 2.0, world_h / 2.0),
+        );
+        let result = tiling.generate(&params, &tess_core::Query { region });
+        assert!(result.message.is_none(), "primal refused: {:?}", result.message);
+        let card = tess_tilings::dual::dual_primal_for(tiling_id).expect("card is not dualizable");
+        let dual = tess_tilings::dual::dual(&card).expect("dual is degenerate");
+        let dual_result = dual.generate(&params, &tess_core::Query { region });
+        assert!(dual_result.message.is_none(), "dual refused: {:?}", dual_result.message);
+        (result.tiles.len(), dual_result.tiles.len())
+    }
+
+    #[test]
+    fn dual_overlay_flag_parses_and_defaults_off() {
+        let a = parse_export(&args(&["--tiling", "square", "--dual-overlay"])).expect("flag parses");
+        assert!(a.dual_overlay, "the flag must set the export arg");
+        let d = parse_export(&args(&["--tiling", "square"])).expect("defaults");
+        assert!(!d.dual_overlay, "the flag defaults off");
+        // Mutually exclusive with --decoration — named parse error.
+        let e = parse_export(&args(&[
+            "--tiling", "square", "--strapwork", "45", "--decoration", "fill", "--dual-overlay",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("--dual-overlay"), "{e}");
+        assert!(e.contains("--decoration"), "the error must name the collision: {e}");
+        // Rejects --medallion-weave with a named parse error.
+        let e = parse_export(&args(&[
+            "--tiling", "square", "--strapwork", "45", "--medallion-weave", "--dual-overlay",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("--dual-overlay"), "{e}");
+        assert!(e.contains("--medallion-weave"), "the error must name the collision: {e}");
+    }
+
+    #[test]
+    fn dual_overlay_off_state_is_byte_identical_to_plain_render() {
+        // No --dual-overlay: the export must be byte-identical to the
+        // plain (pre-flag) library render — the flag must never reshape
+        // the plain path.
+        let out = dual_tmp("off");
+        let mut argv: Vec<String> = [
+            "--tiling", "tetrakis-square", "--width", "400", "--height", "400",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        argv.extend(["--out".to_string(), out.to_string_lossy().to_string()]);
+        super::export(&argv).expect("off export");
+        let plain = std::fs::read_to_string(&out).expect("SVG readable");
+        assert!(!plain.contains(r#"<g id="primal">"#), "off-state must have no primal group");
+        assert!(!plain.contains(r#"<g id="dual">"#), "off-state must have no dual group");
+
+        // Same args through the library directly — the same plain render.
+        let registry = tess_tilings::registry();
+        let tiling = registry.get("tetrakis-square").expect("tetrakis-square registered");
+        let mut params = tess_core::params::ParamSet::default_for(tiling.params());
+        params.set(
+            tess_tilings::lattice::SCALE_ID,
+            tess_core::params::ParamValue::Float(1.0),
+        );
+        params.set(
+            tess_tilings::lattice::ROTATION_ID,
+            tess_core::params::ParamValue::Angle(0.0),
+        );
+        let region = tess_core::BBox::new(
+            tess_core::Vec2::new(-10.0, -10.0),
+            tess_core::Vec2::new(10.0, 10.0),
+        );
+        let result = tiling.generate(&params, &tess_core::Query { region });
+        assert!(result.message.is_none(), "primal refused: {:?}", result.message);
+        let direct = tess_core::svg::render_svg_with_walls_highlight(
+            &result.tiles,
+            &region,
+            tess_core::view::ColorMode::Pattern,
+            &[],
+            false,
+        );
+        assert_eq!(plain, direct, "off-state export must be byte-identical to the plain library render");
+        let _ = std::fs::remove_file(&out);
+    }
+
+    #[test]
+    fn dual_overlay_export_emits_two_named_groups_with_tile_counts() {
+        // One machine dual (kuniform-dual-p6m) and one Laves-family card
+        // (tetrakis-square): each emits two named groups, the primal
+        // group painting before the dual, and each group's fill/path
+        // census equal the generator's tile count (1 fill + 1 outline
+        // path per tile).
+        for tiling_id in ["tetrakis-square", "kuniform-dual-p6m", "hexagon"] {
+            let out = dual_tmp(tiling_id);
+            let mut argv: Vec<String> = [
+                "--tiling", tiling_id, "--dual-overlay",
+                "--width", "400", "--height", "400",
+            ]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+            argv.extend(["--out".to_string(), out.to_string_lossy().to_string()]);
+            super::export(&argv).expect("on export");
+            let svg = std::fs::read_to_string(&out).expect("SVG readable");
+
+            let p = svg.find(r#"<g id="primal">"#).expect("primal group");
+            let d = svg.find(r#"<g id="dual">"#).expect("dual group");
+            assert!(p < d, "{tiling_id}: primal must paint before the dual");
+
+            let (primal_n, dual_n) = dual_expected_tile_counts(tiling_id);
+            let p_slice = dual_group_slice(&svg, r#"<g id="primal">"#);
+            let d_slice = dual_group_slice(&svg, r#"<g id="dual">"#);
+            assert_eq!(
+                p_slice.matches(r#"fill="rgb("#).count(),
+                primal_n,
+                "{tiling_id}: primal fills must equal the tile count"
+            );
+            assert_eq!(
+                p_slice.matches("<path ").count(),
+                2 * primal_n,
+                "{tiling_id}: primal paths must be 2 × the tile count"
+            );
+            assert_eq!(
+                d_slice.matches(r#"fill="rgb("#).count(),
+                dual_n,
+                "{tiling_id}: dual fills must equal the tile count"
+            );
+            assert_eq!(
+                d_slice.matches("<path ").count(),
+                2 * dual_n,
+                "{tiling_id}: dual paths must be 2 × the tile count"
+            );
+            let _ = std::fs::remove_file(&out);
+        }
+    }
+
+    #[test]
+    fn dual_overlay_export_is_coercion_free_named_error_for_ih_card() {
+        let out = dual_tmp("ih");
+        let mut argv: Vec<String> = [
+            "--tiling", "ih27-pgg-pentagon", "--dual-overlay",
+            "--width", "100", "--height", "100",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        argv.extend(["--out".to_string(), out.to_string_lossy().to_string()]);
+        let err = super::export(&argv).expect_err("ih27-pgg-pentagon is not dualizable");
+        assert!(err.contains("not dualizable"), "{err}");
+        assert!(err.contains("ih27-pgg-pentagon"), "{err}");
+        assert!(!out.exists(), "no partial SVG must be written on refusal");
+    }
+
+    #[test]
+    fn dual_overlay_composes_with_mirror_end_to_end() {
+        // --dual-overlay --mirror: both groups reflect identically about
+        // the frame center; the whole file (preamble, primal group, dual
+        // group) mirrors exactly. Uses an offset view so the reflected
+        // copy is visibly distinct from the off-state.
+        let off_path = dual_tmp("mirror_off");
+        let on_path = dual_tmp("mirror_on");
+        let base = ["--tiling", "square", "--dual-overlay", "--center", "2,1", "--width", "400", "--height", "400"];
+        let mut off: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        off.extend(["--out".to_string(), off_path.to_string_lossy().to_string()]);
+        super::export(&off).expect("off export");
+        let mut on: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        on.extend(["--mirror".to_string(), "--out".to_string(), on_path.to_string_lossy().to_string()]);
+        super::export(&on).expect("on export");
+        let off_svg = std::fs::read_to_string(&off_path).expect("SVG readable");
+        let on_svg = std::fs::read_to_string(&on_path).expect("SVG readable");
+        for svg in [&off_svg, &on_svg] {
+            assert!(svg.contains(r#"<g id="primal">"#), "primal group present");
+            assert!(svg.contains(r#"<g id="dual">"#), "dual group present");
+        }
+        assert_mirrored(&off_svg, &on_svg, "square + dual-overlay + mirror");
+        let _ = std::fs::remove_file(&off_path);
+        let _ = std::fs::remove_file(&on_path);
+    }
+
+    #[test]
+    fn dual_overlay_self_dual_square_writes_svg() {
+        // Square is self-dual (the dual is the same grid shifted by half a
+        // cell): a render-level note is emitted, never a refusal — the SVG
+        // is still written, both groups present.
+        let out = dual_tmp("self_dual");
+        let mut argv: Vec<String> = [
+            "--tiling", "square", "--dual-overlay", "--width", "400", "--height", "400",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        argv.extend(["--out".to_string(), out.to_string_lossy().to_string()]);
+        super::export(&argv).expect("self-dual square export must succeed");
+        let svg = std::fs::read_to_string(&out).expect("SVG readable");
+        assert!(svg.contains(r#"<g id="primal">"#), "primal group present");
+        assert!(svg.contains(r#"<g id="dual">"#), "dual group present");
+        let _ = std::fs::remove_file(&out);
     }
 }

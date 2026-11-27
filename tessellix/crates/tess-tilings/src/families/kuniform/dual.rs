@@ -192,6 +192,66 @@ pub fn dual(primal: &LatticeTiling) -> Option<LatticeTiling> {
     })
 }
 
+/// The overlay lookup: the card's own `LatticeTiling` for the 31
+/// dualizable card ids (8 Laves cards, 20 machine duals, 3 regulars),
+/// by id. The overlay is "card + dual(card)": the caller (the atlas
+/// export) uses this table as the primal group, then applies [`dual`] to
+/// it for the dual group.
+///
+/// Returns `None` for the 5 isohedral (`ih*`) cards — `IhTiling`-based,
+/// not `LatticeTiling` — and for anything outside the 31-id set, so the
+/// caller can emit a named refusal instead of a silent drop. The
+/// `uniform`/`laves` arms are feature-gated like the sibling test
+/// oracle (the root re-exports vanish with their features); the
+/// `kuniform` arms are always in scope.
+pub fn dual_primal_for(card_id: &str) -> Option<LatticeTiling> {
+    match card_id {
+        #[cfg(feature = "uniform")]
+        "square" => Some(crate::square::spec()),
+        #[cfg(feature = "uniform")]
+        "hexagon" => Some(crate::hexagon::spec()),
+        #[cfg(feature = "uniform")]
+        "triangle" => Some(crate::triangle::spec()),
+        #[cfg(feature = "laves")]
+        "tetrakis-square" => Some(crate::laves::tetrakis_square()),
+        #[cfg(feature = "laves")]
+        "rhombille" => Some(crate::laves::rhombille()),
+        #[cfg(feature = "laves")]
+        "triakis-triangular" => Some(crate::laves::triakis_triangular()),
+        #[cfg(feature = "laves")]
+        "deltoidal-trihexagonal" => Some(crate::laves::deltoidal_trihexagonal()),
+        #[cfg(feature = "laves")]
+        "kisrhombille" => Some(crate::laves::kisrhombille()),
+        #[cfg(feature = "laves")]
+        "prismatic-pentagonal" => Some(crate::laves::prismatic_pentagonal()),
+        #[cfg(feature = "laves")]
+        "floret-pentagonal" => Some(crate::laves::floret_pentagonal()),
+        #[cfg(feature = "laves")]
+        "cairo-pentagonal" => Some(crate::cairo::cairo_pentagonal()),
+        "kuniform-dual-p6m" => Some(kuniform_dual_p6m()),
+        "kuniform-dual-n18" => Some(kuniform_dual_n18()),
+        "kuniform-dual-n9" => Some(kuniform_dual_n9()),
+        "kuniform-dual-n8" => Some(kuniform_dual_n8()),
+        "kuniform-dual-n5" => Some(kuniform_dual_n5()),
+        "kuniform-dual-n1" => Some(kuniform_dual_n1()),
+        "kuniform-dual-n13" => Some(kuniform_dual_n13()),
+        "kuniform-dual-n20" => Some(kuniform_dual_n20()),
+        "kuniform-dual-pmm" => Some(kuniform_dual_pmm()),
+        "kuniform-dual-n12" => Some(kuniform_dual_n12()),
+        "kuniform-dual-n19" => Some(kuniform_dual_n19()),
+        "kuniform-dual-n2" => Some(kuniform_dual_n2()),
+        "kuniform-dual-n16" => Some(kuniform_dual_n16()),
+        "kuniform-dual-n4" => Some(kuniform_dual_n4()),
+        "kuniform-dual-n3" => Some(kuniform_dual_n3()),
+        "kuniform-dual-n14" => Some(kuniform_dual_n14()),
+        "kuniform-dual-n15" => Some(kuniform_dual_n15()),
+        "kuniform-dual-n7" => Some(kuniform_dual_n7()),
+        "kuniform-dual-n6" => Some(kuniform_dual_n6()),
+        "kuniform-dual-n17" => Some(kuniform_dual_n17()),
+        _ => None,
+    }
+}
+
 /// Core construction for a named catalog entry: the [`dual`] geometry
 /// with the dual's own id/name/description, the Laves category (primary
 /// only), and the congruence-aware proper-coloring seeds.
@@ -912,6 +972,57 @@ mod dual_tests {
 
     fn v2(x: f64, y: f64) -> Vec2 {
         Vec2::new(x, y)
+    }
+
+    // ── dual_primal_for: the overlay lookup (C2) ──────────────────────
+
+    /// Every dualizable card id resolves to its card's own table — the
+    /// primal group — and the lookup names exactly the 31 cards the
+    /// overlay may render. The 5 isohedral cards (ih*) and anything else
+    /// return None, so the CLI emits a named refusal.
+    #[cfg(all(feature = "uniform", feature = "laves"))]
+    #[test]
+    fn dual_primal_for_covers_the_31_dualizable_cards() {
+        let dualizable = [
+            "square", "hexagon", "triangle",
+            "tetrakis-square", "rhombille", "triakis-triangular",
+            "deltoidal-trihexagonal", "kisrhombille", "prismatic-pentagonal",
+            "floret-pentagonal", "cairo-pentagonal",
+            "kuniform-dual-p6m", "kuniform-dual-n18", "kuniform-dual-n9",
+            "kuniform-dual-n8", "kuniform-dual-n5", "kuniform-dual-n1",
+            "kuniform-dual-n13", "kuniform-dual-n20", "kuniform-dual-pmm",
+            "kuniform-dual-n12", "kuniform-dual-n19", "kuniform-dual-n2",
+            "kuniform-dual-n16", "kuniform-dual-n4", "kuniform-dual-n3",
+            "kuniform-dual-n14", "kuniform-dual-n15", "kuniform-dual-n7",
+            "kuniform-dual-n6", "kuniform-dual-n17",
+        ];
+        assert_eq!(dualizable.len(), 31);
+        for id in dualizable {
+            let card = dual_primal_for(id).unwrap_or_else(|| panic!("{id}: dualizable card must resolve"));
+            assert_eq!(card.id, id, "card table carries its own id");
+        }
+        for id in [
+            "ih1-p1-hexagon", "ih6-pgg-hexagon", "ih7-p3-hexagon",
+            "ih27-pgg-pentagon", "ih29-p4g-pentagon",
+            "square-2", "not-a-real-id",
+        ] {
+            assert!(dual_primal_for(id).is_none(), "{id}: must not resolve");
+        }
+    }
+
+    /// The overlay's primal group renders in the same lattice frame as
+    /// the card's own table: the helper returns a freshly constructed
+    /// table identical in lattice to the registry's — so the caller can
+    /// hand it straight to [`dual`] and generate both groups from the
+    /// same params.
+    #[cfg(all(feature = "uniform", feature = "laves"))]
+    #[test]
+    fn dual_primal_for_returns_offset_zero_lattice_tables() {
+        for id in ["tetrakis-square", "kuniform-dual-n18", "square"] {
+            let card = dual_primal_for(id).unwrap();
+            assert_eq!(card.offset, Vec2::ZERO);
+            assert!(!card.cells.is_empty());
+        }
     }
 
     /// One dual under test, with the machine-derived face-class census.

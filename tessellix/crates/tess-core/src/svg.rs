@@ -132,13 +132,39 @@ pub fn render_svg_with_walls_highlight_mirrored(
     render_svg_core(tiles, bbox, mode, walls, highlight_supertiles, true)
 }
 
-/// The two-pass emitter behind both public rendering entry points (the
-/// [`render_svg_with_walls_highlight_mirrored`] variant reflects every
-/// emitted coordinate about the frame center first). Every tile fill is
-/// emitted first, then every tile outline (SVG paints each element fill/stroke
-/// in document order, so interleaving lets a later tile's fill cover an
-/// earlier tile's stroke half — the discipline below), then strapwork walls
-/// (round caps, on top).
+/// The SVG scaffolding shared by every tiling render: the `<svg>` element
+/// with the y-axis flipped viewBox, the `<g transform="...">` y-flip group
+/// and the paper background rect. Shared by the single-tiling and the
+/// two-layer primal+dual renders so both emit identical scaffolding bytes.
+fn svg_scaffold(bbox: &BBox) -> String {
+    let w = bbox.size().x;
+    let h = bbox.size().y;
+    let (ar, ag, ab) = rgb(BACKGROUND);
+    let mut s = String::new();
+    s.push_str(&format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:.4} {h:.4}">"#
+    ));
+    // Maps world (x, y) -> svg (x - min.x, max.y - y).
+    s.push_str(&format!(
+        r#"<g transform="translate({:.4} {:.4}) scale(1 -1)">"#,
+        -bbox.min.x, bbox.max.y
+    ));
+    s.push_str(&format!(
+        r#"<rect x="{:.4}" y="{:.4}" width="{w:.4}" height="{h:.4}" fill="rgb({ar},{ag},{ab})"/>"#,
+        bbox.min.x, bbox.min.y
+    ));
+    s
+}
+
+/// The closing tag of the y-flip group and the `<svg>` element.
+fn svg_close() -> &'static str {
+    "</g></svg>"
+}
+
+/// The two-pass body of one tiling render: every tile fill first, then
+/// every tile outline (SVG paints each element's fill and stroke in
+/// document order, so a single interleaved pass lets a later tile's fill
+/// cover the earlier tile's stroke half — the discipline below).
 ///
 /// Drawing is two-pass: every tile fill is emitted first, then every tile
 /// outline. SVG paints each element's fill and stroke in document order,
@@ -159,51 +185,30 @@ pub fn render_svg_with_walls_highlight_mirrored(
 /// the output is byte-identical to [`render_svg_with_walls`] for every
 /// tiling.
 ///
-/// Walls are stroked in the border color with round caps — the classic
-/// strapwork ribbon look — at a width proportional to the view extent
-/// (`0.012·min(w, h)`, floored at `0.003`): three times the tile-border
-/// stroke, which keeps the ribbons clearly readable above the fills at
-/// any export size without swallowing thin cells. They are drawn last, so
-/// ribbons stay on top of the grout.
-fn render_svg_core(
+/// [mirror = true]: every emitted coordinate is reflected about the frame
+/// center first (see [`render_svg_with_walls_highlight_mirrored`]).
+fn svg_body(
     tiles: &[Tile],
     bbox: &BBox,
     mode: ColorMode,
-    walls: &[Wall],
     highlight_supertiles: bool,
     mirror: bool,
 ) -> String {
     let cx = bbox.center().x;
     let owned_tiles;
-    let owned_walls;
-    let (tiles, walls): (&[Tile], &[Wall]) = if mirror {
+    let tiles: &[Tile] = if mirror {
         owned_tiles = mirror_tiles(tiles, cx);
-        owned_walls = mirror_walls(walls, cx);
-        (&owned_tiles, &owned_walls)
+        &owned_tiles
     } else {
-        (tiles, walls)
+        tiles
     };
     let w = bbox.size().x;
     let h = bbox.size().y;
     let stroke = (0.004 * w.min(h)).max(0.001);
     let heavy = stroke * SUPERTILE_STROKE_FACTOR;
-    let wall_stroke = (0.012 * w.min(h)).max(0.003);
     let (br, bg_, bb) = rgb(BORDER);
-    let (ar, ag, ab) = rgb(BACKGROUND);
 
-    let mut s = String::with_capacity(tiles.len() * 300 + walls.len() * 64 + 512);
-    s.push_str(&format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:.4} {h:.4}">"#
-    ));
-    // Maps world (x, y) -> svg (x - min.x, max.y - y).
-    s.push_str(&format!(
-        r#"<g transform="translate({:.4} {:.4}) scale(1 -1)">"#,
-        -bbox.min.x, bbox.max.y
-    ));
-    s.push_str(&format!(
-        r#"<rect x="{:.4}" y="{:.4}" width="{w:.4}" height="{h:.4}" fill="rgb({ar},{ag},{ab})"/>"#,
-        bbox.min.x, bbox.min.y
-    ));
+    let mut s = String::with_capacity(tiles.len() * 300 + 256);
     // Pass 1: all fills, no outlines.
     for tile in tiles {
         if let Some(d) = path_d(tile) {
@@ -255,19 +260,111 @@ fn render_svg_core(
             s.push_str("</g>");
         }
     }
-    if !walls.is_empty() {
-        s.push_str(&format!(
-            r#"<g fill="none" stroke="rgb({br},{bg_},{bb})" stroke-width="{wall_stroke:.4}" stroke-linecap="round">"#
-        ));
-        for wall in walls {
-            s.push_str(&format!(
-                r#"<line x1="{:.4}" y1="{:.4}" x2="{:.4}" y2="{:.4}"/>"#,
-                wall.a.x, wall.a.y, wall.b.x, wall.b.y
-            ));
-        }
-        s.push_str("</g>");
+    s
+}
+
+/// The strapwork wall pass (round caps, on top of the grout): stroked in
+/// the border color at a width proportional to the view extent
+/// (`0.012·min(w, h)`, floored at `0.003`) — three times the tile-border
+/// stroke — so the ribbons stay clearly readable above the fills at any
+/// export size without swallowing thin cells. Empty input emits nothing.
+fn svg_walls(walls: &[Wall], bbox: &BBox, mirror: bool) -> String {
+    let cx = bbox.center().x;
+    let owned_walls;
+    let walls: &[Wall] = if mirror {
+        owned_walls = mirror_walls(walls, cx);
+        &owned_walls
+    } else {
+        walls
+    };
+    if walls.is_empty() {
+        return String::new();
     }
-    s.push_str("</g></svg>");
+    let w = bbox.size().x;
+    let h = bbox.size().y;
+    let wall_stroke = (0.012 * w.min(h)).max(0.003);
+    let (br, bg_, bb) = rgb(BORDER);
+    let mut s = String::with_capacity(walls.len() * 64 + 256);
+    s.push_str(&format!(
+        r#"<g fill="none" stroke="rgb({br},{bg_},{bb})" stroke-width="{wall_stroke:.4}" stroke-linecap="round">"#
+    ));
+    for wall in walls {
+        s.push_str(&format!(
+            r#"<line x1="{:.4}" y1="{:.4}" x2="{:.4}" y2="{:.4}"/>"#,
+            wall.a.x, wall.a.y, wall.b.x, wall.b.y
+        ));
+    }
+    s.push_str("</g>");
+    s
+}
+
+/// The two-pass emitter behind both public rendering entry points
+/// (the [`render_svg_with_walls_highlight_mirrored`] variant reflects every
+/// emitted coordinate about the frame center first). Every tile fill is
+/// emitted first, then every tile outline (SVG paints each element fill/stroke
+/// in document order, so interleaving lets a later tile's fill cover an
+/// earlier tile's stroke half — the discipline below), then strapwork walls
+/// (round caps, on top).
+///
+/// Drawing is two-pass: every tile fill is emitted first, then every tile
+/// outline. SVG paints each element's fill and stroke in document order,
+/// so a single interleaved pass lets a later tile's fill cover the
+/// earlier tile's stroke half, making the visible border depend on draw
+/// order (thin decorated bands — e.g. taylor-socolar's chord strips —
+/// get eaten by later-drawn neighbours at shared corners). Emitting all
+/// outlines after all fills makes the border symmetric and
+/// order-independent.
+///
+/// Walls are stroked in the border color with round caps — the classic
+/// strapwork ribbon look — at a width proportional to the view extent
+/// (`0.012·min(w, h)`, floored at `0.003`): three times the tile-border
+/// stroke, which keeps the ribbons clearly readable above the fills at
+/// any export size without swallowing thin cells. They are drawn last, so
+/// ribbons stay on top of the grout.
+fn render_svg_core(
+    tiles: &[Tile],
+    bbox: &BBox,
+    mode: ColorMode,
+    walls: &[Wall],
+    highlight_supertiles: bool,
+    mirror: bool,
+) -> String {
+    let mut s = svg_scaffold(bbox);
+    s.push_str(&svg_body(tiles, bbox, mode, highlight_supertiles, mirror));
+    s.push_str(&svg_walls(walls, bbox, mirror));
+    s.push_str(svg_close());
+    s
+}
+
+/// Primal + dual in one frame (C2): two groups inside one `<svg>` —
+/// `<g id="primal">` over the primal tiles, then `<g id="dual">` over the
+/// dual tiles, so the dual (the card's subject) paints on top — sharing
+/// the scaffolding (paper, y-flip transform, background rect). The
+/// strapwork `walls` are the primal's walls and are emitted once, on top of
+/// both groups: the dual group is a plain fill/outline group, never walls.
+/// `highlight_supertiles` applies to both groups identically (both emitted
+/// by [`svg_body`]); `mirror` reflects both groups about the frame center
+/// identically. Both groups must be generated from the same params and
+/// region (the caller's job) — the geometry is frame-aligned because the
+/// dual shares the primal lattice and the similarity map.
+pub fn render_svg_dual_overlay(
+    primal: &[Tile],
+    dual: &[Tile],
+    bbox: &BBox,
+    mode: ColorMode,
+    walls: &[Wall],
+    highlight_supertiles: bool,
+    mirror: bool,
+) -> String {
+    let mut s = svg_scaffold(bbox);
+    s.push_str(r#"<g id="primal">"#);
+    s.push_str(&svg_body(primal, bbox, mode, highlight_supertiles, mirror));
+    s.push_str("</g>");
+    s.push_str(r#"<g id="dual">"#);
+    s.push_str(&svg_body(dual, bbox, mode, highlight_supertiles, mirror));
+    s.push_str("</g>");
+    s.push_str(&svg_walls(walls, bbox, mirror));
+    s.push_str(svg_close());
     s
 }
 
@@ -1149,6 +1246,90 @@ mod tests {
         let on = render_svg_with_walls_highlight_mirrored(&tiles, &bbox, ColorMode::Pattern, &[], true);
         assert_reflected(&off, &on, cx);
         assert_eq!(on.matches("<g fill=\"none\"").count(), 1, "single group");
+    }
+
+    #[test]
+    fn dual_overlay_marks_the_two_groups_and_shares_the_scaffolding() {
+        // Two tile sets (a flat primal grid and a different dual set),
+        // a non-empty wall list — the output must be:
+        //   scaffolding + <g id="primal"> body(primal) </g>
+        //               + <g id="dual"> body(dual) </g> + walls + close
+        // byte-for-byte, with both groups' bodies and the single wall
+        // pass re-derived from the same helpers.
+        let primal = square_grid(2); // 4 tiles
+        let dual = vec![
+            tile(&[(0.0, 0.0), (1.5, 0.0), (1.5, 1.5), (0.0, 1.5)]),
+            tile(&[(1.5, 1.5), (3.0, 1.5), (3.0, 3.0), (1.5, 3.0)]),
+            tile(&[(0.0, 1.5), (1.5, 1.5), (1.5, 3.0), (0.0, 3.0)]),
+        ]; // 3 tiles
+        let walls = vec![
+            Wall { a: pt(0.5, -0.5), b: pt(1.5, 1.5) },
+            Wall { a: pt(2.0, 0.5), b: pt(2.5, 2.0) },
+        ];
+        let bbox = BBox::new(pt(-0.5, -0.5), pt(3.5, 3.5));
+
+        let svg = render_svg_dual_overlay(
+            &primal, &dual, &bbox, ColorMode::Pattern, &walls, false, false,
+        );
+
+        // Byte-for-byte against the shared scaffold + bodies + walls.
+        let expected = format!(
+            "{}<g id=\"primal\">{}</g><g id=\"dual\">{}</g>{}{}",
+            svg_scaffold(&bbox),
+            svg_body(&primal, &bbox, ColorMode::Pattern, false, false),
+            svg_body(&dual, &bbox, ColorMode::Pattern, false, false),
+            svg_walls(&walls, &bbox, false),
+            svg_close(),
+        );
+        assert_eq!(svg, expected, "overlay output must equal the composed scaffolding");
+
+        // Group layout: primal paints before dual, walls after both.
+        let p = svg.find(r#"<g id="primal">"#).unwrap();
+        let d = svg.find(r#"<g id="dual">"#).unwrap();
+        assert!(p < d, "primal group must come before the dual group");
+
+        // Balanced-tag interior of the first <g id="NAME"> group.
+        fn group_slice<'a>(svg: &'a str, marker: &'a str) -> &'a str {
+            let start = svg.find(marker).unwrap() + marker.len();
+            let mut depth = 1usize;
+            let mut pos = start;
+            loop {
+                let next_open = svg[pos..].find("<g ").map(|i| pos + i);
+                let next_close = svg[pos..].find("</g>").map(|i| pos + i);
+                match (next_open, next_close) {
+                    (Some(o), Some(c)) if c < o => { depth -= 1; pos = c + 4; }
+                    (Some(o), _) => { depth += 1; pos = o + 3; }
+                    (None, Some(c)) => { depth -= 1; pos = c + 4; }
+                    (None, None) => panic!("unbalanced group {marker:?}"),
+                }
+                if depth == 0 {
+                    return &svg[start..pos - 4];
+                }
+            }
+        }
+
+        let walls_at = svg.rfind("<g fill=\"none\" stroke=\"rgb(") .unwrap();
+        assert!(d < walls_at, "walls must come after the dual group");
+
+        // Scaffolding prefix is byte-identical to the plain render's.
+        let plain = render_svg_with_walls(&primal, &bbox, ColorMode::Pattern, &[]);
+        let prefix = svg[..p].to_string();
+        let plain_prefix = plain[..plain.find("<path ").unwrap()].to_string();
+        assert_eq!(prefix, plain_prefix, "overlay scaffolding must be the plain render's scaffolding");
+
+        // Per-group counts: one fill path and one outline path per tile.
+        let p_slice = group_slice(&svg, r#"<g id="primal">"#);
+        assert_eq!(p_slice.matches(r#"fill="rgb("#).count(), primal.len());
+        assert_eq!(p_slice.matches("<path ").count(), 2 * primal.len());
+        let d_slice = group_slice(&svg, r#"<g id="dual">"#);
+        assert_eq!(d_slice.matches(r#"fill="rgb("#).count(), dual.len());
+        assert_eq!(d_slice.matches("<path ").count(), 2 * dual.len());
+
+        // Walls: exactly one line per wall, emitted once.
+        assert_eq!(svg.matches("<line ").count(), walls.len());
+
+        // Ends like the plain render.
+        assert!(svg.ends_with("</g></svg>"), "overlay must end with the svg close tags");
     }
 
     #[test]
