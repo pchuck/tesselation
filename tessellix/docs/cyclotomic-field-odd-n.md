@@ -697,18 +697,18 @@ The spike proves (and certifies per n ∈ {9, 11, 13, 15, 21}):
 
 Design-level coverage of the odd-n cyclotomic layer now spans
 **n = 7, 9, 11, 13, 15, 17, 21** (shipped in `fields.rs`: K₇, K₉,
-K₁₅, L₁₀; design docs: K₁₁ [M178], K₁₃ [this doc]; K₁₇/K₂₁
-design-level rows only — no D ≥ 6 precedent ships):
+K₁₅, L₁₀, and — M182 — K₁₁ + K₁₃; design docs: K₁₁ [M178], K₁₃
+[this doc]; K₁₇/K₂₁ per cyclotomic-field-17-21-design.md [M183]):
 
 | n | field | deg | status | consumers |
 |---|-------|-----|--------|-----------|
 | 7 | K₇ | 3 | **shipped** (M137/M149) | GLB binary, Danzer, G-S 7-fold, Nischke–Danzer |
 | 9 | K₉ | 3 | **shipped** (M139) + Nq (M171) | Harriss 9-fold, GLB 9-fold, 24c n=9 |
-| 11 | K₁₁ | 5 | design (M178) | 24c n=11 rung (queued) |
-| 13 | K₁₃ | 6 | design (this doc) | 24c n=13 rung, 11/13-star instances, Harriss #18 @13 |
+| 11 | K₁₁ | 5 | **shipped** (M182) | 24c n=11 rungs (in implementation) |
+| 13 | K₁₃ | 6 | **shipped** (M182) | 24c n=13 rungs (in implementation), 11/13-star instances, Harriss #18 @13 |
 | 15 | K₁₅ | 4 | **shipped** (M139) | GLB 15-fold |
-| 17 | K₁₇ | 8 | design-level row only | Say-awen 17-fold (deferred, §8.2) |
-| 21 | K₂₁ | 6 | design-level row only | Say-awen 21-fold (shares D = 6 depth) |
+| 17 | K₁₇ | 8 | **designed, constants certified — BLOCKED at the engine wall** (M183: D = 8 NON-QUALIFICATION) | Say-awen 17-fold (engine decision required) |
+| 21 | K₂₁ | 6 | **designed, implementation-ready** (M183: s₀ = 21, battery green, p = 43 square-class extension) | Say-awen 21-fold (shares K₁₃'s D = 6 depth) |
 
 The K₁₃ row is the first degree-6 entry: **degree 6 is a new engine
 depth class**, and its sign/battery/envelope story was re-derived

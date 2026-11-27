@@ -1583,13 +1583,30 @@ and n = 15 siblings remain queued (K₉ shipped M139; K₁₅ shipped M139).
 - **Hexagonal aperiodic monotile** — the spectre-adjacent soft
   variant; effort M.
 
-### 23i. New-field tiers (cubic/quartic cyclotomic layers required)
+### 23i. New-field tiers (cyclotomic field layers, tiered by degree)
 
-- **Danzer 7-fold (+variants)**, **Harriss 9-fold rhomb**,
-  **Goodman-Strauss 7-fold rhomb**, **CAST 10-fold**, the
-  **Nischke–Danzer deltoids**, **Say-awen 17/21-fold** — each needs
-  degree-3/4 arithmetic before any substitution table; effort XL per
-  family (design docs first; overlaps #18).
+### 23i. New-field tiers (cyclotomic field layers, tiered by degree)
+
+- **Tier 1 — field shipped (degree 3/4):** **Danzer 7-fold
+  (+variants)**, **Goodman-Strauss 7-fold rhomb**, the
+  **Nischke–Danzer deltoids** (degree 3, K₇), **Harriss 9-fold rhomb**
+  (degree 3, K₉ + the Nq engine), **CAST 10-fold** (degree 4, L₁₀) —
+  each needs only substitution-table work; effort L–XL per family
+  (overlaps #18).
+- **Tier 2 — field shipped/designed (degree 5/6):** K₁₁ (M178;
+  shipped M182) and K₁₃ (M179; shipped M182) certify the D = 5/6
+  engine depth classes; **Say-awen 21-fold** joins K₁₃'s class
+  (degree 6 composite, s₀ = 21 battery green, genuine extension by a
+  p = 43 square-class witness — the prime-n norm certificate is
+  vacuous at n = 21, see `cyclotomic-field-17-21-design.md` §4);
+  effort XL per family.
+- **Tier 3 — field blocked at the engine wall (degree 8):**
+  **Say-awen 17-fold** needs K₁₇; the D = 8 stress test returns
+  NON-QUALIFICATION — no s in the a-priori range [11, 15] satisfies
+  the single-pass (R1) and i128 (R2) gates together
+  (`cyclotomic-field-17-21-design.md` §2) — blocked on an engine
+  decision (accumulator width or isolation scheme); the field
+  constants and certificates are complete.
 
 ### 23j. Out of scope for the registry as-is
 

@@ -71,6 +71,12 @@ registry name.
   24c odd-n engine-side design doc (M181): seven (n,c) monster rungs at
   n = 11, 13 over the designed field layers, spike-validated, no code
   yet (unblocks the 24c n=11/13 rung implementation)
+- [docs/cyclotomic-field-17-21-design.md](cyclotomic-field-17-21-design.md) —
+  §23i new-field-tiers design doc (M183): K₁₇ degree-8 constants
+  certified but D = 8 NON-QUALIFICATION at the engine wall; K₂₁
+  composite degree-6 transfers verbatim (s₀ = 21, p = 43 square-class
+  extension certificate); corrected per-family applicability table,
+  spike-validated, no code yet
 - [docs/TAXONOMY.md](TAXONOMY.md) — the eleven-tab gallery taxonomy (M76; Isohedral added 2026-11-24)
 - [docs/2D_Tilings_Reference.md](2D_Tilings_Reference.md) — mathematical
   background (uniform/Laves/wallpaper/quasiperiodic/aperiodic reference)

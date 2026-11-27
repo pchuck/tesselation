@@ -289,7 +289,8 @@ the "mixed floret/cairo/prismatic" patterns.
   two independent derivations), disc 11⁴ ⇒ Z[α] maximal (no subfields),
   RED11 tower + ISO11 certified, N₁₁ sine extension a genuine quadratic
   over K₁₁, 55-element battery 0-bisection i128-safe at s=26;
-  implementation queued (strong tier, post-sprint-2).
+  **shipped M182** (Field::K11; option-C I192 endpoint certification
+  after the deg·s′+1 envelope erratum).
   ✅ **Odd-n extension design doc landed (M179)** —
   [docs/cyclotomic-field-odd-n.md](cyclotomic-field-odd-n.md):
   K₁₃ full treatment (m₁₃, disc 13⁵, RED13, ISO13@s₀=20) + the general
@@ -298,8 +299,24 @@ the "mixed floret/cairo/prismatic" patterns.
   bits), s₀=20 spike-selected, battery 0-bisection at 113/127 bits;
   degree theorem w_n ∉ K_n for every odd n; composite discs measured
   (81/1125/453789); corrects M178 §7's "degree 6 prime" slip (Gal K₁₃ =
-  Z/6: Q(√13) + cubic F₃). K₁₃ implementation queued (strong tier,
-  after K₁₁).
+  Z/6: Q(√13) + cubic F₃). K₁₃ **shipped M182** (Field::K13).
+  ✅ **§23i tiered design + the D = 8 wall verdict landed (M183)** —
+  [docs/cyclotomic-field-17-21-design.md](cyclotomic-field-17-21-design.md):
+  K₁₇ constants fully certified (disc 17⁷, M179 certificate transfers)
+  but the D = 8 stress test returns **NON-QUALIFICATION** — no s in the
+  a-priori range [11, 15] satisfies single-pass (R1) + i128 (R2)
+  together (structural worst-pair mu = 0.2559 at s = 13; α⁸ monomial
+  128 bits at the s = 15 ceiling) — the ladder's structural limit under
+  the 127-bit engine, blocker for Say-awen 17-fold (engine decision:
+  accumulator width or isolation scheme); **K₂₁ transfers verbatim**
+  (degree 6 = K₁₃'s depth class, s₀ = 21 battery green 71/2485
+  single-pass, acc peaks 118/118) — implementation-ready at the field
+  layer; the prime-n norm extension certificate is **vacuous at n = 21**
+  (m₂₁(2) = Φ₂₁(1) = 1, a square) — replaced by a p = 43 square-class
+  witness ((2−α)²¹ ≡ −1 per root ⟹ non-square ⟹ degree-2 extension);
+  §23i re-tiered: Tier 1 shipped (Danzer 7, G-S 7, deltoids, Harriss 9,
+  CAST 10) / Tier 2 shipped+designed (K₁₁/K₁₃ M182; Say-awen 21) /
+  Tier 3 engine-blocked (Say-awen 17).
 - ❓ **Wheel tiling (Nissen)** — **parked (M61)** with a proven
   negative: the edge-orthogonal dual of the shield substitution is
   exact but admits no substitution at any inflation (algebraic killer
