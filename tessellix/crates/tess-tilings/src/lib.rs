@@ -3123,10 +3123,9 @@ mod tests_param_surface_pins {
                 }
             }
         }
-        // Negative finding: the well-formedness contract mentions a Choice
-        // variant with a non-empty variant list and valid default — no such
-        // variant exists in `ParamKind` (Float/Int/Bool/Angle only), so that
-        // clause pins nothing today. Report, don't pin.
+        // `ParamKind` has no Choice variant (Float/Int/Bool/Angle only), so
+        // there is no Choice clause to pin — Float/Angle/Int are checked
+        // per-kind above and Bool by construction. Reported, not pinned.
         assert!(total > 0, "registry has no param specs at all");
     }
 

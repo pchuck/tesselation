@@ -129,12 +129,18 @@ framework models all 17 wallpaper groups and the five lattice kinds
 
 Each periodic tiling accepts the same two parameters, discovered by the
 UIs: **scale** (0.1–50, step 0.05) and **rotation** (0–360°, step 5°).
-Three families add a third: star-and-cross takes **star radius**
-(0.05–0.5), spanning gapped layouts to the kissing (khatam) case;
-hexagram takes **star tip radius** (0.05–0.5, default 0.5), spanning
-gapped layouts to the kissing hexagram-and-hexagon case; and the
-Pythagorean two-square family takes the **square ratio** b/a
-(0.2–10, default φ).
+
+Nine tilings add parameters beyond the shared scale and rotation:
+star-and-cross takes **star radius** (0.05–0.5), spanning gapped
+layouts to the kissing (khatam) case; hexagram takes **star tip radius**
+(0.05–0.5, default 0.5), spanning gapped layouts to the kissing
+hexagram-and-hexagon case; and the Pythagorean two-square family takes
+the **square ratio** b/a (0.2–10, default φ). The quasiperiodic
+penrose_p2 additionally takes a **star seed** toggle (on/off, default
+off), choosing the sun vs. star-seed construction. The isohedral family
+declares shaped offset parameters (0–1, step 0.01) before scale and
+rotation, which come last: ih29 (p1), ih7 (p1–p2), ih27 (p1–p3),
+ih1 (p1–p4), ih6 (p1–p5).
 
 ### The eleven families
 
