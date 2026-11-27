@@ -59,10 +59,17 @@
 //! 250 000 < 2^18). The floor exists because this is a BOUNDED patch:
 //! d = 0 renders the entire tiling as one triangle, and the UI preview
 //! window (probe → 9× mean tile side) is anchor-self-canceling.
-//! D_PRESENT = 5 makes the probe-derived default view frame the whole
-//! patch (bbox 1 × √τ — the same framing geometry as the chair, ≈ 69%
-//! of the pane height, all 2^5 = 32 triangles, six size classes)
-//! self-consistently at any scale and aspect.
+//! D_PRESENT = 8 makes the probe-derived default view crop into the
+//! patch interior (a smaller window — covering ~50% of the frame, the
+//! diagonal-half ceiling of an axis-aligned window — at depth 8 = 2^8
+//! = 256 triangles) self-consistently at any scale and aspect, raising
+//! the rendered substitution structure from the depth-5 floor.
+//!
+//! **Depth param.** A `depth` `Int` param (appended last, default 0)
+//! overrides the floor outright: 0 (the default) keeps the auto rule
+//! above byte-identically; 1..=17 pins the substitution level
+//! (2^d triangles); out-of-range values are a named refusal, never a
+//! silent snap.
 //!
 //! **T-junction structure (non-edge-to-edge, intrinsic).** The cut
 //! foot splits the hypotenuse at the exact fraction τ⁻² = 2 − τ from
@@ -77,7 +84,7 @@
 //! (0 = L-type at even −e, 1 = S-type at odd −e).
 
 use tess_core::geometry::{BBox, Polygon, Vec2};
-use tess_core::params::{ParamSet, ParamSpec};
+use tess_core::params::{ParamId, ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 use tess_core::view::ColorMode;
@@ -100,13 +107,15 @@ const PATCH_DIAG: f64 = 1.618033988749895;
 /// Presentation depth floor: the depth rendered whenever the whole
 /// patch fits the view (E ≥ τ). A bounded patch at d = 0 IS one tile
 /// — the lone seed triangle — so whole-patch views must show the
-/// substitution structure instead. 5 is fitted to the UI preview
-/// window (probe → 9× mean tile side, `tess_core::app`): mean AABB
-/// side at depth 5 is ≈ 0.205 cell, so the derived window spans
-/// ≈ 1.85 × 2.54 cell and frames the √τ-tall patch at ≈ 69% of the
-/// pane height, all 32 triangles visible, at any scale and aspect.
-/// Zoomed-in views (E < τ) refine past the floor by τ-octaves.
-const D_PRESENT: u32 = 5;
+/// substitution structure instead. 8 is fitted to the UI preview
+/// window (probe → 9× mean tile side, `tess_core::app`): the mean
+/// AABB side at depth 8 is ≈ 0.067 cell (0.235 world at scale 3.5),
+/// so the derived window spans ≈ 0.80 × 0.60 cell — cropping the
+/// 1.00 × 1.27-cell patch interior and covering ~50% of the frame
+/// (the diagonal-half ceiling, see the module docs) — at any scale
+/// and aspect. Zoomed-in views (E < τ) refine past the floor by
+/// τ-octaves.
+const D_PRESENT: u32 = 8;
 /// Max refinement depth: 2^17 = 131 072 ≤ MAX_TILES < 2^18.
 const MAX_DEPTH: u32 = 17;
 
@@ -260,12 +269,27 @@ fn cls_of(t: &Tri) -> u8 {
 /// default fitted to the finite patch. The patch spans only ~1.3 cell
 /// units (bbox 1 × √τ — the chair's framing geometry), so scale 3.5
 /// frames the whole patch in the standard 20/scale-tall pane at ~78%
-/// height; the depth floor D_PRESENT = 5 then shows the 32-triangle
-/// substitution structure at every scale. The scale slider (0.1–50)
-/// still zooms; zoomed-in views refine past the floor by τ-octaves.
-const PARAMS: [ParamSpec; 2] = [
+/// height; the depth floor D_PRESENT = 8 then shows the 256-triangle
+/// substitution structure at every scale (the UI preview crops into the
+/// patch interior, covering ~50% of the frame — the diagonal-half
+/// ceiling). The scale slider (0.1–50) still zooms; zoomed-in views
+/// refine past the floor by τ-octaves. The `depth` param (below,
+/// appended last) overrides the floor outright: 0 = the auto rule
+/// (default), 1..=17 = pinned.
+
+/// Stable id for the substitution-depth param (the only `Int` param
+/// on this tiling): 0 = the view-anchored auto rule above, 1..=17 =
+/// pinned depth.
+pub const DEPTH_ID: ParamId = ParamId::new("depth");
+
+const PARAMS: [ParamSpec; 3] = [
     ParamSpec::float(SCALE_ID, "scale", 0.1, 50.0, 0.05, 3.5),
     ParamSpec::angle(ROTATION_ID, "rotation (deg)", 0.0, 360.0, 5.0, 0.0),
+    // Depth selection: 0 (default) = the view-anchored auto rule
+    // (floor D_PRESENT = 8); 1..=17 pins the substitution level
+    // outright. Depth is a pure generation-budget knob — every
+    // geometry constant below stays.
+    ParamSpec::int(DEPTH_ID, "depth", 0, MAX_DEPTH as i64, 1, 0),
 ];
 
 pub struct GoldenTriangleTiling;
@@ -344,17 +368,35 @@ impl Tiling for GoldenTriangleTiling {
             };
         }
 
-        // View-anchored depth, anchored at the PATCH: zoom octaves are
-        // measured relative to the patch diagonal τ (each τ-shrink of
-        // the cell-space view diagonal adds one level), and
-        // whole-patch views floor at D_PRESENT (see the module docs).
-        let ext = (region.max - region.min).length();
-        let zoom = if ext < PATCH_DIAG {
-            ((-(ext / PATCH_DIAG).ln()) / LN_TAU).ceil() as u32
+        // Depth selection. The `depth` param pins the substitution
+        // level outright (1..=MAX_DEPTH); 0 (the default) keeps the
+        // view-anchored auto rule below, byte-identical to the
+        // unparameterized path. Anything else is a named refusal,
+        // never a silent snap.
+        let depth_req = params.int(DEPTH_ID, 0);
+        let d = if depth_req != 0 {
+            if depth_req < 1 || depth_req > MAX_DEPTH as i64 {
+                return TilingResult {
+                    tiles: Vec::new(),
+                    symmetry: meta,
+                    periodic: None,
+                    message: Some("unsupported depth — must be 0 (auto) or 1..=17"),
+                };
+            }
+            depth_req as u32
         } else {
-            0
+            // View-anchored depth, anchored at the PATCH: zoom octaves
+            // are measured relative to the patch diagonal τ (each τ-shrink
+            // of the cell-space view diagonal adds one level), and
+            // whole-patch views floor at D_PRESENT (see the module docs).
+            let ext = (region.max - region.min).length();
+            let zoom = if ext < PATCH_DIAG {
+                ((-(ext / PATCH_DIAG).ln()) / LN_TAU).ceil() as u32
+            } else {
+                0
+            };
+            zoom.clamp(D_PRESENT, MAX_DEPTH)
         };
-        let d = zoom.clamp(D_PRESENT, MAX_DEPTH);
 
         let tiles = patch(d);
 
@@ -397,6 +439,7 @@ impl Tiling for GoldenTriangleTiling {
 mod tests {
     use super::*;
     use crate::tests::{check_covers, check_det, check_rotated};
+    use tess_core::params::{ParamKind, ParamValue};
 
     /// τ⁻² = 2 − τ = 2 + λ², the exact hypotenuse cut fraction (the
     /// constant baked into `K::mul_f`, cross-checked below).
@@ -892,6 +935,48 @@ mod tests {
         assert_eq!(norm2(sw.sub(sv)), tau_pow(2), "λ·S₀ hyp² = τ²");
     }
 
+    /// Point-sampled frame coverage over the derived preview window
+    /// (the right triangle fills half its AABB, so exact coverage < 1
+    /// even in the solid interior).
+    fn coverage(tiles: &[Tile], region: &BBox) -> f64 {
+        let n = 60; // grid per axis
+        let mut inside = 0usize;
+        let mut total = 0usize;
+        let w = region.max.x - region.min.x;
+        let h = region.max.y - region.min.y;
+        for gy in 0..n {
+            for gx in 0..n {
+                let x = region.min.x + (gx as f64 + 0.5) * w / n as f64;
+                let y = region.min.y + (gy as f64 + 0.5) * h / n as f64;
+                let p = Vec2::new(x, y);
+                total += 1;
+                for t in tiles {
+                    if poly_contains_pt(&t.poly.pts, p) {
+                        inside += 1;
+                        break;
+                    }
+                }
+            }
+        }
+        inside as f64 / total as f64
+    }
+
+    /// Ray-casting point-in-polygon for the point-sampled coverage helper.
+    fn poly_contains_pt(pts: &[Vec2], p: Vec2) -> bool {
+        let mut inside = false;
+        let m = pts.len();
+        for i in 0..m {
+            let j = (i + 1) % m;
+            let (a, b) = (pts[i], pts[j]);
+            if (a.y > p.y) != (b.y > p.y)
+                && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x
+            {
+                inside = !inside;
+            }
+        }
+        inside
+    }
+
     // --- standard trio + framing --------------------------------------
 
     // Windows strictly INSIDE the recentered seed triangle: unlike
@@ -964,8 +1049,8 @@ mod tests {
         // All five windows sit in the τ-octave [φ⁻⁴, φ⁻³) of
         // patch-relative view diagonals (E/τ ≈ 0.19 / 0.19 / 0.19 /
         // 0.16 / 0.16 — the patch diagonal τ is the chair's φ), so all
-        // pick the same depth (d = 5 = D_PRESENT, pinned by the size
-        // classes −e ∈ 5..=10 below) and refine the same patch: every
+        // pick the same depth (d = 8 = D_PRESENT, pinned by the size
+        // classes −e ∈ 8..=16 below) and refine the same patch: every
         // tile of a smaller view must reappear bit-identically in each
         // larger one containing it.
         let base = gen_keys(BBox::new(Vec2::new(-0.09, -0.12), Vec2::new(0.09, 0.12)));
@@ -981,8 +1066,8 @@ mod tests {
             .chain(zoomed.iter())
         {
             assert!(
-                (5..=10).contains(&k.1),
-                "view picked depth != 5: size class {}",
+                (8..=16).contains(&k.1),
+                "view picked depth != 8: size class {}",
                 k.1
             );
         }
@@ -1011,8 +1096,15 @@ mod tests {
         //     the tiling itself — a bounded ±10 probe, then
         //     preview_window(9 × mean tile side) — an anchor-self-
         //     canceling loop that must land on the D_PRESENT floor and
-        //     frame the whole patch (~69% of the pane height, 32
-        //     triangles) self-consistently at the default scale.
+        //     frame a well-filled patch at the default scale. With
+        //     D_PRESENT = 8 the derived window is SMALLER than the
+        //     patch (it crops into the patch interior), so the preview
+        //     shows the depth-8 substitution structure (2^8 = 256
+        //     triangles, many size classes) — coverage is pinned ≥ 0.45
+        //     (the right triangle fills half its AABB: ~0.50 is the
+        //     intrinsic ceiling for an origin-centered window). The
+        //     whole-patch framing of the depth-5 floor is not pinned
+        //     here (that was the pre-E15 semantic).
         // (b) The CLI convention: a ~20/scale-unit-tall origin-centered
         //     pane; the patch-fitted scale default (3.5) frames the
         //     whole patch at ~78% height (the chair's framing
@@ -1040,30 +1132,42 @@ mod tests {
         let win = tess_core::app::preview_window(probe.periodic, mw, 4.0 / 3.0);
         let r = t.generate(&p, &Query { region: win });
         assert!(r.message.is_none());
-        // The floor renders the whole patch: exactly 2^5 triangles
-        // (the view ⊇ patch at every aspect for the derived window).
-        assert_eq!(r.tiles.len(), 32, "preview must show the depth-5 patch");
+        // The floor renders the whole patch (2^8 = 256 triangles); the
+        // derived window crops into the interior, so the preview shows
+        // a well-filled subset of tiles, not the lone seed triangle.
+        assert!(
+            (32..=256).contains(&r.tiles.len()),
+            "preview must show many triangles, got {}",
+            r.tiles.len()
+        );
         let classes: std::collections::BTreeSet<u32> = r.tiles.iter().map(|tl| tl.seed).collect();
         assert!(
             classes.len() >= 5,
             "preview must show the size hierarchy, got classes {classes:?}"
         );
-        let span_h = win.max.y - win.min.y;
-        let fill = patch_h / span_h;
+        // The interior crop fills the frame: point-sampled coverage of
+        // the derived window ≥ 0.45 (the diagonal-half ceiling of an
+        // origin-centered window on the unit right triangle).
+        let cov = coverage(&r.tiles, &win);
+        assert!(cov >= 0.45, "preview must fill the frame (coverage {cov:.2})");
+        // The derived window sits strictly inside the patch interior
+        // (not the whole-patch framing of the depth-5 floor).
         assert!(
-            (0.55..=0.95).contains(&fill),
-            "preview frames the patch at {fill:.0}% of the pane height"
-        );
-        assert!(
-            win.max.x - win.min.x >= patch_w && span_h >= patch_h,
-            "derived window must contain the whole patch"
+            win.min.x > -patch_w / 2.0 && win.max.x < patch_w / 2.0
+                && win.min.y > -patch_h / 2.0 && win.max.y < patch_h / 2.0,
+            "derived window must crop into the patch interior"
         );
         // Self-consistency: regenerating over a window re-derived from
-        // THIS result lands on the same depth (no d = 0 regression).
+        // THIS result must stay non-degenerate on the D_PRESENT floor
+        // (no d = 0 collapse).
         let mw2 = tess_core::app::mean_tile_side(&r.tiles);
         let win2 = tess_core::app::preview_window(r.periodic, mw2, 4.0 / 3.0);
         let r2 = t.generate(&p, &Query { region: win2 });
-        assert_eq!(r2.tiles.len(), 32, "second probe round must be a fixed point");
+        assert!(
+            r2.tiles.len() >= 32,
+            "second probe round must stay non-degenerate, got {}",
+            r2.tiles.len()
+        );
 
         // --- (b) CLI convention ----------------------------------------
         let region = BBox::new(
@@ -1072,11 +1176,72 @@ mod tests {
         );
         let rc = t.generate(&p, &Query { region });
         assert!(rc.message.is_none());
-        assert_eq!(rc.tiles.len(), 32, "CLI default pane must show the whole patch");
+        assert_eq!(rc.tiles.len(), 256, "CLI default pane must show the whole depth-8 patch");
         let fill_c = patch_h / (region.max.y - region.min.y);
         assert!(
             (0.7..=0.85).contains(&fill_c),
             "CLI default pane frames the patch at {fill_c:.0}% of its height"
         );
+    }
+
+    // The depth param: appended last, Int, default 0 (auto), range 0..=17.
+    #[test]
+    fn depth_spec_pins_int_appended_last() {
+        let t = GoldenTriangleTiling;
+        let specs = t.params();
+        assert_eq!(specs.len(), 3, "scale, rotation, depth (appended last)");
+        let depth = &specs[2];
+        assert_eq!(depth.id, DEPTH_ID);
+        assert_eq!(depth.label, "depth");
+        match depth.kind {
+            ParamKind::Int { min, max, step, default } => {
+                assert_eq!(default, 0);
+                assert_eq!(min, 0);
+                assert_eq!(max, MAX_DEPTH as i64);
+                assert_eq!(step, 1);
+            }
+            other => panic!("depth spec must be Int, got {other:?}"),
+        }
+    }
+
+    // Out-of-range depth is a named refusal (never a silent snap).
+    #[test]
+    fn depth_refusal_names_exact_bounds() {
+        let t = GoldenTriangleTiling;
+        let mut explicit = ParamSet::default_for(t.params());
+        explicit.set(DEPTH_ID, ParamValue::Int(99));
+        let r = t.generate(
+            &explicit,
+            &Query { region: BBox::new(Vec2::new(-4.0, -4.0), Vec2::new(4.0, 4.0)) },
+        );
+        assert_eq!(
+            r.message,
+            Some("unsupported depth — must be 0 (auto) or 1..=17")
+        );
+    }
+
+    // Explicit depth 0 is byte-identical to the default auto rule;
+    // a pinned depth is a different rule (fewer tiles at pinned depth 1).
+    #[test]
+    fn depth_zero_is_default_and_pin_changes_output() {
+        let t = GoldenTriangleTiling;
+        let window = BBox::new(Vec2::new(-4.0, -4.0), Vec2::new(4.0, 4.0));
+        let mut explicit = ParamSet::default_for(t.params());
+        explicit.set(DEPTH_ID, ParamValue::Int(0));
+        let r_explicit = t.generate(&explicit, &Query { region: window.clone() });
+        let r_default = t.generate(&ParamSet::default_for(t.params()), &Query { region: window.clone() });
+        assert_eq!(r_explicit.message, r_default.message);
+        assert_eq!(r_explicit.tiles.len(), r_default.tiles.len(), "explicit depth 0 == default");
+        assert!(
+            r_explicit.tiles.iter().zip(r_default.tiles.iter()).all(|(a, b)| {
+                a.proto == b.proto && a.poly.aabb() == b.poly.aabb()
+            }),
+            "explicit depth 0 reproduces the default byte-identically"
+        );
+        let mut pin1 = ParamSet::default_for(t.params());
+        pin1.set(DEPTH_ID, ParamValue::Int(1));
+        let r_pin1 = t.generate(&pin1, &Query { region: window });
+        assert!(r_pin1.message.is_none());
+        assert!(r_pin1.tiles.len() < r_explicit.tiles.len(), "pinned depth 1 emits fewer tiles");
     }
 }

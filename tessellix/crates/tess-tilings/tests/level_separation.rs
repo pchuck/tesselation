@@ -33,8 +33,8 @@ fn level_buckets(id: &str) -> BTreeSet<usize> {
 
 /// The irreptile engines must show nested hierarchy in a single
 /// default view: children descend by 1 or 2 scale steps, so at the
-/// presentation floor D_PRESENT = 5 the emitted per-tile lineage
-/// depths span 5..=10 — mapped through the 9-entry level ramp that is
+/// presentation floor D_PRESENT = 8 the emitted per-tile lineage
+/// depths span 8..=16 — mapped through the 9-entry level ramp that is
 /// at least 3 distinct buckets, and never the neutral class 0.
 #[test]
 fn level_mode_separates_irreptile_lineage_in_one_view() {
@@ -49,9 +49,9 @@ fn level_mode_separates_irreptile_lineage_in_one_view() {
             "{id}: hierarchical tiles must not fall in the neutral bucket, got {buckets:?}"
         );
     }
-    // golden bee: the exact lineage-depth window. Depth 5 at the
+    // golden bee: the exact lineage-depth window. Depth 8 at the
     // default view, each round adds 1 (large child) or 2 (small
-    // child) scale steps → levels 5..=10, all six classes present.
+    // child) scale steps → levels 8..=16, all nine classes present.
     let registry = tess_tilings::registry();
     let t = registry.get("golden-bee").expect("golden-bee exists");
     let params = ParamSet::default_for(t.params());
@@ -64,8 +64,8 @@ fn level_mode_separates_irreptile_lineage_in_one_view() {
     let raw: BTreeSet<u8> = result.tiles.iter().map(|tile| tile.level).collect();
     assert_eq!(
         raw,
-        (5u8..=10).collect::<BTreeSet<u8>>(),
-        "golden-bee: default view must emit the full lineage window 5..=10"
+        (8u8..=16).collect::<BTreeSet<u8>>(),
+        "golden-bee: default view must emit the full lineage window 8..=16"
     );
 }
 

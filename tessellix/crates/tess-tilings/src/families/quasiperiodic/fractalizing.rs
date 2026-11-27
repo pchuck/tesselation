@@ -474,7 +474,7 @@ impl Tiling for FractalizingTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Limit-periodic fractalizing family over the uniform 3.12.12: hexagonal flower orbits of triangles, squares, hexagons and dodecagons, every level shrunk by 2+sqrt(3)."
+        "Limit-periodic fractalizing family over the uniform 3.12.12: hexagonal flower orbits of triangles, squares, hexagons and dodecagons, every level shrunk by 2+sqrt(3). Under zoom the hierarchy becomes visible via successive substitution levels (fractalizing behavior) — each view refines one substitution octave, and Level color mode (M201) shows the current depth uniformity, every tile in one view carrying the same level."
     }
 
     fn category(&self) -> TilingCategory {
@@ -1024,6 +1024,28 @@ mod tests {
             s += *p;
         }
         Vec2::new(s.x / n, s.y / n)
+    }
+
+    #[test]
+    fn card_note_states_zoom_hierarchy_and_level_mode_uniformity() {
+        // E16: the card note must state that the hierarchy becomes
+        // visible via successive substitution levels under zoom, and
+        // that Level color mode (M201) shows the current depth
+        // uniformity.
+        let t = FractalizingTiling;
+        let d = t.description();
+        assert!(
+            d.contains("successive substitution levels"),
+            "card note must state the successive-substitution-level visibility, got: {d}"
+        );
+        assert!(
+            d.contains("Level color mode"),
+            "card note must state Level color mode, got: {d}"
+        );
+        assert!(
+            d.contains("depth uniformity"),
+            "card note must state the depth-uniformity reading, got: {d}"
+        );
     }
 
     #[test]
