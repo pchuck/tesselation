@@ -1893,7 +1893,7 @@ mod tests {
         // Cut-and-project data.
         assert_eq!(
             line2("ammann-beenker"),
-            "substitution · 1+√2 · R⁴ → R², octagonal window · Ammann & Beenker 1982"
+            "substitution · 1+√2 · R4 plus R2, octagonal window · Ammann & Beenker 1982"
         );
         // Limit-periodic rep-tile.
         assert_eq!(line1("chair"), "limit-periodic");

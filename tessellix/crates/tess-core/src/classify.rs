@@ -122,7 +122,7 @@ pub struct TilingClass {
     pub inflation: Option<&'static str>,
     /// Matching rules ("yes — edge decorations", ...).
     pub matching_rules: Option<&'static str>,
-    /// Cut-and-project data ("R⁴ → R², octagonal window").
+    /// Cut-and-project data ("R4 plus R2, octagonal window").
     pub cut_project: Option<&'static str>,
     // -- Properties ---------------------------------------------------------
     /// "periodic" | "non-periodic" | "weakly aperiodic" | "strongly
