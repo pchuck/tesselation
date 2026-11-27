@@ -14,26 +14,31 @@ pub fn render_svg(tiles: &[Tile], bbox: &BBox, mode: ColorMode) -> String {
 
 /// Render tiles plus an optional strapwork wall overlay
 /// ([`crate::strapwork::walls`]). With an empty `walls` slice the output
-/// is byte-identical to [`render_svg`].
-///
-/// Drawing is two-pass: every tile fill is emitted first, then every tile
-/// outline. SVG paints each element's fill and stroke in document order,
-/// so a single interleaved pass lets a later tile's fill cover the
-/// earlier tile's stroke half, making the visible border depend on draw
-/// order (thin decorated bands — e.g. taylor-socolar's chord strips —
-/// get eaten by later-drawn neighbours at shared corners). Emitting all
-/// outlines after all fills makes the border symmetric and
-/// order-independent.
-///
-/// Walls are stroked in the border color with round caps — the classic
-/// strapwork ribbon look — at a width proportional to the view extent
-/// (`0.012·min(w, h)`, floored at `0.003`): three times the tile-border
-/// stroke, which keeps the ribbons clearly readable above the fills at
-/// any export size without swallowing thin cells. They are drawn last, so
-/// ribbons stay on top of the grout.
+/// is byte-identical to [`render_svg`]. Non-highlighting entry point:
+/// exactly [`render_svg_with_walls_highlight`] with
+/// `highlight_supertiles = false`.
+pub fn render_svg_with_walls(
+    tiles: &[Tile],
+    bbox: &BBox,
+    mode: ColorMode,
+    walls: &[Wall],
+) -> String {
+    render_svg_with_walls_highlight(tiles, bbox, mode, walls, false)
+}
+
+/// Stroke-weight multiplier for the supertile-highlight pass of
+/// [`render_svg_with_walls_highlight`]: tiles carrying substitution
+/// depth (`tile.level > 0` — members of a supertile, not flat-tiling
+/// cells) are outlined at `SUPERTILE_STROKE_FACTOR ×` the base
+/// tile-border stroke. 2× keeps the highlight emphatic without
+/// swallowing thin cells: the base stroke is already
+/// `0.004·min(w, h)` (0.08 world units ≈ 3.2 px at the 1200×800
+/// default export).
+pub const SUPERTILE_STROKE_FACTOR: f64 = 2.0;
+
 /// Path data (SVG `d`) for a tile's polygon, or `None` for degenerate
-/// tiles. Shared by the fill pass and the outline pass so both passes
-/// emit identical geometry.
+/// tiles. Shared by the fill pass and the outline pass(es) so both emit
+/// identical geometry.
 fn path_d(tile: &Tile) -> Option<String> {
     let pts = &tile.poly.pts;
     if pts.len() < 3 {
@@ -47,15 +52,45 @@ fn path_d(tile: &Tile) -> Option<String> {
     Some(d)
 }
 
-pub fn render_svg_with_walls(
+/// Render tiles plus an optional strapwork wall overlay, with an
+/// optional supertile highlight.
+///
+/// Drawing is two-pass: every tile fill is emitted first, then every tile
+/// outline. SVG paints each element's fill and stroke in document order,
+/// so a single interleaved pass lets a later tile's fill cover the
+/// earlier tile's stroke half, making the visible border depend on draw
+/// order (thin decorated bands — e.g. taylor-socolar's chord strips —
+/// get eaten by later-drawn neighbours at shared corners). Emitting all
+/// outlines after all fills makes the border symmetric and
+/// order-independent.
+///
+/// Supertile highlight (`highlight_supertiles = true`): the outline pass
+/// splits into up to two groups in stroke-weight order — level-0 cells at
+/// the base stroke, then supertile members (`tile.level > 0`) at
+/// [`SUPERTILE_STROKE_FACTOR`]× base — so the heavier grout paints over
+/// shared edges. Empty groups are skipped: a flat tiling (every tile
+/// level 0) emits exactly the legacy single group, making the flag a
+/// byte-for-byte no-op there, and with `highlight_supertiles = false`
+/// the output is byte-identical to [`render_svg_with_walls`] for every
+/// tiling.
+///
+/// Walls are stroked in the border color with round caps — the classic
+/// strapwork ribbon look — at a width proportional to the view extent
+/// (`0.012·min(w, h)`, floored at `0.003`): three times the tile-border
+/// stroke, which keeps the ribbons clearly readable above the fills at
+/// any export size without swallowing thin cells. They are drawn last, so
+/// ribbons stay on top of the grout.
+pub fn render_svg_with_walls_highlight(
     tiles: &[Tile],
     bbox: &BBox,
     mode: ColorMode,
     walls: &[Wall],
+    highlight_supertiles: bool,
 ) -> String {
     let w = bbox.size().x;
     let h = bbox.size().y;
     let stroke = (0.004 * w.min(h)).max(0.001);
+    let heavy = stroke * SUPERTILE_STROKE_FACTOR;
     let wall_stroke = (0.012 * w.min(h)).max(0.003);
     let (br, bg_, bb) = rgb(BORDER);
     let (ar, ag, ab) = rgb(BACKGROUND);
@@ -81,15 +116,49 @@ pub fn render_svg_with_walls(
         }
     }
     // Pass 2: all outlines, over every fill.
-    s.push_str(&format!(
-        r#"<g fill="none" stroke="rgb({br},{bg_},{bb})" stroke-width="{stroke:.4}" stroke-linejoin="round">"#
-    ));
-    for tile in tiles {
-        if let Some(d) = path_d(tile) {
-            s.push_str(&format!(r#"<path d="{}"/>"#, d));
+    if !highlight_supertiles {
+        // Single uniform group — the pre-highlight output, byte for byte.
+        s.push_str(&format!(
+            r#"<g fill="none" stroke="rgb({br},{bg_},{bb})" stroke-width="{stroke:.4}" stroke-linejoin="round">"#
+        ));
+        for tile in tiles {
+            if let Some(d) = path_d(tile) {
+                s.push_str(&format!(r#"<path d="{}"/>"#, d));
+            }
+        }
+        s.push_str("</g>");
+    } else {
+        // Supertile highlight: split the outline pass by substitution
+        // depth — level-0 cells at the base stroke first, supertile
+        // members (level > 0) at the heavy stroke last — so the heavier
+        // grout paints over the shared edges. Empty groups are skipped:
+        // a flat tiling emits exactly the legacy single group, a uniform
+        // supertile view exactly one (heavy) group.
+        let base_tiles: Vec<&Tile> = tiles.iter().filter(|t| t.level == 0).collect();
+        let heavy_tiles: Vec<&Tile> = tiles.iter().filter(|t| t.level > 0).collect();
+        if !base_tiles.is_empty() {
+            s.push_str(&format!(
+                r#"<g fill="none" stroke="rgb({br},{bg_},{bb})" stroke-width="{stroke:.4}" stroke-linejoin="round">"#
+            ));
+            for tile in base_tiles {
+                if let Some(d) = path_d(tile) {
+                    s.push_str(&format!(r#"<path d="{}"/>"#, d));
+                }
+            }
+            s.push_str("</g>");
+        }
+        if !heavy_tiles.is_empty() {
+            s.push_str(&format!(
+                r#"<g fill="none" stroke="rgb({br},{bg_},{bb})" stroke-width="{heavy:.4}" stroke-linejoin="round">"#
+            ));
+            for tile in heavy_tiles {
+                if let Some(d) = path_d(tile) {
+                    s.push_str(&format!(r#"<path d="{}"/>"#, d));
+                }
+            }
+            s.push_str("</g>");
         }
     }
-    s.push_str("</g>");
     if !walls.is_empty() {
         s.push_str(&format!(
             r#"<g fill="none" stroke="rgb({br},{bg_},{bb})" stroke-width="{wall_stroke:.4}" stroke-linecap="round">"#
@@ -347,6 +416,218 @@ mod tests {
         let plain = render_svg(&tiles, &bbox, ColorMode::Pattern);
         assert_eq!(plain, render_svg_with_walls(&tiles, &bbox, ColorMode::Pattern, &[]));
         assert!(!plain.contains("data-deco"));
+    }
+
+    // ---- supertile highlight (render_svg_with_walls_highlight) ----------
+
+    /// A mixed-level tiling: one level-0 tile (flat-tiling cell) and one
+    /// level-2 tile (supertile member), side by side.
+    fn mixed_level_tiles() -> Vec<Tile> {
+        vec![
+            Tile {
+                proto: 0,
+                seed: 0,
+                level: 0,
+                poly: Polygon::from_slice(&[
+                    pt(0.0, 0.0),
+                    pt(1.0, 0.0),
+                    pt(1.0, 1.0),
+                    pt(0.0, 1.0),
+                ]),
+            },
+            Tile {
+                proto: 1,
+                seed: 1,
+                level: 2,
+                poly: Polygon::from_slice(&[
+                    pt(1.0, 0.0),
+                    pt(2.0, 0.0),
+                    pt(2.0, 1.0),
+                    pt(1.0, 1.0),
+                ]),
+            },
+        ]
+    }
+
+    /// The outline `<g>` blocks of a rendered SVG (outline and wall
+    /// groups only — the sole `<g fill="none" ...>` openers), as
+    /// (start, end) byte ranges in document order.
+    fn outline_group_spans(svg: &str) -> Vec<(usize, usize)> {
+        svg.match_indices("<g fill=\"none\"")
+            .map(|(i, _)| {
+                let end = i
+                    + svg[i..]
+                        .find("</g>")
+                        .expect("outline/wall group is closed");
+                (i, end + "</g>".len())
+            })
+            .collect()
+    }
+
+    #[test]
+    fn highlight_off_output_is_byte_pinned() {
+        // Full golden pin of the toggle-off output on a mixed-level
+        // tiling: any change to the default export's markup, attribute
+        // order or number formatting breaks this. Bbox 4×3 → base stroke
+        // 0.004·3 = 0.012; Single mode → PALETTE[0] light gray.
+        let tiles = mixed_level_tiles();
+        let bbox = BBox::new(pt(-1.0, -1.0), pt(3.0, 2.0));
+        let expected = concat!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4.0000 3.0000">"#,
+            r#"<g transform="translate(1.0000 2.0000) scale(1 -1)">"#,
+            r#"<rect x="-1.0000" y="-1.0000" width="4.0000" height="3.0000" fill="rgb(40,42,58)"/>"#,
+            r#"<path d="M0.0000 0.0000L1.0000 0.0000L1.0000 1.0000L0.0000 1.0000Z" fill="rgb(212,212,212)"/>"#,
+            r#"<path d="M1.0000 0.0000L2.0000 0.0000L2.0000 1.0000L1.0000 1.0000Z" fill="rgb(212,212,212)"/>"#,
+            r#"<g fill="none" stroke="rgb(30,30,46)" stroke-width="0.0120" stroke-linejoin="round">"#,
+            r#"<path d="M0.0000 0.0000L1.0000 0.0000L1.0000 1.0000L0.0000 1.0000Z"/>"#,
+            r#"<path d="M1.0000 0.0000L2.0000 0.0000L2.0000 1.0000L1.0000 1.0000Z"/>"#,
+            r#"</g></g></svg>"#
+        );
+        assert_eq!(render_svg_with_walls(&tiles, &bbox, ColorMode::Single, &[]), expected);
+        assert_eq!(
+            render_svg_with_walls_highlight(&tiles, &bbox, ColorMode::Single, &[], false),
+            expected,
+            "flag-off must be the legacy bytes, not merely equivalent"
+        );
+    }
+
+    #[test]
+    fn highlight_on_weights_supertile_members_only() {
+        // On-state on the same mixed tiling: the fill pass is untouched,
+        // the outline pass splits into a base group (exactly the level-0
+        // path) and a heavy group at 2× width (exactly the level-2
+        // path), base before heavy.
+        let tiles = mixed_level_tiles();
+        let bbox = BBox::new(pt(-1.0, -1.0), pt(3.0, 2.0));
+        let off = render_svg_with_walls(&tiles, &bbox, ColorMode::Single, &[]);
+        let svg = render_svg_with_walls_highlight(&tiles, &bbox, ColorMode::Single, &[], true);
+        let d0 = "M0.0000 0.0000L1.0000 0.0000L1.0000 1.0000L0.0000 1.0000Z";
+        let d2 = "M1.0000 0.0000L2.0000 0.0000L2.0000 1.0000L1.0000 1.0000Z";
+
+        // Fill pass byte-identical: everything up to the first outline
+        // group is unchanged.
+        let cut_off = off.find("<g fill=\"none\"").unwrap();
+        let cut_on = svg.find("<g fill=\"none\"").unwrap();
+        assert_eq!(&off[..cut_off], &svg[..cut_on], "fill pass must be untouched");
+
+        // Exactly one group per weight class, base at 0.0120, heavy at
+        // 2× = 0.0240.
+        let base_attr = r#"stroke-width="0.0120""#;
+        let heavy_attr = r#"stroke-width="0.0240""#;
+        assert_eq!(svg.matches(base_attr).count(), 1, "{svg}");
+        assert_eq!(svg.matches(heavy_attr).count(), 1, "{svg}");
+
+        // Group contents: group 0 (base) carries exactly the level-0
+        // path; group 1 (heavy) exactly the level-2 path.
+        let spans = outline_group_spans(&svg);
+        assert_eq!(spans.len(), 2, "base + heavy group, no walls: {svg}");
+        let g0 = &svg[spans[0].0..spans[0].1];
+        let g1 = &svg[spans[1].0..spans[1].1];
+        assert!(g0.contains(base_attr) && !g0.contains(heavy_attr), "{g0}");
+        assert!(g1.contains(heavy_attr) && !g1.contains(base_attr), "{g1}");
+        assert_eq!(g0.matches("<path ").count(), 1);
+        assert!(g0.contains(d0) && !g0.contains(d2), "base group must hold the level-0 path only");
+        assert_eq!(g1.matches("<path ").count(), 1);
+        assert!(g1.contains(d2) && !g1.contains(d0), "heavy group must hold the level-2 path only");
+    }
+
+    #[test]
+    fn highlight_on_flat_tiling_is_byte_identical_to_off() {
+        // No tile carries substitution depth: the heavy group is empty
+        // and skipped, so flag-on must be the flag-off bytes — the
+        // highlight is a pure no-op outside the substitution hierarchy.
+        let tiles = square_grid(3);
+        let bbox = BBox::new(pt(-2.0, -2.0), pt(4.0, 4.0));
+        let off = render_svg_with_walls(&tiles, &bbox, ColorMode::Pattern, &[]);
+        let on = render_svg_with_walls_highlight(&tiles, &bbox, ColorMode::Pattern, &[], true);
+        assert_eq!(on, off, "flat tiling: highlight must be a byte-for-byte no-op");
+        assert_eq!(on.matches("<g fill=\"none\"").count(), 1, "one base group only");
+    }
+
+    #[test]
+    fn highlight_on_uniform_supertile_is_single_heavy_group() {
+        // Every tile is a supertile member (a uniform-depth view, the
+        // shape of every substitution engine's default view): the base
+        // group is empty and skipped — the on-state is the legacy bytes
+        // with the outline width scaled by SUPERTILE_STROKE_FACTOR and
+        // nothing else. Bbox 4×4 → base 0.0160, heavy 0.0320.
+        let mut tiles = square_grid(2);
+        for t in &mut tiles {
+            t.level = 3;
+        }
+        let bbox = BBox::new(pt(-1.0, -1.0), pt(3.0, 3.0));
+        let off = render_svg_with_walls(&tiles, &bbox, ColorMode::Pattern, &[]);
+        let on = render_svg_with_walls_highlight(&tiles, &bbox, ColorMode::Pattern, &[], true);
+        let base_attr = r#"stroke-width="0.0160""#;
+        let heavy_attr = r#"stroke-width="0.0320""#;
+        assert_eq!(off.matches(base_attr).count(), 1, "one base group in the off state");
+        assert_eq!(on.matches(heavy_attr).count(), 1, "{on}");
+        assert!(!on.contains(base_attr), "no base stroke in the on state: {on}");
+        assert_eq!(on, off.replace(base_attr, heavy_attr));
+        assert_eq!(on.matches("<g fill=\"none\"").count(), 1, "single heavy group");
+    }
+
+    #[test]
+    fn highlight_on_mixed_tiles_skips_degenerate_in_heavy_group() {
+        // A degenerate (2-vertex) supertile member contributes no path
+        // anywhere: the heavy group holds only the non-degenerate level-2
+        // tile's path.
+        let mut tiles = mixed_level_tiles();
+        tiles.push(Tile {
+            proto: 2,
+            seed: 2,
+            level: 2,
+            poly: Polygon::from_slice(&[pt(2.0, 0.0), pt(3.0, 0.0)]),
+        });
+        let bbox = BBox::new(pt(-1.0, -1.0), pt(4.0, 2.0));
+        let svg = render_svg_with_walls_highlight(&tiles, &bbox, ColorMode::Single, &[], true);
+        let spans = outline_group_spans(&svg);
+        assert_eq!(spans.len(), 2, "base + heavy group: {svg}");
+        let g1 = &svg[spans[1].0..spans[1].1];
+        assert_eq!(g1.matches("<path ").count(), 1, "degenerate tile must emit no path: {g1}");
+        // Fill pass: the degenerate tile gets no fill either (path_d
+        // None) — exactly the two non-degenerate tiles carry the Single
+        // fill (PALETTE[0] light gray), not the background rect.
+        assert_eq!(
+            svg.matches(r#"fill="rgb(212,212,212)""#).count(),
+            2,
+            "only the two non-degenerate tiles get a fill: {svg}"
+        );
+    }
+
+    #[test]
+    fn highlight_on_keeps_walls_on_top() {
+        // The wall pass stays last regardless of the highlight: every
+        // wall line follows the last (heavy) outline path, and the two
+        // outline groups (here just the heavy one) precede the wall
+        // group. Bbox 8×8 → base 0.0320, heavy 0.0640, walls 0.0960.
+        let mut tiles = square_grid(4);
+        for t in &mut tiles {
+            t.level = 2;
+        }
+        let ws = walls(&tiles, 45.0);
+        assert!(!ws.is_empty(), "need a non-empty wall set");
+        let bbox = BBox::new(pt(-2.0, -2.0), pt(6.0, 6.0));
+        let svg = render_svg_with_walls_highlight(&tiles, &bbox, ColorMode::Pattern, &ws, true);
+        let spans = outline_group_spans(&svg);
+        assert_eq!(spans.len(), 2, "heavy outline group + wall group: {svg}");
+        let heavy = &svg[spans[0].0..spans[0].1];
+        let wallg = &svg[spans[1].0..spans[1].1];
+        assert!(heavy.contains(r#"stroke-width="0.0640""#), "{heavy}");
+        assert_eq!(heavy.matches("<path ").count(), tiles.len(), "every tile in the heavy group");
+        assert!(!heavy.contains(r#"stroke-width="0.0320""#), "no base group when all tiles are supertile members");
+        assert!(wallg.contains(r#"stroke-width="0.0960""#), "{wallg}");
+        assert_eq!(wallg.matches("<line ").count(), ws.len());
+        // Every fill precedes the first outline group.
+        let mut last_fill = 0usize;
+        for (i, _) in svg.match_indices("<path ") {
+            let rest = &svg[i..];
+            let tag_end = rest.find('>').unwrap();
+            if rest[..tag_end].contains("fill=\"rgb(") {
+                last_fill = i;
+            }
+        }
+        assert!(last_fill < spans[0].0, "fills must precede the outline groups");
     }
 
     #[test]

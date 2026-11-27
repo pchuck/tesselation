@@ -44,6 +44,15 @@
 //!                                  the weave, generic ones do not.
 //!     [--band-w W]                 band width in world units for the
 //!                                  decoration (default 0.1 at scale 1)
+//!     [--highlight-supertiles]     outline supertile-member tiles
+//!                                  (substitution level > 0) at 2× the
+//!                                  tile-border stroke, so the
+//!                                  substitution hierarchy reads as
+//!                                  heavier grout. A byte-for-byte no-op
+//!                                  on flat tilings (all level 0).
+//!                                  Mutually exclusive with --decoration
+//!                                  (the decoration replaces the tiling
+//!                                  render).
 //!   tess-tui explore --tiling ID  deterministic δ/θ sweep + leaderboard
 //!     (docs/briefs/pic-explorer.md). Emits a JSON leaderboard plus an
 //!     optional CSV and a top-K SVG gallery.
@@ -103,6 +112,7 @@ struct ExportArgs {
     decoration: Option<Decoration>,
     band_w: f64,
     center: Option<(f64, f64)>,
+    highlight_supertiles: bool,
 }
 
 /// Parse a float CLI value, rejecting NaN and infinities: they would
@@ -238,6 +248,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         decoration: None,
         band_w: 0.1,
         center: None,
+        highlight_supertiles: false,
     };
     let mut i = 0;
     let mut band_w_seen = false;
@@ -291,6 +302,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
                 band_w_seen = true;
                 a.band_w = finite(&next(&mut i)?, "--band-w")?;
             }
+            "--highlight-supertiles" => a.highlight_supertiles = true,
             "--center" => {
                 let v = next(&mut i)?;
                 let (x_s, y_s) = v.split_once(',').ok_or_else(|| {
@@ -340,6 +352,12 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
     }
     if a.band_w <= 0.0 {
         return Err("--band-w must be a positive number".into());
+    }
+    if a.highlight_supertiles && a.decoration.is_some() {
+        return Err(
+            "--highlight-supertiles is not applicable with --decoration (the decoration replaces the tiling render)"
+                .into(),
+        );
     }
     Ok(a)
 }
@@ -431,7 +449,13 @@ fn export(args: &[String]) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
             tess_core::svg::render_svg_decorated(&region, &plan)
         }
-        None => tess_core::svg::render_svg_with_walls(&result.tiles, &region, a.mode, &walls),
+        None => tess_core::svg::render_svg_with_walls_highlight(
+            &result.tiles,
+            &region,
+            a.mode,
+            &walls,
+            a.highlight_supertiles,
+        ),
     };
     std::fs::write(&a.out, svg).map_err(|e| format!("failed to write {}: {e}", a.out))?;
     println!("wrote {} ({} tiles)", a.out, result.tiles.len());
@@ -2768,6 +2792,114 @@ mod tests {
         let d = parse_export(&args(&["--tiling", "square"])).expect("defaults");
         assert!(d.decoration.is_none());
         assert_eq!(d.band_w, 0.1);
+    }
+
+    #[test]
+    fn highlight_supertiles_flag_parses_and_excludes_decoration() {
+        let a =
+            parse_export(&args(&["--tiling", "square", "--highlight-supertiles"])).expect("flag parses");
+        assert!(a.highlight_supertiles, "the flag must set the export arg");
+        let d = parse_export(&args(&["--tiling", "square"])).expect("defaults");
+        assert!(!d.highlight_supertiles, "the flag defaults off");
+        // Mutually exclusive with --decoration: a named parse error, not a
+        // silent no-op.
+        let e = parse_export(&args(&[
+            "--tiling",
+            "square",
+            "--strapwork",
+            "45",
+            "--decoration",
+            "fill",
+            "--highlight-supertiles",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("--highlight-supertiles"), "{e}");
+        assert!(e.contains("--decoration"), "the error must name the collision: {e}");
+    }
+
+    #[test]
+    fn highlight_supertiles_export_is_noop_on_flat_and_2x_on_supertile() {
+        // End-to-end through the export path: on a flat tiling (every
+        // tile level 0) the flag is a byte-for-byte no-op; on a
+        // uniform-depth supertile view (chair) the entire diff is the
+        // outline width doubling.
+        let tmp = |tag: &str| {
+            std::env::temp_dir().join(format!("tess_tui_hl_{tag}_{}.svg", std::process::id()))
+        };
+
+        // Flat: on == off, byte for byte (320×320 → 20×20 world view).
+        let base: &[&str] = &["--tiling", "square", "--width", "320", "--height", "320"];
+        let mut off: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        off.extend(["--out".to_string(), tmp("flat_off").to_string_lossy().to_string()]);
+        super::export(&off).expect("flat off export");
+        let mut on: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        on.extend([
+            "--highlight-supertiles".to_string(),
+            "--out".to_string(),
+            tmp("flat_on").to_string_lossy().to_string(),
+        ]);
+        super::export(&on).expect("flat on export");
+        let flat_off = std::fs::read_to_string(tmp("flat_off")).expect("SVG readable");
+        let flat_on = std::fs::read_to_string(tmp("flat_on")).expect("SVG readable");
+        assert_eq!(flat_on, flat_off, "flat tiling: the highlight must be a byte-for-byte no-op");
+
+        // Engine-side precondition, pinned for a loud failure: the
+        // default chair view (30×20 world region, scale 1 — the export
+        // default) is a uniform supertile view, every tile level > 0.
+        let registry = tess_tilings::registry();
+        let tiling = registry.get("chair").expect("chair registered");
+        let mut params = tess_core::params::ParamSet::default_for(tiling.params());
+        params.set(tess_tilings::lattice::SCALE_ID, tess_core::params::ParamValue::Float(1.0));
+        params.set(
+            tess_tilings::lattice::ROTATION_ID,
+            tess_core::params::ParamValue::Angle(0.0),
+        );
+        let region = tess_core::geometry::BBox::new(
+            tess_core::geometry::Vec2::new(-15.0, -10.0),
+            tess_core::geometry::Vec2::new(15.0, 10.0),
+        );
+        let result = tiling.generate(&params, &tess_core::tiling::Query { region });
+        assert!(result.message.is_none(), "chair refused: {:?}", result.message);
+        let levels: std::collections::BTreeMap<u8, usize> = result
+            .tiles
+            .iter()
+            .fold(std::collections::BTreeMap::new(), |mut m, t| {
+                *m.entry(t.level).or_insert(0) += 1;
+                m
+            });
+        assert!(
+            result.tiles.iter().all(|t| t.level > 0),
+            "chair default view must be a supertile view, got {levels:?}"
+        );
+
+        // Supertile: 1200×800 default → base stroke 0.0800, heavy 0.1600.
+        // The on-state is the off-state bytes with exactly that width
+        // doubled — nothing else moves.
+        let chair: &[&str] = &["--tiling", "chair"];
+        let mut off_c: Vec<String> = chair.iter().map(|s| s.to_string()).collect();
+        off_c.extend(["--out".to_string(), tmp("chair_off").to_string_lossy().to_string()]);
+        super::export(&off_c).expect("chair off export");
+        let mut on_c: Vec<String> = chair.iter().map(|s| s.to_string()).collect();
+        on_c.extend([
+            "--highlight-supertiles".to_string(),
+            "--out".to_string(),
+            tmp("chair_on").to_string_lossy().to_string(),
+        ]);
+        super::export(&on_c).expect("chair on export");
+        let chair_off = std::fs::read_to_string(tmp("chair_off")).expect("SVG readable");
+        let chair_on = std::fs::read_to_string(tmp("chair_on")).expect("SVG readable");
+        let (base_w, heavy_w) = (r#"stroke-width="0.0800""#, r#"stroke-width="0.1600""#);
+        assert_eq!(chair_off.matches(base_w).count(), 1, "one outline group in the off state");
+        assert_eq!(
+            chair_on,
+            chair_off.replace(base_w, heavy_w),
+            "the entire diff must be the 2× outline width"
+        );
+        assert!(!chair_on.contains(base_w), "no base stroke remains: {chair_on}");
+
+        for tag in ["flat_off", "flat_on", "chair_off", "chair_on"] {
+            let _ = std::fs::remove_file(tmp(tag));
+        }
     }
 
     #[test]
