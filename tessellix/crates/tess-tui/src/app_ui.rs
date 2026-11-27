@@ -1907,10 +1907,11 @@ mod tests {
             line2("pic-4-8-8"),
             "Hankin polygons-in-contact · 4.8.8 · θK 45°"
         );
-        // Cut-and-project data.
+        // Quasiperiodic substitution cards keep method + inflation
+        // (the window-fitting pair — attribution is dropped).
         assert_eq!(
             line2("ammann-beenker"),
-            "substitution · 1+√2 · R4 plus R2, octagonal window · Ammann & Beenker 1982"
+            "substitution · 1+√2"
         );
         // Limit-periodic rep-tile.
         assert_eq!(line1("chair"), "limit-periodic");

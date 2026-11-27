@@ -55,7 +55,7 @@ use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
 use tess_core::TilingCategory;
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 
-use crate::lattice::{similarity_map, MAX_TILES, SIMILARITY_PARAMS};
+use crate::lattice::{similarity_map, MAX_TILES, ROTATION_ID, SCALE_ID};
 
 const TOL: f64 = 1e-9;
 /// Snap used to identify points (computation paths of the same
@@ -69,6 +69,20 @@ const ANG60: f64 = std::f64::consts::PI / 3.0;
 /// Interior angles of the pentagon, in units of 20°: 140, 60, 160, 80, 100.
 const ANG20: [u8; 5] = [7, 3, 8, 4, 5];
 const MAX_GROW_STEPS: usize = 100_000;
+
+/// Hirschhorn's own param table. The shared `SIMILARITY_PARAMS` defaults
+/// scale to 1.0, which frames the central rosette (~2 world units across,
+/// the C6 seed flower) as a ~25%-of-view speck in the GUI (60 px/unit).
+/// The default is bumped to 2.5 so the main view frames the rosette with
+/// the built-in zoom; the rotation spec is identical to the shared table.
+/// Trade-off: the TUI (8 px/unit, ~2 world units of half-height) shows
+/// only the central slice of the rosette at this default — dial the scale
+/// back down with the params strip (`p`, left/right) if the full rosette is
+/// wanted there. Tests pin explicit scales (1.0/0.6/0.5) and are unaffected.
+const HIRSCHHORN_PARAMS: [ParamSpec; 2] = [
+    ParamSpec::float(SCALE_ID, "scale", 0.1, 50.0, 0.05, 2.5),
+    ParamSpec::angle(ROTATION_ID, "rotation (deg)", 0.0, 360.0, 5.0, 0.0),
+];
 
 // ---------------------------------------------------------------------------
 // Geometry helpers (convex, orientation-agnostic)
@@ -937,7 +951,7 @@ impl Tiling for HirschhornTiling {
     }
 
     fn params(&self) -> &'static [ParamSpec] {
-        &SIMILARITY_PARAMS
+        &HIRSCHHORN_PARAMS
     }
 
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {

@@ -63,10 +63,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             families: &["Quasiperiodic"],
             method: Some("substitution"),
             inflation: Some("1+√2"),
-            cut_project: Some("R4 plus R2, octagonal window"),
             point_order: Some(8),
-            source: Some("Ammann & Beenker"),
-            year: Some("1982"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -74,14 +71,9 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             families: &["Quasiperiodic"],
             method: Some("substitution"),
             inflation: Some("1+√2"),
-            cut_project: Some("R4 plus R2, octagonal window"),
             point_order: Some(8),
-            source: Some("Ammann & Beenker"),
-            year: Some("1982"),
             translational: Some("quasiperiodic"),
-            tile_set: Some("45° rhombus + two mirror-image half-square triangles"),
             prototiles: Some(3),
-            reflections: Some(true),
             ..TilingClass::EMPTY
         },
         "shield" => TilingClass {
@@ -115,8 +107,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             families: &["Quasiperiodic"],
             method: Some("substitution"),
             inflation: Some("√(−τ)"),
-            source: Some("Danzer–van Ophuysen"),
-            year: Some("2000"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -158,8 +148,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             method: Some("pentagon deflation"),
             inflation: Some("φ²"),
             point_order: Some(5),
-            source: Some("Penrose"),
-            year: Some("1974"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -168,8 +156,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             method: Some("half-tile substitution"),
             inflation: Some("φ"),
             point_order: Some(5),
-            source: Some("Penrose"),
-            year: Some("1974"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -185,11 +171,9 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "glb-binary-n7" => TilingClass {
             families: &["Quasiperiodic"],
-            method: Some("binary substitution"),
+            method: Some("substitution"),
             inflation: Some("√(2+2cos(π/7))"),
             point_order: Some(7),
-            source: Some("Pautze, Stefan + Hibma, Tjipke"),
-            year: Some("2015"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -199,7 +183,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             inflation: Some("φ²"),
             point_order: Some(4),
             prototiles: Some(3),
-            source: Some("Bielefeld Tilings Encyclopedia"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -209,17 +192,14 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             inflation: Some("2+√3"),
             point_order: Some(12),
             prototiles: Some(3),
-            source: Some("Watanabe, Ito & Soma (1995)"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
         "girih-14-fold" => TilingClass {
             families: &["Quasiperiodic"],
-            method: Some("substitution"),
             inflation: Some("2b²+3b (b = 2cos(2π/7))"),
             point_order: Some(14),
             prototiles: Some(11),
-            source: Some("Pautze (2017) / Bielefeld Tilings Encyclopedia"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -228,8 +208,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             method: Some("substitution"),
             inflation: Some("1+√2"),
             point_order: Some(8),
-            source: Some("Grünbaum & Shephard"),
-            year: Some("1987"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -238,8 +216,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             method: Some("substitution"),
             inflation: Some("φ"),
             prototiles: Some(3),
-            source: Some("Ammann"),
-            year: Some("1986"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
