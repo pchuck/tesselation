@@ -75,6 +75,15 @@ pub enum Field {
     /// [`monster::n13`](monster::n13), the four band rungs at n = 13;
     /// isolating interval at the certified s0 = 20, M179 §2.2).
     K13,
+    /// Q(b), b = 2cos(pi/8) = sqrt(2 + sqrt 2), b^4 - 4b^2 + 2 = 0 —
+    /// the hexadecagon field [`K16`](crate::fields::K16): degree 4,
+    /// biquadratic, the real subfield of Q(zeta_16) — NOT the degree-8
+    /// Q(2cos(pi/16)). It carries both quadratic generators exactly
+    /// (sqrt 2 = b^2 - 2, sqrt(2 - sqrt 2) = b^3 - 3b), so the n = 16
+    /// record coordinates live in K16 itself (no extension layer
+    /// needed); consumed by [`monster::n16`](monster::n16), the (16,3)
+    /// catalog rung.
+    K16,
 }
 
 /// A boundary contact of the internal figure (doc §1.4).

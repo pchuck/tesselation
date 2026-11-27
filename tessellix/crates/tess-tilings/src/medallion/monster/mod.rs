@@ -12,7 +12,10 @@
 //! unit-edge regular n-gon — over n ∈ {8, 9, 10, 11, 12, 13} and every
 //! legal `c` (8 → {2}; 9 → {2, 3}; 10 → {2, 3}; 11 → {2, 3, 4}; 12 →
 //! {2, 3, 4}; 13 → {2, 3, 4, 5}, i.e. 2 ≤ c ≤ ⌈n/2⌉ − 2, the band the
-//! displacement censuses realize). For even n the rotation `R` is the
+//! displacement censuses realize), plus the §22e hexadecagon rung
+//! (16,3) — the legal band at n = 16 is [2, 6] and only the
+//! substrate-derived rung is catalogued ("The (16,3) entry" below).
+//! For even n the rotation `R` is the
 //! identity (a **parallel** pair); for odd n ∈ {9, 11, 13} it is
 //! `rot(π/n)` — the parallel family cannot pin an odd polygon at all
 //! ("Why the parallel pair"). The
@@ -214,12 +217,42 @@
 //! (2 + b)/4` of degree ⌈n/2⌉ − 1 pinned in the battery, `None` in
 //! the trait.
 //!
+//! # The (16,3) entry, the K₁₆ field and the {16/8} figure
+//!
+//! The §22e Stage-2 rung is the parallel pair on the regular hexadecagon
+//! at `c = 3` — the combinatorics of the Stage-1 AB substrate (monster
+//! 000: two apothem-½ 16-gons, `c = 3` strict AND closed, a 10-vertex
+//! lens, exact overlap `(9 − 16b − 5b² + 6b³)/2` and union
+//! `(7 − 16b − 11b² + 10b³)/2`, both re-derived exactly in
+//! [`n16`](n16)) pinned to the catalog's crossing-midpoint rule. Its
+//! coordinates live in `K₁₆ = Q(b)`, `b = 2cos(π/8)`, `b⁴ = 4b² − 2`
+//! ([`K16`](crate::fields::K16)): degree 4 and **biquadratic**, so the
+//! frame trig needs no extension layer — `√2 = b² − 2` and
+//! `√(2−√2) = b³ − 3b` both lie in the field — unlike the odd-n rungs,
+//! and unlike the degree-8 `Q(2cos(π/16))` this field is easily
+//! confused with. The pin is `P = M₆ − M₂` on the mid-edge axis with
+//! `ρ = √2/2`, and the exact vertex-on-edge-line census of that axis
+//! gives the window `(b² − b − 1, b − 1)`: the pin is its exact
+//! **midpoint** (`2ρ = lo + hi` identically — the only catalog pin with
+//! that symmetry). `d = 2(6 − 2) ≡ 8 (mod 16)` forces the `{16/8}`
+//! figure — eight diameters, `cos² = 0` — so both exit rays at each
+//! contact coincide: the `{12/6}` degeneracy above, `\u03b8 = 90°` on the
+//! same EXTENSION guard boundary, and the M163 cross-check covers it.
+//!
+//! Scope: the same axis-pin census realizes the rest of the n = 16 band
+//! ((16,2) at the (6,1) pin through (16,6) at (4,3)), and an octagon
+//! pair closes the (8,2) band only through a **vertex tangency**
+//! (`c_strict = 0`, `c_closed = 2`) — outside the catalog's strict
+//! interior definition of `c`, recorded as a comment in [`n16`](n16),
+//! never as a record. Stage-2 catalogues the substrate rung only; the
+//! remaining (16,c) rungs are deferred with the field shipped.
+//!
 //! # M163 consistency
 //!
 //! [`Motif::Star`] on a regular n-gon emits, per edge midpoint, the
 //! two arms `rot(edge tangent, ±θ)` (both chiralities) — the same
 //! lines as the record's exit rays with `θ = d·180/n`. The battery
-//! matches segment lines to record exit lines for all fifteen records; a
+//! matches segment lines to record exit lines for all sixteen records; a
 //! mismatch would be a STOP, the check passes (the odd-n checks
 //! exercise `Motif::Star` at interior θ and at the boundary `θ = π/n`
 //! for n = 9, 11, 13).
@@ -273,6 +306,7 @@ pub mod dod12;
 pub mod n9;
 pub mod n11;
 pub mod n13;
+pub mod n16;
 pub mod oct8;
 pub mod rotodd;
 
@@ -1135,7 +1169,10 @@ fn hom_reflect<F: FieldEl>(h: &Hom<F>, n: i64, sum: Gp<F>, dvec: Gp<F>, dd: F) -
 /// n in {8, 9, 10, 11, 12, 13}, each once (the legality band `c <=
 /// ceil(n / 2) - 2` is re-derived in the catalog test; odd n = 9, 11,
 /// 13 are the rotated `pi/n` family — parallel pairs cannot pin odd n,
-/// and the exact n² census found each band exactly realized).
+/// and the exact n² census found each band exactly realized). The n = 16
+/// rung is the exception: the band [2, 6] is realizable at axis pins,
+/// but §22e Stage-2 catalogues the substrate-derived (16,3) only (module
+/// docs).
 pub fn catalog_pairs() -> Vec<(&'static str, usize, usize, usize)> {
     vec![
         ("(8,2)", 8, 2, 2),
@@ -1153,6 +1190,7 @@ pub fn catalog_pairs() -> Vec<(&'static str, usize, usize, usize)> {
         ("(13,3)", 13, 3, 5),
         ("(13,4)", 13, 4, 3),
         ("(13,5)", 13, 5, 1),
+        ("(16,3)", 16, 3, 8),
     ]
 }
 
@@ -1173,6 +1211,7 @@ mod tests {
     use crate::medallion::monster::n9::{Monster91, Monster93};
     use crate::medallion::monster::n11::{Monster111, Monster113, Monster115};
     use crate::medallion::monster::n13::{Monster131, Monster133, Monster135, Monster136};
+    use crate::medallion::monster::n16::Monster168;
     use crate::medallion::Medallion;
     use tess_core::Vec2;
 
@@ -1184,13 +1223,16 @@ mod tests {
         // entries: the rotated pi/n family (parallel pairs cannot pin
         // odd n), and the exact n² census found the full band for
         // each — c in {2, 3} at n = 9, c in {2, 3, 4} at n = 11, c in
-        // {2, 3, 4, 5} at n = 13.
+        // {2, 3, 4, 5} at n = 13. n = 16 is the documented exception to
+        // band completeness: the axis-pin census realizes c in [2, 6],
+        // but only the substrate-derived (16,3) is catalogued (§22e
+        // Stage-2), so the completeness loop below runs over 8..=13.
         let cat = catalog_pairs();
-        assert_eq!(cat.len(), 15);
+        assert_eq!(cat.len(), 16);
         let mut seen: Vec<(usize, usize)> = Vec::new();
         for (_, n, c, d) in &cat {
             assert!(
-                [8usize, 9, 10, 11, 12, 13].contains(n),
+                [8usize, 9, 10, 11, 12, 13, 16].contains(n),
                 "n = {n} out of scope"
             );
             assert!(
@@ -1207,6 +1249,11 @@ mod tests {
                 assert!(seen.contains(&(n, c)), "({n}, {c}) missing");
             }
         }
+        // n = 16 (exception above): exactly the substrate rung.
+        let mut n16: Vec<usize> =
+            cat.iter().filter(|(_, n, _, _)| *n == 16).map(|(_, _, c, _)| *c).collect();
+        n16.sort_unstable();
+        assert_eq!(n16, vec![3], "n = 16 must carry the (16,3) rung only");
         // Forced d per (n, c), from the 2-D crossing-angle census (at
         // odd n: d = 2(Delta) - 1 for the (Delta, 0) crossing, folded
         // to min(d, n - d) — the (13,2) rung is the first record whose
@@ -1227,6 +1274,7 @@ mod tests {
             ((13, 3), 5),
             ((13, 4), 3),
             ((13, 5), 1),
+            ((16, 3), 8),
         ];
         for (nc, d) in want {
             let got = cat.iter().find(|(_, n, c, _)| (*n, *c) == nc).unwrap();
@@ -1235,7 +1283,7 @@ mod tests {
     }
 
     #[test]
-    fn all_fifteen_placements_verify_their_certified_tables() {
+    fn all_sixteen_placements_verify_their_certified_tables() {
         // Each constructor runs the full exact battery (asserts); the
         // per-entry data checks live in the entry modules.
         let e = oct8::pair82();
@@ -1268,6 +1316,8 @@ mod tests {
         assert_eq!(e.e_ab.len(), 4);
         let e = n13::pair135();
         assert_eq!(e.e_ab.len(), 5);
+        let e = n16::pair163();
+        assert_eq!(e.e_ab.len(), 3);
     }
 
     /// M163 cross-check: the landed standalone [`Motif::Star`] at
@@ -1320,7 +1370,7 @@ mod tests {
     }
 
     #[test]
-    fn m163_star_matches_all_fifteen_catalog_records() {
+    fn m163_star_matches_all_sixteen_catalog_records() {
         m163_star_matches::<KhatamM53>("(8,2) KhatamM53 {8/2}", 8, 2);
         m163_star_matches::<Monster104>("(10,2) {10/4}", 10, 4);
         m163_star_matches::<Monster102>("(10,3) {10/2}", 10, 2);
@@ -1350,6 +1400,10 @@ mod tests {
         // (13,5): theta = pi/13 is exactly on the EXTENSION guard
         // boundary (the {9/1} precedent).
         m163_star_matches::<Monster131>("(13,5) {13/1}", 13, 1);
+        // n = 16 rung (K₁₆): theta = 8*180/16 = 90 deg — the {12/6}
+        // precedent, on the EXTENSION guard boundary and legal for the
+        // standalone star (both arm chiralities are the same diameter).
+        m163_star_matches::<Monster168>("(16,3) {16/8}", 16, 8);
     }
 
     fn zq_ok(name: &str, z: Zq, disc: i64) {
@@ -1550,6 +1604,37 @@ mod tests {
             for (_, d) in &ex {
                 assert!(d[0].is_finite() && d[1].is_finite(), "n11/n13 exit_rays_f64 finite");
             }
+        }
+        // n = 16: the same M164 lesson for the biquadratic K₁₆ wrapper
+        // Kq16 — positive denominator, gcd-canonical across the four
+        // numerator coefficients and the denominator, finite f64 view —
+        // across the pin, the crossing points, the hull, the cos² constant
+        // and the f64 emission surfaces.
+        let kq16_ok = |name: &str, q: n16::Kq16| {
+            assert!(q.den > 0, "{name}: non-positive denominator");
+            assert_eq!(
+                gcd5([q.n.0[0], q.n.0[1], q.n.0[2], q.n.0[3], q.den]),
+                1,
+                "{name}: not gcd-canonical"
+            );
+            assert!(q.fl().is_finite(), "{name}: non-finite float view");
+        };
+        kq16_ok("rho (16,3)", n16::rho163());
+        kq16_ok("cos2 (16,3)", n16::cos2163());
+        let q16 = n16::pair163();
+        for pt in [q16.p].iter().chain(q16.cross_pts.iter()) {
+            kq16_ok("n16 P/X", pt.0);
+            kq16_ok("n16 P/X", pt.1);
+        }
+        for p in n16::hull() {
+            kq16_ok("n16 hull", p.0);
+            kq16_ok("n16 hull", p.1);
+        }
+        for p in Monster168::hull_f64() {
+            assert!(p[0].is_finite() && p[1].is_finite(), "n16 hull_f64 finite");
+        }
+        for (_, d) in Monster168::exit_rays_f64() {
+            assert!(d[0].is_finite() && d[1].is_finite(), "n16 exit_rays_f64 finite");
         }
     }
 }

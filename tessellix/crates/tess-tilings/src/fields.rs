@@ -34,6 +34,11 @@
 //!   lifted onto the generic layer. Its anchor test rebuilds the 20
 //!   shipped girih rotation matrices bit-for-bit at denominator /64 —
 //!   the permanent regression anchor (doc §7).
+//! * **[`K16`]** — the hexadecagon field K₁₆ = Q(b), b = 2cos(π/8):
+//!   degree 4, minpoly x⁴ − 4x² + 2, biquadratic (√2 = b² − 2 and
+//!   √(2−√2) = b³ − 3b both live in it; NOT the degree-8
+//!   Q(2cos(π/16))). Consumed by
+//!   [`medallion::monster::n16`](crate::medallion::monster::n16).
 //!
 //! No family consumes this module yet (doc §7 sequencing: consumer
 //! families are a later step); the `Tiling` contract stays f64 at the
@@ -1504,6 +1509,147 @@ impl K13 {
         kval13(self.0)
     }
 }
+
+// =====================================================================
+// K16 — Q(b), b = 2cos(π/8) = √(2+√2); degree 4; denominator 1. The
+// hexadecagon field of the §22e (16,3) monster: biquadratic — it is the
+// real subfield of Q(ζ₁₆) and contains BOTH quadratic generators
+// √2 = b² − 2 and d = √(2−√2) = b³ − 3b (d² = 4 − b² exactly), so all
+// 16-gon frame trig (cos 22.5° = b/2, sin 22.5° = d/2) lives here. It
+// is NOT the degree-8 Q(2cos(π/16)) (the next level up: 2cos(π/16)² =
+// 2 + b); §22e Stage-1 recon pinned the K₁₆ degree by exact
+// Sturm/Newton computation (scratch s22e-stage2-k16). Consumed by
+// [`crate::medallion::monster::n16`] (the (16,3) catalog record).
+// =====================================================================
+
+/// Float value of the generator: b = 2cos(π/8) (cross-check/emission
+/// use only).
+#[allow(dead_code)]
+const B16_F: f64 = 1.8477590650225735;
+
+/// An element of K₁₆ = Q(b), b = 2cos(π/8): the tuple
+/// `K16([c0, c1, c2, c3])` is the field element c0 + c1·b + c2·b² +
+/// c3·b³ at global denominator 1.
+///
+/// Minpoly (Sturm-certified Python-side, scratch `derive16.py`; tests
+/// re-assert): m(x) = x⁴ − 4x² + 2 — irreducible over Q by Eisenstein
+/// at p = 2 (2 | −4, 2 | 2, 4 ∤ 2). Roots ±√(2±√2): the splitting
+/// field is Q(b) itself (√(2−√2) = b³ − 3b ∈ Q(b)), so K₁₆/Q is Galois
+/// with group V₄ — the biquadratic closure of Q(√2), NOT the degree-8
+/// cyclotomic-real Q(2cos(π/16)). N(b) = (−1)⁴·m₀ = 2, whence
+/// b⁻¹ = (4b − b³)/2 ∉ Z[b] (the [`crate::medallion::monster::n16`]
+/// wrapper carries the denominator). Reduction rows [`RED16`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
+pub struct K16(pub [i64; 4]);
+
+/// Minpoly of b, low→high: x⁴ − 4x² + 2.
+#[allow(dead_code)]
+pub const MK16: [i64; 5] = [2, 0, -4, 0, 1];
+
+/// Reduction rows — basis coordinates of b⁴ = 4b² − 2, b⁵ = 4b³ − 2b
+/// and b⁶ = 14b² − 8 (re-derived from the minpoly by the battery).
+#[allow(dead_code)]
+pub const RED16: [[i64; 4]; 3] = [[-2, 0, 4, 0], [0, -2, 0, 4], [-8, 0, 14, 0]];
+
+/// Isolating interval of b (the rightmost conjugate): the consecutive
+/// dyadics [124001011/2²⁶, 124001012/2²⁶] ≈ [1.8477590531110764,
+/// 1.8477590680122375], strictly containing b ≈ 1.8477590650225735.
+/// Certified Python-side (scratch `derive16.py`): exactly one root of
+/// m in [3/2, 2] (Sturm: V(3/2) = 1, V(2) = 0 — the other roots
+/// ±√(2−√2) ≈ ±0.765 and −√(2+√2) are below); m′ = 4x³ − 8x = 4x(x² − 2)
+/// is root-free there (its roots 0, ±√2 lie below 3/2) with m′(3/2) =
+/// 3/2 > 0, so m is strictly increasing on the whole interval; and
+/// m(lo) < 0 < m(hi) exactly. Same s₀ = 26 i128 envelope as [`ISO15`]
+/// and [`ISO_L10`] (see [`BISECT_CAP`]: B_m = Σ|mᵢ|·2.1ⁱ ≈ 39, worst
+/// case 2^{4·30}·39 ≈ 2^125.3 < 2^127); the bracket tests re-assert.
+#[allow(dead_code)]
+pub const ISO16: Iso = Iso {
+    lo_num: 124001011,
+    hi_num: 124001012,
+    s: 26,
+    m_increasing: true,
+};
+
+/// Float value of a K16 element (cross-check/emission use only).
+#[inline]
+#[allow(dead_code)]
+pub fn kval16(x: [i64; 4]) -> f64 {
+    x[0] as f64
+        + x[1] as f64 * B16_F
+        + x[2] as f64 * (B16_F * B16_F)
+        + x[3] as f64 * (B16_F * B16_F * B16_F)
+}
+
+#[allow(dead_code)]
+impl K16 {
+    /// The zero element.
+    pub const ZERO: K16 = K16([0, 0, 0, 0]);
+    /// The unit element.
+    pub const ONE: K16 = K16([1, 0, 0, 0]);
+    /// The generator b = 2cos(π/8).
+    pub const B: K16 = K16([0, 1, 0, 0]);
+    /// √2 = b² − 2 (the quadratic subfield generator; tests pin
+    /// (b² − 2)² = 2 and the float).
+    pub const SQRT2: K16 = K16([-2, 0, 1, 0]);
+    /// d = √(2−√2) = b³ − 3b (the companion quadratic generator,
+    /// 2·sin(π/8); tests pin d² = 4 − b² = 2 − √2 and the float).
+    pub const DD: K16 = K16([0, -3, 0, 1]);
+
+    /// Exact zero test — equality is never numeric (doc §5.1).
+    #[inline]
+    pub fn is_zero(&self) -> bool {
+        self.0 == [0, 0, 0, 0]
+    }
+
+    /// Field addition.
+    #[inline]
+    pub fn add(self, y: K16) -> K16 {
+        K16(kadd(self.0, y.0))
+    }
+
+    /// Field subtraction.
+    #[inline]
+    pub fn sub(self, y: K16) -> K16 {
+        K16(ksub(self.0, y.0))
+    }
+
+    /// Field negation.
+    #[inline]
+    pub fn neg(self) -> K16 {
+        K16(kneg(self.0))
+    }
+
+    /// Scaling by an integer (exact).
+    #[inline]
+    pub fn scale(self, c: i64) -> K16 {
+        K16(kscale(self.0, c))
+    }
+
+    /// Field multiplication (convolution + [`RED16`] fold).
+    #[inline]
+    pub fn mul(self, y: K16) -> K16 {
+        K16(kmul(self.0, y.0, &RED16))
+    }
+
+    /// Exact sign — the isolating-interval engine ([`ksign`] with the
+    /// K₁₆ constants).
+    pub fn sign(&self) -> Ordering {
+        ksign(self.0, &MK16, &ISO16)
+    }
+
+    /// Exact norm N(x) = Res(m, x) (Sylvester/Bareiss, i128).
+    pub fn norm(&self) -> i128 {
+        knorm(&MK16, &self.0)
+    }
+
+    /// Float value — cross-check and emission use only.
+    #[inline]
+    pub fn float(&self) -> f64 {
+        kval16(self.0)
+    }
+}
+
 // =====================================================================
 // Test battery — mirrors the spike battery per doc §7 / the brief:
 // (1) minpoly zero + float cross-checks, (2) frame, (3) star walks,
@@ -3323,5 +3469,83 @@ mod tests {
             vec![(27, 136), (28, 141), (29, 146), (30, 151)],
             "intermediate peaks — every round dead at s = 26"
         );
+    }
+
+    // =================================================================
+    // K16 — the hexadecagon field (§22e Stage-2): minpoly/RED/norm,
+    // the exact ISO bracket, and the biquadratic subfield + trig
+    // identities the n16 record frame runs on (scratch derive16.py).
+    // =================================================================
+
+    /// (1) m(b) == 0 exactly on the tuple model; the pasted reduction
+    /// rows are exactly b⁴, b⁵, b⁶ under [`kmul`]; float cross-checks;
+    /// norm identities N(1) = 1, N(b) = m₀ = 2, multiplicative probes.
+    #[test]
+    fn k16_minpoly_red_rows_and_norm() {
+        check_minpoly_red(&MK16, &RED16, kval16, B16_F);
+        assert!(
+            (B16_F - 2.0 * (PI / 8.0).cos()).abs() < 1e-15,
+            "B16_F constant"
+        );
+        check_norm_identities(
+            &MK16,
+            &RED16,
+            &[[1, 1, 0, 0], [0, -3, 0, 1], [-2, 0, 1, 0]],
+            2,
+        );
+        // Norms of the two quadratic generators (conjugate products
+        // ±√2, ±√2 and ±d, ±b): N(√2) = 4, N(d) = 2 = N(b) — the
+        // V₄ structure made numeric-exact, with b·d = √2 below.
+        assert_eq!(K16::SQRT2.norm(), 4);
+        assert_eq!(K16::DD.norm(), 2);
+    }
+
+    /// Sign-engine certificate, exact (see [`check_iso_bracket`]); the
+    /// width bound is the deg-4 s₀ = 26 envelope ([`BISECT_CAP`]).
+    #[test]
+    fn k16_iso_interval_brackets_b_exactly() {
+        check_iso_bracket(&MK16, &ISO16, B16_F, 2e-8, |x| K16(x).sign());
+    }
+
+    /// The biquadratic structure, exact: √2 = b² − 2 with (b² − 2)² = 2,
+    /// d = b³ − 3b with d² = 4 − b² = 2 − √2, b·d = √2, the 22.5° trig
+    /// (cos = b/2, sin = d/2) closing Pythagoras exactly, the inverse
+    /// 2/b = 4b − b³ (b⁻¹ ∉ Z[b] — the n16 wrapper's denominator), and
+    /// the mixed-sign arm of the engine (the M178 lesson element).
+    #[test]
+    fn k16_subfield_trig_and_inv_identities_exact() {
+        let b = K16::B;
+        let s2 = K16::SQRT2;
+        let d = K16::DD;
+        assert_eq!(b.mul(b), K16([0, 0, 1, 0]), "b² not one-hot");
+        // √2 is the pasted tuple b² − 2 and squares to 2 exactly.
+        assert_eq!(s2, b.mul(b).sub(K16([2, 0, 0, 0])), "SQRT2 tuple");
+        assert_eq!(s2.mul(s2), K16([2, 0, 0, 0]), "(b²−2)² != 2");
+        // d is the pasted tuple b³ − 3b, d² = 4 − b² = 2 − √2 exactly,
+        // and b·d = b⁴ − 3b² = b² − 2 = √2 (the V₄ pairing).
+        assert_eq!(d, b.mul(b).mul(b).sub(b.scale(3)), "DD tuple");
+        assert_eq!(d.mul(d), K16([4, 0, -1, 0]), "d² != 4 − b²");
+        assert_eq!(d.mul(d), K16([2, 0, 0, 0]).sub(s2), "d² != 2 − √2");
+        assert_eq!(b.mul(d), s2, "b·d != √2");
+        // 22.5° trig closes Pythagoras: b² + d² = b² + 4 − b² = 4
+        // (i.e. cos²22.5 + sin²22.5 = (b/2)² + (d/2)² = 1, exactly).
+        assert_eq!(b.mul(b).add(d.mul(d)), K16([4, 0, 0, 0]), "Pythagoras");
+        // The inverse identity in denominator-free form: b(4b − b³) = 2
+        // (so b⁻¹ = (4b − b³)/2 ∉ Z[b]: N(b) = 2 — n16 carries /2).
+        assert_eq!(b.mul(K16([0, 4, 0, -1])), K16([2, 0, 0, 0]), "2/b rule");
+        // Sign/order: b > 0, d > 0, b > d (b − d = 4b − b³ = 2/b > 0),
+        // 3 − b² < 0, and the mixed-sign element d − √2 < 0 (the M178
+        // n9 erratum arm: coefficient signs carry no information).
+        assert_eq!(b.sign(), Ordering::Greater);
+        assert_eq!(d.sign(), Ordering::Greater);
+        assert_eq!(b.sub(d).sign(), Ordering::Greater);
+        assert_eq!(K16([3, 0, -1, 0]).sign(), Ordering::Less);
+        let mixed = d.sub(s2); // 2 − 3b − b² + b³, floats to −0.649
+        assert_eq!(mixed.sign(), Ordering::Less);
+        assert_eq!(mixed.neg().sign(), Ordering::Greater);
+        // float cross-checks (test-side only)
+        assert!((b.float() - 2.0 * (PI / 8.0).cos()).abs() < 1e-12);
+        assert!((d.float() - 2.0 * (PI / 8.0).sin()).abs() < 1e-12);
+        assert!((s2.float() - 2.0f64.sqrt()).abs() < 1e-12);
     }
 }
