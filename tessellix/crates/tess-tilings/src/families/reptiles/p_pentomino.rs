@@ -341,7 +341,7 @@ impl Tiling for PentPentominoTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: 0,
-                    seed: p.c as u32 + 1,
+                    seed: p.c as u32 + 1, level: depth as u8,
                     poly,
                 });
             }

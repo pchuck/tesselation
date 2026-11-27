@@ -428,7 +428,7 @@ impl Tiling for GoldenBeeTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: c.cls,
-                    seed: c.e as u32,
+                    seed: c.e as u32, level: c.e,
                     poly,
                 });
             }

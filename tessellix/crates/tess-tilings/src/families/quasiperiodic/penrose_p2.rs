@@ -370,12 +370,15 @@ impl Tiling for PenroseP2Tiling {
         // Refine until the tile scale reaches 1 (the patch stays put:
         // children tile their parents; each step divides the scale by φ).
         let mut halves = if star { seed_star(scale) } else { seed_sun(scale) };
+        // Substitution depth actually applied (level coloring).
+        let mut depth = 0_usize;
         for _ in 0..STEP_CAP {
             if scale <= 1.0 + 1e-12 {
                 break;
             }
             halves = refine_step(&halves, &region);
             scale /= PHI;
+            depth += 1;
         }
         if halves.is_empty() || scale > 1.0 + 1e-12 {
             return fail("view too far from the seed — pan back or zoom in");
@@ -393,7 +396,7 @@ impl Tiling for PenroseP2Tiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto,
-                    seed: proto as u32,
+                    seed: proto as u32, level: depth.min(255) as u8,
                     poly,
                 });
             }

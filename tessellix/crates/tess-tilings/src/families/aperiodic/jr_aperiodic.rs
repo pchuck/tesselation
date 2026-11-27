@@ -398,7 +398,7 @@ impl Tiling for JeandelRaoTiling {
                     if poly.aabb().intersects(query.region) {
                         tiles.push(Tile {
                             proto: *proto,
-                            seed: u32::from(seeds[i]),
+                            seed: u32::from(seeds[i]), level: 0,
                             poly,
                         });
                     }

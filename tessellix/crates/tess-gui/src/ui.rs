@@ -894,6 +894,7 @@ impl GuiApp {
                         ColorMode::Role,
                         ColorMode::Metatile,
                         ColorMode::Orientation,
+                        ColorMode::Level,
                     ] {
                         if ui
                             .selectable_label(self.app.color_mode == m, m.label())

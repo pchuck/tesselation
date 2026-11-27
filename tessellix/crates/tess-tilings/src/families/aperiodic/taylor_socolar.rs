@@ -1922,7 +1922,7 @@ impl Tiling for TaylorSocolarTiling {
                 if poly.aabb().intersects(query.region) {
                     tiles.push(Tile {
                         proto: piece.proto,
-                        seed: seed_of(piece.proto),
+                        seed: seed_of(piece.proto), level: 0,
                         poly,
                     });
                 }

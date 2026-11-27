@@ -1245,7 +1245,7 @@ impl Tiling for GlbBinaryN7Tiling {
             if poly.aabb().intersects(query.region) {
                 out.push(Tile {
                     proto: t.shape - 1,
-                    seed: (t.shape - 1) as u32,
+                    seed: (t.shape - 1) as u32, level: d as u8,
                     poly,
                 });
             }

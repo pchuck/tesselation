@@ -827,7 +827,8 @@ impl Tiling for Wis12FoldTiling {
 
         // Emission: exact points -> f64 embedding, culled to the view
         // (finite patch: contract-legal to emit only the intersecting
-        // tiles). proto = seed = shape code (tri 0, sq 1, rho 2).
+        // tiles). proto = seed = shape code (tri 0, sq 1, rho 2); the
+        // patch is a fixed depth-1 supertile, so level is always 1.
         let mut out = Vec::new();
         for t in &tiles {
             let pts: Vec<Vec2> = t.1.iter().map(|c| val(*c)).collect();
@@ -835,7 +836,7 @@ impl Tiling for Wis12FoldTiling {
             if poly.aabb().intersects(query.region) {
                 out.push(Tile {
                     proto: t.0,
-                    seed: t.0 as u32,
+                    seed: t.0 as u32, level: 1,
                     poly,
                 });
             }

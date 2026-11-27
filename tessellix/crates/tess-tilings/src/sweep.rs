@@ -1234,7 +1234,7 @@ pub fn theta_gallery_svg(substrate_id: &str, offset_deg: f64) -> Result<String, 
         .map(|c| Tile {
             proto: 0,
             poly: c.poly.clone(),
-            seed: c.seed,
+            seed: c.seed, level: 0,
         })
         .collect();
     let mut bb = BBox::new(
@@ -1690,7 +1690,7 @@ mod tests {
             .map(|(i, v)| Tile {
                 proto: i as u8,
                 poly: Polygon { pts: v.to_vec() },
-                seed: i as u32,
+                seed: i as u32, level: 0,
             })
             .collect();
         let walls = tess_core::strapwork::walls(&host, 45.0);

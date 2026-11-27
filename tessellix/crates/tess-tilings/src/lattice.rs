@@ -255,7 +255,7 @@ impl Tiling for LatticeTiling {
                     tiles.push(Tile {
                         proto: ci as u8,
                         poly: poly.translated(tr),
-                        seed: base.wrapping_add(*seed),
+                        seed: base.wrapping_add(*seed), level: 0,
                     });
                 }
             }

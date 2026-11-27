@@ -212,7 +212,7 @@ impl Tiling for PythagoreanTiling {
                     tiles.push(Tile {
                         proto: *proto,
                         poly: poly.translated(tr),
-                        seed: *seed,
+                        seed: *seed, level: 0,
                     });
                 }
             }

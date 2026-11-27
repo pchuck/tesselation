@@ -663,7 +663,7 @@ impl Tiling for PentiamondAcFactor2Tiling {
             if poly.aabb().intersects(query.region) {
                 out.push(Tile {
                     proto: t.letter,
-                    seed: t.label() as u32 + 1,
+                    seed: t.label() as u32 + 1, level: depth as u8,
                     poly,
                 });
             }

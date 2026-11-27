@@ -441,7 +441,7 @@ impl Tiling for ShieldTiling {
                 let proto = proto_of(t.kind);
                 tiles.push(Tile {
                     proto,
-                    seed: proto as u32,
+                    seed: proto as u32, level: steps as u8,
                     poly: world,
                 });
             }

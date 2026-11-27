@@ -353,7 +353,7 @@ impl Tiling for PinwheelTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: 0,
-                    seed: *slot as u32,
+                    seed: *slot as u32, level: depth.min(255) as u8,
                     poly,
                 });
             }

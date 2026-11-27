@@ -90,6 +90,48 @@ pub const METATILE_PALETTE: [u32; 9] = [
     0x7FA8F0, // 8: sky blue
 ];
 
+/// Dedicated 9-entry ramp for [`ColorMode::Level`] (see `crate::view`):
+/// index 0 is the neutral tone for level 0 (non-hierarchical tiles and
+/// the level-0 seed plane of fractalizing families); indices 1..=8 are
+/// an ordered spectral progression (chartreuse → mint → teal → sky →
+/// indigo → purple → magenta → rose) read as "deeper into the
+/// hierarchy". Deeper levels cycle the eight steps (index `1 + (level -
+/// 1) % 8`), so adjacent levels always land on distinct tones. Engine
+/// level ranges measured from the shipped engines: golden bee and
+/// golden triangle carry per-tile lineage depths up to `2 * MAX_DEPTH =
+/// 34`; the uniform engines peak at their per-view depth caps — 40
+/// (chair-family `.min(40)`), 24 (penrose `STEP_CAP`), 16 (stampfli /
+/// fractalizing), 20 (Ammann-Beenker / shield), 12 (golden rhomboid),
+/// 8 (morphic patches), 6 (fibonacci), 5 (turtle / spectre / GLB).
+/// Clamping would collapse everything from 8 on onto one tone, whereas
+/// aliasing needs levels a full 8 hierarchy steps (≈ 8 zoom octaves, or
+/// 8 scale generations) apart in one view — never adjacent. Distinct
+/// from every other ramp; the table is byte-pinned in the tests below.
+pub const LEVEL_PALETTE: [u32; 9] = [
+    0xB9B7C9, // 0: neutral lavender-gray — non-hierarchical / seed level
+    0xCDE86B, // 1: chartreuse — level 1
+    0x67D489, // 2: mint — level 2
+    0x4FC0A6, // 3: teal — level 3
+    0x4AA8D8, // 4: sky — level 4
+    0x5B7CE8, // 5: indigo — level 5
+    0x8A6FE8, // 6: purple — level 6
+    0xB75FC8, // 7: magenta — level 7
+    0xD94F8A, // 8: rose — level 8 (and every 8th deeper level)
+];
+
+/// Substitution-level class of a tile: 0 stays 0 (neutral,
+/// non-hierarchical); levels 1..=8 map to ramp slots 1..=8; deeper
+/// levels cycle the 8 hierarchy steps (`1 + (level - 1) % 8`) so
+/// adjacent levels are always distinct — see [`LEVEL_PALETTE`] for the
+/// clamp-vs-cycle design evidence.
+pub fn level_class(tile: &Tile) -> usize {
+    if tile.level == 0 {
+        0
+    } else {
+        1 + ((tile.level as usize - 1) % (LEVEL_PALETTE.len() - 1))
+    }
+}
+
 /// Dedicated 4-entry ramp for [`ColorMode::Orientation`] (see `crate::view`):
 /// one tone per dominant-axis bucket — 0: axis-aligned (horizontal),
 /// 1: diagonal (45°), 2: axis-aligned (vertical), 3: anti-diagonal
@@ -230,6 +272,7 @@ pub fn tile_rgb(mode: ColorMode, tile: &Tile) -> u32 {
         ColorMode::Role => (tile.seed as usize) % ROLE_PALETTE.len(),
         ColorMode::Metatile => metatile_class(tile),
         ColorMode::Orientation => orientation_class(&tile.poly),
+        ColorMode::Level => level_class(tile),
     };
     match mode {
         ColorMode::Gray => GRAY_PALETTE[idx],
@@ -237,6 +280,7 @@ pub fn tile_rgb(mode: ColorMode, tile: &Tile) -> u32 {
         ColorMode::Role => ROLE_PALETTE[idx],
         ColorMode::Metatile => METATILE_PALETTE[idx],
         ColorMode::Orientation => ORIENTATION_PALETTE[idx],
+        ColorMode::Level => LEVEL_PALETTE[idx],
         _ => PALETTE[idx],
     }
 }
@@ -314,6 +358,7 @@ mod tests {
         Tile {
             proto,
             seed,
+            level: 0,
             poly: Polygon::from_slice(&[
                 Vec2::new(0.0, 0.0),
                 Vec2::new(1.0, 0.0),
@@ -321,6 +366,11 @@ mod tests {
                 Vec2::new(0.0, 1.0),
             ]),
         }
+    }
+
+    /// Unit square with an explicit substitution level (level-mode tests).
+    fn tile_lv(proto: u8, seed: u32, level: u8) -> Tile {
+        Tile { level, ..tile(proto, seed) }
     }
 
     #[test]
@@ -462,7 +512,7 @@ mod tests {
     }
 
     fn tile_with_shape(proto: u8, seed: u32, n: usize) -> Tile {
-        Tile { proto, seed, poly: poly_with_n_vertices(n) }
+        Tile { proto, seed, level: 0, poly: poly_with_n_vertices(n) }
     }
 
     #[test]
@@ -547,7 +597,7 @@ mod tests {
             (6, 2), (7, 2),                          // P
             (8, 3), (9, 3),                          // F
         ] {
-            let t = Tile { proto: 0, seed, poly: poly_with_n_vertices(3) };
+            let t = Tile { proto: 0, seed, level: 0, poly: poly_with_n_vertices(3) };
             assert_eq!(metatile_class(&t), expected, "seed {seed}");
         }
     }
@@ -561,7 +611,7 @@ mod tests {
             (2, 2, 2),           // P
             (3, 1, 3),           // F
         ] {
-            let t = Tile { proto, seed, poly: poly_with_n_vertices(3) };
+            let t = Tile { proto, seed, level: 0, poly: poly_with_n_vertices(3) };
             assert_eq!(metatile_class(&t), expected, "proto {proto}");
         }
     }
@@ -570,12 +620,12 @@ mod tests {
     fn metatile_class_falls_back_to_proto() {
         // Non-aperiodic shapes (seed 0, or proto > 3): the proto-class fires.
         for proto in 0u8..9 {
-            let t = Tile { proto, seed: 0, poly: poly_with_n_vertices(3) };
+            let t = Tile { proto, seed: 0, level: 0, poly: poly_with_n_vertices(3) };
             assert_eq!(metatile_class(&t), (proto as usize) % 9);
         }
         // Cap-like signature with a seed NOT matching SEED_OF must not be
         // treated as cap — it follows the hat/spectre seed branch instead.
-        let t = Tile { proto: 0, seed: 5, poly: poly_with_n_vertices(3) };
+        let t = Tile { proto: 0, seed: 5, level: 0, poly: poly_with_n_vertices(3) };
         assert_eq!(metatile_class(&t), 1); // seed-5 → hat T bucket
     }
 
@@ -596,10 +646,10 @@ mod tests {
     #[test]
     fn tile_rgb_metatile_matches_class() {
         // Cap F (proto=3, seed=1) → class 3 → METATILE_PALETTE[3].
-        let cap = Tile { proto: 3, seed: 1, poly: poly_with_n_vertices(6) };
+        let cap = Tile { proto: 3, seed: 1, level: 0, poly: poly_with_n_vertices(6) };
         assert_eq!(tile_rgb(ColorMode::Metatile, &cap), METATILE_PALETTE[3]);
         // Hat F1/F2 (proto=0, seed 8/9) → class 3 → same slot.
-        let hat = Tile { proto: 0, seed: 8, poly: poly_with_n_vertices(6) };
+        let hat = Tile { proto: 0, seed: 8, level: 0, poly: poly_with_n_vertices(6) };
         assert_eq!(tile_rgb(ColorMode::Metatile, &hat), METATILE_PALETTE[3]);
     }
 
@@ -625,9 +675,69 @@ mod tests {
                 .chain(PATTERN_GRAY_PALETTE.iter())
                 .chain(ROLE_PALETTE.iter())
                 .chain(METATILE_PALETTE.iter())
+                .chain(LEVEL_PALETTE.iter())
             {
                 assert_ne!(ORIENTATION_PALETTE[i], other, "orientation entry {i} collides with another ramp");
             }
+        }
+    }
+
+    #[test]
+    fn level_palette_is_pinned_and_distinct() {
+        // The pinned 9-entry level ramp (neutral + 8 hierarchy steps).
+        const EXPECTED: [u32; 9] = [
+            0xB9B7C9, 0xCDE86B, 0x67D489, 0x4FC0A6, 0x4AA8D8, 0x5B7CE8, 0x8A6FE8, 0xB75FC8,
+            0xD94F8A,
+        ];
+        assert_eq!(LEVEL_PALETTE, EXPECTED);
+        // All distinct, and none of them equal to any entry of the
+        // other ramps — the level table is its own ramp.
+        for i in 0..LEVEL_PALETTE.len() {
+            for j in (i + 1)..LEVEL_PALETTE.len() {
+                assert_ne!(LEVEL_PALETTE[i], LEVEL_PALETTE[j], "entries {i} and {j} collide");
+            }
+            for &other in PALETTE.iter()
+                .chain(GRAY_PALETTE.iter())
+                .chain(PATTERN_GRAY_PALETTE.iter())
+                .chain(ROLE_PALETTE.iter())
+                .chain(METATILE_PALETTE.iter())
+                .chain(ORIENTATION_PALETTE.iter())
+            {
+                assert_ne!(LEVEL_PALETTE[i], other, "level entry {i} collides with another ramp");
+            }
+        }
+    }
+
+    #[test]
+    fn level_class_maps_and_cycles() {
+        // Level 0 is its own neutral class; levels 1..=8 map to ramp
+        // slots 1..=8; deeper levels cycle the 8 steps (1 + (l-1) % 8),
+        // so adjacent levels are always distinct and the whole ramp is
+        // reachable from levels 0..=8 alone.
+        for l in 0u8..=8 {
+            assert_eq!(level_class(&tile_lv(0, 0, l)) as u32, l as u32, "level {l}");
+        }
+        for &(l, expected) in &[(9u8, 1usize), (16, 8), (17, 1), (34, 2), (255, 7)] {
+            assert_eq!(level_class(&tile_lv(0, 0, l)), expected, "level {l}");
+        }
+        // Adjacent levels never share a class across the full u8 range.
+        for l in 0u8..255 {
+            assert_ne!(
+                level_class(&tile_lv(0, 0, l)),
+                level_class(&tile_lv(0, 0, l + 1)),
+                "levels {l} and {} collide",
+                l + 1
+            );
+        }
+    }
+
+    #[test]
+    fn level_mode_reads_the_level_field_only() {
+        // tile_rgb(Level) is the field read straight through the ramp:
+        // proto/seed must not leak, and the tone equals LEVEL_PALETTE.
+        for l in 0u8..=34 {
+            let c = level_class(&tile_lv(3, 7, l));
+            assert_eq!(tile_rgb(ColorMode::Level, &tile_lv(3, 7, l)), LEVEL_PALETTE[c], "level {l}");
         }
     }
 
@@ -671,8 +781,8 @@ mod tests {
         // Same quad polygon at 0° vs 90° → distinct colors.
         let h = rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
         let v = rect_poly(&[[0.0, 0.0], [0.0, 2.0], [1.0, 2.0], [1.0, 0.0]]);
-        let h_tile = Tile { proto: 0, seed: 0, poly: h };
-        let v_tile = Tile { proto: 0, seed: 0, poly: v };
+        let h_tile = Tile { proto: 0, seed: 0, level: 0, poly: h };
+        let v_tile = Tile { proto: 0, seed: 0, level: 0, poly: v };
         assert_eq!(tile_rgb(ColorMode::Orientation, &h_tile), ORIENTATION_PALETTE[0]);
         assert_eq!(tile_rgb(ColorMode::Orientation, &v_tile), ORIENTATION_PALETTE[2]);
         assert_ne!(
@@ -680,8 +790,8 @@ mod tests {
             tile_rgb(ColorMode::Orientation, &v_tile)
         );
         // seed/proto must not leak into the selection.
-        let a = Tile { proto: 0, seed: 3, poly: rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]) };
-        let b = Tile { proto: 7, seed: 1, poly: rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]) };
+        let a = Tile { proto: 0, seed: 3, level: 0, poly: rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]) };
+        let b = Tile { proto: 7, seed: 1, level: 0, poly: rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]) };
         assert_eq!(tile_rgb(ColorMode::Orientation, &a), tile_rgb(ColorMode::Orientation, &b));
     }
 

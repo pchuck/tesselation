@@ -446,7 +446,7 @@ impl FractalizingTiling {
             if world.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: kind,
-                    seed: kind as u32,
+                    seed: kind as u32, level: depth as u8,
                     poly: world,
                 });
             }

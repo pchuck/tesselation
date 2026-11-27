@@ -339,7 +339,7 @@ impl Tiling for PeriodTriplingTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: 0,
-                    seed: c.ty as u32,
+                    seed: c.ty as u32, level: d as u8,
                     poly,
                 });
             }

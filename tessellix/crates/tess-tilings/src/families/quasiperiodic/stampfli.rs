@@ -583,7 +583,7 @@ impl Tiling for StampfliTiling {
             if world.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: t.kind,
-                    seed: t.kind as u32,
+                    seed: t.kind as u32, level: steps as u8,
                     poly: world,
                 });
             }

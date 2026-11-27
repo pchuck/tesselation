@@ -2619,6 +2619,7 @@ mod lattice_culling_tests {
                             proto: ci as u8,
                             poly: poly.translated(tr),
                             seed: lt.seed_pattern.base(i, j).wrapping_add(*seed),
+                            level: 0,
                         });
                     }
                 }

@@ -408,7 +408,7 @@ impl Tiling for TurtleTiling {
             }
             tiles.push(Tile {
                 proto: lf.shape,
-                seed: lf.label as u32 + 1,
+                seed: lf.label as u32 + 1, level: depth as u8,
                 poly,
             });
         }

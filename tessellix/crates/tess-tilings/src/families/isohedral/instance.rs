@@ -86,7 +86,7 @@ impl Tiling for IhTiling {
                     .map(|(poly, seed)| Tile {
                         proto: 0,
                         poly,
-                        seed,
+                        seed, level: 0,
                     })
                     .collect(),
                 symmetry: meta,

@@ -275,7 +275,7 @@ mod pythagorean_tests {
                             brute.push(Tile {
                                 proto: ci as u8,
                                 poly: poly.translated(tr),
-                                seed: ci as u32,
+                                seed: ci as u32, level: 0,
                             });
                         }
                     }

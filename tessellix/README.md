@@ -4,7 +4,7 @@ A Rust tiling generator with two front ends: an interactive terminal UI
 (TUI) and a desktop GUI. It generates 2D tilings of the plane on demand —
 uniform/Archimedean, wallpaper, Penrose, Pythagorean, and monohedral
 nonperiodic families — and renders them live, with pan/zoom, tunable
-parameters, nine color modes, and SVG export.
+parameters, ten color modes, and SVG export.
 
 - **License:** MIT
 - **Rust:** edition 2021, MSRV 1.85

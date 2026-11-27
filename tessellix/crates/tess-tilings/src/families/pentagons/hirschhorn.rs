@@ -1036,7 +1036,7 @@ impl Tiling for HirschhornTiling {
             let d = t.pts[1] - t.pts[0];
             let ang = d.y.atan2(d.x).rem_euclid(TAU);
             let seed = ((ang / (TAU / 18.0)).round() % 18.0) as u32;
-            tiles.push(Tile { proto: 0, poly, seed });
+            tiles.push(Tile { proto: 0, poly, seed, level: 0 });
         }
 
         TilingResult {

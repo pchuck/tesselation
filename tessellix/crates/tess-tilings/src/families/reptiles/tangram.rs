@@ -676,7 +676,7 @@ impl Tiling for TangramTiling {
             if poly.aabb().intersects(query.region) {
                 out.push(Tile {
                     proto: t.proto,
-                    seed: t.twist as u32 + 1,
+                    seed: t.twist as u32 + 1, level: depth as u8,
                     poly,
                 });
             }

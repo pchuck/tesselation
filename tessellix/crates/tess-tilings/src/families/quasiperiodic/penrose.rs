@@ -311,12 +311,16 @@ impl Tiling for PenroseTiling {
             return fail("too many tiles for this view — zoom in");
         }
         let mut tris: Vec<Tri> = sun_at(scale);
+        // Substitution depth actually applied (level coloring): rounds
+        // until the tiles reach unit scale.
+        let mut depth = 0_usize;
         for _ in 0..STEP_CAP {
             if scale <= 1.0 + 1e-12 {
                 break;
             }
             tris = refine_step(&tris, &region);
             scale /= PHI;
+            depth += 1;
         }
         if tris.is_empty() || scale > 1.0 + 1e-12 {
             return fail("view too far from the seed — pan back or zoom in");
@@ -357,7 +361,7 @@ impl Tiling for PenroseTiling {
             if world.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto,
-                    seed: proto as u32,
+                    seed: proto as u32, level: depth.min(255) as u8,
                     poly: world,
                 });
             }

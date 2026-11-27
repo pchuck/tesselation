@@ -374,7 +374,7 @@ impl Tiling for AmmannBeenkerTriTiling {
             if world.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto,
-                    seed,
+                    seed, level: steps as u8,
                     poly: world,
                 });
             }

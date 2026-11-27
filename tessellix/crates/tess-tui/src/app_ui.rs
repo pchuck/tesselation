@@ -110,6 +110,9 @@ struct Tui {
     /// (`paint::ORIENTATION_PALETTE`), selected when the color mode is
     /// `Orientation`.
     palette256_orientation: Vec<u8>,
+    /// xterm-256 indices of the level ramp (`paint::LEVEL_PALETTE`),
+    /// selected when the color mode is `Level`.
+    palette256_level: Vec<u8>,
     border256: u8,
     gap256: u8,
     /// Last rendered canvas size; pans scale with it.
@@ -165,6 +168,10 @@ impl Tui {
             .iter()
             .map(|&c| paint::rgb_to_256(c))
             .collect();
+        let palette256_level: Vec<u8> = paint::LEVEL_PALETTE
+            .iter()
+            .map(|&c| paint::rgb_to_256(c))
+            .collect();
         Self {
             app: App::new(registry, 8.0),
             tabs,
@@ -180,6 +187,7 @@ impl Tui {
             palette256_role,
             palette256_metatile,
             palette256_orientation,
+            palette256_level,
             border256: paint::rgb_to_256(paint::BORDER),
             gap256: 124,
             canvas_size: (0, 0),
@@ -1022,6 +1030,7 @@ fn render_render_view(frame: &mut Frame, tui: &mut Tui, area: Rect) {
                 ColorMode::Role => &tui.palette256_role,
                 ColorMode::Metatile => &tui.palette256_metatile,
                 ColorMode::Orientation => &tui.palette256_orientation,
+                ColorMode::Level => &tui.palette256_level,
                 _ => &tui.palette256,
             };
             let r = raster::raster(
@@ -1173,6 +1182,10 @@ mod tests {
             .iter()
             .map(|&c| paint::rgb_to_256(c))
             .collect();
+        let palette256_level: Vec<u8> = paint::LEVEL_PALETTE
+            .iter()
+            .map(|&c| paint::rgb_to_256(c))
+            .collect();
         Tui {
             app: App::new(registry, 8.0),
             tabs,
@@ -1188,6 +1201,7 @@ mod tests {
             palette256_role,
             palette256_metatile,
             palette256_orientation,
+            palette256_level,
             border256: paint::rgb_to_256(paint::BORDER),
             gap256: 124,
             canvas_size: (0, 0),

@@ -104,6 +104,9 @@ fn color_index(mode: ColorMode, tile: &Tile) -> usize {
         // front end maps the bucket through the orientation ramp
         // (`paint::ORIENTATION_PALETTE`).
         ColorMode::Orientation => crate::paint::orientation_class(&tile.poly),
+        // `Level` uses the substitution-level class directly; the front
+        // end picks the level ramp (`paint::LEVEL_PALETTE`).
+        ColorMode::Level => crate::paint::level_class(tile),
     }
 }
 
@@ -292,7 +295,7 @@ mod tests {
     fn tile(proto: u8, seed: u32, pts: &[[f64; 2]]) -> Tile {
         Tile {
             proto,
-            seed,
+            seed, level: 0,
             poly: Polygon::from_slice(
                 &pts.iter()
                     .map(|p| Vec2::new(p[0], p[1]))
@@ -464,4 +467,31 @@ mod tests {
             raster(&[a, b], &bbox, 20, 20, ColorMode::Proto, &PAL).pixels
         );
     }
+
+    #[test]
+    fn level_mode_uses_the_level_class_index_space() {
+        // color_index(Level) is the paint-level class (0 neutral,
+        // 1 + (level - 1) % 8) — the front end maps it through the
+        // level ramp. The field is the only input: proto/seed must not
+        // leak. Indices stay inside the 9-entry space (0..=8), far
+        // below the 254/255 sentinels.
+        let poly = |x: f64| {
+            tile(3, 7, &[[x, 0.0], [x + 1.0, 0.0], [x + 1.0, 1.0], [x, 1.0]])
+        };
+        let mut t = poly(0.0);
+        for l in 0u8..=8 {
+            t.level = l;
+            assert_eq!(color_index(ColorMode::Level, &t), l as usize, "level {l}");
+        }
+        t.level = 9;
+        assert_eq!(color_index(ColorMode::Level, &t), 1, "level 9 cycles to 1");
+        t.level = 255;
+        assert_eq!(color_index(ColorMode::Level, &t), 7);
+        assert!(color_index(ColorMode::Level, &t) < LEVEL_INDEX_SPACE);
+    }
+
+    /// The Level ramp adds a 9-entry index space (0..=8); sentinels at
+    /// 254/255 stay collision-free for it too (same argument as the
+    /// 8-entry space pin above).
+    const LEVEL_INDEX_SPACE: usize = 9;
 }

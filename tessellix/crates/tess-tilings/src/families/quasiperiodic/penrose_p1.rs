@@ -659,7 +659,7 @@ impl Tiling for PenroseP1Tiling {
             if poly.aabb().intersects(query.region) {
                 out.push(Tile {
                     proto: t.kind,
-                    seed: t.kind as u32,
+                    seed: t.kind as u32, level: 0,
                     poly,
                 });
             }

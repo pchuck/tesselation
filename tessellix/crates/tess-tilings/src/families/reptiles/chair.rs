@@ -333,7 +333,7 @@ impl Tiling for ChairTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: 0,
-                    seed: c.o as u32 + 1,
+                    seed: c.o as u32 + 1, level: depth as u8,
                     poly,
                 });
             }

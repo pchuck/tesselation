@@ -139,9 +139,18 @@ the shared `tess-core::raster` (the TUI to character cells over its
   90° (axis-aligned vertical), 135° (anti-diagonal) — drawn from a
   dedicated 4-entry ramp; the geometric counterpart of `shape`,
   distinguishing e.g. a horizontal basketweave domino from a vertical
-  one). Shared 8-color palette for the index-mapped modes; the
-  dedicated ramps (gray, pattern-gray, role, metatile, orientation)
-  are byte-pinned separately. The TUI maps it to the nearest xterm-256
+  one), and `level` (color by the tile's substitution level — `Tile::level`,
+  the hierarchy depth tracked by substitution engines: refinement/
+  expansion rounds applied to produce the tile, `0` neutral for
+  non-hierarchical families; drawn from a dedicated 9-entry ramp where
+  deeper levels cycle the 8 hierarchy steps so adjacent levels always
+  differ. The uniform engines pick one expansion depth per view — the
+  mode reads the patch's position in the hierarchy and steps across
+  zoom octaves; the golden bee and golden triangle irreptiles show
+  genuinely nested per-tile lineage depths at once). Shared 8-color
+  palette for the index-mapped modes; the
+  dedicated ramps (gray, pattern-gray, role, metatile, orientation,
+  level) are byte-pinned separately. The TUI maps it to the nearest xterm-256
   indices and rasterizes to character cells, the GUI draws convex
   polygons directly, and the CLI writes SVG paths (y-axis flipped to
   match the math orientation, hairline border stroke scaled to the view).

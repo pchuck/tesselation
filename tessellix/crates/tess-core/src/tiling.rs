@@ -26,11 +26,27 @@ pub struct Query {
 /// * `seed`  — small integer driving "pattern" coloring; chosen by the
 ///   generator so that symmetry-related tiles share structure
 ///   (e.g. checkerboard parity for the square grid).
+/// * `level` — substitution level (hierarchy depth) of the tile, as
+///   tracked by a substitution/expansion engine at emission time: the
+///   number of refinement (deflation) rounds — or, in mixed-size
+///   irreptile engines, the tile's lineage scale-steps — applied to
+///   produce it. `0` = non-hierarchical: the generator knows no
+///   substitution depth for this tile (every periodic/closed-form
+///   family, and any engine whose depth is unavailable without deep
+///   restructuring). Engines here select one expansion depth per view,
+///   so in the uniform engines all tiles of one `generate` share that
+///   engine depth — the level reads as the patch's position in the
+///   family's hierarchy and steps as the view crosses substitution
+///   octaves; the irreptile engines (golden bee, golden triangle)
+///   carry genuinely mixed per-tile lineage depths within one view.
+///   Drives [`ColorMode::Level`](crate::view::ColorMode::Level); never
+///   affects any other mode's decision function.
 #[derive(Debug, Clone)]
 pub struct Tile {
     pub proto: u8,
     pub poly: Polygon,
     pub seed: u32,
+    pub level: u8,
 }
 
 /// The output of a generation.

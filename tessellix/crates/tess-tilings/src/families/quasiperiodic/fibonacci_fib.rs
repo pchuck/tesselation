@@ -406,7 +406,7 @@ impl Tiling for FibonacciFibTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: PROTO[t.cls as usize],
-                    seed: t.cls as u32,
+                    seed: t.cls as u32, level: d as u8,
                     poly,
                 });
             }

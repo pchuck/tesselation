@@ -277,7 +277,7 @@ impl Tiling for HalfHexTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: 0,
-                    seed: c.cls as u32,
+                    seed: c.cls as u32, level: d as u8,
                     poly,
                 });
             }

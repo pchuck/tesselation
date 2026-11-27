@@ -261,7 +261,7 @@ mod tests {
     fn tile(pts: &[(f64, f64)]) -> Tile {
         Tile {
             proto: 0,
-            seed: 0,
+            seed: 0, level: 0,
             poly: Polygon::from_slice(&pts.iter().map(|&(x, y)| pt(x, y)).collect::<Vec<_>>()),
         }
     }
@@ -286,7 +286,7 @@ mod tests {
                 let x = seed as f64;
                 Tile {
                     proto: 0,
-                    seed,
+                    seed, level: 0,
                     poly: Polygon::from_slice(&[
                         pt(x, 0.0),
                         pt(x + 0.9, 0.0),

@@ -873,7 +873,7 @@ impl Tiling for AndritzBowtieHexagonTiling {
                 let proto = proto_of(ob.ty);
                 tiles.push(Tile {
                     proto,
-                    seed: proto as u32,
+                    seed: proto as u32, level: 0,
                     poly,
                 });
             }

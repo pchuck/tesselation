@@ -375,7 +375,7 @@ impl Tiling for GoldenTriangleTiling {
             if poly.aabb().intersects(query.region) {
                 out.push(Tile {
                     proto: cls_of(t),
-                    seed: (-t.e) as u32,
+                    seed: (-t.e) as u32, level: (-t.e).min(255) as u8,
                     poly,
                 });
             }

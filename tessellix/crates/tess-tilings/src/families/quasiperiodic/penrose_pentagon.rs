@@ -321,12 +321,15 @@ impl Tiling for PenrosePentagonTiling {
             t: Vec2::new(-s0 * c.x, -s0 * c.y),
         }];
         let mut sc = s0;
+        // Substitution depth actually applied (level coloring).
+        let mut depth = 0_usize;
         for _ in 0..STEP_CAP {
             if sc <= 1.0 + 1e-12 {
                 break;
             }
             tiles = refine_step(&tiles, &protos, &region);
             sc /= PHI;
+            depth += 1;
         }
         if tiles.is_empty() || sc > 1.0 + 1e-12 {
             return fail("view too far from the seed — pan back or zoom in");
@@ -338,7 +341,7 @@ impl Tiling for PenrosePentagonTiling {
             if world.aabb().intersects(query.region) {
                 out.push(Tile {
                     proto: t.proto,
-                    seed: t.proto as u32,
+                    seed: t.proto as u32, level: depth.min(255) as u8,
                     poly: world,
                 });
             }

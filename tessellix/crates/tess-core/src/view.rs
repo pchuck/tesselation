@@ -46,13 +46,25 @@ pub enum ColorMode {
     /// (axis-aligned, horizontal), 45° (diagonal), 90° (axis-aligned,
     /// vertical), 135° (anti-diagonal) — drawn from a dedicated
     /// 4-entry ramp. The geometric counterpart of `Shape`: it encodes
-    /// *how* the tile is laid, not which shape it is. Appended last so
-    /// the existing ALL-index pins stay stable.
+    /// *how* the tile is laid, not which shape it is.
     Orientation,
+    /// Color by the tile's substitution level (`Tile::level`): the
+    /// hierarchy depth tracked by substitution engines — the number of
+    /// refinement/expansion rounds that produced the tile. Level 0
+    /// (non-hierarchical, or the level-0 seed plane of a fractalizing
+    /// family) gets a dedicated neutral tone; levels 1..=8 get ordered
+    /// ramp steps, and deeper levels cycle the 8 steps (level-1 mod 8),
+    /// so adjacent levels always land on distinct tones. The uniform
+    /// engines pick one expansion depth per view, so the mode reads the
+    /// patch's position in the family's hierarchy and steps as the view
+    /// crosses substitution octaves; the irreptile engines (golden bee,
+    /// golden triangle) show genuinely nested levels at once. Appended
+    /// last so the existing ALL-index pins stay stable.
+    Level,
 }
 
 impl ColorMode {
-    pub const ALL: [ColorMode; 9] = [
+    pub const ALL: [ColorMode; 10] = [
         ColorMode::Single,
         ColorMode::Pattern,
         ColorMode::Proto,
@@ -62,6 +74,7 @@ impl ColorMode {
         ColorMode::Role,
         ColorMode::Metatile,
         ColorMode::Orientation,
+        ColorMode::Level,
     ];
 
     pub fn next(self) -> ColorMode {
@@ -75,8 +88,9 @@ impl ColorMode {
             ColorMode::Role => 6,
             ColorMode::Metatile => 7,
             ColorMode::Orientation => 8,
+            ColorMode::Level => 9,
         };
-        ColorMode::ALL[(idx + 1) % 9]
+        ColorMode::ALL[(idx + 1) % 10]
     }
 
     pub fn label(self) -> &'static str {
@@ -90,6 +104,7 @@ impl ColorMode {
             ColorMode::Role => "role",
             ColorMode::Metatile => "metatile",
             ColorMode::Orientation => "orientation",
+            ColorMode::Level => "level",
         }
     }
 
@@ -104,6 +119,7 @@ impl ColorMode {
             "role" => Some(ColorMode::Role),
             "metatile" => Some(ColorMode::Metatile),
             "orientation" => Some(ColorMode::Orientation),
+            "level" => Some(ColorMode::Level),
             _ => None,
         }
     }
@@ -209,13 +225,15 @@ mod tests {
         assert_eq!(ColorMode::Shape.next(), ColorMode::Role);
         assert_eq!(ColorMode::Role.next(), ColorMode::Metatile);
         assert_eq!(ColorMode::Metatile.next(), ColorMode::Orientation);
-        assert_eq!(ColorMode::Orientation.next(), ColorMode::Single);
+        assert_eq!(ColorMode::Orientation.next(), ColorMode::Level);
+        assert_eq!(ColorMode::Level.next(), ColorMode::Single);
         assert_eq!(ColorMode::parse("gray"), Some(ColorMode::Gray));
         assert_eq!(ColorMode::parse("pattern-gray"), Some(ColorMode::PatternGray));
         assert_eq!(ColorMode::parse("shape"), Some(ColorMode::Shape));
         assert_eq!(ColorMode::parse("role"), Some(ColorMode::Role));
         assert_eq!(ColorMode::parse("metatile"), Some(ColorMode::Metatile));
         assert_eq!(ColorMode::parse("orientation"), Some(ColorMode::Orientation));
+        assert_eq!(ColorMode::parse("level"), Some(ColorMode::Level));
         assert_eq!(ColorMode::parse("nope"), None);
         assert_eq!(ColorMode::Gray.label(), "gray");
         assert_eq!(ColorMode::PatternGray.label(), "pattern-gray");
@@ -223,6 +241,7 @@ mod tests {
         assert_eq!(ColorMode::Role.label(), "role");
         assert_eq!(ColorMode::Metatile.label(), "metatile");
         assert_eq!(ColorMode::Orientation.label(), "orientation");
+        assert_eq!(ColorMode::Level.label(), "level");
         assert_eq!(
             ColorMode::parse(ColorMode::PatternGray.label()),
             Some(ColorMode::PatternGray)
@@ -235,24 +254,30 @@ mod tests {
             ColorMode::parse(ColorMode::Orientation.label()),
             Some(ColorMode::Orientation)
         );
+        assert_eq!(
+            ColorMode::parse(ColorMode::Level.label()),
+            Some(ColorMode::Level)
+        );
         assert_eq!(ColorMode::Gray.preview_mode(), ColorMode::Gray);
         assert_eq!(ColorMode::PatternGray.preview_mode(), ColorMode::PatternGray);
-        // The structure modes (Shape, Role, Metatile, Orientation) preview as
-        // themselves (like Gray/PatternGray) — thumbnails keep their
-        // structure and are NOT switched onto a legacy mode.
+        // The structure modes (Shape, Role, Metatile, Orientation, Level)
+        // preview as themselves (like Gray/PatternGray) — thumbnails keep
+        // their structure and are NOT switched onto a legacy mode.
         assert_eq!(ColorMode::Shape.preview_mode(), ColorMode::Shape);
         assert_eq!(ColorMode::Role.preview_mode(), ColorMode::Role);
         assert_eq!(ColorMode::Metatile.preview_mode(), ColorMode::Metatile);
         assert_eq!(ColorMode::Orientation.preview_mode(), ColorMode::Orientation);
+        assert_eq!(ColorMode::Level.preview_mode(), ColorMode::Level);
     }
 
     #[test]
-    fn color_mode_all_len_is_nine() {
-        assert_eq!(ColorMode::ALL.len(), 9);
+    fn color_mode_all_len_is_ten() {
+        assert_eq!(ColorMode::ALL.len(), 10);
         assert_eq!(ColorMode::ALL[4], ColorMode::PatternGray);
         assert_eq!(ColorMode::ALL[5], ColorMode::Shape);
         assert_eq!(ColorMode::ALL[6], ColorMode::Role);
         assert_eq!(ColorMode::ALL[7], ColorMode::Metatile);
         assert_eq!(ColorMode::ALL[8], ColorMode::Orientation);
+        assert_eq!(ColorMode::ALL[9], ColorMode::Level);
     }
 }

@@ -902,7 +902,7 @@ impl Tiling for HatTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: 0,
-                    seed: h.role,
+                    seed: h.role, level: 0,
                     poly,
                 });
             }

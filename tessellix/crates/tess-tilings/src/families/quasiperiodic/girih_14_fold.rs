@@ -1545,7 +1545,9 @@ impl Tiling for Girih14FoldTiling {
         }
 
         // Emission: exact twists → floats, + p₀, the world map, final
-        // cull in world space; post-guard on the count.
+        // cull in world space; post-guard on the count. `level` is the
+        // seed level N: the cascade substituted n rounds down to the
+        // canonical level-0 tiles.
         let mut out = Vec::new();
         for inst in parents.iter() {
             let pts: Vec<Vec2> = verts_of(inst, &t)
@@ -1559,7 +1561,7 @@ impl Tiling for Girih14FoldTiling {
             if poly.aabb().intersects(query.region) {
                 out.push(Tile {
                     proto: inst.cls,
-                    seed: inst.cls as u32,
+                    seed: inst.cls as u32, level: n,
                     poly,
                 });
             }

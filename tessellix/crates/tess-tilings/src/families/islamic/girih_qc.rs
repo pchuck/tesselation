@@ -2086,7 +2086,7 @@ impl Tiling for GirihQuasiperiodicTiling {
                 let proto = proto_of(o.ty);
                 tiles.push(Tile {
                     proto,
-                    seed: proto as u32,
+                    seed: proto as u32, level: 0,
                     poly,
                 });
             }

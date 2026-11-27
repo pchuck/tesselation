@@ -388,7 +388,7 @@ impl Tiling for AmmannBeenkerTiling {
             if world.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: 1,
-                    seed: 1,
+                    seed: 1, level: steps as u8,
                     poly: world,
                 });
             }
@@ -407,7 +407,7 @@ impl Tiling for AmmannBeenkerTiling {
             if world.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: 0,
-                    seed: 0,
+                    seed: 0, level: steps as u8,
                     poly: world,
                 });
             }

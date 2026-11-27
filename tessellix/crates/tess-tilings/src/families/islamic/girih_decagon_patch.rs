@@ -913,7 +913,7 @@ impl Tiling for GirihDecagonPatchTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: *proto,
-                    seed: u32::from(*proto),
+                    seed: u32::from(*proto), level: 0,
                     poly,
                 });
             }

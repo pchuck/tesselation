@@ -550,7 +550,7 @@ impl Tiling for GoldenRhomboidTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: t.cls,
-                    seed: t.cls as u32,
+                    seed: t.cls as u32, level: d as u8,
                     poly,
                 });
             }

@@ -468,7 +468,7 @@ impl Tiling for SpectreTiling {
             }
             tiles.push(Tile {
                 proto: 0,
-                seed: lf.label as u32 + 1,
+                seed: lf.label as u32 + 1, level: depth as u8,
                 poly,
             });
         }

@@ -501,7 +501,7 @@ impl Tiling for OctiamondReptileTiling {
             if poly.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: 0,
-                    seed: t.cls as u32 + 1,
+                    seed: t.cls as u32 + 1, level: depth as u8,
                     poly,
                 });
             }

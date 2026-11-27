@@ -1529,7 +1529,7 @@ mod tests {
         Tile {
             proto: 0,
             poly: Polygon::from_slice(&pts.iter().map(|&(x, y)| pt(x, y)).collect::<Vec<_>>()),
-            seed: 0,
+            seed: 0, level: 0,
         }
     }
 

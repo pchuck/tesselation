@@ -557,7 +557,7 @@ impl Tiling for AmmannA3Tiling {
             if world.aabb().intersects(query.region) {
                 tiles.push(Tile {
                     proto: class_of(t.st),
-                    seed: class_of(t.st) as u32,
+                    seed: class_of(t.st) as u32, level: steps as u8,
                     poly: world,
                 });
             }

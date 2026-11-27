@@ -521,6 +521,7 @@ impl Tiling for AmmannA4Tiling {
                 tiles.push(Tile {
                     proto: if t.st <= 1 { 0 } else { 1 },
                     seed: if t.st <= 1 { 0 } else { 1 },
+                    level: steps as u8,
                     poly: world,
                 });
             }

@@ -1086,7 +1086,7 @@ impl Tiling for CapTiling {
             ) {
                 tiles.push(Tile {
                     proto: ty,
-                    seed: SEED_OF[ty as usize],
+                    seed: SEED_OF[ty as usize], level: 0,
                     poly,
                 });
             }

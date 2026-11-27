@@ -236,7 +236,7 @@ impl Tiling for HexagramTiling {
                 }
                 let poly = Polygon::from_slice(&sp).transform(&map);
                 if poly.aabb().intersects(query.region) {
-                    tiles.push(Tile { proto: 1, seed: 1, poly });
+                    tiles.push(Tile { proto: 1, seed: 1, level: 0, poly });
                 }
                 // Interstice: two hexagons at the kissing radius (the
                 // 16-gon would degenerate to a cut-vertex polygon), one
@@ -251,7 +251,7 @@ impl Tiling for HexagramTiling {
                         if poly.aabb().intersects(query.region) {
                             tiles.push(Tile {
                                 proto,
-                                seed: proto as u32,
+                                seed: proto as u32, level: 0,
                                 poly,
                             });
                         }
@@ -263,7 +263,7 @@ impl Tiling for HexagramTiling {
                     }
                     let poly = Polygon::from_slice(&ip).transform(&map);
                     if poly.aabb().intersects(query.region) {
-                        tiles.push(Tile { proto: 0, seed: 0, poly });
+                        tiles.push(Tile { proto: 0, seed: 0, level: 0, poly });
                     }
                 }
             }
