@@ -2615,6 +2615,115 @@ mod tests_export_contract {
             );
         }
     }
+
+    // ---- param bounds/refusal: pins for the resolution entry point --------
+    //
+    // Registry-wide out-of-range/step/Bool behavior is pinned at the CLI
+    // resolution entry point (the `--param` loop inside `export`). The
+    // resolution step is parse-only for Float/Angle/Int — it enforces
+    // finiteness (Float/Angle) and i64 parsing (Int), never declared bounds
+    // or steps — so an out-of-range value flows into the tiling's
+    // `generate()`. Only the one tiling with a tiling-level range refusal
+    // (glb-binary-n7 `depth`) refuses, and that named refusal is the
+    // outermost behavior the CLI surfaces. Nothing here asserts the tiling's
+    // own output, which is the tiling-crate's job.
+
+    #[test]
+    fn param_bounds_float_angle_step_not_enforced_at_resolution() {
+        // scale is 0.1..=50.0 step 0.05; rotation is 0.0..=360.0 step 5.0.
+        // All three values below violate the declared bounds or step grid
+        // and are accepted by the resolution loop (finiteness/parse only).
+        for (param, value) in [
+            ("scale", "60"),     // above the 50.0 max
+            ("rotation", "720"), // above the 360.0 max
+            ("scale", "1.03"),   // off the 0.05 grid (step not enforced)
+        ] {
+            let out = temp_svg("float_ok");
+            let mut argv = args(&[
+                "--tiling", "square",
+                "--param", &format!("{param}={value}"),
+                "--width", "100", "--height", "100",
+            ]);
+            argv.push("--out".to_string());
+            argv.push(out.to_string_lossy().into_owned());
+            export(&argv).unwrap_or_else(|e| {
+                panic!("out-of-range {param}={value} must be accepted at resolution, got {e:?}")
+            });
+            assert!(out.exists(), "SVG must be written for {param}={value}");
+            let _ = std::fs::remove_file(&out);
+        }
+    }
+
+    #[test]
+    fn param_bounds_float_finiteness_enforced_at_resolution() {
+        // NaN and infinity are refused by the finite() helper — the only
+        // numeric property the resolution entry point enforces for Float/Angle.
+        for (param, value) in [("scale", "nan"), ("rotation", "inf")] {
+            let argv = args(&[
+                "--tiling", "square",
+                "--param", &format!("{param}={value}"),
+            ]);
+            let err = export(&argv).expect_err("non-finite must be refused");
+            assert!(
+                err.contains(&format!("value for parameter '{param}' must be a finite number")),
+                "error must name the parameter and value: {err}"
+            );
+        }
+    }
+
+    #[test]
+    fn param_bounds_bool_accepted_input_set_and_rejection_is_named() {
+        // Accepted set, by construction: true|on|1 -> true, false|off|0 -> false.
+        for accepted in ["true", "on", "1", "false", "off", "0"] {
+            let out = temp_svg("bool_ok");
+            let mut argv = args(&[
+                "--tiling", "penrose_p2",
+                "--param", &format!("star seed={accepted}"),
+                "--width", "100", "--height", "100",
+            ]);
+            argv.push("--out".to_string());
+            argv.push(out.to_string_lossy().into_owned());
+            export(&argv).unwrap_or_else(|e| {
+                panic!("accepted Bool input {accepted:?} must be accepted at resolution, got {e:?}")
+            });
+            let _ = std::fs::remove_file(&out);
+        }
+        // Rejects: anything else — named error naming the id and value.
+        for rejected in ["yes", "TRUE", "2"] {
+            let argv = args(&[
+                "--tiling", "penrose_p2",
+                "--param", &format!("star seed={rejected}"),
+            ]);
+            let err = export(&argv).expect_err("non-accepted Bool input must be refused");
+            assert_eq!(
+                err,
+                format!("bad boolean value for parameter 'star seed': {rejected}")
+            );
+        }
+    }
+
+    #[test]
+    fn param_bounds_int_out_of_range_refused_by_tiling_not_resolution() {
+        // The Int spec (glb-binary-n7 `depth`) is parsed at the resolution
+        // entry point with no range check — an out-of-range i64 flows into
+        // generate(), which refuses with the named tiling-level refusal.
+        let err = export(&args(&[
+            "--tiling", "glb-binary-n7",
+            "--param", "depth=6", // above the 1..=5 range
+            "--width", "100", "--height", "100",
+        ]))
+        .expect_err("out-of-range depth must be refused by the tiling");
+        assert_eq!(err, "unsupported depth — must be 0 (auto) or 1..=5");
+        // A non-i64 value is refused at the resolution entry point with the
+        // named parse error; no bound is named here.
+        let err = export(&args(&[
+            "--tiling", "glb-binary-n7",
+            "--param", "depth=abc",
+            "--width", "100", "--height", "100",
+        ]))
+        .expect_err("non-i64 depth must be refused at resolution");
+        assert_eq!(err, "bad value for parameter 'depth': abc");
+    }
 }
 
 #[cfg(test)]
