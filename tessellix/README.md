@@ -90,7 +90,7 @@ text and the complete table — is in
 
 ## Supported tilings
 
-169 built-in tilings (190 tab memberships), all discoverable in both UIs
+169 built-in tilings (188 tab memberships), all discoverable in both UIs
 via the registry (`tess-tui -- list`). Every tiling declares a primary
 display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic

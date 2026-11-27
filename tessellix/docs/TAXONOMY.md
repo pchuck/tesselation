@@ -6,7 +6,7 @@ tab was added for the Kaplan IH instances —: **Uniform** (11) · **Two-Uniform
 **Duals & variants** (36) · **Wallpaper** (17) · **Pentagon
 Types** (15) · **Isohedral** (5) · **Islamic** (29) · **Bonds & dissections** (8) ·
 **Quasiperiodic** (23) · **Aperiodic** (11) · **Nonperiodic** (13) —
-190 memberships over the 169 implemented tilings; the 21 extra are
+188 memberships over the 169 implemented tilings; the 19 extra are
 secondary memberships. (Counts at this commit; the per-tab figures
 are pinned by `registry_groups_are_complete_and_canonically_ordered`.)
 

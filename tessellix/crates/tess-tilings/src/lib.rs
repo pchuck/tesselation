@@ -255,7 +255,7 @@ mod tests {
         //   Arrangements 8, Quasiperiodic 23, Aperiodic 12, Nonperiodic 12
         //   (girih-decagon-patch moved Islamic -> Nonperiodic, review
         //   E17/A12: a finite patch must not render a wallpaper group).
-        // Membership census 190 = 169 primaries + 21 secondaries
+        // Membership census 188 = 169 primaries + 19 secondaries
         // (3 regular Laves + 5 isohedral->Laves + 9 Wallpaper
         // + 2 typed PentagonTypes: cairo-pentagonal (type 4)
         // and floret-pentagonal (type 5), M122 + 2 untyped
@@ -429,7 +429,7 @@ mod tests {
         // chair set)
         // -> review A12 Islamic 30 -> 29, Nonperiodic 11 -> 12 (girih-decagon-patch
         //   re-categorised: a finite patch must not render a wallpaper group)
-        // -> review A3 Laves 33 -> 36, built-ins 166 -> 169, memberships 187 -> 190
+        // -> review A3 Laves 33 -> 36, built-ins 166 -> 169, memberships 185 -> 188
         //   (the last three 2-uniform face-centroid duals: kuniform-dual-n7/n6/n17)
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
@@ -438,7 +438,7 @@ vec![11, 20, 36, 17, 15, 5, 29, 8, 23, 11, 13],
             "per-tab census (update when adding tilings)"
         );
         assert_eq!(r.len(), 169, "built-in tiling count (update when adding tilings)");
-        assert_eq!(memberships, 190, "membership census (update when adding tilings)");
+        assert_eq!(memberships, 188, "membership census (update when adding tilings)");
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
@@ -956,7 +956,7 @@ vec![11, 20, 36, 17, 15, 5, 29, 8, 23, 11, 13],
         )
         .expect("docs/families/aperiodic.md readable from crates/tess-tilings");
 
-        // "169 tilings, 190 memberships" — the M168 status-line census
+        // "169 tilings, 188 memberships" — the M168 status-line census
         // (not the historical M34/M37/M38/M93 status lines, which are
         // frozen history, not live census). The test-suite count on the
         // same line is NOT pinned: it is not a census claim, and every
@@ -1018,10 +1018,10 @@ vec![11, 20, 36, 17, 15, 5, 29, 8, 23, 11, 13],
             "docs/TAXONOMY.md (line {line_no}): eleven-since word form"
         );
 
-        // "190 memberships over the 169 implemented tilings; the 21 extra
+        // "188 memberships over the 169 implemented tilings; the 19 extra
         // are" — the live membership census and the derived "extra"
         // arithmetic: 21 extra == memberships - built-ins, both live
-        // values (190 - 169 = 21). The per-tab figures in the same file
+        // values (188 - 169 = 19). The per-tab figures in the same file
         // are already pinned against the registry by
         // registry_groups_are_complete_and_canonically_ordered (the
         // per-tab vector) and are intentionally not re-pinned.
