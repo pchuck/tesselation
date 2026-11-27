@@ -71,7 +71,9 @@ pub(crate) const TILING: IhTiling = IhTiling {
     description: "IH27 incidence symbol\nKaplan isohedral template IH27 — pentagon with one rotationally-paired (U) \
                   edge orbit and two freeform (J) orbits, wallpaper group pgg, four aspects; \
                   Cairo-net topology (V3.3.4.3.4, dual of the snub square) with exact \
-                  per-orbit edge curves. Isohedral variant — deliberate edge deformation (curved/notched), not a pentagon type.",
+                  per-orbit edge curves. Isohedral variant — the waviness of the curved/notched \
+                  per-orbit edge polylines is a deliberate deformation of the IH27 incidence \
+                  structure, not a pentagon type.",
     data: &DATA,
     shape_ids: &SHAPE_IDS,
     defaults: &DEFAULTS,
@@ -80,8 +82,8 @@ pub(crate) const TILING: IhTiling = IhTiling {
     lattice: LatticeKind::Rectangular,
     category: TilingCategory::Isohedral,
     secondary: &[TilingCategory::Laves],
-    symmetry_notes: "Kaplan IH27; pgg, 1 U + 2 J edge orbits; curved/notched edges are deliberate \
-                     deformations",
+    symmetry_notes: "Kaplan IH27; pgg, 1 U + 2 J edge orbits; wavy (curved/notched) edges are \
+                     deliberate deformations of the incidence structure",
 };
 
 #[cfg(test)]

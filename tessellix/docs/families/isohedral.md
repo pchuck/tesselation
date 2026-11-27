@@ -36,7 +36,10 @@ quantized to the 2⁻²⁰ grid and handled exactly there
 (`engine.rs::resolve_params`).
 The pentagon templates sit on the Cairo net; they are isohedral
 variants — deliberate edge deformations, not pentagon types — with a
-Laves secondary; the family never touches the Wallpaper tab.
+Laves secondary; the family never touches the Wallpaper tab. The edge
+waviness (curved/notched per-orbit edge polylines, the base edge
+staying straight) is a deliberate deformation of the underlying
+IH27/IH29 incidence structure.
 
 ## Per-tiling documents
 

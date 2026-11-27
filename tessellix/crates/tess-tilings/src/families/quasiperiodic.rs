@@ -197,7 +197,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "girih-14-fold" => TilingClass {
             families: &["Quasiperiodic"],
-            inflation: Some("2b²+3b (b = 2cos(2π/7))"),
+            inflation: Some("2b²+3b"),
             point_order: Some(14),
             prototiles: Some(11),
             translational: Some("quasiperiodic"),

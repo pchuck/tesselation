@@ -155,8 +155,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             inflation: Some("2φ³"),
             point_order: Some(10),
             prototiles: Some(3),
-            source: Some("Lu & Steinhardt"),
-            year: Some("2007"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -182,8 +180,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             inflation: Some("φ²"),
             point_order: Some(10),
             prototiles: Some(2),
-            source: Some("Andritz"),
-            year: Some("2016"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -193,8 +189,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             inflation: Some("φ²"),
             point_order: Some(10),
             prototiles: Some(3),
-            source: Some("Andritz"),
-            year: Some("2016"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
@@ -204,19 +198,15 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             inflation: Some("3 + 2φ"),
             point_order: Some(10),
             prototiles: Some(3),
-            source: Some("Andritz"),
-            year: Some("2016"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
         "andritz-bowtie-hexagon-10gon-3" => TilingClass {
             families: &["Islamic", "Quasiperiodic"],
             method: Some("sigma-frame walk substitution"),
-            inflation: Some("φ⁴ (72° frame turn)"),
+            inflation: Some("φ⁴"),
             point_order: Some(10),
             prototiles: Some(3),
-            source: Some("Andritz"),
-            year: Some("2016"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY
         },
