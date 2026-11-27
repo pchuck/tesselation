@@ -3,6 +3,7 @@
 use crate::geometry::{BBox, Polygon, Vec2};
 use crate::paint::{rgb, tile_rgb, BORDER, BACKGROUND};
 use crate::strapwork::{DecorationPlan, Wall};
+use crate::symmetry::overlay::SymmetryOverlay;
 use crate::tiling::Tile;
 use crate::view::ColorMode;
 
@@ -97,6 +98,10 @@ fn mirror_walls(walls: &[Wall], cx: f64) -> Vec<Wall> {
 /// stroke — so the heavier grout paints over shared edges. Empty
 /// groups are skipped: a flat tiling emits exactly the legacy single
 /// group. Walls are stroked last, on top of the grout.
+///
+/// Exactly [`render_svg_with_walls_overlay`] with `mirror = false`
+/// and `overlay = None`: byte-identical output at this entry point
+/// (M205 contract).
 pub fn render_svg_with_walls_highlight(
     tiles: &[Tile],
     bbox: &BBox,
@@ -104,7 +109,7 @@ pub fn render_svg_with_walls_highlight(
     walls: &[Wall],
     highlight_supertiles: bool,
 ) -> String {
-    render_svg_core(tiles, bbox, mode, walls, highlight_supertiles, false)
+    render_svg_with_walls_overlay(tiles, bbox, mode, walls, highlight_supertiles, false, None)
 }
 
 /// Mirror-image export (C6): identical to
@@ -129,7 +134,7 @@ pub fn render_svg_with_walls_highlight_mirrored(
     walls: &[Wall],
     highlight_supertiles: bool,
 ) -> String {
-    render_svg_core(tiles, bbox, mode, walls, highlight_supertiles, true)
+    render_svg_with_walls_overlay(tiles, bbox, mode, walls, highlight_supertiles, true, None)
 }
 
 /// The SVG scaffolding shared by every tiling render: the `<svg>` element
@@ -298,40 +303,53 @@ fn svg_walls(walls: &[Wall], bbox: &BBox, mirror: bool) -> String {
     s
 }
 
-/// The two-pass emitter behind both public rendering entry points
-/// (the [`render_svg_with_walls_highlight_mirrored`] variant reflects every
-/// emitted coordinate about the frame center first). Every tile fill is
-/// emitted first, then every tile outline (SVG paints each element fill/stroke
-/// in document order, so interleaving lets a later tile's fill cover an
-/// earlier tile's stroke half — the discipline below), then strapwork walls
-/// (round caps, on top).
+/// Symmetry-overlay accent colours (C5) — high-saturation annotations in
+/// hues the tiling palette never uses:
 ///
-/// Drawing is two-pass: every tile fill is emitted first, then every tile
-/// outline. SVG paints each element's fill and stroke in document order,
-/// so a single interleaved pass lets a later tile's fill cover the
-/// earlier tile's stroke half, making the visible border depend on draw
-/// order (thin decorated bands — e.g. taylor-socolar's chord strips —
-/// get eaten by later-drawn neighbours at shared corners). Emitting all
-/// outlines after all fills makes the border symmetric and
-/// order-independent.
+/// * unit cell — gold outline;
+/// * rotation centers — rose filled circle + `fold` spokes;
+/// * mirror lines — solid green;
+/// * glide axes — dashed cyan.
+pub const OVERLAY_CELL_GOLD: u32 = 0xFFC107;
+pub const OVERLAY_ROT_ROSE: u32 = 0xF43F5E;
+pub const OVERLAY_MIRROR_GREEN: u32 = 0x10B981;
+pub const OVERLAY_GLIDE_CYAN: u32 = 0x22D3EE;
+
+/// Full single-tiling render entry (C5): tiles + strapwork walls +
+/// optional supertile highlight + optional mirror (enantiomorph) +
+/// optional certified-symmetry overlay. The two-pass body, the wall pass
+/// and the scaffolding are the shared helpers ([`svg_body`], [`svg_walls`],
+/// [`svg_scaffold`], [`svg_close`]) exactly as the C2 dual entry threads
+/// them; the legacy entries above are precisely this with
+/// `mirror = false` / `overlay = None`.
 ///
-/// Walls are stroked in the border color with round caps — the classic
-/// strapwork ribbon look — at a width proportional to the view extent
-/// (`0.012·min(w, h)`, floored at `0.003`): three times the tile-border
-/// stroke, which keeps the ribbons clearly readable above the fills at
-/// any export size without swallowing thin cells. They are drawn last, so
-/// ribbons stay on top of the grout.
-fn render_svg_core(
+/// [mirror = true]: every emitted coordinate is reflected about the frame
+/// center first (see [`render_svg_with_walls_highlight_mirrored`]); the
+/// overlay (when present) is appended after the mirrored walls.
+///
+/// Symmetry overlay (`Some(overlay)`, C5): after the walls group, a
+/// `<g data-symmetry-overlay="true">` block is appended — the unit-cell
+/// parallelogram (closed gold path), the certified rotation centers (rose
+/// circle + `fold` spokes, one group per site), the certified mirror
+/// lines (solid green) and the certified glide axes (dashed cyan) — all
+/// in world coordinates inside the y-flipped group, line glyphs clipped
+/// to `bbox`. With `overlay = None` the output is byte-identical to the
+/// M205 entries for every input.
+pub fn render_svg_with_walls_overlay(
     tiles: &[Tile],
     bbox: &BBox,
     mode: ColorMode,
     walls: &[Wall],
     highlight_supertiles: bool,
     mirror: bool,
+    overlay: Option<&SymmetryOverlay>,
 ) -> String {
     let mut s = svg_scaffold(bbox);
     s.push_str(&svg_body(tiles, bbox, mode, highlight_supertiles, mirror));
     s.push_str(&svg_walls(walls, bbox, mirror));
+    if let Some(ov) = overlay {
+        append_symmetry_overlay(&mut s, ov, bbox);
+    }
     s.push_str(svg_close());
     s
 }
@@ -366,6 +384,150 @@ pub fn render_svg_dual_overlay(
     s.push_str(&svg_walls(walls, bbox, mirror));
     s.push_str(svg_close());
     s
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Symmetry overlay emission (C5).
+// ──────────────────────────────────────────────────────────────────────────
+
+/// Endpoints of the segment of the infinite line (point `p`, unit
+/// direction `u`) that crosses the axis-aligned `bbox` — `None` when the
+/// intersection has zero length (e.g. it only touches a corner, which the
+/// derivation already drops).
+fn line_bbox_endpoints(p: Vec2, u: Vec2, bbox: &BBox) -> Option<(Vec2, Vec2)> {
+    let mut tlo = f64::NEG_INFINITY;
+    let mut thi = f64::INFINITY;
+    for (lo, hi, cu, c0) in [
+        (bbox.min.x, bbox.max.x, u.x, p.x),
+        (bbox.min.y, bbox.max.y, u.y, p.y),
+    ] {
+        if cu.abs() < 1e-12 {
+            if !(lo - 1e-9 <= c0 && c0 <= hi + 1e-9) {
+                return None;
+            }
+        } else {
+            let a = (lo - c0) / cu;
+            let b = (hi - c0) / cu;
+            tlo = tlo.max(a.min(b));
+            thi = thi.min(a.max(b));
+        }
+    }
+    if thi - tlo < 1e-9 {
+        return None;
+    }
+    Some((p + u * tlo, p + u * thi))
+}
+
+/// Closed four-point path data for a unit cell, `None` if any corner is
+/// non-finite.
+fn cell_path(cell: &[Vec2; 4]) -> Option<String> {
+    for p in cell {
+        if !p.x.is_finite() || !p.y.is_finite() {
+            return None;
+        }
+    }
+    let mut d = format!("M{:.4} {:.4}", cell[0].x, cell[0].y);
+    for p in &cell[1..] {
+        d.push_str(&format!("L{:.4} {:.4}", p.x, p.y));
+    }
+    d.push('Z');
+    Some(d)
+}
+
+/// Emit the `<g data-symmetry-overlay="true">` block: unit cell, rotation
+/// centers, mirrors, glides — in that order, in world coordinates inside
+/// the y-flipped group. Deterministic: centers sorted by (x, y, fold);
+/// lines sorted by (direction, offset).
+fn append_symmetry_overlay(s: &mut String, ov: &SymmetryOverlay, bbox: &BBox) {
+    let w = bbox.size().x;
+    let h = bbox.size().y;
+    let stroke = (0.008 * w.min(h)).max(0.002);
+    let (cr, cg, cb) = rgb(OVERLAY_CELL_GOLD);
+    let (rr, rg, rb) = rgb(OVERLAY_ROT_ROSE);
+    let (mr, mg, mb) = rgb(OVERLAY_MIRROR_GREEN);
+    let (gr, gg, gb) = rgb(OVERLAY_GLIDE_CYAN);
+    let radius = 0.12 * ov.scale;
+    let spoke = 0.28 * ov.scale;
+
+    s.push_str("<g data-symmetry-overlay=\"true\" fill=\"none\" stroke-linecap=\"round\">");
+
+    // Unit cell: closed gold parallelogram.
+    if let Some(d) = cell_path(&ov.cell) {
+        s.push_str(&format!(
+            r#"<path data-sym="cell" d="{}" stroke="rgb({},{},{})" stroke-width="{:.4}" stroke-linejoin="round"/>"#,
+            d, cr, cg, cb, stroke
+        ));
+    }
+
+    // Rotation centers: rose filled circle + `fold` spokes at 2πk/fold.
+    let mut centers = ov.centers.clone();
+    centers.sort_by(|a, b| {
+        a.point.x.partial_cmp(&b.point.x).unwrap()
+            .then_with(|| a.point.y.partial_cmp(&b.point.y).unwrap())
+            .then_with(|| a.fold.cmp(&b.fold))
+    });
+    for c in &centers {
+        s.push_str(&format!(
+            r#"<g data-sym="rot-{}" stroke="rgb({},{},{})" stroke-width="{:.4}">"#,
+            c.fold, rr, rg, rb, stroke
+        ));
+        s.push_str(&format!(
+            r#"<circle cx="{:.4}" cy="{:.4}" r="{:.4}" fill="rgb({},{},{})"/>"#,
+            c.point.x, c.point.y, radius, rr, rg, rb
+        ));
+        let n = c.fold as i64;
+        for k in 0..n {
+            let ang = std::f64::consts::TAU * k as f64 / n as f64;
+            s.push_str(&format!(
+                r#"<line x1="{:.4}" y1="{:.4}" x2="{:.4}" y2="{:.4}"/>"#,
+                c.point.x,
+                c.point.y,
+                c.point.x + spoke * ang.cos(),
+                c.point.y + spoke * ang.sin()
+            ));
+        }
+        s.push_str("</g>");
+    }
+
+    // Mirrors: solid green lines clipped to the bbox.
+    let mut mirrors = ov.mirrors.clone();
+    mirrors.sort_by(|a, b| {
+        let sa = a.point.dot(Vec2::new(-a.direction.y, a.direction.x));
+        let sb = b.point.dot(Vec2::new(-b.direction.y, b.direction.x));
+        a.direction.x.partial_cmp(&b.direction.x).unwrap()
+            .then_with(|| a.direction.y.partial_cmp(&b.direction.y).unwrap())
+            .then_with(|| sa.partial_cmp(&sb).unwrap())
+    });
+    for m in &mirrors {
+        if let Some((a, b)) = line_bbox_endpoints(m.point, m.direction, bbox) {
+            s.push_str(&format!(
+                r#"<line data-sym="mirror" x1="{:.4}" y1="{:.4}" x2="{:.4}" y2="{:.4}" stroke="rgb({},{},{})" stroke-width="{:.4}"/>"#,
+                a.x, a.y, b.x, b.y, mr, mg, mb, stroke
+            ));
+        }
+    }
+
+    // Glides: dashed cyan lines (dasharray 3:2 of the stroke).
+    let mut glides = ov.glides.clone();
+    glides.sort_by(|a, b| {
+        let sa = a.point.dot(Vec2::new(-a.direction.y, a.direction.x));
+        let sb = b.point.dot(Vec2::new(-b.direction.y, b.direction.x));
+        a.direction.x.partial_cmp(&b.direction.x).unwrap()
+            .then_with(|| a.direction.y.partial_cmp(&b.direction.y).unwrap())
+            .then_with(|| sa.partial_cmp(&sb).unwrap())
+    });
+    let dash_on = (3.0 * stroke).max(0.001);
+    let dash_off = (2.0 * stroke).max(0.001);
+    for g in &glides {
+        if let Some((a, b)) = line_bbox_endpoints(g.point, g.direction, bbox) {
+            s.push_str(&format!(
+                r#"<line data-sym="glide" x1="{:.4}" y1="{:.4}" x2="{:.4}" y2="{:.4}" stroke="rgb({},{},{})" stroke-width="{:.4}" stroke-dasharray="{:.4} {:.4}"/>"#,
+                a.x, a.y, b.x, b.y, gr, gg, gb, stroke, dash_on, dash_off
+            ));
+        }
+    }
+
+    s.push_str("</g>");
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -821,6 +983,116 @@ mod tests {
             }
         }
         assert!(last_fill < spans[0].0, "fills must precede the outline groups");
+    }
+
+    // ---- symmetry overlay (render_svg_with_walls_overlay, C5) ----------
+
+    use crate::symmetry::overlay::{GlideAxis, MirrorLine, RotationCenter};
+    use crate::symmetry::WallpaperGroup;
+
+    /// A small synthetic overlay: one unit cell, one 4-fold center, one
+    /// mirror and one glide. Enough structure to exercise every glyph
+    /// class in the emitter.
+    fn synth_overlay() -> SymmetryOverlay {
+        SymmetryOverlay {
+            group: WallpaperGroup::P4m,
+            cell: [pt(0.0, 0.0), pt(1.0, 0.0), pt(1.0, 1.0), pt(0.0, 1.0)],
+            centers: vec![RotationCenter {
+                point: pt(0.5, 0.5),
+                fold: 4,
+            }],
+            mirrors: vec![MirrorLine {
+                point: pt(0.0, 0.5),
+                direction: Vec2::new(1.0, 0.0),
+            }],
+            glides: vec![GlideAxis {
+                point: pt(0.0, 1.5),
+                direction: Vec2::new(1.0, 0.0),
+                glide: Vec2::new(0.5, 0.0),
+            }],
+            scale: 1.0,
+        }
+    }
+
+    #[test]
+    fn overlay_off_output_is_byte_pinned() {
+        // Full golden pin of the new entry with `overlay = None`: byte
+        // identical to the legacy M205 off-state bytes, so the new
+        // delegation cannot drift the default export. Same tiling and
+        // bbox as highlight_off_output_is_byte_pinned.
+        let tiles = mixed_level_tiles();
+        let bbox = BBox::new(pt(-1.0, -1.0), pt(3.0, 2.0));
+        let expected = concat!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4.0000 3.0000">"#,
+            r#"<g transform="translate(1.0000 2.0000) scale(1 -1)">"#,
+            r#"<rect x="-1.0000" y="-1.0000" width="4.0000" height="3.0000" fill="rgb(40,42,58)"/>"#,
+            r#"<path d="M0.0000 0.0000L1.0000 0.0000L1.0000 1.0000L0.0000 1.0000Z" fill="rgb(212,212,212)"/>"#,
+            r#"<path d="M1.0000 0.0000L2.0000 0.0000L2.0000 1.0000L1.0000 1.0000Z" fill="rgb(212,212,212)"/>"#,
+            r#"<g fill="none" stroke="rgb(30,30,46)" stroke-width="0.0120" stroke-linejoin="round">"#,
+            r#"<path d="M0.0000 0.0000L1.0000 0.0000L1.0000 1.0000L0.0000 1.0000Z"/>"#,
+            r#"<path d="M1.0000 0.0000L2.0000 0.0000L2.0000 1.0000L1.0000 1.0000Z"/>"#,
+            r#"</g></g></svg>"#
+        );
+        assert_eq!(
+            render_svg_with_walls_overlay(&tiles, &bbox, ColorMode::Single, &[], false, false, None),
+            expected,
+            "None overlay must be the legacy bytes"
+        );
+        // The delegation is exact: the legacy entry and the new entry with
+        // None produce the same bytes.
+        assert_eq!(
+            render_svg_with_walls_overlay(&tiles, &bbox, ColorMode::Single, &[], true, false, None),
+            render_svg_with_walls_highlight(&tiles, &bbox, ColorMode::Single, &[], true),
+        );
+    }
+
+    #[test]
+    fn overlay_on_structure_and_zorder() {
+        // On-state: one element per site type, correct z-order (after the
+        // wall group), and on == off with the overlay group stripped.
+        let tiles = square_grid(4);
+        let ws = walls(&tiles, 45.0);
+        assert!(!ws.is_empty(), "need a non-empty wall set");
+        let bbox = BBox::new(pt(-2.0, -2.0), pt(6.0, 6.0));
+        let ov = synth_overlay();
+        let off = render_svg_with_walls_overlay(&tiles, &bbox, ColorMode::Pattern, &ws, false, false, None);
+        let on = render_svg_with_walls_overlay(&tiles, &bbox, ColorMode::Pattern, &ws, false, false, Some(&ov));
+
+        // Element inventory (one per site type in the synthetic overlay).
+        assert_eq!(on.matches(r#"data-sym="cell""#).count(), 1);
+        assert_eq!(on.matches(r#"data-sym="rot-4""#).count(), 1);
+        assert_eq!(on.matches(r#"data-sym="mirror""#).count(), 1);
+        assert_eq!(on.matches(r#"data-sym="glide""#).count(), 1);
+        assert_eq!(on.matches(r#"<g data-symmetry-overlay="true""#).count(), 1);
+
+        // The rot-4 group holds exactly one filled circle plus 4 spokes.
+        let g0 = on.find(r#"<g data-sym="rot-4""#).unwrap();
+        let g1 = &on[g0..];
+        let gend = g1.find("</g>").unwrap() + "</g>".len();
+        let gblock = &g1[..gend];
+        assert_eq!(gblock.matches("<circle").count(), 1, "{gblock}");
+        assert_eq!(gblock.matches("<line").count(), 4, "4 spokes for a 4-fold center: {gblock}");
+        assert!(gblock.contains("fill=\"rgb(244,63,94)\""), "rot circle is rose: {gblock}");
+
+        // Z-order: the overlay group is the LAST group in the document —
+        // it follows every wall line and every outline. The wall group is
+        // the second `<g fill="none">` span (outline group + wall group;
+        // the overlay group does not match that opener, so it is excluded).
+        let tail = "</g></svg>";
+        assert!(on.ends_with(tail), "{on}");
+        let marker = r#"<g data-symmetry-overlay="true""#;
+        let idx = on.find(marker).unwrap();
+        let spans = outline_group_spans(&on);
+        assert_eq!(spans.len(), 2, "outline group + wall group (overlay excluded): {on}");
+        let wall_end = spans[1].1;
+        // The wall group's closing `</g>` ends exactly where the overlay
+        // group begins (or the wall group is absent and the overlay
+        // follows the outline group directly).
+        assert!(wall_end <= idx, "overlay must be appended after the wall group");
+
+        // on == off with the overlay block stripped: the overlay is the
+        // tail group, so removing it recovers the off-state bytes exactly.
+        assert_eq!(&on[..idx], &off[..off.len() - tail.len()], "on minus overlay == off");
     }
 
     #[test]

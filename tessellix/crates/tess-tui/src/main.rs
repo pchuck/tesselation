@@ -79,6 +79,14 @@
 //!                                  Self-dual "square" is not an error: a
 //!                                  render-level note is emitted and the SVG
 //!                                  is still written.
+//!     [--symmetry-overlay]         overlay the certified wallpaper-group
+//!                                  symmetry elements of a periodic
+//!                                  tiling: the unit cell, rotation
+//!                                  centers, mirror lines and glide axes.
+//!                                  A byte-for-byte no-op on aperiodic
+//!                                  (non-periodic) tilings. Mutually
+//!                                  exclusive with --decoration (the
+//!                                  decoration replaces the tiling render).
 //!   tess-tui explore --tiling ID  deterministic δ/θ sweep + leaderboard
 //!     (docs/briefs/pic-explorer.md). Emits a JSON leaderboard plus an
 //!     optional CSV and a top-K SVG gallery.
@@ -143,6 +151,7 @@ struct ExportArgs {
     highlight_supertiles: bool,
     mirror: bool,
     dual_overlay: bool,
+    symmetry_overlay: bool,
 }
 
 /// Parse a float CLI value, rejecting NaN and infinities: they would
@@ -282,6 +291,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         highlight_supertiles: false,
         mirror: false,
         dual_overlay: false,
+        symmetry_overlay: false,
     };
     let mut i = 0;
     let mut band_w_seen = false;
@@ -335,10 +345,11 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
                 band_w_seen = true;
                 a.band_w = finite(&next(&mut i)?, "--band-w")?;
             }
-"--highlight-supertiles" => a.highlight_supertiles = true,
+            "--highlight-supertiles" => a.highlight_supertiles = true,
             "--medallion-weave" => a.medallion_weave = true,
             "--mirror" => a.mirror = true,
             "--dual-overlay" => a.dual_overlay = true,
+            "--symmetry-overlay" => a.symmetry_overlay = true,
             "--center" => {
                 let v = next(&mut i)?;
                 let (x_s, y_s) = v.split_once(',').ok_or_else(|| {
@@ -418,6 +429,12 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
     if a.dual_overlay && a.medallion_weave {
         return Err(
             "--dual-overlay is not applicable with --medallion-weave (the weave fuses the medallion third layer into the wall map, which the two-group overlay render does not support)"
+                .into(),
+        );
+    }
+    if a.symmetry_overlay && a.decoration.is_some() {
+        return Err(
+            "--symmetry-overlay is not applicable with --decoration (the decoration replaces the tiling render)"
                 .into(),
         );
     }
@@ -572,6 +589,22 @@ fn export(args: &[String]) -> Result<(), String> {
             None => (Vec::new(), None),
         }
     };
+    // Certified-symmetry overlay (C5). Derived from the rendered patch when
+    // the flag is on and the tiling is periodic; a silent no-op (None) on
+    // aperiodic tilings, mirroring how --highlight-supertiles is a no-op on
+    // flat tilings.
+    let overlay = if a.symmetry_overlay {
+        result.periodic.map(|p| {
+            tess_core::symmetry::overlay::derive_overlay(
+                &result.tiles,
+                result.symmetry.group,
+                p,
+                region,
+            )
+        })
+    } else {
+        None
+    };
     // Decoration styles (Kaplan §3.7) replace the tiling render with
     // paper + decorated walls. The gates run on the view region itself:
     // the coverage contract keeps every unshared host edge (the source
@@ -600,23 +633,15 @@ fn export(args: &[String]) -> Result<(), String> {
         None if a.dual_overlay => {
             render_dual_overlay(&a, &region, &result.tiles, &walls, &params)?
         }
-        None if a.mirror => (
-            tess_core::svg::render_svg_with_walls_highlight_mirrored(
-                &result.tiles,
-                &region,
-                a.mode,
-                &walls,
-                a.highlight_supertiles,
-            ),
-            0,
-        ),
         None => (
-            tess_core::svg::render_svg_with_walls_highlight(
+            tess_core::svg::render_svg_with_walls_overlay(
                 &result.tiles,
                 &region,
                 a.mode,
                 &walls,
                 a.highlight_supertiles,
+                a.mirror,
+                overlay.as_ref(),
             ),
             0,
         ),
@@ -2090,6 +2115,7 @@ mod tests_export_contract {
             ("supertile-member tiles", "--highlight-supertiles"),
             ("enantiomorph", "--mirror"),
             ("centroid dual", "--dual-overlay"),
+            ("certified wallpaper-group symmetry elements", "--symmetry-overlay"),
             ("output SVG file", "--out"),
         ];
         let mut documented: Vec<String> = Vec::new();
@@ -2108,7 +2134,7 @@ mod tests_export_contract {
             "--tiling", "--width", "--height", "--scale", "--rotation", "--center",
             "--param", "--mode", "--strapwork", "--deform", "--decoration",
             "--band-w", "--medallion-weave", "--highlight-supertiles", "--mirror",
-            "--dual-overlay", "--out", "-o",
+            "--dual-overlay", "--symmetry-overlay", "--out", "-o",
         ];
         for flag in expected {
             assert!(
@@ -2147,6 +2173,7 @@ mod tests_export_contract {
             (&["--tiling", "square", "--highlight-supertiles"], "--highlight-supertiles"),
             (&["--tiling", "square", "--mirror"], "--mirror"),
             (&["--tiling", "square", "--dual-overlay"], "--dual-overlay"),
+            (&["--tiling", "square", "--symmetry-overlay"], "--symmetry-overlay"),
             (&["--tiling", "square", "--out", "a.svg"], "--out"),
             (&["--tiling", "square", "-o", "b.svg"], "-o"),
         ];
@@ -2163,10 +2190,16 @@ mod tests_export_contract {
             "docs/USAGE.md: --band-w without --decoration must be a named parse error, got {err:?}"
         );
 
-        // --highlight-supertiles and --mirror are documented as mutually
-        // exclusive with --decoration (the decoration replaces the tiling
-        // render); both must be named parse errors, not silent no-ops.
-        for flag in ["--highlight-supertiles", "--mirror", "--dual-overlay"] {
+        // --highlight-supertiles, --mirror, --dual-overlay and
+        // --symmetry-overlay are documented as mutually exclusive with
+        // --decoration (the decoration replaces the tiling render); each
+        // must be a named parse error, not a silent no-op.
+        for flag in [
+            "--highlight-supertiles",
+            "--mirror",
+            "--dual-overlay",
+            "--symmetry-overlay",
+        ] {
             let err = parse_export(&args(&[
                 "--tiling", "square", "--strapwork", "45", "--decoration", "fill", flag,
             ]))
@@ -2479,6 +2512,23 @@ mod tests_export_contract {
             !defaults.dual_overlay,
             "docs/USAGE.md line {line_no} (--dual-overlay default): default should be off, got {}",
             defaults.dual_overlay
+        );
+
+        // --symmetry-overlay default off.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "certified wallpaper-group symmetry elements",
+            "docs/USAGE.md: --symmetry-overlay default pin",
+        );
+        assert_eq!(
+            cells[2], "off",
+            "docs/USAGE.md line {line_no} (--symmetry-overlay default): documented default {:?}",
+            cells[2]
+        );
+        assert!(
+            !defaults.symmetry_overlay,
+            "docs/USAGE.md line {line_no} (--symmetry-overlay default): default should be off, got {}",
+            defaults.symmetry_overlay
         );
 
         // --band-w default 0.1 (the "requires --decoration" requirement is
@@ -3144,6 +3194,99 @@ mod tests {
         assert!(!chair_on.contains(base_w), "no base stroke remains: {chair_on}");
 
         for tag in ["flat_off", "flat_on", "chair_off", "chair_on"] {
+            let _ = std::fs::remove_file(tmp(tag));
+        }
+    }
+
+    #[test]
+    fn symmetry_overlay_flag_parses_and_excludes_decoration() {
+        let a =
+            parse_export(&args(&["--tiling", "square", "--symmetry-overlay"])).expect("flag parses");
+        assert!(a.symmetry_overlay, "the flag must set the export arg");
+        let d = parse_export(&args(&["--tiling", "square"])).expect("defaults");
+        assert!(!d.symmetry_overlay, "the flag defaults off");
+        // Mutually exclusive with --decoration: a named parse error, not a
+        // silent no-op.
+        let e = parse_export(&args(&[
+            "--tiling",
+            "square",
+            "--strapwork",
+            "45",
+            "--decoration",
+            "fill",
+            "--symmetry-overlay",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("--symmetry-overlay"), "{e}");
+        assert!(e.contains("--decoration"), "the error must name the collision: {e}");
+    }
+
+    #[test]
+    fn symmetry_overlay_export_noop_and_on() {
+        // End-to-end through the export path: the flag is a byte-for-byte
+        // no-op on aperiodic tilings (no period lattice → no overlay); on a
+        // periodic tiling it appends the overlay group — cell-only for p1,
+        // with rotation centers and mirrors for p6m.
+        let tmp = |tag: &str| {
+            std::env::temp_dir().join(format!("tess_tui_sym_{tag}_{}.svg", std::process::id()))
+        };
+        let export_to = |base: &[&str], overlay: bool, tag: &str| {
+            let mut v: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+            if overlay {
+                v.push("--symmetry-overlay".to_string());
+            }
+            v.extend(["--out".to_string(), tmp(tag).to_string_lossy().to_string()]);
+            super::export(&v).unwrap();
+            std::fs::read_to_string(tmp(tag)).expect("SVG readable")
+        };
+        let tail = "</g></svg>";
+
+        // p1 (stepped-hexominoes): periodic, but the group carries no
+        // rotation/mirror/glide operations → the overlay is the unit cell
+        // alone. on == off with the overlay block stripped.
+        let p1: &[&str] = &["--tiling", "stepped-hexominoes", "--width", "480", "--height", "480"];
+        let off = export_to(p1, false, "p1_off");
+        let on = export_to(p1, true, "p1_on");
+        assert!(
+            on.contains(r#"<g data-symmetry-overlay="true""#),
+            "p1 on-state must carry the overlay group: {on}"
+        );
+        assert_eq!(on.matches(r#"data-sym="cell""#).count(), 1, "p1 overlay is cell-only: {on}");
+        for sym in ["rot-2", "rot-3", "rot-4", "rot-6", "mirror", "glide"] {
+            assert!(
+                !on.contains(&format!(r#"data-sym="{sym}""#)),
+                "p1 must have no {sym} sites: {on}"
+            );
+        }
+        let idx = on.find(r#"<g data-symmetry-overlay="true""#).unwrap();
+        assert_eq!(&on[..idx], &off[..off.len() - tail.len()], "p1: on minus overlay == off");
+
+        // p6m (hexagon): periodic, carries 6-fold centers and mirror lines.
+        let hex: &[&str] = &["--tiling", "hexagon", "--width", "480", "--height", "480"];
+        let on_h = export_to(hex, true, "hex_on");
+        assert!(on_h.contains(r#"data-sym="cell""#), "hex on-state must carry a cell: {on_h}");
+        assert!(
+            on_h.matches(r#"data-sym="rot-6""#).count() >= 1,
+            "hex on-state must carry 6-fold centers: {on_h}"
+        );
+        assert!(
+            on_h.matches(r#"data-sym="mirror""#).count() >= 1,
+            "hex on-state must carry mirror lines: {on_h}"
+        );
+        assert!(!on_h.contains(r#"data-sym="glide""#), "p6m has no glides: {on_h}");
+
+        // aperiodic (penrose-p1): no period lattice → the flag is a
+        // byte-for-byte no-op (no overlay at all).
+        let pen: &[&str] = &["--tiling", "penrose-p1", "--width", "480", "--height", "480"];
+        let pen_off = export_to(pen, false, "pen_off");
+        let pen_on = export_to(pen, true, "pen_on");
+        assert_eq!(
+            pen_on, pen_off,
+            "aperiodic tiling: the overlay flag must be a byte-for-byte no-op"
+        );
+        assert!(!pen_on.contains("data-symmetry-overlay"), "aperiodic export must carry no overlay group");
+
+        for tag in ["p1_off", "p1_on", "hex_on", "pen_off", "pen_on"] {
             let _ = std::fs::remove_file(tmp(tag));
         }
     }

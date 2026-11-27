@@ -136,3 +136,7 @@ impl fmt::Display for SymmetryMeta {
         Ok(())
     }
 }
+
+/// The certified symmetry overlay (unit cell, rotation centers, mirror
+/// lines, glide axes) for a periodic tiling — C5.
+pub mod overlay;
