@@ -59,6 +59,10 @@ exact partitions; the failure is between different D1 parents). The
 are background (contract-legal for finite patches, `fibonacci_fib.rs`
 precedent).
 
+## Presentation
+
+The tiling is a fixed 26-tile depth-1 patch (the single-parent square supertile — 16 tri + 6 rho + 4 sq, simply connected); the rules do not compose at depth ≥ 2 (pinned D2 drift-guard: tri seed 155 tiles / 770 overlap pairs, sq 358 / 3660, rho 179 / 1023, same-parent overlaps 0 — the failure is between different D1 parents), so no depth lever exists and the frame cannot be re-framed by emission. The default view is origin-centered (`preview_window`: aperiodic span 9.0 × mean tile, `Viewport::new` zero-centered), so the 26-tile patch does not fill the frame; measured UI coverage is 0.1161 at scales 1.0 / 3.5 / 0.3 (0.1125 at 20.0 — M210's quoted 0.1194 was a different sampling over the same 26 tiles). Scale is self-canceling there too (the preview window ∝ scale, so zooming re-crops the same fraction of the frame). The E15 tier rejected a recenter as "pin-breaking"; the rejection conflates the view with the patch geometry — the exact-arithmetic pins (level-1 dissections, angle census, coverage windows) derive from the patch, not the camera, so a VIEW-center recenter would NOT break them. Deferred follow-up: a `Tiling::default_view_center()` hook on the `Tiling` trait (no such hook exists today — `preview_window` is origin-centered at `crates/tess-core/src/app.rs`, `Viewport::new` is zero-centered at `crates/tess-core/src/view.rs`, and both UIs read the origin), landed in one change across tess-core + both UIs, with live pin re-derivation per the M202 E14 precedent (Hirschhorn SCALE was a view-param change with live pin re-derivation).
+
 ## See also
 
 - Family doc (catalog table + build arcs): [docs/families/quasiperiodic.md](../families/quasiperiodic.md)
