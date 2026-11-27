@@ -1982,6 +1982,8 @@ mod tests_export_contract {
             ("ornamentation style", "--decoration"),
             ("band width in world units", "--band-w"),
             ("medallion third layer", "--medallion-weave"),
+            ("supertile-member tiles", "--highlight-supertiles"),
+            ("enantiomorph", "--mirror"),
             ("output SVG file", "--out"),
         ];
         let mut documented: Vec<String> = Vec::new();
@@ -1999,7 +2001,8 @@ mod tests_export_contract {
         let expected: &[&str] = &[
             "--tiling", "--width", "--height", "--scale", "--rotation", "--center",
             "--param", "--mode", "--strapwork", "--deform", "--decoration",
-            "--band-w", "--medallion-weave", "--out", "-o",
+            "--band-w", "--medallion-weave", "--highlight-supertiles", "--mirror",
+            "--out", "-o",
         ];
         for flag in expected {
             assert!(
@@ -2035,6 +2038,8 @@ mod tests_export_contract {
             (&["--tiling", "square", "--strapwork", "45", "--decoration", "fill"], "--decoration"),
             (&["--tiling", "square", "--band-w", "0.2", "--strapwork", "45", "--decoration", "fill"], "--band-w"),
             (&["--tiling", "square", "--strapwork", "45", "--medallion-weave"], "--medallion-weave"),
+            (&["--tiling", "square", "--highlight-supertiles"], "--highlight-supertiles"),
+            (&["--tiling", "square", "--mirror"], "--mirror"),
             (&["--tiling", "square", "--out", "a.svg"], "--out"),
             (&["--tiling", "square", "-o", "b.svg"], "-o"),
         ];
@@ -2050,6 +2055,24 @@ mod tests_export_contract {
             err.contains("--band-w requires --decoration"),
             "docs/USAGE.md: --band-w without --decoration must be a named parse error, got {err:?}"
         );
+
+        // --highlight-supertiles and --mirror are documented as mutually
+        // exclusive with --decoration (the decoration replaces the tiling
+        // render); both must be named parse errors, not silent no-ops.
+        for flag in ["--highlight-supertiles", "--mirror"] {
+            let err = parse_export(&args(&[
+                "--tiling", "square", "--strapwork", "45", "--decoration", "fill", flag,
+            ]))
+            .unwrap_err();
+            assert!(
+                err.contains(flag),
+                "docs/USAGE.md: {flag} with --decoration must be a named parse error, got {err:?}"
+            );
+            assert!(
+                err.contains("--decoration"),
+                "docs/USAGE.md: {flag} with --decoration must name the collision, got {err:?}"
+            );
+        }
     }
 
     // ---- requirement claim: --band-w requires --decoration ---------------
@@ -2298,6 +2321,40 @@ mod tests_export_contract {
             defaults.decoration.is_none(),
             "docs/USAGE.md line {line_no} (--decoration default): default should be off (None), got {:?}",
             defaults.decoration
+        );
+
+        // --highlight-supertiles default off.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "supertile-member tiles",
+            "docs/USAGE.md: --highlight-supertiles default pin",
+        );
+        assert_eq!(
+            cells[2], "off",
+            "docs/USAGE.md line {line_no} (--highlight-supertiles default): documented default {:?}",
+            cells[2]
+        );
+        assert!(
+            !defaults.highlight_supertiles,
+            "docs/USAGE.md line {line_no} (--highlight-supertiles default): default should be off, got {}",
+            defaults.highlight_supertiles
+        );
+
+        // --mirror default off.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "enantiomorph",
+            "docs/USAGE.md: --mirror default pin",
+        );
+        assert_eq!(
+            cells[2], "off",
+            "docs/USAGE.md line {line_no} (--mirror default): documented default {:?}",
+            cells[2]
+        );
+        assert!(
+            !defaults.mirror,
+            "docs/USAGE.md line {line_no} (--mirror default): default should be off, got {}",
+            defaults.mirror
         );
 
         // --band-w default 0.1 (the "requires --decoration" requirement is
