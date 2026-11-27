@@ -18,6 +18,14 @@ complementary strap pattern. Full dossier in
 - **24b Hole-bearing substrates + boundary-matched inference** — the
   core algorithm; ground-truth bar: reproduce M158/M161 cell tables
   first. Subsumes the open 22b hole decomposition.
+  **Third-layer composition design landed (M188):**
+  [docs/medallion-third-layer-design.md](medallion-third-layer-design.md) —
+  the medallion (interstitial) layer absorbed at the wall stage into
+  the same `Vec<Wall>` before `build_map`; suppression by seed;
+  continuity law `θ_record = d·180/n = δ` free via M163; surface =
+  `extra_walls`/`suppressed_seeds` default-empty hooks +
+  `walls_layered`; tess-core stays medallion-free. Implementation
+  queued (strong tier).
   ✅ M174 sprint 1: WIS substrate + inference engine landed
   (6480/6480 exhaustive fills, 0 invalid; freedom `Report` output
   feeds 24e); M158 reproduced from the general path, M161 staged

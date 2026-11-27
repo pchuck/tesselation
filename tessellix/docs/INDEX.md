@@ -71,6 +71,11 @@ registry name.
   24c odd-n engine-side design doc (M181): seven (n,c) monster rungs at
   n = 11, 13 over the designed field layers, spike-validated, no code
   yet (unblocks the 24c n=11/13 rung implementation)
+- [docs/medallion-third-layer-design.md](medallion-third-layer-design.md) —
+  medallion third-layer design (M188): absorbing the medallion layer
+  into the strapwork weave at the wall stage — one fused `Vec<Wall>`
+  before `build_map`, suppression by seed, the θ_record = δ continuity
+  law via M163, default-empty `Tiling` hooks (design doc, no code)
 - [docs/cyclotomic-field-17-21-design.md](cyclotomic-field-17-21-design.md) —
   §23i new-field-tiers design doc (M183): K₁₇ degree-8 constants
   certified but D = 8 NON-QUALIFICATION at the engine wall; K₂₁

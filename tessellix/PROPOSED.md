@@ -1905,6 +1905,22 @@ can be adopted independently through the standard checklist.
 
 ### 24. Medallion composition program — star-and-field two-level patterns (planned 2026-11-24)
 
+> **Third-layer design (M188, 2026-11-26):**
+> [docs/medallion-third-layer-design.md](docs/medallion-third-layer-design.md)
+> — the intermediate/interstitial medallion layer is absorbed at the
+> wall stage into the same `Vec<Wall>` as the host strapwork *before*
+> `build_map` (one Eulerian/two-strand map; all four Kaplan decoration
+> styles decide honesty on the fused map). Suppression is by seed (PIC
+> rays never cross tiles ⟹ no clipper); the continuity law
+> `θ_record = d·180/n = δ` is free via the M163 identity when δ
+> matches, a named gate error otherwise. Surface: two default-empty
+> `Tiling` hooks (`extra_walls`, `suppressed_seeds`), `walls_layered`,
+> two `Medallion` f64 views, one error variant; `tess-core` names no
+> medallion concept. Certification anchors: WIS/3.12.12 interstitial
+> closure, khatam {8/2}@45° segment-multiset identity, M172 δ=60
+> pass/δ=30 named fail. Nested medallions + field tower = §10 backlog.
+> Implementation queued (strong tier).
+
 The program the foundation has been building toward: high-degree
 medallions (hexagrams {6/2}, dodecagrams {12/4}, rosettes, n-pointed
 stars, khatam rings) placed on a periodic grid/lattice, their rays
