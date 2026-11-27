@@ -3228,23 +3228,26 @@ mod tests_param_surface_pins {
 
     #[test]
     fn glb_binary_n7_fingerprint_locks_appended_spec() {
-        // The in-flight depth-param job adds `depth` Int to this tiling.
-        // Appending a spec must be a detectable, non-colliding change —
-        // pinned here so that job's keys stay honest.
+        // The depth-param job LANDED (M-integration): `depth` Int is a
+        // real appended spec on this tiling (bounds 0..=5, default 0).
+        // Pin the real appended tail, and keep the generic property —
+        // appending a spec must be a detectable, non-colliding change —
+        // with a fresh hypothetical id.
         let registry = crate::registry();
         let t = registry.get("glb-binary-n7").unwrap_or_else(|| panic!("missing glb-binary-n7"));
         let specs = t.params();
         let baseline = fingerprint(specs, &ParamSet::default_for(specs));
+        assert!(baseline.ends_with(",depth=0"), "glb-binary-n7: the landed depth spec must be the appended tail: {baseline}");
         let mut specs_plus: Vec<ParamSpec> = specs.to_vec();
         specs_plus.push(ParamSpec::int(
-            ParamId::new("depth"), "depth", 1, 4, 1, 2,
+            ParamId::new("future_param"), "future_param", 1, 4, 1, 2,
         ));
         let appended = fingerprint(&specs_plus, &ParamSet::default_for(&specs_plus));
         assert_ne!(appended, baseline, "appending a param must change the fingerprint");
-        assert!(appended.ends_with(",depth=2"), "the new spec is appended, not spliced: {appended}");
+        assert!(appended.ends_with(",future_param=2"), "the new spec is appended, not spliced: {appended}");
         // And the appended spec must not collide with the existing ids.
         let existing: std::collections::BTreeSet<&str> = specs.iter().map(|s| s.id.as_str()).collect();
-        assert!(!existing.contains("depth"), "depth id would collide with an existing spec");
+        assert!(!existing.contains("future_param"), "future_param id would collide with an existing spec");
     }
 
     #[test]

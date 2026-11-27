@@ -119,7 +119,7 @@
 use std::cmp::Ordering;
 
 use tess_core::geometry::{BBox, Polygon, Vec2};
-use tess_core::params::{ParamSet, ParamSpec};
+use tess_core::params::{ParamId, ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
 use tess_core::TilingCategory;
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
@@ -1054,13 +1054,21 @@ fn assemble_lattice(seeds: &[TileR], depth: usize) -> Option<Vec<TileR>> {
 // The tiling proper
 // ---------------------------------------------------------------------
 
-const PARAMS: [ParamSpec; 2] = [
+/// Stable id for the substitution-depth param (the only `Int` param
+/// on this tiling): 0 = the view-budget rule, 1..=5 = pinned depth.
+pub const DEPTH_ID: ParamId = ParamId::new("depth");
+
+const PARAMS: [ParamSpec; 3] = [
     // Plane-filling presentation: every query window is covered, so the
     // scale only sets tile fineness. At the default 2.75 the standard
     // 20/scale-tall CLI pane (7.27 world units) renders the depth-4
     // hierarchy at ≈ 0.8 k tiles (budget band O(10³–10⁴)).
     ParamSpec::float(SCALE_ID, "scale", 0.1, 50.0, 0.05, 2.75),
     ParamSpec::angle(ROTATION_ID, "rotation (deg)", 0.0, 360.0, 5.0, 0.0),
+    // Depth selection: 0 (default) = the view-budget rule below;
+    // 1..=5 pins the substitution level outright. Depth is a pure
+    // generation-budget knob — every geometry constant below stays.
+    ParamSpec::int(DEPTH_ID, "depth", 0, D_MAX as i64, 1, 0),
 ];
 
 pub struct GlbBinaryN7Tiling;
@@ -1090,8 +1098,8 @@ impl Tiling for GlbBinaryN7Tiling {
          of the certified seed parent refined d ∈ [3,5] levels (the \
          same DFS over the whole parent set meshes cell seams), seeds \
          chosen so φ⁻¹ of any query window is covered; depth = largest \
-         d with emitted estimate ≤ 2500 (floored at 3), culling at \
-         emission only"
+         d with emitted estimate ≤ 2500 (floored at 3) — or pinned by the `depth` \
+         param to 1..=5 (0 = the budget rule), culling at emission only"
     }
 
     fn category(&self) -> TilingCategory {
@@ -1159,20 +1167,31 @@ impl Tiling for GlbBinaryN7Tiling {
             });
         let center = Vec2::new((dmin.x + dmax.x) / 2.0, (dmin.y + dmax.y) / 2.0);
 
-        // Depth from the view budget: the cell-frame emitted count is
-        // ≈ region area × λ^{2(d−1)} / TILE_AVG (level-d tiles are
-        // unit-edge rhombi scaled by λ^−(d−1); TILE_AVG is the measured
-        // substitution-mix mean). Pick the largest certified depth whose
-        // estimate stays within VIEW_BUDGET, floored at D_MIN.
-        let area = (region.max.x - region.min.x) * (region.max.y - region.min.y);
-        let mut d = D_MIN;
-        for cand_d in (D_MIN..=D_MAX).rev() {
-            let est = area * LAM.powi((cand_d as i32 - 1) * 2) / TILE_AVG;
-            if est <= VIEW_BUDGET {
-                d = cand_d;
-                break;
+        // Depth selection. The `depth` param pins the substitution level
+        // outright (1..=5); 0 (the default) keeps the view-budget rule,
+        // byte-identical to the unparameterized path. Anything else is a
+        // named refusal, never a silent snap. The cell-frame emitted
+        // count is ≈ region area × λ^{2(d−1)} / TILE_AVG (level-d tiles
+        // are unit-edge rhombi scaled by λ^−(d−1); TILE_AVG is the
+        // measured substitution-mix mean).
+        let depth_req = params.int(DEPTH_ID, 0);
+        let d = if depth_req != 0 {
+            if depth_req < 1 || depth_req > D_MAX as i64 {
+                return fail("unsupported depth — must be 0 (auto) or 1..=5");
             }
-        }
+            depth_req as usize
+        } else {
+            let area = (region.max.x - region.min.x) * (region.max.y - region.min.y);
+            let mut d = D_MIN;
+            for cand_d in (D_MIN..=D_MAX).rev() {
+                let est = area * LAM.powi((cand_d as i32 - 1) * 2) / TILE_AVG;
+                if est <= VIEW_BUDGET {
+                    d = cand_d;
+                    break;
+                }
+            }
+            d
+        };
 
         // Area pre-guard (mirrors lattice.rs): the emitted count is
         // ≈ region_area·λ^{2(d−1)}/(mix-mean raw tile area) with the
@@ -1252,6 +1271,7 @@ impl Tiling for GlbBinaryN7Tiling {
 mod tests {
     use super::*;
     use crate::tests::{check_covers, check_det, check_rotated};
+    use tess_core::params::{ParamKind, ParamValue};
 
     /// Total twist shoelace of a tile set, every vertex aligned to the
     /// set's maximal exponent `e` (true value = result / 2^(2e)) — the
@@ -2310,5 +2330,63 @@ mod tests {
                 r.tiles.len()
             );
         }
+    }
+
+    // The depth param: appended last, Int, default 0 (auto), range 0..=5.
+    #[test]
+    fn depth_spec_pins_int_appended_last() {
+        let t = GlbBinaryN7Tiling;
+        let specs = t.params();
+        assert_eq!(specs.len(), 3, "scale, rotation, depth (appended last)");
+        let depth = &specs[2];
+        assert_eq!(depth.id, DEPTH_ID);
+        assert_eq!(depth.label, "depth");
+        match depth.kind {
+            ParamKind::Int { min, max, step, default } => {
+                assert_eq!(default, 0);
+                assert_eq!(min, 0);
+                assert_eq!(max, D_MAX as i64);
+                assert_eq!(step, 1);
+            }
+            other => panic!("depth spec must be Int, got {other:?}"),
+        }
+    }
+
+    // Out-of-range depth is a named refusal (never a silent snap).
+    #[test]
+    fn depth_refusal_names_exact_bounds() {
+        let t = GlbBinaryN7Tiling;
+        for d in [-1i64, 6i64] {
+            let mut pp = ParamSet::default_for(t.params());
+            pp.set(DEPTH_ID, ParamValue::Int(d));
+            let r = t.generate(&pp, &Query { region: BBox::new(Vec2::new(-1.0, -1.0), Vec2::new(1.0, 1.0)) });
+            assert_eq!(r.message, Some("unsupported depth — must be 0 (auto) or 1..=5"));
+            assert!(r.tiles.is_empty());
+        }
+    }
+
+    // Explicit depth 0 is byte-identical to the default budget rule;
+    // a pinned depth is a different rule (fewer tiles at pinned depth 1).
+    #[test]
+    fn depth_zero_is_default_and_pin_changes_output() {
+        let t = GlbBinaryN7Tiling;
+        let window = BBox::new(Vec2::new(-4.0, -4.0), Vec2::new(4.0, 4.0));
+        let mut explicit = ParamSet::default_for(t.params());
+        explicit.set(DEPTH_ID, ParamValue::Int(0));
+        let r_explicit = t.generate(&explicit, &Query { region: window });
+        let r_default = t.generate(&ParamSet::default_for(t.params()), &Query { region: window });
+        assert_eq!(r_explicit.message, r_default.message);
+        assert_eq!(r_explicit.tiles.len(), r_default.tiles.len(), "explicit depth 0 == default");
+        assert!(
+            r_explicit.tiles.iter().zip(r_default.tiles.iter()).all(|(a, b)| {
+                a.proto == b.proto && a.poly.aabb() == b.poly.aabb()
+            }),
+            "explicit depth 0 reproduces the default byte-identically"
+        );
+        let mut pin1 = ParamSet::default_for(t.params());
+        pin1.set(DEPTH_ID, ParamValue::Int(1));
+        let r_pin1 = t.generate(&pin1, &Query { region: window });
+        assert!(r_pin1.message.is_none());
+        assert!(r_pin1.tiles.len() < r_explicit.tiles.len(), "pinned depth 1 emits fewer tiles");
     }
 }

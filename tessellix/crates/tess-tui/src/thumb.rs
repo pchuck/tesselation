@@ -22,7 +22,7 @@
 use std::collections::HashMap;
 
 use tess_core::geometry::{BBox, Vec2};
-use tess_core::params::{ParamSet, ParamSpec};
+use tess_core::params::{ParamSet, ParamSpec, ParamValue};
 use tess_core::symmetry::SymmetryMeta;
 use tess_core::tiling::{Query, Tiling};
 
@@ -43,6 +43,28 @@ impl Thumb {
             rows: vec![vec![(raster::GAP, raster::GAP); w as usize]; h as usize],
         }
     }
+}
+
+/// `glb-binary-n7` id — the only tiling whose card preview changes.
+const GLB_BINARY_N7_ID: &str = "glb-binary-n7";
+/// Preview-only depth pin for `glb-binary-n7` (see `preview_params`).
+const GLB_BINARY_N7_PREVIEW_DEPTH: i64 = 3;
+
+/// The params the card preview actually renders with: the tiling's
+/// passed params, except for `glb-binary-n7`, whose preview is pinned
+/// to depth 3 via the tiling's own `depth` param (the same cap the
+/// e01fc76 scale override enforced, closed here by the param). Window
+/// derivation (the probe) always runs on the original params.
+fn preview_params(params: &ParamSet, tiling_id: &str) -> ParamSet {
+    if tiling_id != GLB_BINARY_N7_ID {
+        return params.clone();
+    }
+    let mut p = params.clone();
+    p.set(
+        tess_tilings::families::quasiperiodic::glb_binary_n7::DEPTH_ID,
+        ParamValue::Int(GLB_BINARY_N7_PREVIEW_DEPTH),
+    );
+    p
 }
 
 /// A card preview: the half-block raster plus the symmetry facts
@@ -105,11 +127,13 @@ pub fn generate_for(
     let wc = w_chars.max(1);
     let hc = h_chars.max(1);
     let aspect = wc as f64 / (2.0 * hc as f64);
+    let effective = preview_params(params, tiling.id());
 
+    // Window derivation: the probe runs on the original params.
     let mut window = derive_window(tiling, params, aspect);
 
     // Pass 2: the preview itself, with shrink-and-retry on refusal.
-    let mut result = tiling.generate(params, &Query { region: window });
+    let mut result = tiling.generate(&effective, &Query { region: window });
     let mut shrink = 0.4;
     while result.message.is_some() && shrink > 0.05 {
         let cx = (window.min.x + window.max.x) / 2.0;
@@ -117,7 +141,7 @@ pub fn generate_for(
         let hx = (window.max.x - window.min.x) / 2.0 * shrink;
         let hy = (window.max.y - window.min.y) / 2.0 * shrink;
         window = BBox::new(Vec2::new(cx - hx, cy - hy), Vec2::new(cx + hx, cy + hy));
-        result = tiling.generate(params, &Query { region: window });
+        result = tiling.generate(&effective, &Query { region: window });
         shrink *= 0.4;
     }
 
@@ -169,10 +193,11 @@ impl CardCache {
         w_chars: u32,
         h_chars: u32,
     ) -> &CardPreview {
+        let effective = preview_params(params, tiling.id());
         let key = format!(
             "{}|{}|{}x{}",
             tiling.id(),
-            params_key(tiling.params(), params),
+            params_key(tiling.params(), &effective),
             w_chars,
             h_chars
         );

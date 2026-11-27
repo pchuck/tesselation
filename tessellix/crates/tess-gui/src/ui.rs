@@ -473,22 +473,22 @@ fn card_key(id: &str, params: &str, w: u32, h: u32) -> String {
 
 /// `glb-binary-n7` id — the only tiling whose card preview changes.
 const GLB_BINARY_N7_ID: &str = "glb-binary-n7";
-/// Preview-only scale override for `glb-binary-n7` (see `preview_params`).
-const GLB_BINARY_N7_PREVIEW_SCALE: f64 = 1.0;
+/// Preview-only depth pin for `glb-binary-n7` (see `preview_params`).
+const GLB_BINARY_N7_PREVIEW_DEPTH: i64 = 3;
 
 /// The params the card preview actually renders with: the tiling
-/// defaults, except for `glb-binary-n7`, whose preview is forced back
-/// under the depth-3 budget (see `card_texture`). Everything else
-/// (probe, window derivation, all other tilings) renders exactly as
-/// before.
+/// defaults, except for `glb-binary-n7`, whose preview is pinned to
+/// depth 3 (the same cap the e01fc76 scale override enforced, now via
+/// the tiling's own `depth` param). Everything else (probe, window
+/// derivation, all other tilings) renders exactly as before.
 fn preview_params(default_params: &ParamSet, tiling_id: &str) -> ParamSet {
     if tiling_id != GLB_BINARY_N7_ID {
         return default_params.clone();
     }
     let mut p = default_params.clone();
     p.set(
-        tess_tilings::lattice::SCALE_ID,
-        ParamValue::Float(GLB_BINARY_N7_PREVIEW_SCALE),
+        tess_tilings::families::quasiperiodic::glb_binary_n7::DEPTH_ID,
+        ParamValue::Int(GLB_BINARY_N7_PREVIEW_DEPTH),
     );
     p
 }
@@ -1266,13 +1266,16 @@ impl GuiApp {
     /// est d=5 = 3264 > VIEW_BUDGET 2500 — the budget rule picks the
     /// largest d within budget, depth 4), which is ~7× more expensive
     /// per tile than the depth-3 probe and ~80% of the card's wall
-    /// time. The preview is pushed under the depth-3 budget instead by
-    /// rescaling to 1.0 (cell-frame area 88.6 → est d=3 = 1708 ✓,
-    /// est d=4 = 6492 ✗ — depth 3). The window is unchanged (derived
-    /// from the unmodified probe); the rendered pattern is finer
-    /// (~2.75×), which is acceptable at card sizes. Only the preview
-    /// generate + shrink-retry see the override; the probe, the
-    /// window derivation and every other tiling are untouched.
+    /// time. The preview is pinned to depth 3 via the tiling's own
+    /// `depth` param instead of the rescaled-scale override it
+    /// replaces (est d=3 = 226 ✓ — the preview generates ≈ that many
+    /// tiles, same structural win). The window is unchanged (derived
+    /// from the unmodified probe, which still runs at scale 2.75 and
+    /// itself lands on depth 3); the rendered pattern keeps the
+    /// default scale, so it is chunkier than the old finer-scaled
+    /// preview — acceptable at card sizes. Only the preview generate
+    /// + shrink-retry see the pin; the probe, the window derivation
+    /// and every other tiling are untouched.
     fn card_texture(
         &mut self,
         ctx: &egui::Context,
