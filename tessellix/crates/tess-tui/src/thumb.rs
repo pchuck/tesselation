@@ -412,8 +412,10 @@ mod tests_card_cache_pins {
     }
 
     #[test]
-    fn doc_claim_cache_keyed_by_id_params_size() {
-        assert_doc_anchor("docs/USAGE.md", "cached per (id, params, size)");
+    fn doc_claim_cache_keyed_by_id_params_mode_size() {
+        // M215 (GUI card_key) + M217 (TUI CardCache) both embed the effective
+        // color mode; the doc phrase was synced at M217 integration.
+        assert_doc_anchor("docs/USAGE.md", "cached per (id, params, mode, size)");
     }
 
     #[test]

@@ -184,7 +184,7 @@ Like the TUI, it is a **single-pane, two-mode browser** over the shared
   completed catalog. Cards show crystal-system section headers
   (Wallpaper tab), a lazily generated preview (rasterized at default parameters
   by the shared `tess-core::raster`, same palette/proto-fallback
-  semantics as the TUI thumbnails, cached per (id, params, size),
+  semantics as the TUI thumbnails, cached per (id, params, mode, size),
   generated for visible cards only), the bold name (up to two lines,
   broken at a word boundary), the `group · lattice` line, and a
   truncated description. Search filters name/id/description
