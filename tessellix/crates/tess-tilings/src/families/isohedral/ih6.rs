@@ -86,9 +86,9 @@ static DATA: TypeData = TypeData {
 pub(crate) const TILING: IhTiling = IhTiling {
     id: "ih6-pgg-hexagon",
     name: "IH6 hexagon (pgg)",
-    description: "Kaplan isohedral template IH6: hexagon with two rotationally-paired (U) edge \
-                  pairs and two freeform (J) orbits, wallpaper group pgg, four aspects; \
-                  incidence symbol over the 6^3 honeycomb net with exact per-orbit edge curves.",
+    description: "IH6 incidence symbol\nKaplan isohedral template IH6 — hexagon with two rotationally-paired (U) \
+                  edge pairs and two freeform (J) orbits, wallpaper group pgg, four aspects; \
+                  incidence symbol over the 6³ honeycomb net with exact per-orbit edge curves.",
     data: &DATA,
     shape_ids: &SHAPE_IDS,
     defaults: &DEFAULTS,
@@ -97,7 +97,7 @@ pub(crate) const TILING: IhTiling = IhTiling {
     lattice: LatticeKind::Rectangular,
     category: TilingCategory::Isohedral,
     secondary: &[TilingCategory::Laves],
-    symmetry_notes: "Kaplan IH6; pgg, 2 U + 2 J edge orbits; Tactile incidence-symbol data",
+    symmetry_notes: "Kaplan IH6; pgg, 2 U + 2 J edge orbits",
 };
 
 #[cfg(test)]

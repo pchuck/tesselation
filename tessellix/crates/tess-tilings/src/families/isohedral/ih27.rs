@@ -68,7 +68,7 @@ static DATA: TypeData = TypeData {
 pub(crate) const TILING: IhTiling = IhTiling {
     id: "ih27-pgg-pentagon",
     name: "IH27 (pgg)",
-    description: "Kaplan isohedral template IH27: pentagon with one rotationally-paired (U) \
+    description: "IH27 incidence symbol\nKaplan isohedral template IH27 — pentagon with one rotationally-paired (U) \
                   edge orbit and two freeform (J) orbits, wallpaper group pgg, four aspects; \
                   Cairo-net topology (V3.3.4.3.4, dual of the snub square) with exact \
                   per-orbit edge curves. Isohedral variant — deliberate edge deformation (curved/notched), not a pentagon type.",
@@ -81,7 +81,7 @@ pub(crate) const TILING: IhTiling = IhTiling {
     category: TilingCategory::Isohedral,
     secondary: &[TilingCategory::Laves],
     symmetry_notes: "Kaplan IH27; pgg, 1 U + 2 J edge orbits; curved/notched edges are deliberate \
-                     deformations; Tactile incidence-symbol data",
+                     deformations",
 };
 
 #[cfg(test)]

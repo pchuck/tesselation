@@ -58,7 +58,7 @@ static DATA: TypeData = TypeData {
 pub(crate) const TILING: IhTiling = IhTiling {
     id: "ih7-p3-hexagon",
     name: "IH7 hexagon (p3)",
-    description: "Kaplan isohedral template IH7: hexagon with three freeform (J) edge orbits \
+    description: "IH7 incidence symbol\nKaplan isohedral template IH7 — hexagon with three freeform (J) edge orbits \
                   under 120°-rotated aspects, wallpaper group p3, three aspects; the shipped \
                   record lives in Q(√3) (fitted exact coefficients) and carries the showpiece \
                   four-point edge curves.",
@@ -70,7 +70,7 @@ pub(crate) const TILING: IhTiling = IhTiling {
     lattice: LatticeKind::Hexagonal,
     category: TilingCategory::Isohedral,
     secondary: &[TilingCategory::Laves],
-    symmetry_notes: "Kaplan IH7; p3, 3 J edge orbits; Tactile incidence-symbol data",
+    symmetry_notes: "Kaplan IH7; p3, 3 J edge orbits",
 };
 
 #[cfg(test)]

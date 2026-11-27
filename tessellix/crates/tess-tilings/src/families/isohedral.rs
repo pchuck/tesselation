@@ -43,9 +43,12 @@ pub fn register(mut r: Registry) -> Registry {
 /// The family's classification arms (see `crate::classify` for the
 /// composer and the shared constructor helpers).
 ///
-/// Every shipped type is 1-isohedral by definition (`isohedral: Some(1)`
-/// — the field counts isohedral classes, not the IH type number; the
-/// type number lives in `method`). Topologies verified by dual census
+/// Every shipped type is 1-isohedral by definition. The summary line is
+/// kept short enough to fit the card width (face configuration + the
+/// symbol — no `isohedral` class field, no `dual_of`, no attribution):
+/// the IH type number lives in the `method` text ("`IH<n> incidence
+/// symbol`"), and the 1-isohedral and dual facts are documented in the
+/// family doc and per-tiling docs. Topologies verified by dual census
 /// (design doc §6): IH1/6/7 on the 6³ honeycomb net (dual: triangular),
 /// IH27/29 on the Cairo net V3.3.4.3.4 (dual: snub square), so all five
 /// take primary Isohedral and a Laves secondary; the two Cairo-net
@@ -57,48 +60,33 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
     use crate::classify::laves;
     Some(match id {
         "ih1-p1-hexagon" => TilingClass {
-            isohedral: Some(1),
-            method: Some("Kaplan Tactile incidence symbol (IH1)"),
+            method: Some("IH1 incidence symbol"),
+            dual_of: None,
             translational: Some("periodic"),
-            cell_content: Some("1 tile per translation cell"),
-            prototiles: Some(1),
-            source: Some("Kaplan (Tactile)"),
             ..laves(&["Laves"], "V3.3.3.3.3.3", "triangular")
         },
         "ih6-pgg-hexagon" => TilingClass {
-            isohedral: Some(1),
-            method: Some("Kaplan Tactile incidence symbol (IH6)"),
+            method: Some("IH6 incidence symbol"),
+            dual_of: None,
             translational: Some("periodic"),
-            cell_content: Some("4 tiles per translation cell"),
-            prototiles: Some(1),
-            source: Some("Kaplan (Tactile)"),
             ..laves(&["Laves"], "V3.3.3.3.3.3", "triangular")
         },
         "ih7-p3-hexagon" => TilingClass {
-            isohedral: Some(1),
-            method: Some("Kaplan Tactile incidence symbol (IH7)"),
+            method: Some("IH7 incidence symbol"),
+            dual_of: None,
             translational: Some("periodic"),
-            cell_content: Some("3 tiles per translation cell"),
-            prototiles: Some(1),
-            source: Some("Kaplan (Tactile)"),
             ..laves(&["Laves"], "V3.3.3.3.3.3", "triangular")
         },
         "ih27-pgg-pentagon" => TilingClass {
-            isohedral: Some(1),
-            method: Some("Kaplan Tactile incidence symbol (IH27)"),
+            method: Some("IH27 incidence symbol"),
+            dual_of: None,
             translational: Some("periodic"),
-            cell_content: Some("4 tiles per translation cell"),
-            prototiles: Some(1),
-            source: Some("Kaplan (Tactile)"),
             ..laves(&["Laves"], "V3.3.4.3.4", "snub square")
         },
         "ih29-p4g-pentagon" => TilingClass {
-            isohedral: Some(1),
-            method: Some("Kaplan Tactile incidence symbol (IH29)"),
+            method: Some("IH29 incidence symbol"),
+            dual_of: None,
             translational: Some("periodic"),
-            cell_content: Some("4 tiles per translation cell"),
-            prototiles: Some(1),
-            source: Some("Kaplan (Tactile)"),
             ..laves(&["Laves"], "V3.3.4.3.4", "snub square")
         },
         _ => return None,
