@@ -180,7 +180,7 @@ pub fn wallpaper_gap_note() -> String {
 ///   cut-and-project, prototile count, attribution, dual, aperiodic
 ///   status, chirality, reflections, cell content, tile set). A
 ///   segment is **skipped when the card name already says it** (the
-///   "Truncated Square (4.8.8)" card does not repeat "4.8.8") so the
+///   "Truncated Square (4.8²)" card does not repeat "4.8²") so the
 ///   line adds information instead of echoing the title. When the
 ///   schema adds nothing (or the card is unclassified) the line falls
 ///   back to the description fragment. Chirality shows only when it
