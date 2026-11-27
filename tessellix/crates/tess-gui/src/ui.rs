@@ -1673,8 +1673,75 @@ impl GuiApp {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use std::sync::OnceLock;
 
     use super::layout_fingerprint;
+
+    /// Shared, process-wide browse-tabs fixture: built once per test
+    /// binary and reused by every test that needs the browser model.
+    /// The tabs are pure (registry + classification, no test state),
+    /// so sharing is behavior-identical to each test rebuilding them
+    /// (the expensive ~10 s `browse_tabs_with` copy).
+    static SHARED_TABS: OnceLock<Vec<tess_core::Tab>> = OnceLock::new();
+
+    fn shared_tabs() -> &'static Vec<tess_core::Tab> {
+        SHARED_TABS.get_or_init(|| {
+            tess_core::browse_tabs_with(
+                &tess_tilings::registry(),
+                tess_tilings::classification,
+            )
+        })
+    }
+
+    /// A fresh [`super::GuiApp`] with the shared tabs fixture, mirroring
+    /// `GuiApp::new()`'s field initialization exactly (the registry, the
+    /// selection, the active tab, and the zoom baseline are all rebuilt
+    /// per test, exactly as `new()` does). Private-field access is fine:
+    /// these tests are a child module of `ui`.
+    fn fresh_gui() -> super::GuiApp {
+        let app = tess_core::App::new(tess_tilings::registry(), 60.0);
+        // The zoom label's 100% baseline: the construction zoom.
+        let zoom_default = app.viewport.zoom;
+        // Rebuild the tabs from the shared fixture: cheap (one
+        // `Vec<CardMeta>` clone per tab; `CardMeta` is `Copy` and the
+        // `TilingCategory` is `Copy`, but `Tab` itself is not `Clone`).
+        let tabs: Vec<tess_core::Tab> = shared_tabs()
+            .iter()
+            .map(|t| tess_core::Tab {
+                category: t.category,
+                cards: t.cards.clone(),
+            })
+            .collect();
+        let selected = app.selected_id().to_string();
+        let active_tab = tabs
+            .iter()
+            .position(|t| t.cards.iter().any(|c| c.id == selected))
+            .unwrap_or(0);
+        let mut tab_selected = vec![None; tabs.len()];
+        tab_selected[active_tab] = Some(selected.clone());
+        super::GuiApp {
+            app,
+            mode: super::GuiMode::Browse,
+            params_open: true,
+            meta: None,
+            render_cache: None,
+            render_cache_misses: 0,
+            tabs,
+            active_tab,
+            tab_selected,
+            search_at_jump: String::new(),
+            last_highlighted: (active_tab, selected),
+            card_textures: HashMap::new(),
+            card_target_w: super::CARD_TARGET_W,
+            search: String::new(),
+            card_rects: Vec::new(),
+            card_grid_col_w: 0.0,
+            card_grid_cols: 0,
+            card_grid_avail: 0.0,
+            canvas_rect: None,
+            zoom_default,
+        }
+    }
 
     #[test]
     fn penrose_cache_valid_for_all_tiles() {
@@ -1726,7 +1793,7 @@ mod tests {
 
     #[test]
     fn metadata_cache_tracks_tiling_switch() {
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let before = gui.metadata().symmetry.group;
         gui.app.select_id("penrose");
         let after = gui.metadata().symmetry.group;
@@ -1878,8 +1945,7 @@ mod tests {
     /// an empty (whitespace) query matches everything.
     #[test]
     fn search_matches_fields_and_empty_query() {
-        let tabs =
-            tess_core::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        let tabs = shared_tabs();
         let real = tabs
             .iter()
             .find_map(|t| t.cards.iter().find(|c| c.id == "penrose"))
@@ -1994,8 +2060,7 @@ mod tests {
     /// the header, and every card is covered exactly once.
     #[test]
     fn sectionize_real_wallpaper_tab() {
-        let tabs =
-            tess_core::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        let tabs = shared_tabs();
         let wp = tabs
             .iter()
             .find(|t| t.category == tess_core::TilingCategory::Wallpaper)
@@ -2240,7 +2305,7 @@ mod tests {
     #[test]
     fn set_card_target_w_clamps_and_prunes_textures() {
         let ctx = egui::Context::default();
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 900.0));
         let pass = |gui: &mut super::GuiApp| {
             let input = egui::RawInput {
@@ -2294,7 +2359,7 @@ mod tests {
     #[test]
     fn card_texture_cache_pruned_on_target_change() {
         let ctx = egui::Context::default();
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let card = card_fix(
             "penrose",
             tess_core::TilingCategory::Uniform,
@@ -2340,7 +2405,7 @@ mod tests {
     #[test]
     fn card_texture_cache_key_sensitive_to_params_str() {
         let ctx = egui::Context::default();
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let card = card_fix(
             "star-cross",
             tess_core::TilingCategory::Uniform,
@@ -2384,7 +2449,7 @@ mod tests {
     #[test]
     fn card_texture_cache_keyed_per_size() {
         let ctx = egui::Context::default();
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let card = card_fix(
             "penrose",
             tess_core::TilingCategory::Uniform,
@@ -2545,7 +2610,7 @@ mod tests {
     /// before the first grid pass records the geometry.
     #[test]
     fn step_card_columns_steps_one_column_and_clamps() {
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let avail = 901.0_f32;
         gui.card_grid_avail = avail;
         gui.card_target_w = super::card_target_for_cols(avail, 5);
@@ -2573,12 +2638,13 @@ mod tests {
             "stepping + never goes below the squash-floor column count"
         );
 
-        // No grid pass yet (avail never recorded): a no-op.
-        let mut fresh = super::GuiApp::new();
-        let before = fresh.card_target_w;
-        fresh.step_card_columns(1);
-        fresh.step_card_columns(-1);
-        assert_eq!(fresh.card_target_w, before);
+        // The no-op path only reads `card_grid_avail` (0.0 = no grid
+        // pass yet): force that state and expect no change.
+        let before = gui.card_target_w;
+        gui.card_grid_avail = 0.0;
+        gui.step_card_columns(1);
+        gui.step_card_columns(-1);
+        assert_eq!(gui.card_target_w, before);
     }
 
     /// The render zoom cluster: `+`/`−` multiply/divide the viewport
@@ -2587,7 +2653,7 @@ mod tests {
     /// to 100% (center untouched).
     #[test]
     fn render_zoom_steps_label_and_reset() {
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         assert_eq!(gui.zoom_label(), "100%");
         gui.zoom_by_step(1);
         assert!(
@@ -2611,7 +2677,7 @@ mod tests {
     #[test]
     fn headless_pass_at_zoomed_card_size() {
         let ctx = egui::Context::default();
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         gui.set_card_target_w(360.0);
         let (_iw, ih) = super::card_img_size(360.0);
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 900.0));
@@ -2905,7 +2971,7 @@ mod tests {
     /// Also pins the mode switch on card selection.
     #[test]
     fn walk_render_walks_tab_order_and_updates_memory() {
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let at = gui.active_tab;
         // Copy the &'static str ids out first: the walks below need
         // `&mut gui`, so no borrow of `gui.tabs` may survive.
@@ -2952,7 +3018,7 @@ mod tests {
     fn canvas_cache_tracks_view_params_and_selection() {
         let ctx = egui::Context::default();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let pass = |gui: &mut super::GuiApp, screen: egui::Rect| {
             let input = egui::RawInput {
                 screen_rect: Some(screen),
@@ -3007,7 +3073,7 @@ mod tests {
     fn canvas_cache_caches_max_tiles_refusals() {
         let ctx = egui::Context::default();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         // Tiny zoom → a huge world region → a refused generation.
         gui.app.viewport.zoom = 0.01;
         let pass = |gui: &mut super::GuiApp| {
@@ -3122,7 +3188,7 @@ mod tests {
     /// it fresh every frame).
     #[test]
     fn cache_key_is_stable_and_sensitive() {
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let key = gui.cache_key(800, 600);
         assert_eq!(key, gui.cache_key(800, 600), "stable across identical reads");
 
@@ -3161,7 +3227,7 @@ mod tests {
     /// exact decision `draw_canvas` makes per frame.
     #[test]
     fn should_regen_mirrors_cache_freshness() {
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         assert!(gui.should_regen(&gui.cache_key(800, 600)), "empty cache: regen");
         let key = gui.cache_key(800, 600);
         let result = gui.app.result(800, 600);
@@ -3188,7 +3254,7 @@ mod tests {
     fn canvas_cache_recolors_without_regeneration() {
         let ctx = egui::Context::default();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let pass = |gui: &mut super::GuiApp, screen: egui::Rect| {
             let input = egui::RawInput {
                 screen_rect: Some(screen),
@@ -3227,7 +3293,7 @@ mod tests {
     fn canvas_cache_selection_change_is_wholesale_replacement() {
         let ctx = egui::Context::default();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let pass = |gui: &mut super::GuiApp, screen: egui::Rect| {
             let input = egui::RawInput {
                 screen_rect: Some(screen),
@@ -3264,7 +3330,7 @@ mod tests {
     #[test]
     fn canvas_cache_size_change_regenerates_per_axis() {
         let ctx = egui::Context::default();
-        let mut gui = super::GuiApp::new();
+        let mut gui = fresh_gui();
         let pass = |gui: &mut super::GuiApp, w: f32, h: f32| {
             let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(w, h));
             let input = egui::RawInput {

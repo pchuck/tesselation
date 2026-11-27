@@ -1081,8 +1081,82 @@ fn render_params_strip(frame: &mut Frame, tui: &mut Tui, rect: Rect) {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::OnceLock;
+
     use super::*;
     use ratatui::backend::TestBackend;
+
+    /// Shared, process-wide browse-tabs fixture: built once per test
+    /// binary and reused by every test that needs the browser model.
+    /// The tabs are pure (registry + classification, no test state),
+    /// so sharing is behavior-identical to each test rebuilding them
+    /// (the expensive ~10 s `browse_tabs_with` copy).
+    static SHARED_TABS: OnceLock<Vec<Tab>> = OnceLock::new();
+
+    fn shared_tabs() -> &'static Vec<Tab> {
+        SHARED_TABS.get_or_init(|| {
+            browse::browse_tabs_with(
+                &tess_tilings::registry(),
+                tess_tilings::classification,
+            )
+        })
+    }
+
+    /// A fresh [`Tui`] with the shared tabs fixture, mirroring
+    /// `Tui::new()`'s field initialization exactly (the registry, the
+    /// cursors/scroll, the thumbs cache, the palettes, and the dirty
+    /// flag are all rebuilt per test, exactly as `new()` does).
+    /// Private-field access is fine: these tests are a child module of
+    /// `app_ui`.
+    fn fresh_tui() -> Tui {
+        let registry = tess_tilings::registry();
+        // Rebuild the tabs from the shared fixture: cheap (one
+        // `Vec<CardMeta>` clone per tab; `CardMeta` is `Copy` and the
+        // `TilingCategory` is `Copy`, but `Tab` itself is not `Clone`).
+        let tabs: Vec<Tab> = shared_tabs()
+            .iter()
+            .map(|t| Tab {
+                category: t.category,
+                cards: t.cards.clone(),
+            })
+            .collect();
+        let palette256: Vec<u8> = paint::PALETTE
+            .iter()
+            .map(|&c| paint::rgb_to_256(c))
+            .collect();
+        let palette256_gray: Vec<u8> = paint::GRAY_PALETTE
+            .iter()
+            .map(|&c| paint::rgb_to_256(c))
+            .collect();
+        let palette256_pattern_gray: Vec<u8> = paint::PATTERN_GRAY_PALETTE
+            .iter()
+            .map(|&c| paint::rgb_to_256(c))
+            .collect();
+        Tui {
+            app: App::new(registry, 8.0),
+            tabs,
+            tab_idx: 0,
+            cursors: [0; 10],
+            scroll: [0; 10],
+            mode: Mode::Browse,
+            search: String::new(),
+            params_open: false,
+            palette256,
+            palette256_gray,
+            palette256_pattern_gray,
+            border256: paint::rgb_to_256(paint::BORDER),
+            gap256: 124,
+            canvas_size: (0, 0),
+            grid_cols: 1,
+            grid_rows: 1,
+            thumbs: thumb::CardCache::new(),
+            dirty: true,
+            tab_rects: Vec::new(),
+            card_rects: Vec::new(),
+            card_w: TARGET_CARD_W,
+            last_highlighted: (0, None),
+        }
+    }
 
     /// Count cells with the given symbol across the whole buffer.
     fn count_symbol(terminal: &Terminal<TestBackend>, sym: &str) -> usize {
@@ -1130,7 +1204,7 @@ mod tests {
 
     #[test]
     fn wallpaper_tab_sorted_by_crystal_system_then_group() {
-        let tui = Tui::new();
+        let tui = fresh_tui();
         let wall = &tui.tabs[3];
         assert_eq!(wall.category, TilingCategory::Wallpaper);
         let keys: Vec<&'static str> = wall
@@ -1216,7 +1290,7 @@ mod tests {
     #[test]
     fn grid_paints_wallpaper_cards_and_sections() {
         let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         key(&mut tui, KeyCode::Char('4')); // Wallpaper tab
         term.draw(|f| render(f, &mut tui)).unwrap();
         let mut text = buffer_text(&term);
@@ -1260,7 +1334,7 @@ mod tests {
     #[test]
     fn tab_switch_keeps_per_tab_cursor_and_scroll() {
         let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         key(&mut tui, KeyCode::Right); // Uniform cursor → 1
         assert_eq!(tui.cursors[0], 1);
@@ -1290,7 +1364,7 @@ mod tests {
     #[test]
     fn cursor_moves_wrap_and_autoscroll() {
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         let n = tui.tabs[0].cards.len();
         key(&mut tui, KeyCode::Right);
@@ -1325,7 +1399,7 @@ mod tests {
     #[test]
     fn enter_opens_render_and_esc_returns_to_grid() {
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         key(&mut tui, KeyCode::Char('4')); // Wallpaper
         key(&mut tui, KeyCode::Right); // cursor → card 1
@@ -1375,7 +1449,7 @@ mod tests {
     #[test]
     fn render_prev_next_walks_tab_order() {
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         key(&mut tui, KeyCode::Char('5')); // Pentagon Types
         // The walk follows the SELECTED tiling's own category tab; the
@@ -1412,7 +1486,7 @@ mod tests {
         // BACKGROUND of a space glyph; the whole canvas region must be
         // painted (nothing left at the default background).
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         key(&mut tui, KeyCode::Enter); // first tiling → Render
         term.draw(|f| render(f, &mut tui)).unwrap();
@@ -1440,7 +1514,7 @@ mod tests {
     #[test]
     fn search_filters_cards_jumps_tab_and_opens_match() {
         let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         key(&mut tui, KeyCode::Char('4')); // start in Wallpaper
         key(&mut tui, KeyCode::Char('/'));
@@ -1502,7 +1576,7 @@ mod tests {
     #[test]
     fn search_tab_bar_shows_match_counts() {
         let mut term = Terminal::new(TestBackend::new(200, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         key(&mut tui, KeyCode::Char('/'));
         for c in "hat".chars() {
@@ -1526,7 +1600,7 @@ mod tests {
     #[test]
     fn params_overlay_toggles_and_adjusts() {
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         key(&mut tui, KeyCode::Char('4'));
         let ci = tui.tabs[3]
@@ -1588,7 +1662,7 @@ mod tests {
         // MouseEvents (the event loop's match arm is plain state
         // mutation — safe to drive from a test).
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         assert!(!tui.tab_rects.is_empty());
         assert!(!tui.card_rects.is_empty());
@@ -1683,7 +1757,7 @@ mod tests {
     #[test]
     fn plus_minus_keys_resize_browse_cards() {
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         assert_eq!(tui.card_w, TARGET_CARD_W);
         // '=' (unshifted) and '+' (shifted on US layouts) both grow.
@@ -1719,9 +1793,9 @@ mod tests {
     /// card name: pinned lines for representative families.
     #[test]
     fn attr_lines_compose_schema_summaries() {
-        let tabs = browse::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        let tabs = shared_tabs();
         let line2 = |id: &str| -> String {
-            for tab in &tabs {
+            for tab in tabs {
                 if let Some(c) = tab.cards.iter().find(|c| c.id == id) {
                     return browse::attr_lines(c).1;
                 }
@@ -1729,7 +1803,7 @@ mod tests {
             panic!("{id} not found in any tab");
         };
         let line1 = |id: &str| -> String {
-            for tab in &tabs {
+            for tab in tabs {
                 if let Some(c) = tab.cards.iter().find(|c| c.id == id) {
                     return browse::attr_lines(c).0;
                 }
@@ -1788,8 +1862,8 @@ mod tests {
     /// instead.
     #[test]
     fn attr_lines_never_render_placeholders() {
-        let tabs = browse::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
-        for tab in &tabs {
+        let tabs = shared_tabs();
+        for tab in tabs {
             for c in &tab.cards {
                 let (l1, l2) = browse::attr_lines(c);
                 assert!(!l1.is_empty(), "{}: empty symmetry line", c.id);
@@ -1815,7 +1889,7 @@ mod tests {
     /// Hirschhorn pentagon is a Nonperiodic primary, not a type).
     #[test]
     fn pentagon_tab_orders_types_sequentially() {
-        let tabs = browse::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        let tabs = shared_tabs();
         let pent = &tabs[tabs
             .iter()
             .position(|t| t.category == TilingCategory::PentagonTypes)
@@ -1834,7 +1908,7 @@ mod tests {
     /// config-less remainder (none today).
     #[test]
     fn two_uniform_tab_groups_configurations() {
-        let tabs = browse::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        let tabs = shared_tabs();
         let tu = &tabs[tabs
             .iter()
             .position(|t| t.category == TilingCategory::TwoUniform)
@@ -1867,7 +1941,7 @@ mod tests {
     /// regulars, then the Laves proper, then the 2-uniform duals.
     #[test]
     fn laves_tab_sorts_by_declared_rank() {
-        let tabs = browse::browse_tabs_with(&tess_tilings::registry(), tess_tilings::classification);
+        let tabs = shared_tabs();
         let lv = &tabs[tabs
             .iter()
             .position(|t| t.category == TilingCategory::Laves)
@@ -1885,7 +1959,7 @@ mod tests {
     #[test]
     fn dirty_loop_does_not_redraw_when_idle() {
         let mut term = Terminal::new(TestBackend::new(100, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         term.draw(|f| render(f, &mut tui)).unwrap();
         assert!(!tui.dirty, "render clears the dirty flag");
         // A non-mutating key (e.g. 'x' in Browse) leaves state alone.
@@ -1896,7 +1970,7 @@ mod tests {
     #[test]
     fn debug_dump_screen() {
         let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
-        let mut tui = Tui::new();
+        let mut tui = fresh_tui();
         key(&mut tui, KeyCode::Char('4'));
         term.draw(|f| render(f, &mut tui)).unwrap();
         println!("\n=== browse (wallpaper) ===\n{}", buffer_text(&term));

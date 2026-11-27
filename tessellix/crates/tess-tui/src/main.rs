@@ -927,7 +927,30 @@ fn explore(args: &[String]) -> Result<(), String> {
 }
 
 #[cfg(test)]
+mod tests_shared {
+    use std::sync::OnceLock;
+
+    use tess_tilings::sweep::{run_sweep, REGION, SweepOutcome};
+
+    /// Shared, process-wide `run_sweep("square", REGION)` outcome.
+    /// The outcome is pure (registry + classification, no test state),
+    /// so every direct-`run_sweep` test shares it: the expensive
+    /// ~28 s sweep is paid once per test binary instead of once per
+    /// test. All consumers read it read-only.
+    static SHARED_OUTCOME: OnceLock<SweepOutcome> = OnceLock::new();
+
+    pub(crate) fn shared_outcome() -> &'static SweepOutcome {
+        SHARED_OUTCOME.get_or_init(|| {
+            let reg = tess_tilings::registry();
+            let tiling = reg.get("square").expect("square registered");
+            run_sweep(tiling, &REGION)
+        })
+    }
+}
+
+#[cfg(test)]
 mod tests_explore {
+    use super::tests_shared::shared_outcome;
     use super::{explore, leaderboard_json, parse_explore};
 
     fn args(v: &[&str]) -> Vec<String> {
@@ -962,13 +985,9 @@ mod tests_explore {
 
     #[test]
     fn explore_leaderboard_is_byte_deterministic() {
-        let reg = tess_tilings::registry();
-        let outcome = tess_tilings::sweep::run_sweep(
-            reg.get("square").unwrap(),
-            &tess_tilings::sweep::REGION,
-        );
-        let a = leaderboard_json(&outcome);
-        let b = leaderboard_json(&outcome);
+        let outcome = shared_outcome();
+        let a = leaderboard_json(outcome);
+        let b = leaderboard_json(outcome);
         assert_eq!(a, b);
         assert!(a.contains("\"schema\": \"pic-explorer-leaderboard/v1\""));
     }
@@ -1035,10 +1054,11 @@ mod tests_explore {
 // writer. No CLI process spawn, no interactive TUI; purely test-only.
 #[cfg(test)]
 mod tests_explore_contract {
+    use super::tests_shared::shared_outcome;
     use super::{explore_write_gallery, leaderboard_json, parse_explore};
     use tess_tilings::sweep::{
-        run_sweep, DeltaRow, DELTA_GRID, REGION, SweepFeatures, SweepOutcome, ThetaFeatures,
-        ThetaRow, THETA_AXIS_IDS, THETA_GRID,
+        DeltaRow, DELTA_GRID, REGION, SweepFeatures, SweepOutcome, ThetaFeatures, ThetaRow,
+        THETA_AXIS_IDS, THETA_GRID,
     };
 
     fn args(v: &[&str]) -> Vec<String> {
@@ -1467,11 +1487,9 @@ mod tests_explore_contract {
             line.contains("byte-deterministic"),
             "docs/USAGE.md line {line_no} (byte-determinism): line should claim byte-determinism"
         );
-        let reg = tess_tilings::registry();
-        let tiling = reg.get("square").expect("square registered");
-        let outcome = run_sweep(tiling, &REGION);
-        let a = leaderboard_json(&outcome);
-        let b = leaderboard_json(&outcome);
+        let outcome = shared_outcome();
+        let a = leaderboard_json(outcome);
+        let b = leaderboard_json(outcome);
         assert_eq!(
             a, b,
             "docs/USAGE.md line {line_no} (byte-determinism): two leaderboard_json calls diverged"
@@ -1498,21 +1516,19 @@ mod tests_explore_contract {
             line.contains("gallery"),
             "docs/USAGE.md line {line_no} (--top-k effect): row {line:?} should name the gallery"
         );
-        let reg = tess_tilings::registry();
-        let tiling = reg.get("square").expect("square registered");
-        let outcome = run_sweep(tiling, &REGION);
+        let outcome = shared_outcome();
         let scored = outcome.delta_rows.iter().filter(|r| r.rank > 0).count();
         let refused = outcome.delta_rows.iter().filter(|r| r.rank == 0).count();
-        let json = leaderboard_json(&outcome);
+        let json = leaderboard_json(outcome);
         let tmp = std::env::temp_dir();
         let pid = std::process::id();
         let dir1 = tmp.join(format!("tess_explore_contract_topk1_{pid}"));
         let dir5 = tmp.join(format!("tess_explore_contract_topk5_{pid}"));
         let _ = std::fs::remove_dir_all(&dir1);
         let _ = std::fs::remove_dir_all(&dir5);
-        let (w1, s1) = explore_write_gallery(&outcome, dir1.to_str().unwrap(), 1)
+        let (w1, s1) = explore_write_gallery(outcome, dir1.to_str().unwrap(), 1)
             .expect("gallery at top-k 1 must succeed");
-        let (w5, s5) = explore_write_gallery(&outcome, dir5.to_str().unwrap(), 5)
+        let (w5, s5) = explore_write_gallery(outcome, dir5.to_str().unwrap(), 5)
             .expect("gallery at top-k 5 must succeed");
         assert_eq!(
             w1,
@@ -1542,7 +1558,7 @@ mod tests_explore_contract {
         // across the two gallery writers.
         assert_eq!(
             json,
-            leaderboard_json(&outcome),
+            leaderboard_json(outcome),
             "docs/USAGE.md line {line_no} (--top-k effect): JSON must not depend on top-k"
         );
         // Gallery file naming: <substrate>-d<delta>-r<rank>.svg
@@ -1578,10 +1594,8 @@ mod tests_explore_contract {
                 && line.contains("refused sink with rank 0"),
             "docs/USAGE.md line {line_no} (sort contract): line {line:?} should state score ascending, ties by angle + refused sink with rank 0"
         );
-        let reg = tess_tilings::registry();
-        let tiling = reg.get("square").expect("square registered");
-        let outcome = run_sweep(tiling, &REGION);
-        let json = leaderboard_json(&outcome);
+        let outcome = shared_outcome();
+        let json = leaderboard_json(outcome);
         assert!(
             json.contains("\"delta\": \"score asc, delta_deg asc (refused sink, rank 0)\""),
             "docs/USAGE.md line {line_no} (sort contract): JSON sort block must spell score asc, delta_deg asc (refused sink, rank 0), got: {json}"
