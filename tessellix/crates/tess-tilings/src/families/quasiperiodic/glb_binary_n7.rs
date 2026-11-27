@@ -1272,6 +1272,70 @@ mod tests {
     use super::*;
     use crate::tests::{check_covers, check_det, check_rotated};
     use tess_core::params::{ParamKind, ParamValue};
+    use std::sync::{Mutex, OnceLock};
+
+    /// Shared lazy assembly cache: `depth_counts_area_law` (all depths)
+    /// and `k7_twist_certificate_port` (depth 4) both refine the same
+    /// seed cascade; memoize per depth so each refinement runs once per
+    /// test binary. Returns a clone — callers own their copy.
+    static ASSEMBLE_CACHE: OnceLock<Mutex<std::collections::HashMap<usize, Vec<TileR>>>> =
+        OnceLock::new();
+
+    fn assemble_shared(depth: usize) -> Vec<TileR> {
+        let cache = ASSEMBLE_CACHE
+            .get_or_init(|| Mutex::new(std::collections::HashMap::new()));
+        {
+            // Fast path: no lock held during generation below.
+            if let Some(tiles) = cache.lock().unwrap().get(&depth) {
+                return tiles.clone();
+            }
+        }
+        // Double-checked memo: compute outside the lock so parallel
+        // tests (libtest worker pool) never serialize on the cache.
+        let tiles = assemble(depth)
+            .unwrap_or_else(|| panic!("depth {depth} refinement failed"));
+        let mut guard = cache.lock().unwrap();
+        guard.entry(depth).or_insert_with(|| tiles.clone());
+        tiles
+    }
+
+    /// Shared lazy generate() cache for the plane-battery windows shared
+    /// across `plane_coverage_census`, `view_budget_pins` and
+    /// `far_view_covered` (covers / rotated / det / box20@1 / clipane /
+    /// far): each test re-ran the same parameterized generation. Keyed on
+    /// the exact scale, rotation and window — the same inputs the tests
+    /// passed. Returns a clone — callers own their copy.
+    static GENERATE_CACHE: OnceLock<
+        Mutex<std::collections::HashMap<(u64, u64, u64, u64, u64, u64), TilingResult>>,
+    > = OnceLock::new();
+
+    fn generate_cached(sc: f64, rot: f64, world: BBox) -> TilingResult {
+        let key = (
+            sc.to_bits(),
+            rot.to_bits(),
+            world.min.x.to_bits(),
+            world.min.y.to_bits(),
+            world.max.x.to_bits(),
+            world.max.y.to_bits(),
+        );
+        let cache = GENERATE_CACHE
+            .get_or_init(|| Mutex::new(std::collections::HashMap::new()));
+        {
+            if let Some(r) = cache.lock().unwrap().get(&key) {
+                return r.clone();
+            }
+        }
+        // Double-checked memo: compute outside the lock (see
+        // `assemble_shared`) so parallel tests never serialize on the cache.
+        let t = GlbBinaryN7Tiling;
+        let mut pp = ParamSet::default_for(t.params());
+        pp.set(SCALE_ID, ParamValue::Float(sc));
+        pp.set(ROTATION_ID, ParamValue::Angle(rot));
+        let r = t.generate(&pp, &Query { region: world });
+        let mut guard = cache.lock().unwrap();
+        guard.entry(key).or_insert_with(|| r.clone());
+        r
+    }
 
     /// Total twist shoelace of a tile set, every vertex aligned to the
     /// set's maximal exponent `e` (true value = result / 2^(2e)) — the
@@ -1475,16 +1539,36 @@ mod tests {
     #[test]
     fn depth_counts_area_law() {
         for d in 1..=D_MAX {
-            let tiles = assemble(d)
-                .unwrap_or_else(|| panic!("depth {d} refinement failed"));
+            let tiles = assemble_shared(d);
             let expected = [3usize, 10, 35, 126, 462][d - 1];
             assert_eq!(tiles.len(), expected, "depth {d} count");
-            for i in 0..tiles.len() {
-                for j in (i + 1)..tiles.len() {
-                    assert!(
-                        interior_disjoint(&tiles[i].v, &tiles[j].v),
-                        "overlap at depth {d}, tiles {i}/{j}"
-                    );
+            // all-pairs interior disjointness (bucketed: every tile
+            // registers in every 2-unit cell its bbox spans, so any
+            // bbox-overlapping pair shares at least one cell — complete)
+            const AREA_CELL: f64 = 2.0;
+            let mut buckets: std::collections::HashMap<(i32, i32), Vec<usize>> =
+                std::collections::HashMap::new();
+            for (i, t) in tiles.iter().enumerate() {
+                for gx in (t.bbox.0.x / AREA_CELL).floor() as i32
+                    ..=(t.bbox.1.x / AREA_CELL).floor() as i32
+                {
+                    for gy in (t.bbox.0.y / AREA_CELL).floor() as i32
+                        ..=(t.bbox.1.y / AREA_CELL).floor() as i32
+                    {
+                        buckets.entry((gx, gy)).or_default().push(i);
+                    }
+                }
+            }
+            for list in buckets.values() {
+                for x in 0..list.len() {
+                    for y in (x + 1)..list.len() {
+                        let (i, j) = (list[x], list[y]);
+                        if bbox_intersect(&tiles[i].bbox, &tiles[j].bbox)
+                            && !interior_disjoint(&tiles[i].v, &tiles[j].v)
+                        {
+                            panic!("overlap at depth {d}, tiles {i}/{j}");
+                        }
+                    }
                 }
             }
             let (s, e) = twist_shoelace(&tiles);
@@ -1519,7 +1603,7 @@ mod tests {
     /// the even π/14 class grid.
     #[test]
     fn k7_twist_certificate_port() {
-        let tiles = assemble(4).expect("depth-4 refinement");
+        let tiles = assemble_shared(4);
         assert_eq!(tiles.len(), 126);
         // Vertex census: every normalized twist vertex has e ≤ 1.
         let mut verts: Vec<Tw> = tiles.iter().flat_map(|t| t.v).collect();
@@ -1580,7 +1664,9 @@ mod tests {
         let t = GlbBinaryN7Tiling;
         let p = ParamSet::default_for(t.params());
         let region = BBox::new(Vec2::new(100.0, 100.0), Vec2::new(101.0, 101.0));
-        let r = t.generate(&p, &Query { region });
+        // Far view == the shared plane-battery "far" window at the
+        // default scale/rotation: served by the memoized cache.
+        let r = generate_cached(2.75, 0.0, region);
         assert!(r.message.is_none(), "far view must not fail");
         assert!(
             (40..=90).contains(&r.tiles.len()),
@@ -2090,11 +2176,7 @@ mod tests {
             ("far", 2.75, 0.0,
                 BBox::new(Vec2::new(100.0, 100.0), Vec2::new(101.0, 101.0)), 9),
         ] {
-            let t = GlbBinaryN7Tiling;
-            let mut pp = ParamSet::default_for(t.params());
-            pp.set(SCALE_ID, tess_core::params::ParamValue::Float(sc));
-            pp.set(ROTATION_ID, tess_core::params::ParamValue::Angle(rot));
-            let r = t.generate(&pp, &Query { region: world });
+            let r = generate_cached(sc, rot, world);
             assert!(r.message.is_none(), "{tag} must be plane-covered");
             assert!(!r.tiles.is_empty(), "{tag} must emit tiles");
             let polys: Vec<Vec<Vec2>> =
@@ -2299,7 +2381,6 @@ mod tests {
     /// only.
     #[test]
     fn view_budget_pins() {
-        let t = GlbBinaryN7Tiling;
         for (tag, sc, rot, world, lo, hi) in [
             ("covers", 2.75f64, 0.0f64,
                 BBox::new(Vec2::new(-8.0, -6.0), Vec2::new(8.0, 6.0)), 1900usize, 2300),
@@ -2319,10 +2400,7 @@ mod tests {
             ("far", 2.75, 0.0,
                 BBox::new(Vec2::new(100.0, 100.0), Vec2::new(101.0, 101.0)), 40, 90),
         ] {
-            let mut pp = ParamSet::default_for(t.params());
-            pp.set(SCALE_ID, tess_core::params::ParamValue::Float(sc));
-            pp.set(ROTATION_ID, tess_core::params::ParamValue::Angle(rot));
-            let r = t.generate(&pp, &Query { region: world });
+            let r = generate_cached(sc, rot, world);
             assert!(r.message.is_none(), "{tag}: {:?}", r.message);
             assert!(
                 (lo..=hi).contains(&r.tiles.len()),

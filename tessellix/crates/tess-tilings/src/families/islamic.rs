@@ -3959,7 +3959,25 @@ mod hankin_4_8_8_rosette_transform_tests {
         EXPECTED_SEEDS, LATTICE, THETA_E_DEG,
     };
     use crate::tests::{check_covers, check_det, check_rotated};
+    use crate::lattice::{Cell, LatticeTiling};
     use std::collections::HashMap;
+    use std::sync::OnceLock;
+
+    /// Shared lazy transform + inference-table fixtures: the rosette
+    /// transform pipeline (13-cell substrate → 93-cell inference) runs
+    /// for every test and — via `assert_p4m_exact` — 7× per symmetry
+    /// table check. Memoized once per test binary.
+    static HANKIN_TILING: OnceLock<LatticeTiling> = OnceLock::new();
+
+    fn hankin_shared() -> &'static LatticeTiling {
+        HANKIN_TILING.get_or_init(hankin_4_8_8_rosette_transform)
+    }
+
+    static HANKIN_CELLS: OnceLock<Vec<Cell>> = OnceLock::new();
+
+    fn hankin_inference_cells() -> &'static Vec<Cell> {
+        HANKIN_CELLS.get_or_init(|| transformed_cells().0)
+    }
     use tess_core::category::TilingCategory;
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::symmetry::{LatticeKind, WallpaperGroup};
@@ -3967,7 +3985,7 @@ mod hankin_4_8_8_rosette_transform_tests {
     #[test]
     fn hankin_4_8_8_rosette_transform_covers_region() {
         check_covers(
-            &hankin_4_8_8_rosette_transform(),
+            hankin_shared(),
             "hankin-4-8-8-rosette-transform",
             BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
         );
@@ -3976,7 +3994,7 @@ mod hankin_4_8_8_rosette_transform_tests {
     #[test]
     fn hankin_4_8_8_rosette_transform_rotated_scaled() {
         check_rotated(
-            &hankin_4_8_8_rosette_transform(),
+            hankin_shared(),
             "hankin-4-8-8-rosette-transform(rot20,scale0.6)",
             BBox::new(Vec2::new(-24.0, -18.0), Vec2::new(24.0, 18.0)),
             0.6,
@@ -3987,7 +4005,7 @@ mod hankin_4_8_8_rosette_transform_tests {
     #[test]
     fn hankin_4_8_8_rosette_transform_deterministic() {
         check_det(
-            &hankin_4_8_8_rosette_transform(),
+            hankin_shared(),
             "hankin-4-8-8-rosette-transform",
             BBox::new(Vec2::new(-12.0, -9.0), Vec2::new(12.0, 9.0)),
         );
@@ -3995,7 +4013,7 @@ mod hankin_4_8_8_rosette_transform_tests {
 
     #[test]
     fn hankin_4_8_8_rosette_transform_unit_structure() {
-        let t = hankin_4_8_8_rosette_transform();
+        let t = hankin_shared();
         assert_eq!(
             t.cells.len(),
             93,
@@ -4014,7 +4032,7 @@ mod hankin_4_8_8_rosette_transform_tests {
 
     #[test]
     fn hankin_4_8_8_rosette_transform_symmetry_metadata() {
-        let t = hankin_4_8_8_rosette_transform();
+        let t = hankin_shared();
         assert_eq!(t.id, "hankin-4-8-8-rosette-transform");
         assert_eq!(t.group, WallpaperGroup::P4m);
         assert_eq!(t.lattice_kind, LatticeKind::Square);
@@ -4024,7 +4042,7 @@ mod hankin_4_8_8_rosette_transform_tests {
 
     #[test]
     fn hankin_4_8_8_rosette_transform_inference_census() {
-        let (sub, _trep) = transformed_cells();
+        let sub = hankin_inference_cells();
         let tiles: Vec<&[Vec2]> = sub.iter().map(|c| c.poly.pts.as_slice()).collect();
         let (cells, report) = hankin::build_cells(&tiles, THETA_E_DEG, DELTA);
         assert!(report.complete, "pairing must be complete at the selected θK");
@@ -4081,7 +4099,7 @@ mod hankin_4_8_8_rosette_transform_tests {
     /// must coincide with a unique, still-unmatched table cell to
     /// 1e-9. Returns the worst vertex mismatch.
     fn assert_p4m_exact(label: &str, flip: bool, g: impl Fn(Vec2) -> Vec2) -> f64 {
-        let t = hankin_4_8_8_rosette_transform();
+        let t = hankin_shared();
         let (a1, a2) = (LATTICE[0], LATTICE[1]);
         let mut unused: HashMap<(usize, Vec<i64>), Vec<usize>> = HashMap::new();
         for (j, c) in t.cells.iter().enumerate() {

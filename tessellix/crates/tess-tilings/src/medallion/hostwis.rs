@@ -33,19 +33,26 @@ use super::holes::{blob, cluster_tiles};
 use super::infer::{
     analyze, candidates, constraints, corner_cos2, dot4, edge_key, global_validate,
     is_legal_lattice, padd, poly_area2, search, tile_area, Constraints, FillFp, InstanceSet,
-    Level, Limits, Pair, Substrate, Tile, SQ, RHO, TRI,
+    Level, Limits, Pair, Report, Substrate, Tile, SQ, RHO, TRI,
 };
+use std::sync::OnceLock;
 use crate::families::quasiperiodic::wis_12_fold::{rot4, P4, SQ_SUP};
 
-fn sub() -> Substrate {
-    Substrate::new(blob())
+static CACHED_SUB: OnceLock<Substrate> = OnceLock::new();
+
+fn sub() -> &'static Substrate {
+    CACHED_SUB.get_or_init(|| Substrate::new(blob()))
 }
 
-fn ship_tiles() -> Vec<Tile> {
-    cluster_tiles()
-        .into_iter()
-        .map(|t| Tile::new(t.kind, &t.cs))
-        .collect()
+static CACHED_SHIP: OnceLock<Vec<Tile>> = OnceLock::new();
+
+fn ship_tiles() -> &'static Vec<Tile> {
+    CACHED_SHIP.get_or_init(|| {
+        cluster_tiles()
+            .into_iter()
+            .map(|t| Tile::new(t.kind, &t.cs))
+            .collect()
+    })
 }
 
 /// Pinned per-vertex cos²-class census of the shipped cluster
@@ -78,6 +85,20 @@ const CENSUS_TABLE: &[([u32; 3], usize)] = &[
 ];
 
 const EXHAUSTIVE_LIMITS: Limits = Limits { max_nodes: 2_000_000, max_sols: 20_000 };
+
+/// Memoized shared K20 Segment exhaustive search (EXHAUSTIVE_LIMITS +
+/// K20 + Level::Segment): the triple shared by
+/// `bar_exhaustive_segment_k20_reproduces_census_family`, the segment
+/// side of `bar_exhaustive_rayline_vset_k20_same_fill_set`, and
+/// `field_membership_and_finiteness`. `determinism_byte_identical_rerun`
+/// deliberately keeps its double search (the byte-identity itself).
+static CACHED_SEGMENTED_REPORT: OnceLock<Report> = OnceLock::new();
+
+fn segment_exhaustive_report() -> &'static Report {
+    CACHED_SEGMENTED_REPORT.get_or_init(|| {
+        search(sub(), InstanceSet::K20, Level::Segment, EXHAUSTIVE_LIMITS)
+    })
+}
 
 // ------------------------------------------------------------------
 // substrate + record conventions
@@ -163,7 +184,7 @@ fn shipped_cluster_reference_data() {
     // 26 tiles, 16/4/6 census, 2·area (56,32), 29 vertices, 54 edges.
     assert_eq!(ship.len(), 26);
     assert_eq!(SQ_SUP.len(), 26);
-    let an = analyze(&ship);
+    let an = analyze(ship);
     assert_eq!(an.census, [16, 4, 6], "SQ_SUP cell census");
     assert_eq!(an.area, (56, 32), "SQ_SUP exact 2-area == hole identity");
     assert_eq!(an.nverts, 29, "fill vertices");
@@ -171,7 +192,7 @@ fn shipped_cluster_reference_data() {
     let interior = an.nedges - s.edge_set.len();
     assert_eq!(interior, 34, "interior edges");
     // Independent global validation of the shipped fill.
-    assert!(global_validate(&s, &ship).is_empty(), "shipped fill valid");
+    assert!(global_validate(s, ship).is_empty(), "shipped fill valid");
     // cos²-class census matches the pinned 13-class table exactly.
     let pinned: BTreeMap<Vec<(i64, i64)>, usize> =
         SHIP_COS2.iter().map(|(k, c)| (k.to_vec(), *c)).collect();
@@ -283,7 +304,7 @@ fn guided_walk_reachability() {
     let ship = ship_tiles();
     for (set, label) in [(InstanceSet::K20, "20-set"), (InstanceSet::K24, "24-set")] {
         for level in [Level::RayLine, Level::Segment] {
-            let (tiles, area) = guided_walk(&s, set, level, &ship)
+            let (tiles, area) = guided_walk(s, set, level, ship)
                 .unwrap_or_else(|e| panic!("{label} {level:?}: {e}"));
             assert_eq!(tiles, 26, "{label} {level:?}: tile count");
             assert_eq!(area, (56, 32), "{label} {level:?}: area identity");
@@ -297,10 +318,9 @@ fn guided_walk_reachability() {
 
 #[test]
 fn bar_exhaustive_segment_k20_reproduces_census_family() {
-    let s = sub();
     let ship = ship_tiles();
-    let ship_fp: FillFp = analyze(&ship).fp;
-    let r = search(&s, InstanceSet::K20, Level::Segment, EXHAUSTIVE_LIMITS);
+    let ship_fp: FillFp = analyze(ship).fp;
+    let r = segment_exhaustive_report();
     assert!(r.exhausted, "K20 Segment search must exhaust");
     assert_eq!(r.invalid, 0, "every completion globally valid");
     assert_eq!(r.sols, 6480);
@@ -320,8 +340,8 @@ fn bar_exhaustive_segment_k20_reproduces_census_family() {
 fn bar_exhaustive_rayline_vset_k20_same_fill_set() {
     let s = sub();
     let ship = ship_tiles();
-    let ship_fp: FillFp = analyze(&ship).fp;
-    let r = search(&s, InstanceSet::K20, Level::RayLineVset, EXHAUSTIVE_LIMITS);
+    let ship_fp: FillFp = analyze(ship).fp;
+    let r = search(s, InstanceSet::K20, Level::RayLineVset, EXHAUSTIVE_LIMITS);
     assert!(r.exhausted, "K20 RayLineVset search must exhaust");
     assert_eq!(r.invalid, 0);
     assert_eq!(r.sols, 6480);
@@ -330,7 +350,7 @@ fn bar_exhaustive_rayline_vset_k20_same_fill_set() {
         CENSUS_TABLE.iter().copied().collect();
     assert_eq!(r.by_census, table);
     assert!(r.fps.contains(&ship_fp));
-    let r_seg = search(&s, InstanceSet::K20, Level::Segment, EXHAUSTIVE_LIMITS);
+    let r_seg = segment_exhaustive_report();
     assert_eq!(r_seg.fps, r.fps, "independent constraint systems, same fills");
 }
 
@@ -338,7 +358,7 @@ fn bar_exhaustive_rayline_vset_k20_same_fill_set() {
 fn rayline_capped_freedom_documented() {
     let s = sub();
     let r = search(
-        &s,
+        s,
         InstanceSet::K20,
         Level::RayLine,
         Limits { max_nodes: 30_000, max_sols: 100_000 },
@@ -359,8 +379,8 @@ fn rayline_capped_freedom_documented() {
 fn determinism_byte_identical_rerun() {
     let s = sub();
     let limits = Limits { max_nodes: 20_000, max_sols: 100_000 };
-    let r1 = search(&s, InstanceSet::K20, Level::RayLine, limits);
-    let r2 = search(&s, InstanceSet::K20, Level::RayLine, limits);
+    let r1 = search(s, InstanceSet::K20, Level::RayLine, limits);
+    let r2 = search(s, InstanceSet::K20, Level::RayLine, limits);
     assert_eq!(format!("{r1:?}"), format!("{r2:?}"), "byte-identical rerun");
 }
 
@@ -391,7 +411,7 @@ fn field_membership_and_finiteness() {
         }
     }
     // Exhaustive-run finiteness: coordinates stay tiny (report field).
-    let r = search(&s, InstanceSet::K20, Level::Segment, EXHAUSTIVE_LIMITS);
+    let r = segment_exhaustive_report();
     assert!(r.max_coord < 1000, "finiteness: max |component| {}", r.max_coord);
 }
 
