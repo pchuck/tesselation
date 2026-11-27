@@ -7,11 +7,16 @@
 //!   above each section; the Wallpaper tab also opens with a catalog
 //!   note (since M85 all 17 groups are represented, it reports the
 //!   completed catalog); the grid scrolls by rows.
+//!   `c` cycles the grid's preview color mode (through the 10
+//!   [`ColorMode::ALL`] modes, starting from the highlighted card's
+//!   current look), `d` resets to each card's own default preview
+//!   mode (the historical behavior).
 //! * **Render** — the selected tiling full-screen (one cell = one
 //!   pixel, as before) with a status bar; `←`/`→` walk prev/next tiling
 //!   in the current tab's order (the browse cursor follows, so `Esc`
 //!   returns to exactly the right card); `p` toggles a params overlay
-//!   strip at the bottom.
+//!   strip at the bottom. `c`/`d` drive the same funnel as the grid —
+//!   one effective color mode in both views.
 //! * **Search** — `/` filters cards by name/id/description across all
 //!   tabs; the tab bar shows per-tab match counts and the active tab
 //!   jumps to the first tab with a match.
@@ -120,6 +125,16 @@ struct Tui {
     /// Last rendered grid geometry (for cursor steps and paging).
     grid_cols: u16,
     grid_rows: u16,
+    /// Browse-grid preview-mode override (M215's GUI pattern transplanted):
+    /// `None` = every card previews in its own default preview mode
+    /// (today's behavior); `Some(m)` = every card in the grid renders in
+    /// `m`'s preview mode (the `Single`→`Proto` fallback is applied at
+    /// the raster call, same as the default path). Also drives the
+    /// Render canvas's `app.color_mode` through the same funnel, so
+    /// the grid and the canvas always agree on one effective mode —
+    /// see [`Tui::set_preview_mode`]. TUI-local state: never written to
+    /// tess-core's [`App`].
+    preview_mode: Option<ColorMode>,
     /// Last `(tab, highlighted card)` the grid auto-scrolled for: the
     /// grid snaps to the highlight only when it moves, so manual
     /// PgUp/PgDn/wheel scrolling is not undone on the next render.
@@ -194,6 +209,7 @@ impl Tui {
             grid_cols: 1,
             grid_rows: 1,
             thumbs: thumb::CardCache::new(),
+            preview_mode: None,
             dirty: true,
             tab_rects: Vec::new(),
             card_rects: Vec::new(),
@@ -309,6 +325,71 @@ impl Tui {
         }
     }
 
+    /// The single funnel for every color-mode change in either view —
+    /// the M215 GUI funnel transplanted. Sets the grid's
+    /// [`Tui::preview_mode`] override AND drives `app.color_mode`, so
+    /// the Browse grid and the Render canvas always agree on one
+    /// effective mode (the GUI's `set_preview_mode` precedent: the
+    /// Browse<->Render bidirectional sync). The thumbnail cache is
+    /// keyed by the effective mode, so a real change regenerates the
+    /// grid lazily (a no-op does not re-key) — no cache clearing is
+    /// needed. Unlike the GUI there is no second selector: the TUI's
+    /// canvas is painted live every frame, so no canvas invalidation
+    /// is needed either.
+    ///
+    /// Passing the same mode is a no-op: no dirty flag, no re-key.
+    fn set_preview_mode(&mut self, m: Option<ColorMode>) {
+        if self.preview_mode != m {
+            self.preview_mode = m;
+            self.dirty = true;
+        }
+        self.app.color_mode = m.unwrap_or_else(|| self.app.tiling().default_color_mode());
+    }
+
+    /// Set the explicit preview override, or clear it (`None` = each
+    /// card's own default preview mode). `c` cycles the effective mode
+    /// one step through [`ColorMode::ALL`]; `d` resets to the defaults.
+    fn cycle_preview_mode(&mut self) {
+        let current = self.effective_preview_mode();
+        self.set_preview_mode(Some(current.next()));
+    }
+
+    /// The preview mode the grid/canvas is currently showing — the
+    /// starting point for the cycle. An explicit override while set;
+    /// otherwise the highlighted card's own default. Post
+    /// `Single`→`Proto` fallback, matching the raster call.
+    fn effective_preview_mode(&self) -> ColorMode {
+        if let Some(m) = self.preview_mode {
+            return m.preview_mode();
+        }
+        // The highlighted card's own default (what the user is looking
+        // at; in Render the same card is the selected tiling).
+        if let Some(i) = self.highlighted_card() {
+            if let Some(c) = self.active_tab().cards.get(i) {
+                if let Some(t) = self.app.registry().get(c.id) {
+                    return t.default_color_mode().preview_mode();
+                }
+            }
+        }
+        self.app.tiling().default_color_mode().preview_mode()
+    }
+
+    /// `App::select_id` plus the preview-override re-application:
+    /// `select_id` resets `app.color_mode` to the newly selected
+    /// tiling's default (the tess-core behavior), but an explicit mode
+    /// choice made in either selector is meant to survive card
+    /// navigation, so while an override is set the canvas returns to
+    /// it. With no override the historical per-tiling-default behavior
+    /// is untouched (the M215 `select_id_synced` precedent). The browse
+    /// grid always renders in the same effective mode, so the two views
+    /// stay in sync through every selection path.
+    fn select_id_synced(&mut self, id: &str) {
+        self.app.select_id(id);
+        if let Some(m) = self.preview_mode {
+            self.app.color_mode = m;
+        }
+    }
+
     /// Select a card and enter the full-screen Render view. The browse
     /// cursor is kept in sync so `Esc` returns to this card.
     fn open_render(&mut self, card_idx: usize) {
@@ -317,7 +398,7 @@ impl Tui {
             None => return,
         };
         let cat = self.active_tab().category;
-        self.app.select_id(id);
+        self.select_id_synced(id);
         self.cursors[self.cat_idx(cat)] = card_idx;
         self.mode = Mode::Render;
         self.params_open = false;
@@ -338,7 +419,7 @@ impl Tui {
         let next = ((cur + dir).rem_euclid(n)) as usize;
         let id = tab.cards[next].id;
         self.cursors[ci] = next;
-        self.app.select_id(id);
+        self.select_id_synced(id);
         self.dirty = true;
     }
 
@@ -414,6 +495,14 @@ impl Tui {
                 // modifiers on wheel events.
                 KeyCode::Char('+') | KeyCode::Char('=') => self.resize_cards(2),
                 KeyCode::Char('-') | KeyCode::Char('_') => self.resize_cards(-2),
+                // Color-mode funnel (M215's GUI selector, keyboard idiom):
+                // `c` cycles the grid's effective preview mode one step
+                // through ColorMode::ALL (starting from the highlighted
+                // card's current look), `d` resets to each card's own
+                // default preview mode. Both views share one effective
+                // mode — the Render canvas and the grid always agree.
+                KeyCode::Char('c') => self.cycle_preview_mode(),
+                KeyCode::Char('d') => self.set_preview_mode(None),
                 KeyCode::Up | KeyCode::Char('k') => self.move_cursor(-(self.grid_cols as i32)),
                 KeyCode::Down | KeyCode::Char('j') => self.move_cursor(self.grid_cols as i32),
                 KeyCode::Left | KeyCode::Char('h') => self.move_cursor(-1),
@@ -475,10 +564,8 @@ impl Tui {
                     self.app.zoom(1.0 / 1.3, None);
                     self.dirty = true;
                 }
-                KeyCode::Char('c') => {
-                    self.app.cycle_color_mode();
-                    self.dirty = true;
-                }
+                KeyCode::Char('c') => self.cycle_preview_mode(),
+                KeyCode::Char('d') => self.set_preview_mode(None),
                 KeyCode::Char('r') => {
                     self.app.reset_view();
                     self.dirty = true;
@@ -914,12 +1001,20 @@ fn render_card(
         .get(id)
         .expect("card id is registered");
     let params = ParamSet::default_for(t.params());
+    // The effective grid mode: the browse-grid override while one is
+    // set, else this card's own default — with the `Single`→`Proto`
+    // fallback applied, matching the previous behavior.
+    let mode = tui
+        .preview_mode
+        .unwrap_or_else(|| t.default_color_mode())
+        .preview_mode();
     let pv = tui.thumbs.get_or_generate(
         t,
         &params,
         &tui.palette256,
         iw as u32,
         thumb_rows as u32,
+        mode,
     );
     let map = |c: u8| match c {
         raster::BORDER => Color::Indexed(tui.border256),
@@ -974,11 +1069,18 @@ fn render_status_browse(frame: &mut Frame, tui: &mut Tui, rect: Rect) {
             truncate(&tui.search, 24),
             tui.match_counts().iter().sum::<usize>()
         ),
-        _ => format!(
-            " {} (tab {}/10) │ arrows/hjkl move · enter open · tab/1-9/0 tabs · pgup/pgdn/wheel scroll · +/- card size · / search · q quit",
-            tui.active_tab().category.label(),
-            tui.tab_idx + 1
-        ),
+        _ => {
+            let mode_hint = match tui.preview_mode {
+                Some(m) => format!(" · mode {}", m.label()),
+                None => String::new(),
+            };
+            format!(
+                " {} (tab {}/10) │ arrows/hjkl move · enter open · tab/1-9/0 tabs · pgup/pgdn/wheel scroll · +/- card size · c/d preview-mode{} · / search · q quit",
+                tui.active_tab().category.label(),
+                tui.tab_idx + 1,
+                mode_hint
+            )
+        }
     };
     frame.render_widget(
         Paragraph::new(truncate(&status, rect.width as usize))
@@ -1066,7 +1168,7 @@ fn render_render_view(frame: &mut Frame, tui: &mut Tui, area: Rect) {
 
     let t = tui.app.tiling();
     let status = format!(
-        " {} [{}] · {} · tiles {} │ esc back · ←/→ prev/next · hjkl pan · +/- zoom · c color · r reset · p params",
+        " {} [{}] · {} · tiles {} │ esc back · ←/→ prev/next · hjkl pan · +/- zoom · c/d color cycle/reset · r reset · p params",
         t.name(),
         t.id(),
         result.symmetry.group,
@@ -1208,6 +1310,7 @@ mod tests {
             grid_cols: 1,
             grid_rows: 1,
             thumbs: thumb::CardCache::new(),
+            preview_mode: None,
             dirty: true,
             tab_rects: Vec::new(),
             card_rects: Vec::new(),
@@ -2163,6 +2266,141 @@ mod tests {
             }
         }
         panic!("golden-rhomboid not found in any tab");
+    }
+
+    // ---- preview-mode selector (c/d) -----------------------------------
+
+    #[test]
+    fn browse_cycle_key_sets_override_and_dirties() {
+        let mut term = Terminal::new(TestBackend::new(160, 30)).unwrap();
+        let mut tui = fresh_tui();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        assert!(!tui.dirty, "render clears the dirty flag");
+        assert_eq!(tui.preview_mode, None);
+        // Start point: the highlighted card's own default preview mode
+        // (post Single→Proto fallback) — what the grid currently shows.
+        let expected = tui.effective_preview_mode().next();
+        key(&mut tui, KeyCode::Char('c'));
+        assert_eq!(
+            tui.preview_mode,
+            Some(expected),
+            "c must set the override to the next mode"
+        );
+        assert_eq!(
+            tui.app.color_mode, expected,
+            "the canvas must follow the grid through the same funnel"
+        );
+        assert!(tui.dirty, "a real mode change must dirty");
+        // The status bar advertises the override (label + c/d hint).
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        let text = buffer_text(&term);
+        assert!(
+            text.contains("c/d preview-mode"),
+            "browse status bar must show the c/d hint: {text}"
+        );
+        assert!(
+            text.contains(&format!("mode {}", expected.label())),
+            "browse status bar must show the effective mode label: {text}"
+        );
+    }
+
+    #[test]
+    fn browse_reset_key_clears_override_and_is_noop_when_already_default() {
+        let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
+        let mut tui = fresh_tui();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        assert!(!tui.dirty);
+        // With no override set, 'd' is a no-op: no dirty, no state move.
+        key(&mut tui, KeyCode::Char('d'));
+        assert_eq!(tui.preview_mode, None);
+        assert!(!tui.dirty, "resetting when already default must not dirty");
+        // Cycle → reset.
+        key(&mut tui, KeyCode::Char('c'));
+        assert!(tui.preview_mode.is_some());
+        let default = tui.app.tiling().default_color_mode();
+        term.draw(|f| render(f, &mut tui)).unwrap(); // clear dirty
+        key(&mut tui, KeyCode::Char('d'));
+        assert_eq!(tui.preview_mode, None, "d must clear the override");
+        assert_eq!(
+            tui.app.color_mode, default,
+            "clearing the override returns the canvas to the tiling default"
+        );
+        assert!(tui.dirty, "clearing an override must dirty");
+    }
+
+    #[test]
+    fn cycle_from_raw_override_resumes_at_the_next_mode() {
+        let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
+        let mut tui = fresh_tui();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        key(&mut tui, KeyCode::Char('c'));
+        let first = tui.preview_mode.unwrap();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        key(&mut tui, KeyCode::Char('c'));
+        assert_eq!(tui.preview_mode, Some(first.next()), "c must advance the override");
+        assert_eq!(tui.app.color_mode, first.next());
+    }
+
+    #[test]
+    fn override_survives_open_render_and_walk() {
+        let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
+        let mut tui = fresh_tui();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        key(&mut tui, KeyCode::Char('c'));
+        let override_mode = tui.preview_mode.unwrap();
+        let before = tui.app.selected_id().to_string();
+        // Browse → Render: select_id must re-apply the override.
+        key(&mut tui, KeyCode::Enter);
+        assert_eq!(tui.mode, Mode::Render);
+        assert_eq!(tui.app.selected_id(), before);
+        assert_eq!(
+            tui.app.color_mode, override_mode,
+            "entering Render must keep the override on the canvas"
+        );
+        assert_eq!(tui.preview_mode, Some(override_mode));
+        // Walk: select_id must re-apply the override too (the canvas
+        // must not revert to the walked tiling's default).
+        key(&mut tui, KeyCode::Right);
+        assert_ne!(tui.app.selected_id(), before);
+        assert_eq!(
+            tui.app.color_mode, override_mode,
+            "walking in Render must keep the override on the canvas"
+        );
+        // Esc back to the Browse grid: the override persists.
+        key(&mut tui, KeyCode::Esc);
+        assert_eq!(tui.mode, Mode::Browse);
+        assert_eq!(tui.preview_mode, Some(override_mode));
+    }
+
+    #[test]
+    fn render_keys_share_the_grid_funnel_and_stay_in_sync() {
+        let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
+        let mut tui = fresh_tui();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        key(&mut tui, KeyCode::Enter); // Browse → Render on the first card
+        assert_eq!(tui.mode, Mode::Render);
+        assert_eq!(tui.preview_mode, None);
+        // c in Render drives the same funnel: grid state + canvas move.
+        let expected = tui.effective_preview_mode().next();
+        key(&mut tui, KeyCode::Char('c'));
+        assert_eq!(
+            tui.preview_mode,
+            Some(expected),
+            "c in Render must set the grid override"
+        );
+        let override_mode = tui.preview_mode.unwrap();
+        assert_eq!(tui.app.color_mode, override_mode);
+        // Canvas matches the grid: same labels.
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        let text = buffer_text(&term);
+        assert!(
+            text.contains("c/d color"),
+            "render status bar must advertise c/d: {text}"
+        );
+        // d in Render resets both views together.
+        key(&mut tui, KeyCode::Char('d'));
+        assert_eq!(tui.preview_mode, None);
+        assert_eq!(tui.app.color_mode, tui.app.tiling().default_color_mode());
     }
 
     // ---- misc --------------------------------------------------------------

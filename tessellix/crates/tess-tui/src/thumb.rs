@@ -13,11 +13,14 @@
 //! world unit (square lattice) to ~80 (measured girih panels), so a
 //! fixed window would show either a single tile or a shapeless mass.
 //!
-//! Card previews are pure functions of (tiling, params, size): the
-//! color mode is the tiling's own default preview mode (proto fallback
-//! for `Single`, which would otherwise render a featureless slab), so
-//! grid previews stay stable while the render view cycles color modes.
-//! Callers can cache via [`CardCache`].
+//! Card previews are pure functions of (tiling, params, effective
+//! preview mode, size): the preview mode follows the caller's browse-
+//! grid override — `None` means the tiling's own default preview mode
+//! (proto fallback for `Single`, which would otherwise render a
+//! featureless slab), `Some(m)` means `m` explicitly, with the same
+//! `Single`→`Proto` fallback applied at the call site. Callers can
+//! cache via [`CardCache`]; the key embeds the resolved preview mode,
+//! so a mode change regenerates the thumbnail while a no-op does not.
 
 use std::collections::HashMap;
 
@@ -25,6 +28,7 @@ use tess_core::geometry::{BBox, Vec2};
 use tess_core::params::{ParamSet, ParamSpec, ParamValue};
 use tess_core::symmetry::SymmetryMeta;
 use tess_core::tiling::{Query, Tiling};
+use tess_core::view::ColorMode;
 
 use crate::raster;
 
@@ -111,7 +115,10 @@ fn derive_window(tiling: &dyn Tiling, params: &ParamSet, aspect: f64) -> BBox {
 
 /// Generate the card preview for `tiling` at `params` (typically
 /// `ParamSet::default_for(tiling.params())`) at `w_chars` × `h_chars`
-/// character cells (each cell = 2 vertical pixels).
+/// character cells (each cell = 2 vertical pixels), rasterized in the
+/// resolved `mode` (the caller's effective preview mode: the browse-
+/// grid override or the tiling's own default, post `Single`→`Proto`
+/// fallback — the same contract the GUI's `card_texture` follows).
 ///
 /// Window derivation is two-pass (see the module docs): [`derive_window`]
 /// → generate → shrink-and-retry on generation refusal. Symmetry is read
@@ -123,6 +130,7 @@ pub fn generate_for(
     palette256: &[u8],
     w_chars: u32,
     h_chars: u32,
+    mode: ColorMode,
 ) -> CardPreview {
     let wc = w_chars.max(1);
     let hc = h_chars.max(1);
@@ -153,7 +161,6 @@ pub fn generate_for(
         };
     }
 
-    let mode = tiling.default_color_mode().preview_mode();
     let r = raster::raster(&result.tiles, &window, wc, 2 * hc, mode, palette256);
     let mut rows = Vec::with_capacity(hc as usize);
     for cr in 0..hc {
@@ -171,9 +178,10 @@ pub fn generate_for(
 }
 
 /// Lazily-populated card-preview cache keyed by
-/// `(tiling id, effective params, size)`. The color mode is fixed to the
-/// tiling's default preview mode (see [`generate_for`]), so param edits
-/// and resizes are the only invalidations.
+/// `(tiling id, effective params, resolved preview mode, size)`. The
+/// preview mode is part of the key — the M215 card_key precedent — so
+/// a real mode change regenerates the thumbnail while a no-op leaves
+/// the cached entry untouched.
 pub struct CardCache {
     map: HashMap<String, CardPreview>,
 }
@@ -192,19 +200,21 @@ impl CardCache {
         palette256: &[u8],
         w_chars: u32,
         h_chars: u32,
+        mode: ColorMode,
     ) -> &CardPreview {
         let effective = preview_params(params, tiling.id());
         let key = format!(
-            "{}|{}|{}x{}",
+            "{}|{}|{}|{}x{}",
             tiling.id(),
             params_key(tiling.params(), &effective),
+            mode.label(),
             w_chars,
             h_chars
         );
         let palette = palette256.to_vec();
-        self.map
-            .entry(key)
-            .or_insert_with(|| generate_for(tiling, params, &palette, w_chars, h_chars))
+        self.map.entry(key).or_insert_with(|| {
+            generate_for(tiling, params, &palette, w_chars, h_chars, mode)
+        })
     }
 }
 
@@ -243,7 +253,7 @@ mod tests {
             .get(id)
             .unwrap_or_else(|| panic!("unknown tiling {id}"));
         let params = ParamSet::default_for(t.params());
-        generate_for(t, &params, &palette(), w, h)
+        generate_for(t, &params, &palette(), w, h, t.default_color_mode().preview_mode())
     }
 
     #[test]
@@ -302,7 +312,7 @@ mod tests {
         let t = reg.get("girih-quasiperiodic").unwrap();
         assert_eq!(t.default_color_mode(), ColorMode::Proto);
         let params = ParamSet::default_for(t.params());
-        let p = generate_for(t, &params, &palette(), 24, 10);
+        let p = generate_for(t, &params, &palette(), 24, 10, t.default_color_mode().preview_mode());
         let colors: std::collections::BTreeSet<u8> = p
             .thumb
             .rows
@@ -336,9 +346,9 @@ mod tests {
         let params = ParamSet::default_for(t.params());
         let pal = palette();
         let mut cache = CardCache::new();
-        let a = cache.get_or_generate(t, &params, &pal, 10, 4);
+        let a = cache.get_or_generate(t, &params, &pal, 10, 4, t.default_color_mode().preview_mode());
         let pa = a as *const CardPreview;
-        let b = cache.get_or_generate(t, &params, &pal, 10, 4);
+        let b = cache.get_or_generate(t, &params, &pal, 10, 4, t.default_color_mode().preview_mode());
         assert!(
             std::ptr::eq(pa, b as *const CardPreview),
             "identical keys must hit the cache"
@@ -373,7 +383,7 @@ mod tests_card_cache_pins {
             .get(id)
             .unwrap_or_else(|| panic!("unknown tiling {id}"));
         let params = ParamSet::default_for(t.params());
-        generate_for(t, &params, &palette(), w, h)
+        generate_for(t, &params, &palette(), w, h, t.default_color_mode().preview_mode())
     }
 
     fn doc_text(path: &str) -> String {
@@ -421,9 +431,9 @@ mod tests_card_cache_pins {
         let params = ParamSet::default_for(t.params());
         let pal = palette();
         let mut cache = CardCache::new();
-        let a = cache.get_or_generate(t, &params, &pal, 10, 4);
+        let a = cache.get_or_generate(t, &params, &pal, 10, 4, t.default_color_mode().preview_mode());
         let pa = a as *const CardPreview;
-        let b = cache.get_or_generate(t, &params, &pal, 10, 4);
+        let b = cache.get_or_generate(t, &params, &pal, 10, 4, t.default_color_mode().preview_mode());
         assert!(
             std::ptr::eq(pa, b as *const CardPreview),
             "identical (tiling, params, size) must hit the cache (stable key)"
@@ -458,11 +468,35 @@ mod tests_card_cache_pins {
         );
         let pal = palette();
         let mut cache = CardCache::new();
-        let a = cache.get_or_generate(t, &p_lo, &pal, 10, 4) as *const CardPreview;
-        let b = cache.get_or_generate(t, &p_hi, &pal, 10, 4) as *const CardPreview;
+        let a = cache.get_or_generate(t, &p_lo, &pal, 10, 4, t.default_color_mode().preview_mode()) as *const CardPreview;
+        let b = cache.get_or_generate(t, &p_hi, &pal, 10, 4, t.default_color_mode().preview_mode()) as *const CardPreview;
         assert!(
             !std::ptr::eq(a, b),
             "a param change must move the cache key (miss, no reuse)"
+        );
+    }
+
+    /// Key sensitivity on the effective preview mode (the M215
+    /// card_key precedent): the same (tiling, params, size) under
+    /// different modes must yield different cache entries (a real
+    /// change regenerates), and a repeat hit stays pointer-identical.
+    #[test]
+    fn card_cache_key_sensitive_to_mode() {
+        let reg = registry();
+        let t = reg.get("square").unwrap();
+        let params = ParamSet::default_for(t.params());
+        let pal = palette();
+        let mut cache = CardCache::new();
+        let proto = cache.get_or_generate(t, &params, &pal, 10, 4, ColorMode::Proto) as *const CardPreview;
+        let gray = cache.get_or_generate(t, &params, &pal, 10, 4, ColorMode::Gray) as *const CardPreview;
+        assert!(
+            !std::ptr::eq(proto, gray),
+            "different effective preview modes must yield different cache entries"
+        );
+        let proto_again = cache.get_or_generate(t, &params, &pal, 10, 4, ColorMode::Proto) as *const CardPreview;
+        assert!(
+            std::ptr::eq(proto, proto_again),
+            "a repeat hit for the same mode must return the same entry"
         );
     }
 
@@ -506,8 +540,8 @@ mod tests_card_cache_pins {
         p4.set(depth_id, ParamValue::Int(4));
         let pal = palette();
         let mut cache = CardCache::new();
-        let a = cache.get_or_generate(t, &p0, &pal, 10, 4) as *const CardPreview;
-        let b = cache.get_or_generate(t, &p4, &pal, 10, 4) as *const CardPreview;
+        let a = cache.get_or_generate(t, &p0, &pal, 10, 4, t.default_color_mode().preview_mode()) as *const CardPreview;
+        let b = cache.get_or_generate(t, &p4, &pal, 10, 4, t.default_color_mode().preview_mode()) as *const CardPreview;
         assert!(
             std::ptr::eq(a, b),
             "raw depth 0 vs raw depth 4 → same effective params (depth 3) → same cache entry"
@@ -524,8 +558,8 @@ mod tests_card_cache_pins {
         let pal = palette();
         let mut cache_a = CardCache::new();
         let mut cache_b = CardCache::new();
-        let a = cache_a.get_or_generate(t, &params, &pal, 12, 5);
-        let b = cache_b.get_or_generate(t, &params, &pal, 12, 5);
+        let a = cache_a.get_or_generate(t, &params, &pal, 12, 5, t.default_color_mode().preview_mode());
+        let b = cache_b.get_or_generate(t, &params, &pal, 12, 5, t.default_color_mode().preview_mode());
         assert_eq!(a.thumb.w, b.thumb.w);
         assert_eq!(a.thumb.rows, b.thumb.rows);
         assert_eq!(a.tiles, b.tiles);
@@ -540,11 +574,11 @@ mod tests_card_cache_pins {
         let params = ParamSet::default_for(t.params());
         let pal = palette();
         let mut cache = CardCache::new();
-        let a = cache.get_or_generate(t, &params, &pal, 12, 5);
+        let a = cache.get_or_generate(t, &params, &pal, 12, 5, t.default_color_mode().preview_mode());
         let pa = a as *const CardPreview;
         let rows = a.thumb.rows.clone();
         let tiles = a.tiles;
-        let b = cache.get_or_generate(t, &params, &pal, 12, 5);
+        let b = cache.get_or_generate(t, &params, &pal, 12, 5, t.default_color_mode().preview_mode());
         assert!(
             std::ptr::eq(pa, b as *const CardPreview),
             "hit must be pointer-identical to the fill"
@@ -607,7 +641,7 @@ mod tests_card_cache_pins {
             }
         }
         let stub = RefusingTiling;
-        let p = generate_for(&stub, &ParamSet::EMPTY, &palette(), 8, 4);
+        let p = generate_for(&stub, &ParamSet::EMPTY, &palette(), 8, 4, stub.default_color_mode().preview_mode());
         assert_eq!(p.tiles, 0, "refusing tiling must yield zero tiles");
         assert_eq!(p.thumb.w, 8);
         assert_eq!(p.thumb.rows.len(), 4);
