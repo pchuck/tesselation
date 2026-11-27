@@ -347,3 +347,276 @@ mod tests {
         assert_eq!(b.thumb.rows.len(), 4);
     }
 }
+
+#[cfg(test)]
+mod tests_card_cache_pins {
+    //! CardCache key-semantics and render-identity pins (post-M184
+    //! depth-param semantics). These pin the CONTRACT of the cache —
+    //! key stability/sensitivity on effective params, render identity
+    //! across fills and cache hits, and shrink-retry convergence — not
+    //! any per-tiling counts (the registry grows over time).
+    use super::*;
+    use tess_core::tiling::TilingResult;
+    use tess_core::{LatticeKind, TilingCategory, WallpaperGroup};
+    use tess_tilings::registry;
+
+    fn palette() -> Vec<u8> {
+        tess_core::paint::PALETTE
+            .iter()
+            .map(|&c| tess_core::paint::rgb_to_256(c))
+            .collect()
+    }
+
+    fn preview_for(id: &str, w: u32, h: u32) -> CardPreview {
+        let reg = registry();
+        let t = reg
+            .get(id)
+            .unwrap_or_else(|| panic!("unknown tiling {id}"));
+        let params = ParamSet::default_for(t.params());
+        generate_for(t, &params, &palette(), w, h)
+    }
+
+    fn doc_text(path: &str) -> String {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        std::fs::read_to_string(root.join(path)).expect("doc readable")
+    }
+
+    /// Doc claims about card thumbnails: each phrase must appear exactly
+    /// once in the named doc (unique anchor, zero-or-one match).
+    fn assert_doc_anchor(path: &str, phrase: &str) {
+        let doc = doc_text(path);
+        let matches: Vec<&str> = doc.lines().filter(|l| l.contains(phrase)).collect();
+        assert_eq!(
+            matches.len(),
+            1,
+            "doc claim must be unique in {path}: {phrase} (found {}): {matches:?}",
+            matches.len()
+        );
+    }
+
+    /// Doc-side pin: the (id, params, size) cache contract claimed in the
+    /// Browse-mode docs — the key IS id + effective params + size.
+    #[test]
+    fn doc_claim_browse_grid_half_block_raster() {
+        assert_doc_anchor("docs/USAGE.md", "half-block raster thumbnail");
+    }
+
+    #[test]
+    fn doc_claim_cache_keyed_by_id_params_size() {
+        assert_doc_anchor("docs/USAGE.md", "cached per (id, params, size)");
+    }
+
+    #[test]
+    fn doc_claim_browse_thumbnails_keep_color_previews() {
+        assert_doc_anchor("docs/DESIGN.md", "browse thumbnails keep their");
+    }
+
+    /// Same (tiling, params, size) → identical cache key: a repeated
+    /// `get_or_generate` must hit (pointer-identical), i.e. the key is
+    /// stable across calls.
+    #[test]
+    fn card_cache_key_stable() {
+        let reg = registry();
+        let t = reg.get("star-cross").unwrap();
+        let params = ParamSet::default_for(t.params());
+        let pal = palette();
+        let mut cache = CardCache::new();
+        let a = cache.get_or_generate(t, &params, &pal, 10, 4);
+        let pa = a as *const CardPreview;
+        let b = cache.get_or_generate(t, &params, &pal, 10, 4);
+        assert!(
+            std::ptr::eq(pa, b as *const CardPreview),
+            "identical (tiling, params, size) must hit the cache (stable key)"
+        );
+        assert_eq!(
+            params_key(t.params(), &params),
+            params_key(t.params(), &params),
+            "params_key must be a pure function of (specs, params)"
+        );
+    }
+
+    /// Key sensitivity: any param change moves the key. At the raw
+    /// params_key level (the key's params component) and at the cache
+    /// level (a miss, no pointer reuse).
+    #[test]
+    fn card_cache_key_sensitive_to_param_change() {
+        let reg = registry();
+        let t = reg.get("star-cross").unwrap();
+        let specs = t.params();
+        // star-cross declares (scale, rotation, star_radius); the first
+        // spec is scale (declared in the GUI-side pin).
+        let scale_id = specs[0].id;
+        assert_eq!(specs[0].id.as_str(), "scale");
+        let mut p_lo = ParamSet::default_for(specs);
+        p_lo.set(scale_id, ParamValue::Float(1.0));
+        let mut p_hi = ParamSet::default_for(specs);
+        p_hi.set(scale_id, ParamValue::Float(2.0));
+        assert_ne!(
+            params_key(specs, &p_lo),
+            params_key(specs, &p_hi),
+            "params_key must reflect the param values it is handed"
+        );
+        let pal = palette();
+        let mut cache = CardCache::new();
+        let a = cache.get_or_generate(t, &p_lo, &pal, 10, 4) as *const CardPreview;
+        let b = cache.get_or_generate(t, &p_hi, &pal, 10, 4) as *const CardPreview;
+        assert!(
+            !std::ptr::eq(a, b),
+            "a param change must move the cache key (miss, no reuse)"
+        );
+    }
+
+    /// Key sensitivity, glb-binary-n7 depth specifically: the raw key
+    /// construction must reflect the depth value handed in — depth 0 vs
+    /// 3 yield different keys.
+    #[test]
+    fn card_cache_key_sensitive_to_glb_depth() {
+        let reg = registry();
+        let t = reg.get("glb-binary-n7").unwrap();
+        let specs = t.params();
+        let depth_id = tess_tilings::families::quasiperiodic::glb_binary_n7::DEPTH_ID;
+        assert!(
+            specs.iter().any(|s| s.id == depth_id),
+            "glb-binary-n7 must declare a `depth` param"
+        );
+        let mut p0 = ParamSet::default_for(specs);
+        p0.set(depth_id, ParamValue::Int(0));
+        let mut p3 = ParamSet::default_for(specs);
+        p3.set(depth_id, ParamValue::Int(3));
+        assert_ne!(
+            params_key(specs, &p0),
+            params_key(specs, &p3),
+            "depth 0 vs 3 must yield different keys (key reflects the param value)"
+        );
+    }
+
+    /// The cache key is computed from the EFFECTIVE (post-depth-cap)
+    /// params, not the raw request: raw depth 0 and raw depth 4 both
+    /// preview at depth 3 (the M184 preview pin), so they share one
+    /// cache entry — no re-generation, no extra raster.
+    #[test]
+    fn card_cache_key_reflects_effective_params_not_raw() {
+        let reg = registry();
+        let t = reg.get("glb-binary-n7").unwrap();
+        let specs = t.params();
+        let depth_id = tess_tilings::families::quasiperiodic::glb_binary_n7::DEPTH_ID;
+        let mut p0 = ParamSet::default_for(specs);
+        p0.set(depth_id, ParamValue::Int(0));
+        let mut p4 = ParamSet::default_for(specs);
+        p4.set(depth_id, ParamValue::Int(4));
+        let pal = palette();
+        let mut cache = CardCache::new();
+        let a = cache.get_or_generate(t, &p0, &pal, 10, 4) as *const CardPreview;
+        let b = cache.get_or_generate(t, &p4, &pal, 10, 4) as *const CardPreview;
+        assert!(
+            std::ptr::eq(a, b),
+            "raw depth 0 vs raw depth 4 → same effective params (depth 3) → same cache entry"
+        );
+    }
+
+    /// Render identity: two independent fills for the same key produce
+    /// byte-identical rasters (deterministic generation).
+    #[test]
+    fn card_cache_fills_are_byte_identical() {
+        let reg = registry();
+        let t = reg.get("square").unwrap();
+        let params = ParamSet::default_for(t.params());
+        let pal = palette();
+        let mut cache_a = CardCache::new();
+        let mut cache_b = CardCache::new();
+        let a = cache_a.get_or_generate(t, &params, &pal, 12, 5);
+        let b = cache_b.get_or_generate(t, &params, &pal, 12, 5);
+        assert_eq!(a.thumb.w, b.thumb.w);
+        assert_eq!(a.thumb.rows, b.thumb.rows);
+        assert_eq!(a.tiles, b.tiles);
+    }
+
+    /// A cache hit returns the SAME bytes as the initial fill — no
+    /// regeneration drift (pointer AND byte identity).
+    #[test]
+    fn card_cache_hit_returns_same_bytes_as_fill() {
+        let reg = registry();
+        let t = reg.get("square").unwrap();
+        let params = ParamSet::default_for(t.params());
+        let pal = palette();
+        let mut cache = CardCache::new();
+        let a = cache.get_or_generate(t, &params, &pal, 12, 5);
+        let pa = a as *const CardPreview;
+        let rows = a.thumb.rows.clone();
+        let tiles = a.tiles;
+        let b = cache.get_or_generate(t, &params, &pal, 12, 5);
+        assert!(
+            std::ptr::eq(pa, b as *const CardPreview),
+            "hit must be pointer-identical to the fill"
+        );
+        assert_eq!(b.thumb.rows, rows, "hit must be byte-identical to the fill");
+        assert_eq!(b.tiles, tiles);
+    }
+
+    /// The depth-3 card converges: glb-binary-n7 at default params
+    /// previews at depth 3 (the M184 preview pin) and the render comes
+    /// back non-empty — the shrink-retry loop never dead-ends.
+    #[test]
+    fn glb_depth3_card_converges() {
+        let p = preview_for("glb-binary-n7", 20, 8);
+        assert!(
+            p.tiles > 0,
+            "depth-3 card must converge to a non-empty raster"
+        );
+        assert_eq!(p.thumb.w, 20);
+        assert_eq!(p.thumb.rows.len(), 8);
+        let filled = p
+            .thumb
+            .rows
+            .iter()
+            .flatten()
+            .filter(|(a, b)| *a != raster::GAP || *b != raster::GAP)
+            .count();
+        assert!(filled > 0, "depth-3 card must render content");
+    }
+
+    /// Shrink-retry convergence on refusal: a tiling that always refuses
+    /// must terminate the shrink-retry loop and produce an empty
+    /// (gap) raster — never a panic, never a hang.
+    #[test]
+    fn refusing_tiling_converges_to_empty_preview() {
+        struct RefusingTiling;
+        impl Tiling for RefusingTiling {
+            fn id(&self) -> &'static str {
+                "stub-refusing"
+            }
+            fn name(&self) -> &'static str {
+                "Refusing stub"
+            }
+            fn description(&self) -> &'static str {
+                "always refuses"
+            }
+            fn category(&self) -> TilingCategory {
+                TilingCategory::Uniform
+            }
+            fn params(&self) -> &'static [ParamSpec] {
+                &[]
+            }
+            fn generate(&self, _params: &ParamSet, _query: &Query) -> TilingResult {
+                TilingResult {
+                    tiles: Vec::new(),
+                    symmetry: SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None),
+                    periodic: None,
+                    message: Some("stub refuses"),
+                }
+            }
+        }
+        let stub = RefusingTiling;
+        let p = generate_for(&stub, &ParamSet::EMPTY, &palette(), 8, 4);
+        assert_eq!(p.tiles, 0, "refusing tiling must yield zero tiles");
+        assert_eq!(p.thumb.w, 8);
+        assert_eq!(p.thumb.rows.len(), 4);
+        for row in &p.thumb.rows {
+            assert!(
+                row.iter()
+                    .all(|(a, b)| *a == raster::GAP && *b == raster::GAP),
+                "refusing tiling must yield a gap raster"
+            );
+        }
+    }
+}
