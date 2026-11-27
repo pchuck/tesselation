@@ -96,7 +96,7 @@ display category — its family — plus optional secondary tabs (e.g. the
 self-dual regular tilings also appear in Laves, and seventeen periodic
 tilings anchor the per-group Wallpaper catalog — all 17 groups). The
 eleven tabs:
-**Uniform** (11), **Two-Uniform** (20), **Laves / Catalan duals** (33,
+**Uniform** (11), **Two-Uniform** (20), **Duals & variants** (33,
 25 primary + 3 self-dual secondaries + 5 isohedral-type realizations),
 **Wallpaper** (17: one card per
 wallpaper group — the full 17-group catalog, completed by M85),
@@ -106,7 +106,7 @@ secondary members), **Isohedral** (5: Kaplan IH templates — IH1/IH6/IH7
 hexagons on the 6³ net, IH27/IH29 pentagons on the Cairo net; the
 two Cairo-net templates are isohedral variants — deliberate edge
 deformations, not pentagon types),
-**Islamic** (30), **Arrangements** (8),
+**Islamic** (30), **Bonds & dissections** (8),
 **Quasiperiodic** (23: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, golden rhomboid,
 fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7, Andritz

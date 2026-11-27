@@ -315,7 +315,7 @@ mod tests {
     #[test]
     fn search_matches_category_label() {
         let mut app = fixture();
-        app.search = "laves".into();
+        app.search = "duals".into();
         let ids: Vec<&str> = app.visible_tilings().iter().map(|t| t.id()).collect();
         assert_eq!(ids, vec!["l1"]);
         app.search = "aperiodic".into();

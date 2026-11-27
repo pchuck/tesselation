@@ -541,18 +541,17 @@ assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");
             "README tab-membership count"
         );
 
-        // Per-tab prose counts, in canonical order. The README's Laves
-        // alias is "Laves / Catalan duals" (the category label uses
-        // parentheses).
+        // Per-tab prose counts, in canonical order. The README's tab
+        // prose carries the same labels as the category tabs.
         let aliases = [
             "Uniform",
             "Two-Uniform",
-            "Laves / Catalan duals",
+            "Duals & variants",
             "Wallpaper",
             "Pentagon Types",
             "Isohedral",
             "Islamic",
-            "Arrangements",
+            "Bonds & dissections",
             "Quasiperiodic",
             "Aperiodic",
             "Nonperiodic",
