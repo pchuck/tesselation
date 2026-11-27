@@ -2147,7 +2147,7 @@ mod tests_export_contract {
             .map(|c: &str| c.trim().trim_start_matches('`').trim_end_matches('`').trim())
             .filter(|s| !s.is_empty())
             .collect();
-        let expected_modes = ["single", "pattern", "proto", "gray", "pattern-gray", "shape", "role", "metatile"];
+        let expected_modes = ["single", "pattern", "proto", "gray", "pattern-gray", "shape", "role", "metatile", "orientation"];
         assert_eq!(
             doc_modes, expected_modes,
             "docs/USAGE.md line {line_no} (--mode values): documented modes {doc_modes:?}, expected {expected_modes:?}"

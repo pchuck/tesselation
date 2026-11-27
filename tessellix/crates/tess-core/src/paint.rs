@@ -90,6 +90,89 @@ pub const METATILE_PALETTE: [u32; 9] = [
     0x7FA8F0, // 8: sky blue
 ];
 
+/// Dedicated 4-entry ramp for [`ColorMode::Orientation`] (see `crate::view`):
+/// one tone per dominant-axis bucket — 0: axis-aligned (horizontal),
+/// 1: diagonal (45°), 2: axis-aligned (vertical), 3: anti-diagonal
+/// (135°). Chosen to be visually distinct from the rainbow `PALETTE`
+/// and from the `GRAY`/`PATTERN_GRAY`/`ROLE`/`METATILE` ramps; the
+/// table is byte-pinned in the tests below.
+pub const ORIENTATION_PALETTE: [u32; 4] = [
+    0x3EC1D3, // 0: bright teal — axis-aligned (horizontal)
+    0xE95FA6, // 1: hot pink — diagonal (45°)
+    0xF2DD5D, // 2: bright yellow — axis-aligned (vertical)
+    0xA66BE0, // 3: violet — anti-diagonal (135°)
+];
+
+/// Dominant undirected axis of a polygon, in degrees in [0, 180): the
+/// angle (undirected, so θ and θ+180 are the same axis) of the direction
+/// carrying the most total edge length (degenerate edges skipped).
+/// This is a robust choice over the first edge angle — it is invariant
+/// to vertex ordering and to collinear mid-side vertices (the 2:1
+/// dominoes with split long sides, e.g. `herringbone_45`'s 6-vertex
+/// polygons, still read their long-side direction). A direction tie
+/// (e.g. a square, no orientation) resolves to the higher angle; an
+/// empty/degenerate polygon returns 0.0.
+pub fn orientation_axis_deg(poly: &crate::geometry::Polygon) -> f64 {
+    let pts = &poly.pts;
+    let n = pts.len();
+    if n < 2 {
+        return 0.0;
+    }
+    // Total edge length per undirected axis direction, at 0.2°
+    // quantization (0.2° matches the resolution at which the bucket
+    // quantize below operates).
+    let mut totals: std::collections::BTreeMap<i32, f64> = std::collections::BTreeMap::new();
+    let mut any = false;
+    for i in 0..n {
+        let e = pts[(i + 1) % n] - pts[i];
+        let len = (e.x * e.x + e.y * e.y).sqrt();
+        if len < 1e-12 {
+            continue;
+        }
+        any = true;
+        let (dx, dy) = (e.x / len, e.y / len);
+        let mut a = dy.atan2(dx);
+        // Fold the direction into [0, PI) — the undirected axis.
+        if a < 0.0 {
+            a += std::f64::consts::PI;
+        }
+        if a >= std::f64::consts::PI {
+            a -= std::f64::consts::PI;
+        }
+        let key = (a * 1800.0 / std::f64::consts::PI).round() as i32;
+        *totals.entry(key).or_insert(0.0) += len;
+    }
+    if !any {
+        return 0.0;
+    }
+    let (&best_key, _) = totals
+        .iter()
+        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+        .expect("totals non-empty");
+    // key = round(degrees * 10); the documented tie-break is the higher
+    // axis (BTreeMap iterates ascending, so max_by's last-maximum wins).
+    best_key as f64 / 10.0
+}
+
+/// Orientation class of a tile: its dominant-axis angle quantized to
+/// 4 buckets at 45° spacing — 0: axis-aligned (horizontal), 1: diagonal
+/// (45°), 2: axis-aligned (vertical), 3: anti-diagonal (135°). Distinct
+/// from `Metatile`'s aperiodic classification and from `Shape`'s vertex
+/// count: this encodes *how* the tile is oriented, not which shape it
+/// is. Degenerate polygons (or a direction tie) bucket to 0.
+///
+/// Note on reptiles: `armchair` (M128) seeds `orientation + 1` in 1..=4 —
+/// the same four rotations of one shape. Under this mode the four
+/// orientations collapse onto the two axis-aligned buckets (0° and 90°),
+/// because 0° and 180° (and 90° and 270°) are the same undirected axis;
+/// the mode does not distinguish an armchair at 0° from one at 180°.
+/// The seed is still emitted by the generator and `Pattern` mode still
+/// distinguishes all four classes.
+pub fn orientation_class(poly: &crate::geometry::Polygon) -> usize {
+    let deg = orientation_axis_deg(poly);
+    ((deg / 45.0).round() as i32).rem_euclid(4) as usize
+}
+
 /// Polygon shape class: triangle → 0, quadrilateral → 1, … decagon-and-beyond → 7
 /// (`min(n - 3, 7)` on the vertex count, degenerate (< 3-vertex) polygons clamp to 0).
 pub fn shape_class(poly: &crate::geometry::Polygon) -> usize {
@@ -146,12 +229,14 @@ pub fn tile_rgb(mode: ColorMode, tile: &Tile) -> u32 {
         ColorMode::Gray => (tile.proto as usize) % GRAY_PALETTE.len(),
         ColorMode::Role => (tile.seed as usize) % ROLE_PALETTE.len(),
         ColorMode::Metatile => metatile_class(tile),
+        ColorMode::Orientation => orientation_class(&tile.poly),
     };
     match mode {
         ColorMode::Gray => GRAY_PALETTE[idx],
         ColorMode::PatternGray => PATTERN_GRAY_PALETTE[idx],
         ColorMode::Role => ROLE_PALETTE[idx],
         ColorMode::Metatile => METATILE_PALETTE[idx],
+        ColorMode::Orientation => ORIENTATION_PALETTE[idx],
         _ => PALETTE[idx],
     }
 }
@@ -516,6 +601,88 @@ mod tests {
         // Hat F1/F2 (proto=0, seed 8/9) → class 3 → same slot.
         let hat = Tile { proto: 0, seed: 8, poly: poly_with_n_vertices(6) };
         assert_eq!(tile_rgb(ColorMode::Metatile, &hat), METATILE_PALETTE[3]);
+    }
+
+    /// Build a polygon from a point list (a `rect_poly`-ish helper, named
+    /// `rect_poly` to avoid clashing with the existing `tile()` helper).
+    fn rect_poly(pts: &[[f64; 2]]) -> Polygon {
+        Polygon::from_slice(&pts.iter().map(|p| Vec2::new(p[0], p[1])).collect::<Vec<_>>())
+    }
+
+    #[test]
+    fn orientation_palette_is_pinned_and_distinct() {
+        // The pinned 4-entry ramp (one tone per dominant-axis bucket).
+        const EXPECTED: [u32; 4] = [0x3EC1D3, 0xE95FA6, 0xF2DD5D, 0xA66BE0];
+        assert_eq!(ORIENTATION_PALETTE, EXPECTED);
+        // All distinct, and none of them equal to any entry of the
+        // other ramps — the orientation table is its own ramp.
+        for i in 0..ORIENTATION_PALETTE.len() {
+            for j in (i + 1)..ORIENTATION_PALETTE.len() {
+                assert_ne!(ORIENTATION_PALETTE[i], ORIENTATION_PALETTE[j], "entries {i} and {j} collide");
+            }
+            for &other in PALETTE.iter()
+                .chain(GRAY_PALETTE.iter())
+                .chain(PATTERN_GRAY_PALETTE.iter())
+                .chain(ROLE_PALETTE.iter())
+                .chain(METATILE_PALETTE.iter())
+            {
+                assert_ne!(ORIENTATION_PALETTE[i], other, "orientation entry {i} collides with another ramp");
+            }
+        }
+    }
+
+    #[test]
+    fn orientation_axis_and_class_bucket() {
+        // Horizontal domino: long sides at 0° → axis ~0°, bucket 0.
+        let h = rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
+        assert_eq!(orientation_class(&h), 0);
+        assert!(orientation_axis_deg(&h).abs() < 0.2);
+        // Vertical domino: long sides at 90° → axis ~90°, bucket 2.
+        let v = rect_poly(&[[0.0, 0.0], [0.0, 2.0], [1.0, 2.0], [1.0, 0.0]]);
+        assert_eq!(orientation_class(&v), 2);
+        assert!((orientation_axis_deg(&v) - 90.0).abs() < 0.2);
+        // 45°-laid domino (slope +1 long sides) → axis ~45°, bucket 1.
+        let d = rect_poly(&[[0.0, 0.0], [2.0, 2.0], [1.0, 3.0], [-1.0, 1.0]]);
+        assert_eq!(orientation_class(&d), 1);
+        assert!((orientation_axis_deg(&d) - 45.0).abs() < 0.2);
+        // Anti-diagonal domino (slope -1 long sides) → axis ~135°, bucket 3.
+        let ad = rect_poly(&[[0.0, 2.0], [2.0, 0.0], [3.0, 1.0], [1.0, 3.0]]);
+        assert_eq!(orientation_class(&ad), 3);
+        assert!((orientation_axis_deg(&ad) - 135.0).abs() < 0.2);
+        // A square: no orientation — any stable bucket is fine; pin the
+        // documented tie-break (higher axis wins; square resolves to
+        // 90° → bucket 2) so the behavior is pinned, not incidental.
+        let s = rect_poly(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
+        assert_eq!(orientation_class(&s), 2);
+    }
+
+    #[test]
+    fn orientation_is_vertex_order_invariant() {
+        // The same polygon, vertex order permuted, reads the same
+        // axis/bucket — the derivation is not "first edge angle".
+        let a = rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
+        let b = rect_poly(&[[2.0, 1.0], [0.0, 1.0], [0.0, 0.0], [2.0, 0.0]]);
+        assert_eq!(orientation_axis_deg(&a), orientation_axis_deg(&b));
+        assert_eq!(orientation_class(&a), orientation_class(&b));
+    }
+
+    #[test]
+    fn tile_rgb_orientation_follows_axis_not_seed_or_proto() {
+        // Same quad polygon at 0° vs 90° → distinct colors.
+        let h = rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
+        let v = rect_poly(&[[0.0, 0.0], [0.0, 2.0], [1.0, 2.0], [1.0, 0.0]]);
+        let h_tile = Tile { proto: 0, seed: 0, poly: h };
+        let v_tile = Tile { proto: 0, seed: 0, poly: v };
+        assert_eq!(tile_rgb(ColorMode::Orientation, &h_tile), ORIENTATION_PALETTE[0]);
+        assert_eq!(tile_rgb(ColorMode::Orientation, &v_tile), ORIENTATION_PALETTE[2]);
+        assert_ne!(
+            tile_rgb(ColorMode::Orientation, &h_tile),
+            tile_rgb(ColorMode::Orientation, &v_tile)
+        );
+        // seed/proto must not leak into the selection.
+        let a = Tile { proto: 0, seed: 3, poly: rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]) };
+        let b = Tile { proto: 7, seed: 1, poly: rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]) };
+        assert_eq!(tile_rgb(ColorMode::Orientation, &a), tile_rgb(ColorMode::Orientation, &b));
     }
 
     #[test]

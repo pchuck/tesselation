@@ -40,10 +40,19 @@ pub enum ColorMode {
     /// class fallback for non-aperiodic tiles. Appended last so the
     /// existing ALL-index pins stay stable.
     Metatile,
+    /// Color by the tile's geometric orientation: the polygon's dominant
+    /// undirected axis (total edge length per axis direction, the
+    /// argmax), quantized into a small set of 45-degree buckets — 0°
+    /// (axis-aligned, horizontal), 45° (diagonal), 90° (axis-aligned,
+    /// vertical), 135° (anti-diagonal) — drawn from a dedicated
+    /// 4-entry ramp. The geometric counterpart of `Shape`: it encodes
+    /// *how* the tile is laid, not which shape it is. Appended last so
+    /// the existing ALL-index pins stay stable.
+    Orientation,
 }
 
 impl ColorMode {
-    pub const ALL: [ColorMode; 8] = [
+    pub const ALL: [ColorMode; 9] = [
         ColorMode::Single,
         ColorMode::Pattern,
         ColorMode::Proto,
@@ -52,6 +61,7 @@ impl ColorMode {
         ColorMode::Shape,
         ColorMode::Role,
         ColorMode::Metatile,
+        ColorMode::Orientation,
     ];
 
     pub fn next(self) -> ColorMode {
@@ -64,8 +74,9 @@ impl ColorMode {
             ColorMode::Shape => 5,
             ColorMode::Role => 6,
             ColorMode::Metatile => 7,
+            ColorMode::Orientation => 8,
         };
-        ColorMode::ALL[(idx + 1) % 8]
+        ColorMode::ALL[(idx + 1) % 9]
     }
 
     pub fn label(self) -> &'static str {
@@ -78,6 +89,7 @@ impl ColorMode {
             ColorMode::Shape => "shape",
             ColorMode::Role => "role",
             ColorMode::Metatile => "metatile",
+            ColorMode::Orientation => "orientation",
         }
     }
 
@@ -91,6 +103,7 @@ impl ColorMode {
             "shape" => Some(ColorMode::Shape),
             "role" => Some(ColorMode::Role),
             "metatile" => Some(ColorMode::Metatile),
+            "orientation" => Some(ColorMode::Orientation),
             _ => None,
         }
     }
@@ -195,18 +208,21 @@ mod tests {
         assert_eq!(ColorMode::PatternGray.next(), ColorMode::Shape);
         assert_eq!(ColorMode::Shape.next(), ColorMode::Role);
         assert_eq!(ColorMode::Role.next(), ColorMode::Metatile);
-        assert_eq!(ColorMode::Metatile.next(), ColorMode::Single);
+        assert_eq!(ColorMode::Metatile.next(), ColorMode::Orientation);
+        assert_eq!(ColorMode::Orientation.next(), ColorMode::Single);
         assert_eq!(ColorMode::parse("gray"), Some(ColorMode::Gray));
         assert_eq!(ColorMode::parse("pattern-gray"), Some(ColorMode::PatternGray));
         assert_eq!(ColorMode::parse("shape"), Some(ColorMode::Shape));
         assert_eq!(ColorMode::parse("role"), Some(ColorMode::Role));
         assert_eq!(ColorMode::parse("metatile"), Some(ColorMode::Metatile));
+        assert_eq!(ColorMode::parse("orientation"), Some(ColorMode::Orientation));
         assert_eq!(ColorMode::parse("nope"), None);
         assert_eq!(ColorMode::Gray.label(), "gray");
         assert_eq!(ColorMode::PatternGray.label(), "pattern-gray");
         assert_eq!(ColorMode::Shape.label(), "shape");
         assert_eq!(ColorMode::Role.label(), "role");
         assert_eq!(ColorMode::Metatile.label(), "metatile");
+        assert_eq!(ColorMode::Orientation.label(), "orientation");
         assert_eq!(
             ColorMode::parse(ColorMode::PatternGray.label()),
             Some(ColorMode::PatternGray)
@@ -215,22 +231,28 @@ mod tests {
             ColorMode::parse(ColorMode::Metatile.label()),
             Some(ColorMode::Metatile)
         );
+        assert_eq!(
+            ColorMode::parse(ColorMode::Orientation.label()),
+            Some(ColorMode::Orientation)
+        );
         assert_eq!(ColorMode::Gray.preview_mode(), ColorMode::Gray);
         assert_eq!(ColorMode::PatternGray.preview_mode(), ColorMode::PatternGray);
-        // The three new modes are structure modes and preview as
+        // The structure modes (Shape, Role, Metatile, Orientation) preview as
         // themselves (like Gray/PatternGray) — thumbnails keep their
         // structure and are NOT switched onto a legacy mode.
         assert_eq!(ColorMode::Shape.preview_mode(), ColorMode::Shape);
         assert_eq!(ColorMode::Role.preview_mode(), ColorMode::Role);
         assert_eq!(ColorMode::Metatile.preview_mode(), ColorMode::Metatile);
+        assert_eq!(ColorMode::Orientation.preview_mode(), ColorMode::Orientation);
     }
 
     #[test]
-    fn color_mode_all_len_is_eight() {
-        assert_eq!(ColorMode::ALL.len(), 8);
+    fn color_mode_all_len_is_nine() {
+        assert_eq!(ColorMode::ALL.len(), 9);
         assert_eq!(ColorMode::ALL[4], ColorMode::PatternGray);
         assert_eq!(ColorMode::ALL[5], ColorMode::Shape);
         assert_eq!(ColorMode::ALL[6], ColorMode::Role);
         assert_eq!(ColorMode::ALL[7], ColorMode::Metatile);
+        assert_eq!(ColorMode::ALL[8], ColorMode::Orientation);
     }
 }

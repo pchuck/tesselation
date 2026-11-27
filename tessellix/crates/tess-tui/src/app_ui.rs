@@ -106,6 +106,10 @@ struct Tui {
     /// (`paint::METATILE_PALETTE`), selected when the color mode is
     /// `Metatile`.
     palette256_metatile: Vec<u8>,
+    /// xterm-256 indices of the orientation ramp
+    /// (`paint::ORIENTATION_PALETTE`), selected when the color mode is
+    /// `Orientation`.
+    palette256_orientation: Vec<u8>,
     border256: u8,
     gap256: u8,
     /// Last rendered canvas size; pans scale with it.
@@ -157,6 +161,10 @@ impl Tui {
             .iter()
             .map(|&c| paint::rgb_to_256(c))
             .collect();
+        let palette256_orientation: Vec<u8> = paint::ORIENTATION_PALETTE
+            .iter()
+            .map(|&c| paint::rgb_to_256(c))
+            .collect();
         Self {
             app: App::new(registry, 8.0),
             tabs,
@@ -171,6 +179,7 @@ impl Tui {
             palette256_pattern_gray,
             palette256_role,
             palette256_metatile,
+            palette256_orientation,
             border256: paint::rgb_to_256(paint::BORDER),
             gap256: 124,
             canvas_size: (0, 0),
@@ -1012,6 +1021,7 @@ fn render_render_view(frame: &mut Frame, tui: &mut Tui, area: Rect) {
                 ColorMode::PatternGray => &tui.palette256_pattern_gray,
                 ColorMode::Role => &tui.palette256_role,
                 ColorMode::Metatile => &tui.palette256_metatile,
+                ColorMode::Orientation => &tui.palette256_orientation,
                 _ => &tui.palette256,
             };
             let r = raster::raster(
@@ -1159,6 +1169,10 @@ mod tests {
             .iter()
             .map(|&c| paint::rgb_to_256(c))
             .collect();
+        let palette256_orientation: Vec<u8> = paint::ORIENTATION_PALETTE
+            .iter()
+            .map(|&c| paint::rgb_to_256(c))
+            .collect();
         Tui {
             app: App::new(registry, 8.0),
             tabs,
@@ -1173,6 +1187,7 @@ mod tests {
             palette256_pattern_gray,
             palette256_role,
             palette256_metatile,
+            palette256_orientation,
             border256: paint::rgb_to_256(paint::BORDER),
             gap256: 124,
             canvas_size: (0, 0),

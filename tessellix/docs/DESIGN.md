@@ -132,8 +132,16 @@ the shared `tess-core::raster` (the TUI to character cells over its
   class — drawn from a dedicated warm/earth ramp), and `metatile`
   (color by the aperiodic metatile/cluster classification — hat cluster
   role (H/T/P/F, seeds 1..=9), cap metatile type (proto class 0..=3) and
-  turtle/spectre matching-rule label, with a proto-class fallback).
-  Shared 8-color palette; the TUI maps it to the nearest xterm-256
+  turtle/spectre matching-rule label, with a proto-class fallback), and `orientation`
+  (color by the polygon's dominant undirected axis — the angle in
+  [0, 180) carrying the most total edge length, quantized into
+  four 45° buckets: 0° (axis-aligned horizontal), 45° (diagonal),
+  90° (axis-aligned vertical), 135° (anti-diagonal) — drawn from a
+  dedicated 4-entry ramp; the geometric counterpart of `shape`,
+  distinguishing e.g. a horizontal basketweave domino from a vertical
+  one). Shared 8-color palette for the index-mapped modes; the
+  dedicated ramps (gray, pattern-gray, role, metatile, orientation)
+  are byte-pinned separately. The TUI maps it to the nearest xterm-256
   indices and rasterizes to character cells, the GUI draws convex
   polygons directly, and the CLI writes SVG paths (y-axis flipped to
   match the math orientation, hairline border stroke scaled to the view).

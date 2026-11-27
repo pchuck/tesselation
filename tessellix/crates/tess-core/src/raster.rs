@@ -100,6 +100,10 @@ fn color_index(mode: ColorMode, tile: &Tile) -> usize {
         // `Metatile` uses the aperiodic classification directly; the front
         // end picks the categorical ramp (`paint::METATILE_PALETTE`).
         ColorMode::Metatile => crate::paint::metatile_class(tile),
+        // `Orientation` is polygon-derived exactly like `tile_rgb`; the
+        // front end maps the bucket through the orientation ramp
+        // (`paint::ORIENTATION_PALETTE`).
+        ColorMode::Orientation => crate::paint::orientation_class(&tile.poly),
     }
 }
 
