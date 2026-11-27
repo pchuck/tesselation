@@ -256,6 +256,69 @@ pub fn dodecagon_hexagram_honeycomb() -> LatticeTiling {
     }
 }
 
+/// Medallion third-layer segments for the strapwork fusion (design doc
+/// `docs/medallion-third-layer-design.md` §4/§5, anchor A3): the
+/// record geometry of the two medallion classes, derived from the
+/// **emitted** tile polygons so the similarity parameters (scale /
+/// rotation) carry the layer along with the faces.
+///
+/// * seed 0 (dodecagon): the `{12/4}` chords `m_j → m_{j+4}` between
+///   edge midpoints — the [rosette_m56](crate::medallion::rosette_m56)
+///   chord class, contact angle 60° from the edge (tangent-chord =
+///   arc/2).
+/// * seed 1 (hexagram): the `{6/2}` figure triangles, tip `t_j →
+///   t_{j+2}` — the [hexagram_62](crate::medallion::hexagram_62)
+///   record at kissing ratio T = 1/2.
+///
+/// Pure and ordered (tile order → chord order; the fused-map dedup
+/// makes the final output permutation-independent, design §7 A5).
+pub fn medallion_extra_walls(tiles: &[tess_core::tiling::Tile]) -> Vec<tess_core::strapwork::Wall> {
+    let mut out = Vec::new();
+    for t in tiles {
+        let q = &t.poly.pts;
+        match t.seed {
+            0 if q.len() == 12 => {
+                let m: Vec<Vec2> = (0..12)
+                    .map(|j| (q[j] + q[(j + 1) % 12]) * 0.5)
+                    .collect();
+                for j in 0..12 {
+                    out.push(tess_core::strapwork::Wall {
+                        a: m[j],
+                        b: m[(j + 4) % 12],
+                    });
+                }
+            }
+            1 if q.len() == 12 => {
+                // Centroid and tip set, similarity-invariant: tips are
+                // the vertices on the polygon's maximal circumradius
+                // (ratio tip:notch = sqrt 3, comfortably separated).
+                let mut c = Vec2::ZERO;
+                for p in q {
+                    c = c + *p;
+                }
+                c = c / 12.0;
+                let rmax = q.iter().map(|p| (*p - c).length()).fold(0.0f64, f64::max);
+                let tips: Vec<Vec2> = q
+                    .iter()
+                    .cloned()
+                    .filter(|p| (*p - c).length() > 0.9 * rmax)
+                    .collect();
+                if tips.len() != 6 {
+                    continue;
+                }
+                for j in 0..6 {
+                    out.push(tess_core::strapwork::Wall {
+                        a: tips[j],
+                        b: tips[(j + 2) % 6],
+                    });
+                }
+            }
+            _ => {}
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -111,6 +111,7 @@ struct ExportArgs {
     deform: Option<BuiltInProfile>,
     decoration: Option<Decoration>,
     band_w: f64,
+    medallion_weave: bool,
     center: Option<(f64, f64)>,
     highlight_supertiles: bool,
 }
@@ -247,6 +248,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         deform: None,
         decoration: None,
         band_w: 0.1,
+        medallion_weave: false,
         center: None,
         highlight_supertiles: false,
     };
@@ -302,7 +304,8 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
                 band_w_seen = true;
                 a.band_w = finite(&next(&mut i)?, "--band-w")?;
             }
-            "--highlight-supertiles" => a.highlight_supertiles = true,
+"--highlight-supertiles" => a.highlight_supertiles = true,
+            "--medallion-weave" => a.medallion_weave = true,
             "--center" => {
                 let v = next(&mut i)?;
                 let (x_s, y_s) = v.split_once(',').ok_or_else(|| {
@@ -346,6 +349,14 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
             "--decoration requires --strapwork DEG or --deform PROFILE (the decoration decorates the strapwork walls)"
                 .into(),
         );
+    }
+    if a.medallion_weave && a.deform.is_some() {
+        return Err(
+            "--medallion-weave requires --strapwork DEG: the medallion third layer fuses at a constant contact angle (deformation profiles are not supported)".into(),
+        );
+    }
+    if a.medallion_weave && a.strapwork.is_none() {
+        return Err("--medallion-weave requires --strapwork DEG".into());
     }
     if band_w_seen && a.decoration.is_none() {
         return Err("--band-w requires --decoration".into());
@@ -424,13 +435,30 @@ fn export(args: &[String]) -> Result<(), String> {
     // Hankin PIC strapwork overlay (M57 layer mode): walls at the given
     // contact angle over whatever tiles were generated. Absent flag = no
     // overlay, and the SVG is byte-identical to the pre-M57 export.
-    let walls = if let Some(profile) = &a.deform {
+    // With --medallion-weave (design doc
+    // docs/medallion-third-layer-design.md): the tiling's medallion
+    // layer (hull-seed suppression + record chords) is fused into the
+    // wall map, and the decoration gate can name the record behind an
+    // open end. Flag absent = the two-layer pipeline byte-identically.
+    let (walls, med) = if let Some(profile) = &a.deform {
         let f = resolve_deform(*profile, tess_tilings::envelope_for(&a.tiling), &a.tiling)?;
-        tess_core::strapwork::walls_with_delta(&result.tiles, f)
+        (
+            tess_core::strapwork::walls_with_delta(&result.tiles, f),
+            None,
+        )
     } else {
         match a.strapwork {
-            Some(delta) => tess_core::strapwork::walls(&result.tiles, delta),
-            None => Vec::new(),
+            Some(delta) if a.medallion_weave => {
+                let wv = tess_tilings::medallion::weave::fused_weave(
+                    tiling,
+                    &result.tiles,
+                    &region,
+                    delta,
+                );
+                (wv.walls, wv.med)
+            }
+            Some(delta) => (tess_core::strapwork::walls(&result.tiles, delta), None),
+            None => (Vec::new(), None),
         }
     };
     // Decoration styles (Kaplan §3.7) replace the tiling render with
@@ -440,12 +468,21 @@ fn export(args: &[String]) -> Result<(), String> {
     // hairline inset drops vertices that sit exactly on the region edge.
     let svg = match a.decoration {
         Some(style) => {
-            let plan = tess_core::strapwork::plan_decoration(
-                &walls,
-                a.band_w,
-                style,
-                &region.padding(-1e-9),
-            )
+            let plan = match &med {
+                None => tess_core::strapwork::plan_decoration(
+                    &walls,
+                    a.band_w,
+                    style,
+                    &region.padding(-1e-9),
+                ),
+                Some(m) => tess_core::strapwork::plan_decoration_medallion(
+                    &walls,
+                    a.band_w,
+                    style,
+                    &region.padding(-1e-9),
+                    Some(&m.ctx()),
+                ),
+            }
             .map_err(|e| e.to_string())?;
             tess_core::svg::render_svg_decorated(&region, &plan)
         }
@@ -1918,6 +1955,7 @@ mod tests_export_contract {
             ("Islamic parquet deformation", "--deform"),
             ("ornamentation style", "--decoration"),
             ("band width in world units", "--band-w"),
+            ("medallion third layer", "--medallion-weave"),
             ("output SVG file", "--out"),
         ];
         let mut documented: Vec<String> = Vec::new();
@@ -1935,7 +1973,7 @@ mod tests_export_contract {
         let expected: &[&str] = &[
             "--tiling", "--width", "--height", "--scale", "--rotation", "--center",
             "--param", "--mode", "--strapwork", "--deform", "--decoration",
-            "--band-w", "--out", "-o",
+            "--band-w", "--medallion-weave", "--out", "-o",
         ];
         for flag in expected {
             assert!(
@@ -1970,6 +2008,7 @@ mod tests_export_contract {
             (&["--tiling", "square", "--deform", "sine", "60", "15", "1"], "--deform"),
             (&["--tiling", "square", "--strapwork", "45", "--decoration", "fill"], "--decoration"),
             (&["--tiling", "square", "--band-w", "0.2", "--strapwork", "45", "--decoration", "fill"], "--band-w"),
+            (&["--tiling", "square", "--strapwork", "45", "--medallion-weave"], "--medallion-weave"),
             (&["--tiling", "square", "--out", "a.svg"], "--out"),
             (&["--tiling", "square", "-o", "b.svg"], "-o"),
         ];

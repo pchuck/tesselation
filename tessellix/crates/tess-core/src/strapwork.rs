@@ -116,11 +116,216 @@ struct Ray {
 /// deterministic (sorted) order. See the module docs for the
 /// construction and the numerical guards.
 ///
-/// Delegates to [`walls_with_delta`] with a constant function, so its
+/// Delegates to [`walls_layered`] with an empty third layer, which in
+/// turn calls [`walls_with_delta`] with a constant function, so its
 /// output is byte-identical to the pre-deformation engine for any
 /// constant δ (the regression anchor).
 pub fn walls(tiles: &[Tile], delta_deg: f64) -> Vec<Wall> {
-    walls_with_delta(tiles, |_| delta_deg)
+    walls_layered(tiles, delta_deg, &[])
+}
+
+/// The fused strapwork wall network: the generic PIC emission over
+/// `tiles` at contact angle `delta_deg` plus an optional third layer
+/// of record-supplied segments `extra` (design doc
+/// `docs/medallion-third-layer-design.md` §4.1 — the medallion weave;
+/// `extra` is plain `Wall` geometry and tess-core names no medallion
+/// concept, design F1).
+///
+/// * `extra` empty → byte-identical to [`walls_with_delta`] at a
+///   constant angle: [`walls`] delegates here and the fusion pass
+///   below is skipped entirely (design §7 A4, the off-state anchor).
+/// * `extra` present → every piece (generic and layer) is cut at its
+///   interior crossings with — and endpoint contacts on — every other
+///   piece, using the same margins as the ray cut events in
+///   [`walls_with_delta`] (parallel guard [`EPS_PAR`] on unit
+///   directions, `1e-9 · scale` strict-interior margin, `1e-8 · scale`
+///   event merge), then the whole set deduplicates through the same
+///   [`SegKey`] 1e-6 endpoint grid. A layer whose segments coincide
+///   with the generic network is therefore a no-op on the wall set
+///   (design §4.2 "coincide", anchor A2); a layer that overrides adds
+///   chords and their genuine split points.
+///
+/// # Determinism
+///
+/// Pure function of `(tiles, delta_deg, extra)` — no hidden state, no
+/// RNG — ordered through the same endpoint-canonical [`BTreeMap`]
+/// dedup, so repeated calls and tile-order permutations of the input
+/// yield identical output (design §7 A5).
+pub fn walls_layered(tiles: &[Tile], delta_deg: f64, extra: &[Wall]) -> Vec<Wall> {
+    let base = walls_with_delta(tiles, |_| delta_deg);
+    if extra.is_empty() {
+        return base;
+    }
+    fuse_layers(base, extra)
+}
+
+/// Fuse a generic emission with layer segments: split every piece at
+/// interior crossings and T-junction endpoints of every other piece,
+/// drop degenerate slivers, dedup on [`SegKey`].
+///
+/// The generic pieces are already split at their mutual ray crossings
+/// by [`walls_with_delta`], so only pairs with **at least one layer
+/// segment** need cut events. Candidate pairs come from a uniform
+/// bounding-box cell index (a point shared by two bboxes lies in a
+/// cell shared by both segments, so the query is exact, not
+/// heuristic), keeping the pass near-linear on chord-dense layers.
+/// Deterministic: the index is a [`BTreeMap`], cut events are sorted,
+/// and the output order is the [`SegKey`] order (generic-then-layer
+/// insertion fixes the surviving endpoint values for grid-equal
+/// duplicates).
+fn fuse_layers(base: Vec<Wall>, extra: &[Wall]) -> Vec<Wall> {
+    let mut segs: Vec<(Vec2, Vec2)> = base.into_iter().map(|w| (w.a, w.b)).collect();
+    let nb = segs.len();
+    segs.extend(
+        extra
+            .iter()
+            .filter(|w| (w.b - w.a).length() > EPS_EDGE)
+            .map(|w| (w.a, w.b)),
+    );
+    let n = segs.len();
+    // Cell index over segment bboxes. Cell size adapts to the layer:
+    // the mean layer-segment length, floored at 1/8 world unit.
+    let mut elen = 0.0f64;
+    for &(a, b) in &segs[nb..] {
+        elen += (b - a).length();
+    }
+    let cell = if nb < n {
+        (elen / (n - nb) as f64).max(0.125)
+    } else {
+        1.0
+    };
+    let cid = |v: f64| (v / cell).floor() as i64;
+    let mut grid: BTreeMap<(i64, i64), Vec<usize>> = BTreeMap::new();
+    let mut boxes: Vec<(i64, i64, i64, i64)> = Vec::with_capacity(n);
+    for i in 0..n {
+        let (a, b) = segs[i];
+        let r = (
+            cid(a.x.min(b.x)),
+            cid(a.y.min(b.y)),
+            cid(a.x.max(b.x)),
+            cid(a.y.max(b.y)),
+        );
+        boxes.push(r);
+        for cx in r.0..=r.2 {
+            for cy in r.1..=r.3 {
+                grid.entry((cx, cy)).or_default().push(i);
+            }
+        }
+    }
+    // Cut events per segment, from every candidate pair (i, j>i) with
+    // at least one layer segment (generic-generic pairs are already
+    // consistent from the ray emission).
+    let mut ev: Vec<Vec<f64>> = vec![Vec::new(); n];
+    let mut seen: Vec<bool> = vec![false; n];
+    let mut cand: Vec<usize> = Vec::new();
+    for i in nb..n {
+        let r = boxes[i];
+        for cx in r.0..=r.2 {
+            for cy in r.1..=r.3 {
+                if let Some(list) = grid.get(&(cx, cy)) {
+                    for &j in list {
+                        if j != i && !seen[j] {
+                            seen[j] = true;
+                            cand.push(j);
+                        }
+                    }
+                }
+            }
+        }
+        for &j in &cand {
+            // Disjoint mutable event slots (i is fixed, j varies).
+            if j < i {
+                let (lo, hi) = ev.split_at_mut(j + 1);
+                fuse_pair(segs[i], segs[j], &mut hi[i - j - 1], &mut lo[j]);
+            } else {
+                let (lo, hi) = ev.split_at_mut(i + 1);
+                fuse_pair(segs[i], segs[j], &mut lo[i], &mut hi[j - i - 1]);
+            }
+        }
+        for &j in &cand {
+            seen[j] = false;
+        }
+        cand.clear();
+    }
+    // Emit: cut every segment at its sorted events, dedup pieces.
+    let mut out: BTreeMap<SegKey, Wall> = BTreeMap::new();
+    for i in 0..n {
+        let (a, b) = segs[i];
+        let d = b - a;
+        let len = d.length();
+        if len <= EPS_EDGE {
+            continue;
+        }
+        let u = d / len;
+        let eps = 1e-9 * len.max(1.0);
+        let eps_merge = 1e-8 * len.max(1.0);
+        let mut events = std::mem::take(&mut ev[i]);
+        events.sort_by(f64::total_cmp);
+        let mut cuts: Vec<f64> = Vec::new();
+        let mut prev = 0.0;
+        for &s in &events {
+            if s > eps && s < len - eps && s - prev > eps_merge {
+                cuts.push(s);
+                prev = s;
+            }
+        }
+        cuts.push(len);
+        prev = 0.0;
+        for s in cuts {
+            let pa = a + u * prev;
+            let pb = a + u * s;
+            prev = s;
+            if (pb - pa).length() <= EPS_EDGE {
+                continue;
+            }
+            out.insert(key_seg(pa, pb), Wall { a: pa, b: pb });
+        }
+    }
+    out.into_values().collect()
+}
+
+/// One candidate pair: interior crossing events on both segments and
+/// T-junction endpoint events (endpoint of either lying strictly
+/// inside the other). Same margins as the ray cut events.
+fn fuse_pair(i: (Vec2, Vec2), j: (Vec2, Vec2), evi: &mut Vec<f64>, evj: &mut Vec<f64>) {
+    let (a, b) = i;
+    let (c, e) = j;
+    let d = b - a;
+    let len = d.length();
+    let f = e - c;
+    let lf = f.length();
+    if len <= EPS_EDGE || lf <= EPS_EDGE {
+        return;
+    }
+    let u = d / len;
+    let v = f / lf;
+    let eps_i = 1e-9 * len.max(1.0);
+    let eps_j = 1e-9 * lf.max(1.0);
+    let q = c - a;
+    let den = u.cross(v);
+    if den.abs() >= EPS_PAR {
+        let s1 = q.cross(v) / den;
+        let s2 = q.cross(u) / den;
+        if s1 > eps_i && s1 < len - eps_i && s2 > eps_j && s2 < lf - eps_j {
+            evi.push(s1);
+            evj.push(s2);
+        }
+    }
+    // T-junctions, both directions.
+    for p in [c, e] {
+        let wv = p - a;
+        let s = wv.dot(u);
+        if s > eps_i && s < len - eps_i && wv.cross(u).abs() < eps_i {
+            evi.push(s);
+        }
+    }
+    for p in [a, b] {
+        let wv = p - c;
+        let s = wv.dot(v);
+        if s > eps_j && s < lf - eps_j && wv.cross(v).abs() < eps_j {
+            evj.push(s);
+        }
+    }
 }
 
 /// Islamic parquet deformation over the PIC strapwork engine
@@ -419,6 +624,12 @@ impl Decoration {
 pub struct DecorationError {
     style: &'static str,
     reason: String,
+    /// The §4.4 message variant: `Some((record, absorption path))` when
+    /// the witness vertex sits on a suppressed medallion hull rim or at
+    /// a layer-segment endpoint — the fused weave does not absorb this
+    /// record at this contact angle. `None` everywhere else, keeping
+    /// every pre-existing message byte-identical.
+    medallion: Option<(&'static str, &'static str)>,
 }
 
 impl std::fmt::Display for DecorationError {
@@ -427,7 +638,69 @@ impl std::fmt::Display for DecorationError {
             f,
             "decoration '{}' precondition failed: {}",
             self.style, self.reason
-        )
+        )?;
+        if let Some((record, path)) = self.medallion {
+            write!(
+                f,
+                " — the witness lies on the medallion layer '{record}' \
+                 (declared absorption {path}): the weave at this contact \
+                 angle does not absorb the record (law (L) requires \
+                 theta_record = delta)",
+            )?;
+        }
+        Ok(())
+    }
+}
+
+/// Layer identity and geometry attached to a gated decoration plan so
+/// the open-end gate can name the record behind a failure (design doc
+/// `docs/medallion-third-layer-design.md` §4.4). Purely advisory: the
+/// gate logic itself is unchanged.
+#[derive(Debug, Clone, Copy)]
+pub struct MedallionContext<'a> {
+    /// Record id (opaque label, e.g. `"M172-dodecagon-12/4"`).
+    pub record: &'static str,
+    /// Declared absorption path (e.g. `"LandingIdentity"`).
+    pub absorption: &'static str,
+    /// The suppressed (hull) tiles as emitted, used to recognise a
+    /// witness on a hull rim edge.
+    pub suppressed: &'a [Tile],
+    /// The layer segments handed to [`walls_layered`], used to
+    /// recognise a witness at a layer endpoint.
+    pub extra: &'a [Wall],
+}
+
+/// Does the witness point lie on the medallion layer (a layer-segment
+/// endpoint or a suppressed hull rim edge)? Grid-scale tolerance 1e-6,
+/// matching the dedup grid.
+fn medallion_at(
+    med: Option<&MedallionContext>,
+    p: Vec2,
+) -> Option<(&'static str, &'static str)> {
+    let med = med?;
+    let tol2 = 1e-6f64 * 1e-6;
+    let on_seg = |a: Vec2, b: Vec2| {
+        let d = b - a;
+        let l2 = d.dot(d);
+        if l2 <= f64::EPSILON {
+            return (p - a).dot(p - a) <= tol2;
+        }
+        let t = ((p - a).dot(d) / l2).clamp(0.0, 1.0);
+        let w = p - (a + d * t);
+        w.dot(w) <= tol2
+    };
+    let hit = med
+        .extra
+        .iter()
+        .any(|w| on_seg(w.a, w.b) || on_seg(w.b, w.a))
+        || med.suppressed.iter().any(|t| {
+            let q = &t.poly.pts;
+            (0..q.len()).any(|i| on_seg(q[i], q[(i + 1) % q.len()]))
+        });
+    if hit {
+        Some((med.record, med.absorption))
+    } else {
+        None
     }
 }
 
@@ -435,7 +708,21 @@ fn deco_err(style: Decoration, reason: String) -> DecorationError {
     DecorationError {
         style: style.name(),
         reason,
+        medallion: None,
     }
+}
+
+/// [`deco_err`] for a failure with a witness vertex: attaches the §4.4
+/// medallion message variant when the witness lies on the layer.
+fn deco_err_w(
+    med: Option<&MedallionContext>,
+    style: Decoration,
+    reason: String,
+    witness: Vec2,
+) -> DecorationError {
+    let mut e = deco_err(style, reason);
+    e.medallion = medallion_at(med, witness);
+    e
 }
 
 /// Everything a renderer needs to paint one decoration style: geometry in
@@ -1252,10 +1539,27 @@ pub fn plan_decoration(
     style: Decoration,
     region: &BBox,
 ) -> Result<DecorationPlan, DecorationError> {
+    plan_decoration_medallion(walls, band_w, style, region, None)
+}
+
+/// [`plan_decoration`] carrying a medallion layer context (design doc
+/// `docs/medallion-third-layer-design.md` §4.4). Identical gate logic
+/// and identical messages, except that the open-end failure whose
+/// witness lies on the layer gains the named-record message variant.
+/// `med = None` — and hence [`plan_decoration`] itself — is
+/// byte-identical to the two-layer pipeline.
+pub fn plan_decoration_medallion(
+    walls: &[Wall],
+    band_w: f64,
+    style: Decoration,
+    region: &BBox,
+    med: Option<&MedallionContext<'_>>,
+) -> Result<DecorationPlan, DecorationError> {
     if !band_w.is_finite() || band_w <= 0.0 {
         return Err(DecorationError {
             style: style.name(),
             reason: format!("band width must be a positive finite number, got {band_w}"),
+            medallion: None,
         });
     }
     let line_w = LINE_FRAC * band_w;
@@ -1283,7 +1587,7 @@ pub fn plan_decoration(
         }
         Decoration::Interlace | Decoration::OutlineInterlace => {
             let (strands, at) = walk_strands(&m);
-            check_interlace(&m, &core, &at, style)?;
+            check_interlace(&m, &core, &at, style, med)?;
             let seeds = parity_seeds(&m, &strands, &at, style)?;
             let d = band_w / 2.0;
             let lh = line_w / 2.0;
@@ -1344,6 +1648,7 @@ fn check_interlace(
     core: &[bool],
     at: &[Vec<(usize, usize)>],
     style: Decoration,
+    med: Option<&MedallionContext<'_>>,
 ) -> Result<(), DecorationError> {
     let n = m.pts.len();
     // degree-1 exits or ray end-caps in the core
@@ -1352,7 +1657,7 @@ fn check_interlace(
         .collect();
     if !opens.is_empty() {
         let w = m.pts[opens[0]];
-        return Err(deco_err(style, format!(
+        return Err(deco_err_w(med, style, format!(
             "{n0} open wall end(s) inside the view (degree-1 exits or ray \
              end-caps, e.g. at ({x:.3}, {y:.3})) — strands do not close into \
              a weave at this angle; generic contact angles give open strands, \
@@ -1361,7 +1666,7 @@ fn check_interlace(
             n0 = opens.len(),
             x = w.x,
             y = w.y
-        )));
+        ), w));
     }
     let odds: Vec<usize> = (0..n)
         .filter(|&v| core[v] && m.deg(v) % 2 == 1 && m.deg(v) >= 3)

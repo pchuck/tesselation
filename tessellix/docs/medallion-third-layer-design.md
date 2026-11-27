@@ -409,3 +409,90 @@ tying `figure_f64` to the exact figure); A1–A3 suites ≈ +300; docs:
 carrier's family/per-tiling docs gain the usual rows. Tier: worker
 (standard plumbing) with a strong review pass on A2's segment-
 multiset identity. Effort: S–M. No UI changes (F8 + defaults).
+
+## 12. Implementation record (M203, landed)
+
+Landed shape vs this plan: `tess-core` gained `Tiling::suppressed_seeds`
+/ `Tiling::extra_walls` defaults, `walls_layered`,
+`plan_decoration_medallion`, `MedallionContext`, and the §4.4
+named-record message on the interlace open-end gate (the only gate
+touched — `fill`/corner messages are byte-identical). The fusion splits
+every pair with at least one layer segment at interior crossings and
+T-junctions (same margins as the ray engine: 1e-9·len strict,
+1e-8·len merge, 1e-6 dedup grid), indexed by a uniform bbox-cell grid —
+the naive O(n²) pass cost 1043 s on the A2 substrate, the indexed one
+7 s, with identical output. `walls()` delegates with `extra = []` and is
+byte-identical (pinned in `crates/tess-core/tests/medallion_offstate.rs`).
+
+**Chosen record→wall shape (M172).** Suppression `{0, 1}` (dodecagon +
+hexagram — the hull footprint, §9.3) plus raw chords: dodecagon `{12/4}`
+`m_j → m_{j+4}` edge-midpoint chords and hexagram `{6/2}` tip triangles
+`t_j → t_{j+2}`. The §7 spike step was done in Rust (`spike_m203*`,
+deleted at landing) rather than Python; the decisive measurements are
+below. The A2 coincidence regime confirms the doc's premise on uniform
+hosts: 4.8.8 @ 45° with `{8/2}` chords and 3.12.12 @ 60° with `{12/4}`
+chords give fused == generic as exact sorted segment multisets
+(0 missing, 0 extra, all four styles pass). Chord **extensions** (±L/3
+past the contact, the historical rosette drawing) were tried and
+REJECTED: they fire spurious splits outside the tile and break the
+coincidence identity — raw chords are the ship shape.
+
+**Blocker 1 — §7 A3 "δ = 60 must pass the closure gates" is false for
+this composition.** No fused shape closes the generic M172 weave at ANY
+δ: the dodecagon side demands θ = 60° (chord leaves the contact midpoint
+at tangent-chord = arc/2 = 60°) while the star side's `{6/2}` tip chords
+cross the star edge midpoints at 90°; no single δ matches both families.
+Measured truth (region [-8,8]², default scale; pinned in
+`crates/tess-tilings/tests/medallion_m172.rs`): δ = 30 → 29784 walls,
+exit 1212, corner 606, bad 5828; δ = 60 → 42972 walls, exit 1212,
+corner 606, bad 5828; `fill` fails odd-degree unnamed (3520 / 4732),
+`outline` passes, `interlace` + `outline-interlace` fail with 1798 open
+ends **named** to the record — the honesty case at both angles.
+Candidate resolutions: (i) ACCEPT the named failure at δ = 60 as the
+honest state (SHIPPED — the §4.4 error exists precisely for law-(L)
+violations, and the named message tells the user why); (ii) a per-face
+record-chord scheme where the interstice reflex hexagons also wear
+chords landing on their shared midpoints (unproven; would need its own
+derivation — the hexagon rays end off the midpoint, spike v5).
+
+**Blocker 2 — §7 A1 "the fused map closes … all four styles gate" is
+false for a hull-suppressed patch.** The 24 M158 exit rays march exactly
+(the `{1+√3: 12, 2+√3: 12}` f64 multiset holds at 1e-9 and agrees with
+the exact `host312::bind_and_absorb` certificate; all 24 landings are
+pairwise-distinct neighbour-dodecagon vertices), but they END on vertices
+of the *unsuppressed* neighbouring dodecagons: 24 degree-1 exits, 12
+two-valent joints, 0 unpaired crossings. Only `outline` passes;
+`interlace`/`outline-interlace` fail named to 'WIS 12-point star
+(M158)' / Interstitial — correct: the interstitial absorption cannot
+continue through a host that is not itself wearing its record. Closing
+it needs the neighbours' records to take the strands over = **nested
+medallions, §10 backlog**. Truth pinned in
+`crates/tess-tilings/tests/medallion_host312.rs`.
+
+**Deviations from the doc (all deliberate).**
+1. `extra_walls(&self, tiles, region)` — the doc's region-only signature
+   cannot derive record chords from a `LatticeTiling` *value*, which
+   emits its own polygons; taking the emitted tiles keeps the layer
+   similarity-covariant (scale/rotation carry it for free).
+2. The M172 layer is registered in a side table,
+   `tess-tilings::medallion::weave::medallion_layer_specs()`, keyed by
+   tiling id, and merged with the trait hooks by
+   `weave::medallion_wiring`. The trait hooks alone would require making
+   M172 a native `Tiling` type — forbidden (registry is pinned at 169
+   built-ins / 188 memberships and `lattice.rs` stays untouched).
+3. Activation is gated behind the `--medallion-weave` CLI flag; the doc
+   §4.1 read the layer as flag-less for carriers, but the OFF-default
+   byte-identity of the two-layer pipeline (§8 non-goal) requires an
+   explicit opt-in until the layer is proven on more carriers.
+4. The §5.3 views `contacts_f64` / `figure_f64` landed as trait defaults
+   (empty) with per-instance impls where the exact tables make them
+   cheap (hexagram_62, khatam_m53, rosette_m56, wis_m158); girih_m161
+   keeps the empty default (its figure is a 60-segment map — backlog).
+5. The §7 spike language (stdlib Python ≤ 240 s) was satisfied by Rust
+   spike tests instead — same evidentiary role, run in seconds.
+
+**Battery map.** A4 off-state + gate-message: `tess-core
+tests/medallion_offstate.rs` (+ the untouched classic-δ /
+`decoration_finiteness_battery` / `strapwork_layer_mode` rows); A2:
+`tess-tilings tests/medallion_coexact.rs`; A3 + A5:
+`tests/medallion_m172.rs`; A1: `tests/medallion_host312.rs`.

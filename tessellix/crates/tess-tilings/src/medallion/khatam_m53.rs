@@ -47,6 +47,20 @@ impl Medallion for KhatamM53 {
     const FIELD: Field = Field::Qsqrt2;
     const SYM: usize = 8;
     const PATH: Absorption = Absorption::LandingIdentity;
+    fn contacts_f64() -> Vec<([f64; 2], Option<(usize, f64)>)> {
+        contacts()
+            .iter()
+            .enumerate()
+            .map(|(i, p)| (super::qp_f64(*p), Some((i, 0.5))))
+            .collect()
+    }
+    fn figure_f64() -> Vec<([f64; 2], [f64; 2])> {
+        let m = contacts();
+        figure()
+            .iter()
+            .map(|(i, j)| (super::qp_f64(m[*i]), super::qp_f64(m[*j])))
+            .collect()
+    }
 
     fn hull_f64() -> Vec<[f64; 2]> {
         hull().iter().map(|p| [p.0.fl(), p.1.fl()]).collect()

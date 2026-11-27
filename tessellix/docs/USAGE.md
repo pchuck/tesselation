@@ -30,6 +30,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 | `--deform NAME PARAMS…` | off | Islamic parquet deformation (diss. §3.4.1): the contact angle varies as a function of point; NAME is `linear` (`linear a b x0 x1` — ramp along x: a at x0 → b at x1), `radial` (`radial a b cx cy r0 r1` — ramp along distance from centre (cx, cy): a at r0 → b at r1) or `sine` (`sine mid amp k` — oscillation along x: mid + amp·sin(k·x)); mutually exclusive with `--strapwork` |
 | `--decoration STYLE` | off | over the strapwork walls (`--strapwork` or `--deform`, one required), render a Kaplan §3.7 ornamentation style — `fill` \| `outline` \| `interlace` \| `outline-interlace`; `--mode` is ignored under `--decoration`. See [rendering.md](rendering.md) |
 | `--band-w W` | 0.1 | band width in world units for the decoration layer (requires `--decoration`) |
+| `--medallion-weave` | off | medallion third layer (requires `--strapwork DEG`, mutually exclusive with `--deform`): fuse the tiling's own medallion record layer into the strapwork wall map — the hull-face seeds stop firing generic contact rays and the record's chords take over at the same contact midpoints; tilings without a medallion layer render byte-identically. See [medallion-third-layer-design.md](medallion-third-layer-design.md) |
 | `--out`, `-o` | tessellix.svg | output SVG file |
 
 `explore` options:

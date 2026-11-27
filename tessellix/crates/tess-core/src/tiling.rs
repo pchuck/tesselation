@@ -9,6 +9,7 @@
 use crate::category::TilingCategory;
 use crate::geometry::{BBox, Polygon, Vec2};
 use crate::params::ParamSet;
+use crate::strapwork::Wall;
 use crate::symmetry::SymmetryMeta;
 use crate::view::ColorMode;
 
@@ -121,6 +122,30 @@ pub trait Tiling {
     /// legitimately returns only the patch tiles that intersect the
     /// region, and UIs render background for the rest.
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult;
+
+    /// Medallion third-layer hook (design doc
+    /// `docs/medallion-third-layer-design.md` §5.2): the seeds of the
+    /// faces whose generic strapwork firing is replaced by the record
+    /// layer supplied through [`Tiling::extra_walls`]. The seed *is*
+    /// the hull footprint (design §9.3): suppression never needs a
+    /// clipper. Defaults to empty — every existing tiling keeps the
+    /// standard two-layer pipeline byte-identically.
+    fn suppressed_seeds(&self) -> Vec<u32> {
+        Vec::new()
+    }
+
+    /// Medallion third-layer hook (design doc §5.1): additional wall
+    /// segments for the fused map — literally "more walls", the `Wall`
+    /// currency and nothing else (design F1). Receives the freshly
+    /// emitted `tiles` alongside the `region` so a composition tiling
+    /// derives the layer geometry from the same polygons it emitted
+    /// (this is a deliberate deviation from the doc's region-only
+    /// signature: it keeps layer placement correct under the
+    /// scale/rotation parameters without a second source of truth).
+    /// Defaults to empty.
+    fn extra_walls(&self, _tiles: &[Tile], _region: &BBox) -> Vec<Wall> {
+        Vec::new()
+    }
 }
 
 // Re-export for convenience in trait signature.

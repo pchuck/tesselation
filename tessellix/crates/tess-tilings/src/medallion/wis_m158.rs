@@ -147,6 +147,18 @@ impl Medallion for WisM158 {
     const FIELD: Field = Field::Qsqrt3;
     const SYM: usize = 12;
     const PATH: Absorption = Absorption::Interstitial;
+    fn contacts_f64() -> Vec<([f64; 2], Option<(usize, f64)>)> {
+        hull()
+            .iter()
+            .map(|p| (super::qp_f64(*p), None))
+            .collect()
+    }
+    fn figure_f64() -> Vec<([f64; 2], [f64; 2])> {
+        figure()
+            .iter()
+            .map(|(a, b)| (super::qp_f64(*a), super::qp_f64(*b)))
+            .collect()
+    }
 
     fn hull_f64() -> Vec<[f64; 2]> {
         hull().iter().map(|p| [p.0.fl(), p.1.fl()]).collect()

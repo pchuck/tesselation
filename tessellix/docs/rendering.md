@@ -2,8 +2,9 @@
 
 Two rendering layers on top of the tilings (`--strapwork` and
 `--decoration`, both built on the polygons-in-contact engine in
-`tess-core::strapwork` — the walls are the star patterns' strapwork).
-This is the single source for the surface; the README summarizes it.
+`tess-core::strapwork` — the walls are the star patterns' strapwork),
+plus an optional **medallion third layer** (`--medallion-weave`,
+below). This is the single source for the surface; the README summarizes it.
 
 ## Walls layer
 
@@ -86,6 +87,35 @@ Other regimes, also verified at the same scale:
 - **bad style** (`--decoration weave`): `bad --decoration 'weave': expected fill | outline | interlace | outline-interlace`
 - **no `--strapwork`** with `--decoration`: `--decoration requires --strapwork DEG or --deform PROFILE (the decoration decorates the strapwork walls)`
 - **bad `--band-w`** (0 or negative): `--band-w must be a positive number`
+
+## Medallion layer (third layer)
+
+`--medallion-weave` (requires `--strapwork DEG`, mutually exclusive with
+`--deform`) fuses the tiling's **medallion record** into the wall map:
+the tile seeds that form the medallion's hull footprint stop firing
+generic contact rays, and the record's exact figure chords take over at
+the same edge midpoints; the chords fuse through the same 1e-6 dedup
+grid, split at every crossing and T-junction with the generic walls
+(design doc [medallion-third-layer-design.md](medallion-third-layer-design.md)).
+
+- A tiling without a medallion layer renders **byte-identically** to the
+  two-layer pipeline; flag off changes nothing anywhere.
+- When the weave fails with an open end lying on the layer, the error
+  **names the record** (the honesty case):
+  `… — the witness lies on the medallion layer 'M172 {12/4} dodecagon ⊕ {6/2} hexagram' (declared absorption LandingIdentity): the weave at this contact angle does not absorb the record (law (L) requires theta_record = delta)`
+- One composition currently carries a layer: `dodecagon-hexagram-honeycomb`
+  (dodecagon `{12/4}` edge-midpoint chords + hexagram `{6/2}` tip
+  triangles; seeds 0 and 1 suppressed).
+- **Coincidence regime** (verified, anchor A2): where a record chord class
+  coincides with the generic firing at the host's classic angle, the fused
+  map equals the full generic map exactly (sorted segment-multiset
+  equality on the dedup grid, all four styles pass): 3.12.12 @ 60° with
+  `{12/4}` chords, 4.8.8 @ 45° with `{8/2}` chords.
+- The M172 composition has **no δ closing the fused weave** — the dodecagon
+  chords need θ = 60° while the star chords need 90° — so `fill` fails on
+  odd degree, `interlace` and `outline-interlace` fail with the named error
+  above, and `outline` renders (design doc §7 A3 blocker; tests pin the
+  counts).
 
 ## Classic-δ table
 

@@ -17,7 +17,11 @@
 //! catalog for the §24b inference work: the five re-derived instances in
 //! the submodules carry the exact tables the doc §4 tabulates, and
 //! [`host312`] is the verified bind-and-absorb pipeline that 24b
-//! consumes first (doc §7).
+//! consumes first (doc §7). The [`weave`] submodule is the additive
+//! wiring surface the strapwork fusion consumes (design doc
+//! `docs/medallion-third-layer-design.md`) — a layer table keyed by
+//! tiling id and the fused-emission helpers; still no `Tiling`
+//! implementation and no registry movement.
 //!
 //! Angle facts never appear as square roots or floats: every angle
 //! claim is a `cos^2` identity cross-multiplied into the field, or a
@@ -38,6 +42,7 @@ pub mod infer;
 pub mod khatam_m53;
 pub mod monster;
 pub mod rosette_m56;
+pub mod weave;
 pub mod wis_m158;
 
 use std::cmp::Ordering;
@@ -113,6 +118,23 @@ pub trait Medallion {
     const PATH: Absorption;
     /// Hull vertices, normalized frame, as f64 (consumer view).
     fn hull_f64() -> Vec<[f64; 2]>;
+    /// Contact points in the normalized record frame as f64 (design
+    /// doc `docs/medallion-third-layer-design.md` §5.3): `Some((edge,
+    /// t))` for exact edge contacts (the record's `t_num / t_den`
+    /// converted once) and `None` for corner contacts, whose index is
+    /// the position in [`Medallion::hull_f64`] (mirroring
+    /// [`Contact::Corner`]). Defaults to empty — the view is additive;
+    /// instances pin it against their exact contact tables.
+    fn contacts_f64() -> Vec<([f64; 2], Option<(usize, f64)>)> {
+        Vec::new()
+    }
+    /// Figure chords of the record in the normalized frame as f64
+    /// (§5.3): the exact figure segments converted once, the same
+    /// "exact where the record is exact" convention as
+    /// [`Medallion::hull_f64`]. Defaults to empty.
+    fn figure_f64() -> Vec<([f64; 2], [f64; 2])> {
+        Vec::new()
+    }
     /// Directed exit rays: `(contact index, direction)` as f64.
     fn exit_rays_f64() -> Vec<(usize, [f64; 2])>;
     /// Exact `cos^2` of the contact angle against the hull edge,
@@ -259,8 +281,7 @@ impl Zq {
             && self.b as i128 * o.den as i128 == o.b as i128 * self.den as i128
     }
     /// Float value — landed-cross-check and consumer views only.
-    pub fn fl(self) -> f64 {
-        (self.a as f64 + self.b as f64 * (self.d as f64).sqrt()) / self.den as f64
+    pub fn fl(self) -> f64 {        (self.a as f64 + self.b as f64 * (self.d as f64).sqrt()) / self.den as f64
     }
 }
 
@@ -268,6 +289,13 @@ impl Zq {
 pub type Qp = (Zq, Zq);
 
 /// Vector from `o` to `p`.
+/// f64 consumer conversion of an exact point (each component once —
+/// the §6 convention: exact where the record is exact, converted at
+/// the view boundary).
+pub fn qp_f64(p: Qp) -> [f64; 2] {
+    [p.0.fl(), p.1.fl()]
+}
+
 pub fn vsub(p: Qp, o: Qp) -> Qp {
     (p.0.sub(o.0), p.1.sub(o.1))
 }
