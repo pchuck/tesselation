@@ -40,7 +40,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             ..TilingClass::EMPTY
         },
         "pinwheel" => TilingClass {
-            families: &["Aperiodic"],
+            families: &["Nonperiodic"],
             method: Some("substitution"),
             inflation: Some("√5"),
             source: Some("Conway & Radin"),

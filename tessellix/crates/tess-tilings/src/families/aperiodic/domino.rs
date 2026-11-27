@@ -1,4 +1,4 @@
-//! Domino (table) — Lançon's limit-periodic substitution tiling.
+//! Domino (table) — Lançon's non-periodic substitution tiling (limit-periodic).
 //!
 //! Lançon's domino substitution (Bielefeld Tilings Encyclopedia entry
 //! "domino"; the entry says verbatim "Also known as 'table tiling.'",
@@ -166,7 +166,7 @@ fn patch_of(p: u8, g: u32) -> Vec<TileCell> {
 // Tiling
 // ---------------------------------------------------------------------------
 
-/// Lançon's domino (table) limit-periodic substitution tiling.
+/// Lançon's domino (table) non-periodic substitution tiling (limit-periodic).
 pub struct DominoTiling;
 
 impl Tiling for DominoTiling {
@@ -179,7 +179,7 @@ impl Tiling for DominoTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Lançon's domino (table) substitution tiling (Bielefeld entry \
+        "Lançon's domino (table) non-periodic substitution tiling (Bielefeld entry \
          \"domino\", also known as the table tiling): A (1×2 vertical) \
          and B (2×1 horizontal) dominoes on the square lattice, λ = 2 \
          substitution into 4 children (substitution matrix [[2,2],[2,2]], \
@@ -187,7 +187,7 @@ impl Tiling for DominoTiling {
          2^d × 2^(d+1) block recentered on the origin, d = 5..8 picked \
          by the view diagonal (nested views bit-identical on their \
          intersection); exact integer cell arithmetic end to end. \
-         Limit-periodic via approximating periodic tilings: the depth-g \
+         Limit-periodic (long-range order) via approximating periodic tilings: the depth-g \
          patch is the fundamental cell of the period-(2^g, 2^(g+1)) \
          approximant — measured, no proper within-patch period \
          (g = 1..6); not cut-and-project (Solomyak 1997 continuous \
@@ -204,7 +204,7 @@ impl Tiling for DominoTiling {
 
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {
         let meta = SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None).with_notes(
-            "limit-periodic (Lançon domino / table; Bielefeld entry \
+            "non-periodic substitution tiling; limit-periodic (Lançon domino / table; Bielefeld entry \
              \"domino\", also known as the table tiling); approximating \
              periods (2^d, 2^(d+1)); NOT cut-and-project / model set — \
              Solomyak ETDS 17(3) 1997, Robinson Indag. Math. 10(4) 1999",

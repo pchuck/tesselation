@@ -1,4 +1,4 @@
-//! Half-hex — Socolar's limit-periodic substitution tiling.
+//! Half-hex — Socolar's non-periodic substitution tiling (limit-periodic).
 //!
 //! Socolar's "half-hex" substitution (Bielefeld Tilings Encyclopedia entry
 //! "half-hex"; limit-periodic, 1 prototile): the prototile is a
@@ -161,7 +161,7 @@ fn patch(g: u32) -> Vec<TileCell> {
 // Tiling
 // ---------------------------------------------------------------------------
 
-/// Socolar's half-hex limit-periodic substitution tiling.
+/// Socolar's half-hex non-periodic substitution tiling (limit-periodic).
 pub struct HalfHexTiling;
 
 impl Tiling for HalfHexTiling {
@@ -174,13 +174,13 @@ impl Tiling for HalfHexTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Socolar's half-hex substitution tiling (Bielefeld entry \
+        "Socolar's half-hex non-periodic substitution tiling (Bielefeld entry \
          \"half-hex\"): one achiral half-hexagon prototile, six rotation \
          classes, λ = 2 substitution into 4 children (substitution \
          matrix PF eigenvalue 4 = λ², char poly (x−4)(x−2)(x−1)²(x+1)²). \
          Finite covered patch = 2^d-scaled half-hexagon (d = 5..8 by \
          view diagonal, recentered on the origin); exact √3-field \
-         integer-pair (u,v) arithmetic end to end. Limit-periodic: \
+         integer-pair (u,v) arithmetic end to end. Limit-periodic (long-range order): \
          minimal x-period of the depth-g patch is (3/2)·2^g — 6, 12, \
          24, 48, 96 at g = 2..6."
     }
@@ -195,7 +195,7 @@ impl Tiling for HalfHexTiling {
 
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {
         let meta = SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None).with_notes(
-            "limit-periodic (Socolar half-hex; Bielefeld entry \
+            "non-periodic substitution tiling; limit-periodic (Socolar half-hex; Bielefeld entry \
              \"half-hex\"); Fre02 cut-and-project; GS87 Ex. 10.1.3; \
              finite covered patch = 2^d-scaled half-hexagon, \
              minimal x-period (3/2)·2^d",

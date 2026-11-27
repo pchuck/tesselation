@@ -2,7 +2,7 @@
 
 `pinwheel` · family [Arrangements](../families/arrangements.md) (`arrangements`)
 
-aperiodic Pythagorean; tiles in infinitely many orientations
+non-periodic Pythagorean; tiles in infinitely many orientations
 
 ## Algorithm
 

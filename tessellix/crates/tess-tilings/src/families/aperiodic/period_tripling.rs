@@ -210,7 +210,7 @@ fn patch_of(p: u8, g: u32) -> Vec<TileCell> {
 // Tiling
 // ---------------------------------------------------------------------------
 
-/// The 2D period-tripling marginal supersubstitution tiling.
+/// The 2D period-tripling marginal supersubstitution tiling (non-periodic; limit-periodic).
 pub struct PeriodTriplingTiling;
 
 impl Tiling for PeriodTriplingTiling {
@@ -233,7 +233,7 @@ impl Tiling for PeriodTriplingTiling {
          (x−9)(x+3) — marginal second eigenvalue −3 = −λ). Finite \
          covered patch = 3^d × 3^d block recentered on the origin, \
          d = 5 (9^5 = 59049 ≤ MAX_TILES < 9^6 — single depth band); \
-         exact integer cell arithmetic end to end. Limit-periodic via \
+         exact integer cell arithmetic end to end. Limit-periodic (long-range order) via \
          approximating periodic tilings: the depth-g period lattice is \
          exactly <(1,−1),(3^g,0)> (size 3^g — period-1 in the (1,−1) \
          direction at all depths), axis-aligned period (3^g, 3^g) = \
@@ -253,7 +253,7 @@ impl Tiling for PeriodTriplingTiling {
 
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {
         let meta = SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None).with_notes(
-            "limit-periodic (period-tripling 2D; Bielefeld entry \
+            "non-periodic substitution tiling; limit-periodic (period-tripling 2D; Bielefeld entry \
              \"Period Tripling 2D\" — no references, rule pinned by \
              the patch-image window match); approximating period \
              lattice <(1,-1),(3^d,0)>, size 3^d — period-1 in the \

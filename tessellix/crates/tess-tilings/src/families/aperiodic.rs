@@ -117,37 +117,29 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         "half-hex" => TilingClass {
             families: &["Aperiodic"],
             method: Some("substitution"),
-            prototiles: Some(1),
             source: Some("Grünbaum & Shephard; Frettlöh"),
             year: Some("1987"),
-            aperiodic_status: Some("limit-periodic"),
             translational: Some("limit-periodic"),
             ..TilingClass::EMPTY
         },
         "domino" => TilingClass {
             families: &["Aperiodic"],
             method: Some("substitution"),
-            prototiles: Some(1),
             source: Some("Lançon"),
-            aperiodic_status: Some("limit-periodic"),
             translational: Some("limit-periodic"),
             ..TilingClass::EMPTY
         },
         "period-doubling" => TilingClass {
             families: &["Aperiodic"],
             method: Some("substitution"),
-            prototiles: Some(1),
             source: Some("Frettlöh & Sing"),
-            aperiodic_status: Some("limit-periodic"),
             translational: Some("limit-periodic"),
             ..TilingClass::EMPTY
         },
         "thue-morse" => TilingClass {
             families: &["Aperiodic"],
             method: Some("substitution"),
-            prototiles: Some(1),
             source: Some("Allouche & Shallit"),
-            aperiodic_status: Some("aperiodic"),
             translational: Some("aperiodic"),
             ..TilingClass::EMPTY
         },
@@ -156,9 +148,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         "period-tripling" => TilingClass {
             families: &["Aperiodic"],
             method: Some("substitution"),
-            prototiles: Some(1),
             source: None,
-            aperiodic_status: Some("limit-periodic"),
             translational: Some("limit-periodic"),
             ..TilingClass::EMPTY
         },

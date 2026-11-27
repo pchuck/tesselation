@@ -61,11 +61,13 @@ pub enum TilingCategory {
     /// the girih Darb-i Imam substitution.
     Quasiperiodic,
     /// Aperiodic but not canonically quasiperiodic: the einstein family
-    /// (hat, turtle, spectre) and the pinwheel (dense orientations).
+    /// (hat, turtle, spectre).
     Aperiodic,
     /// Nonperiodic by construction whose prototile is not aperiodic
     /// (the Hirschhorn pentagon realization; the limit-periodic rep-tile
-    /// realizations of the chair, sphinx and P-pentomino).
+    /// realizations of the chair, sphinx and P-pentomino; the pinwheel
+    /// — its bare triangle tiles periodically, the substitution forces
+    /// nonperiodic order).
     Nonperiodic,
 }
 

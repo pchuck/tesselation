@@ -255,7 +255,7 @@ fn refine_step(tris: &[(Tri, u8)], region: &BBox) -> Vec<(Tri, u8)> {
     out
 }
 
-/// Pinwheel tiling (aperiodic, infinitely many tile orientations).
+/// Pinwheel tiling (non-periodic, infinitely many tile orientations).
 pub struct PinwheelTiling;
 
 impl Tiling for PinwheelTiling {
@@ -268,11 +268,11 @@ impl Tiling for PinwheelTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Aperiodic Pythagorean-triangle tiling (Conway–Radin pinwheel); tiles in infinitely many orientations."
+        "Non-periodic Pythagorean-triangle tiling (Conway–Radin pinwheel); homochiral; tiles in infinitely many orientations."
     }
 
     fn category(&self) -> TilingCategory {
-        TilingCategory::Aperiodic
+        TilingCategory::Nonperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {
@@ -281,7 +281,7 @@ impl Tiling for PinwheelTiling {
 
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {
         let meta = SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None)
-            .with_notes("aperiodic; tiles in infinitely many orientations");
+            .with_notes("non-periodic; homochiral; tiles in infinitely many orientations");
         let fail = |message: &'static str| TilingResult {
             tiles: Vec::new(),
             symmetry: meta,

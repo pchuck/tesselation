@@ -167,7 +167,7 @@ fn patch_of(p: u8, g: u32) -> Vec<TileCell> {
 // Tiling
 // ---------------------------------------------------------------------------
 
-/// The 2D-product (τ⊗τ) Thue–Morse aperiodic substitution tiling.
+/// The 2D-product (τ⊗τ) Thue–Morse non-periodic substitution tiling (aperiodic).
 pub struct ThueMorseTiling;
 
 impl Tiling for ThueMorseTiling {
@@ -192,7 +192,7 @@ impl Tiling for ThueMorseTiling {
          recentered on the origin, d = 5..8 picked by the view \
          diagonal (nested views bit-identical on their \
          intersection); exact integer cell arithmetic end to end. \
-         Aperiodic: no proper translation period at any depth g = \
+         Non-periodic — aperiodic long-range order: no proper translation period at any depth g = \
          1..6 (133 candidate shifts rejected), singular continuous \
          diffraction (JS99)."
     }
@@ -207,7 +207,7 @@ impl Tiling for ThueMorseTiling {
 
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {
         let meta = SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None).with_notes(
-            "aperiodic (Thue-Morse 2D product τ⊗τ; Bielefeld entry \
+            "non-periodic substitution tiling; aperiodic long-range order (Thue-Morse 2D product τ⊗τ; Bielefeld entry \
              \"Thue Morse\", 1D rule 0 → 01, 1 → 10, reference \
              JS99 = Allouche & Shallit, Springer 1999); no proper \
              translation period at any depth; singular continuous \

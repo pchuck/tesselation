@@ -163,8 +163,8 @@ fn patch_of(p: u8, g: u32) -> Vec<TileCell> {
 // Tiling
 // ---------------------------------------------------------------------------
 
-/// The 2D-product (σ⊗σ) period-doubling limit-periodic substitution
-/// tiling.
+/// The 2D-product (σ⊗σ) period-doubling non-periodic substitution
+/// tiling (limit-periodic).
 pub struct PeriodDoublingTiling;
 
 impl Tiling for PeriodDoublingTiling {
@@ -187,7 +187,7 @@ impl Tiling for PeriodDoublingTiling {
          2^d block recentered on the origin, d = 5..8 picked by the \
          view diagonal (nested views bit-identical on their \
          intersection); exact integer cell arithmetic end to end. \
-         Limit-periodic via approximating periodic tilings: the \
+         Limit-periodic (long-range order) via approximating periodic tilings: the \
          depth-g patch is the fundamental cell of the period-(2^g, \
          2^g) approximant — measured, no proper within-patch period \
          (g = 1..6)."
@@ -203,7 +203,7 @@ impl Tiling for PeriodDoublingTiling {
 
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {
         let meta = SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None).with_notes(
-            "limit-periodic (period-doubling 2D product σ⊗σ; \
+            "non-periodic substitution tiling; limit-periodic (period-doubling 2D product σ⊗σ; \
              Bielefeld entry \"period-doubling\", 1D rule a → ab, \
              b → aa in the 2-adic internal space, Frettlöh & \
              Sing); approximating periods (2^d, 2^d); the 1D \

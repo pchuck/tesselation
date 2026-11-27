@@ -111,13 +111,13 @@ Stampfli, shield, golden bee, golden triangle, golden rhomboid,
 fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7, Andritz
 bowtie-hexagon, Andritz 10gon-1, Andritz 10gon-2, Andritz 10gon-3,
 fibonacci-fibonacci,
-wis 12-fold, girih 14-fold), **Aperiodic** (12: einstein family, CAP
-cut-and-project, pinwheel,
+wis 12-fold, girih 14-fold), **Aperiodic** (11: einstein family, CAP
+cut-and-project,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
 (table), period-doubling, thue-morse, period-tripling), and
-**Nonperiodic** (11: limit-periodic rep-tiles, Hirschhorn,
+**Nonperiodic** (12: limit-periodic rep-tiles, Hirschhorn,
 pregnant-chair, tangram, octiamond reptile, pentiamond AC factor-2,
-pentiamond AC factor-3, pentiamond AD factor-2). Categories
+pentiamond AC factor-3, pentiamond AD factor-2, pinwheel). Categories
 are declared on the tiling (never derived from its symmetry), so the
 grouping is honest about what the mathematics distinguishes; see
 `tess-core/src/category.rs`.
