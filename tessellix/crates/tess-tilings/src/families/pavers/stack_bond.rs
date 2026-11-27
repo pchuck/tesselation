@@ -43,7 +43,11 @@
 //!
 //! `proto` = cell index (0); `seed` = orientation class — a single
 //! class (0, horizontal), since every domino of the stack bond is a
-//! stretcher.
+//! stretcher. The shipped seed alternates by row via
+//! `SeedPattern::Rows`: the tile at lattice index `(i, j)` sits at
+//! world `y = j` (lattice `⟨(2,0),(0,1)⟩`), so the row-index parity
+//! is exactly the course parity — alternate courses get alternate
+//! fills (the running-bond sibling, M41).
 //!
 //! # Verification
 //!
@@ -107,7 +111,7 @@ pub fn stack_bond() -> LatticeTiling {
         lattice_kind: LatticeKind::Rectangular,
         category: TilingCategory::Arrangements,
         secondary: &[],
-        seed_pattern: SeedPattern::Uniform,
+        seed_pattern: SeedPattern::Rows,
         params: &SIMILARITY_PARAMS,
         make_map: similarity_map,
         color_mode: ColorMode::Pattern,
