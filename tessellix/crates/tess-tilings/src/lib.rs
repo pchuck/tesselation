@@ -439,11 +439,6 @@ vec![11, 20, 36, 17, 15, 5, 29, 8, 23, 11, 13],
         );
         assert_eq!(r.len(), 169, "built-in tiling count (update when adding tilings)");
         assert_eq!(memberships, 190, "membership census (update when adding tilings)");
-        assert_eq!(
-            memberships, 190,
-            "membership census (update when adding tilings)"
-        );
->>>>>>> eae0593 (feat(review): A3 - the last three 2-uniform duals (kuniform-dual n7/n6/n17))
 
         // The Wallpaper tab is the group catalog: exactly one card per
         // represented group, and the represented groups are precisely
