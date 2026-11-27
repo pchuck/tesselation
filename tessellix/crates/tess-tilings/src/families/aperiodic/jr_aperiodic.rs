@@ -20,22 +20,26 @@
 //! legitimately returns only the patch pieces that reach into it, with
 //! background beyond.
 //!
-//! # Edge-colour encoding (geometric edge bands)
+//! # Edge-colour encoding (corner-to-centre edge triangles)
 //!
-//! Each unit-square prototile is partitioned into **5 non-overlapping
-//! convex pieces** (protos: 0 interior, 1 N-band, 2 E-band, 3 S-band,
-//! 4 W-band): four edge bands of width `W = 0.08` (the single documented
-//! scale), one per edge, plus the interior remainder. Each `W × W` corner
-//! square is split by a 45° miter diagonal between the two adjacent
-//! bands. Band area `W − W² = 46/625`, interior area `(1 − 2W)² = 441/625`,
-//! so the five piece areas sum to `4·(46/625) + 441/625 = 1` **exactly in
-//! Q** for `W = 8/100`.
+//! Each unit-square prototile is partitioned into **4 non-overlapping
+//! convex triangles** (protos: 1 N-triangle, 2 E-triangle, 3 S-triangle,
+//! 4 W-triangle): the square's four corners, joined to the centre (the
+//! polygon centroid), split the square exactly along its two diagonals.
+//! Each triangle keeps the square's **full outer edge** byte-identically
+//! — the edge's two corner vertices are the triangle's other two
+//! vertices — so the shared edge between any two adjacent cells is drawn
+//! identically by both cells (full N edge of one cell == full S edge of
+//! the cell above) with no seam, gap or double-count. Each triangle has
+//! area 1/4, so the four triangle areas sum to 1 **exactly in Q**.
 //!
-//! Each band is painted with its edge's colour, so Wang matching across a
-//! shared edge is *visible*: touching bands carry the same palette colour
-//! exactly where the handoff's edge colours agree (0/9900 H and 0/9900 V
-//! on the shipped patch — the handoff battery, reproduced here). `seed`
-//! is the band's palette index; the interior is the base (seed 0).
+//! Each triangle is painted with its outer edge's colour, so Wang
+//! matching across a shared edge is *visible*: touching triangles carry
+//! the same palette colour exactly where the handoff's edge colours
+//! agree (0/9900 H and 0/9900 V on the shipped patch — the handoff
+//! battery, reproduced here). `seed` is the palette index of the outer
+//! edge's Wang label — the N-triangle carries the N edge's label, and so
+//! on; the four seeds of a cell are exactly the four entries of TILES.
 //!
 //! # Palette mapping
 //!
@@ -43,10 +47,9 @@
 //! mapped onto the fixed 8-colour tess-core palette by nearest colour:
 //! white→0, blue→1, red→2, green→3, yellow→4, magenta→5, cyan→6,
 //! orange→7 — i.e. **magenta and pink both map to purple (5)** (one
-//! documented merge) and **white maps to the light-gray base (0)**, which
-//! the interior also uses (border strokes keep the two visually distinct
-//! in Pattern mode). `TILE_COLORS` keeps the exact 9-colour ids, so the
-//! batteries below are checked before the merge.
+//! documented merge) and **white maps to the light-gray base (0)**.
+//! `TILE_COLORS` keeps the exact 9-colour ids, so the batteries below
+//! are checked before the merge.
 //!
 //! # Frame
 //!
@@ -62,9 +65,9 @@
 //! * No grid translation period |t| ≤ 30 of the shipped patch: 2820
 //!   nonzero translations probed, none invariant over an overlap of ≥ 3
 //!   cells (mirrors the study's `translation_periods_100x100_le30 = []`).
-//! * Partition exactness: 5 pieces per cell, convex, CCW, areas summing
-//!   to 1 (clipped-area accounting in the coverage check catches overlap
-//!   as well as gaps).
+//! * Partition exactness: 4 triangles per cell, convex, CCW, areas
+//!   summing to 1 (clipped-area accounting in the coverage check catches
+//!   overlap as well as gaps).
 //! * The standard coverage trio inside the patch (an axis-aligned window
 //!   and a 0.6-scaled / 25°-rotated window, both verified exactly-once by
 //!   the emitter on 4400 samples each), determinism, and empty output
@@ -81,8 +84,8 @@
 //! 25×25 extension (exhaustive DFS, 27 nodes), while the author's 24×24
 //! does extend (226 nodes) — so locally-valid windows are a strict
 //! superset of the JR tiling language, and the only renderable patch is
-//! the author's 100×100. The single scale `W = 0.08` is a porting choice
-//! for the band encoding (documented above), not a claim of the paper.
+//! the author's 100×100. The 4-triangle partition is a rendering choice
+//! for the edge-colour encoding, not a claim of the paper.
 
 use tess_core::geometry::{BBox, Polygon, Vec2};
 use tess_core::params::{ParamSet, ParamSpec};
@@ -91,10 +94,6 @@ use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 use tess_core::TilingCategory;
 
 use crate::lattice::SIMILARITY_PARAMS;
-
-/// Band width as a fraction of the unit tile — the single documented
-/// scale of the edge-colour encoding (see module doc).
-const W: f64 = 0.08;
 
 /// Patch side in cells (the author's 100×100).
 const SIZE: usize = 100;
@@ -260,15 +259,14 @@ const PALETTE_OF: [u8; 9] = [0, 3, 6, 5, 4, 1, 7, 5, 2];
 
 #[cfg(test)]
 /// Reference placement of cell (0,0) (tile A, N=white E=green S=cyan W=green),
-/// default params, in world coordinates; piece order N, E, S, W, interior.
+/// default params, in world coordinates; triangle order N, E, S, W.
 /// Float-evaluated by the emitter (1e-9 round-trip against the
 /// JSON-derived model).
-const REF0: [(u8, u32, [f64; 8]); 5] = [
-    (1, 0, [-49.92, 49.92, -49.08, 49.92, -49.0, 50.0, -50.0, 50.0]),
-    (2, 3, [-49.08, 49.92, -49.08, 49.08, -49.0, 49.0, -49.0, 50.0]),
-    (3, 6, [-49.08, 49.08, -49.92, 49.08, -50.0, 49.0, -49.0, 49.0]),
-    (4, 3, [-49.92, 49.08, -49.92, 49.92, -50.0, 50.0, -50.0, 49.0]),
-    (0, 0, [-49.92, 49.08, -49.08, 49.08, -49.08, 49.92, -49.92, 49.92]),
+const REF0: [(u8, u32, [f64; 6]); 4] = [
+    (1, 0, [-49.5, 49.5, -49.0, 50.0, -50.0, 50.0]),
+    (2, 3, [-49.5, 49.5, -49.0, 49.0, -49.0, 50.0]),
+    (3, 6, [-49.5, 49.5, -50.0, 49.0, -49.0, 49.0]),
+    (4, 3, [-49.5, 49.5, -50.0, 50.0, -50.0, 49.0]),
 ];
 #[cfg(test)]
 const REF0_CELL: (i8, i8) = (0, 0);
@@ -277,15 +275,14 @@ const REF0_TILE: u8 = 0;
 
 #[cfg(test)]
 /// Reference placement of cell (99,99) (tile F, N=cyan E=red S=cyan W=orange),
-/// default params, in world coordinates; piece order N, E, S, W, interior.
+/// default params, in world coordinates; triangle order N, E, S, W.
 /// Float-evaluated by the emitter (1e-9 round-trip against the
 /// JSON-derived model).
-const REF1: [(u8, u32, [f64; 8]); 5] = [
-    (1, 6, [49.08, -49.08, 49.92, -49.08, 50.0, -49.0, 49.0, -49.0]),
-    (2, 2, [49.92, -49.08, 49.92, -49.92, 50.0, -50.0, 50.0, -49.0]),
-    (3, 6, [49.92, -49.92, 49.08, -49.92, 49.0, -50.0, 50.0, -50.0]),
-    (4, 7, [49.08, -49.92, 49.08, -49.08, 49.0, -49.0, 49.0, -50.0]),
-    (0, 0, [49.08, -49.92, 49.92, -49.92, 49.92, -49.08, 49.08, -49.08]),
+const REF1: [(u8, u32, [f64; 6]); 4] = [
+    (1, 6, [49.5, -49.5, 50.0, -49.0, 49.0, -49.0]),
+    (2, 2, [49.5, -49.5, 50.0, -50.0, 50.0, -49.0]),
+    (3, 6, [49.5, -49.5, 49.0, -50.0, 50.0, -50.0]),
+    (4, 7, [49.5, -49.5, 49.0, -49.0, 49.0, -50.0]),
 ];
 #[cfg(test)]
 const REF1_CELL: (i8, i8) = (99, 99);
@@ -299,25 +296,29 @@ fn cell_centre(x: usize, y: usize) -> Vec2 {
     Vec2::new(x as f64 - 49.5, 49.5 - y as f64)
 }
 
-/// The five tile-local pieces (tile centre at the origin, y up, all CCW):
-/// N, E, S, W edge bands of width W, then the interior. Each `W × W`
-/// corner square is split by its 45° miter diagonal between the two
-/// adjacent bands (each band owns the triangle of that corner).
-fn local_pieces() -> [(u8, [f64; 8]); 5] {
-    let a = -0.5 + W;
-    let b = 0.5 - W;
+/// The four tile-local triangles (tile centre at the origin, y up, all
+/// CCW): N, E, S, W corner-to-centre edge triangles. Each triangle owns
+/// the full outer edge of one side (the edge's two corner vertices are
+/// the triangle's other two vertices) plus the centre point (the
+/// polygon centroid), so the four triangles tile the unit square exactly
+/// along its two diagonals with no overlap, gap or seam: the center
+/// insertion never perturbs the outer ring, and shared edges between
+/// adjacent cells stay byte-identical (the edge's two corner vertices
+/// are computed by exactly the same float expressions in both cells).
+fn local_triangles() -> [(u8, [f64; 6]); 4] {
     [
-        (1, [a, b, b, b, 0.5, 0.5, -0.5, 0.5]),     // N band
-        (2, [b, b, b, -b, 0.5, -0.5, 0.5, 0.5]),    // E band
-        (3, [b, -b, a, -b, -0.5, -0.5, 0.5, -0.5]), // S band
-        (4, [a, -b, a, b, -0.5, 0.5, -0.5, -0.5]),  // W band
-        (0, [a, -b, b, -b, b, b, a, b]),            // interior
+        (1, [0.0, 0.0, 0.5, 0.5, -0.5, 0.5]),      // N triangle: centre, TR, TL
+        (2, [0.0, 0.0, 0.5, -0.5, 0.5, 0.5]),      // E triangle: centre, BR, TR
+        (3, [0.0, 0.0, -0.5, -0.5, 0.5, -0.5]),    // S triangle: centre, BL, BR
+        (4, [0.0, 0.0, -0.5, 0.5, -0.5, -0.5]),    // W triangle: centre, TL, BL
     ]
 }
 
 /// Jeandel–Rao 11-tile aperiodic Wang tiles — the author's canonical
-/// 100×100 patch, every cell partitioned into 5 decorated sub-polygons
-/// whose edge bands carry the Wang edge colours.
+/// 100×100 patch, every cell split into 4 corner-to-centre triangles
+/// whose outer edges carry the Wang edge colours (the standard Wang
+/// rendering: touching triangles carry the same palette colour exactly
+/// where the handoff's edge colours agree).
 pub struct JeandelRaoTiling;
 
 impl Tiling for JeandelRaoTiling {
@@ -330,7 +331,7 @@ impl Tiling for JeandelRaoTiling {
     }
 
     fn description(&self) -> &'static str {
-        "Jeandel-Rao aperiodic Wang tile set (arXiv:1506.06492): the author's canonical 100x100 patch, each cell partitioned into edge bands carrying the Wang edge colours (H 0/9900, V 0/9900; no period |t|<=30)."
+        "Jeandel-Rao aperiodic Wang tile set (arXiv:1506.06492): the author's canonical 100x100 patch, each cell split into 4 corner-to-centre triangles whose outer edges carry the Wang edge colours (H 0/9900, V 0/9900; no period |t|<=30)."
     }
 
     fn category(&self) -> TilingCategory {
@@ -371,10 +372,10 @@ impl Tiling for JeandelRaoTiling {
         }
 
         // Finite patch: the patch IS the covered domain, so exactly the
-        // cells whose unit square meets the region contribute their five
-        // pieces, and each emitted piece is kept only if it reaches the
-        // region.
-        let pieces = local_pieces();
+        // cells whose unit square meets the region contribute their
+        // four triangles, and each emitted triangle is kept only if it
+        // reaches the region.
+        let triangles = local_triangles();
         let mut tiles = Vec::new();
         for y in 0..SIZE {
             for x in 0..SIZE {
@@ -388,9 +389,9 @@ impl Tiling for JeandelRaoTiling {
                     continue;
                 }
                 let (n, e, s, w) = TILES[t];
-                let seeds = [n, e, s, w, 0u8];
-                for (i, (proto, off)) in pieces.iter().enumerate() {
-                    let pts: Vec<Vec2> = (0..4)
+                let seeds = [n, e, s, w];
+                for (i, (proto, off)) in triangles.iter().enumerate() {
+                    let pts: Vec<Vec2> = (0..3)
                         .map(|k| Vec2::new(c.x + off[2 * k], c.y + off[2 * k + 1]))
                         .collect();
                     let poly = Polygon::from_slice(&pts).transform(&map);
@@ -573,8 +574,10 @@ mod tests {
     }
 
     /// Partition mandate, measured on emitted tiles: a query over the
-    /// whole patch returns exactly 10000 * 5 pieces, every cell's five
-    /// piece areas sum to 1, and the emission is fully accounted for.
+    /// whole patch returns exactly 10000 * 4 triangles, every cell's
+    /// four triangle areas sum to 1, and the emission is fully
+    /// accounted for. ×4 (4 triangles per cell, up from 5 sub-polygons
+    /// in the band scheme); the area-sum is 1 per cell in both schemes.
     #[test]
     fn jr_partition_areas_sum_to_cell() {
         fn signature(proto: u8, seed: u32, pts: &[Vec2]) -> String {
@@ -593,21 +596,21 @@ mod tests {
             },
         );
         assert!(r.message.is_none(), "{:?}", r.message);
-        assert_eq!(r.tiles.len(), SIZE * SIZE * 5, "whole-patch piece count");
+        assert_eq!(r.tiles.len(), SIZE * SIZE * 4, "whole-patch triangle count");
         let mut pool: HashMap<String, usize> = HashMap::new();
         for t in &r.tiles {
             *pool.entry(signature(t.proto, t.seed, &t.poly.pts)).or_insert(0) += 1;
         }
-        let pieces = local_pieces();
+        let triangles = local_triangles();
         for y in 0..SIZE {
             for x in 0..SIZE {
                 let t = usize::from(PATCH[y * SIZE + x]);
                 let (n, e, s, w) = TILES[t];
-                let seeds = [n, e, s, w, 0u8];
+                let seeds = [n, e, s, w];
                 let c = cell_centre(x, y);
                 let mut sum = 0.0;
-                for (i, (proto, off)) in pieces.iter().enumerate() {
-                    let pts: Vec<Vec2> = (0..4)
+                for (i, (proto, off)) in triangles.iter().enumerate() {
+                    let pts: Vec<Vec2> = (0..3)
                         .map(|k| Vec2::new(c.x + off[2 * k], c.y + off[2 * k + 1]))
                         .collect();
                     let hit = pool.get_mut(&signature(
@@ -626,7 +629,7 @@ mod tests {
                 }
                 assert!(
                     (sum - 1.0).abs() < 1e-9,
-                    "cell ({x},{y}): 5 piece areas sum to {sum}, want 1"
+                    "cell ({x},{y}): 4 triangle areas sum to {sum}, want 1"
                 );
             }
         }
@@ -638,9 +641,9 @@ mod tests {
 
     /// Compare the generator's emission for one cell (region shrunk 1e-6
     /// inside its unit square: the neighbours' box tests exclude them, so
-    /// exactly the cell's five pieces are emitted, in piece order) against
-    /// the emitter's reference placement.
-    fn check_ref(cell: (i8, i8), tile: u8, want: &[(u8, u32, [f64; 8]); 5], label: &str) {
+    /// exactly the cell's four triangles are emitted, in triangle order)
+    /// against the emitter's reference placement.
+    fn check_ref(cell: (i8, i8), tile: u8, want: &[(u8, u32, [f64; 6]); 4], label: &str) {
         let p = ParamSet::default_for(JeandelRaoTiling.params());
         let (cx, cy) = cell;
         let c = cell_centre(usize::try_from(cx).unwrap(), usize::try_from(cy).unwrap());
@@ -655,20 +658,20 @@ mod tests {
             },
         );
         assert!(r.message.is_none(), "{label}: {:?}", r.message);
-        assert_eq!(r.tiles.len(), 5, "{label}: piece count");
+        assert_eq!(r.tiles.len(), 4, "{label}: triangle count");
         assert_eq!(
             PATCH[usize::try_from(cy).unwrap() * SIZE + usize::try_from(cx).unwrap()],
             tile,
             "{label}: tile id"
         );
         for (i, (got, w)) in r.tiles.iter().zip(want.iter()).enumerate() {
-            assert_eq!(got.proto, w.0, "{label} piece {i}: proto");
-            assert_eq!(got.seed, w.1, "{label} piece {i}: seed");
-            assert_eq!(got.poly.pts.len(), 4, "{label} piece {i}: vertex count");
+            assert_eq!(got.proto, w.0, "{label} triangle {i}: proto");
+            assert_eq!(got.seed, w.1, "{label} triangle {i}: seed");
+            assert_eq!(got.poly.pts.len(), 3, "{label} triangle {i}: vertex count");
             for (j, q) in got.poly.pts.iter().enumerate() {
                 assert!(
                     (q.x - w.2[2 * j]).abs() < 1e-9 && (q.y - w.2[2 * j + 1]).abs() < 1e-9,
-                    "{label} piece {i} vertex {j}: ({}, {}) != ({}, {})",
+                    "{label} triangle {i} vertex {j}: ({}, {}) != ({}, {})",
                     q.x,
                     q.y,
                     w.2[2 * j],
