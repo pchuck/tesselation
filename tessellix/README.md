@@ -116,7 +116,7 @@ wis 12-fold, girih 14-fold), **Aperiodic** (11: einstein family, CAP
 cut-and-project,
 Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
 (table), period-doubling, thue-morse, period-tripling), and
-**Nonperiodic** (12: limit-periodic rep-tiles, Hirschhorn,
+**Nonperiodic** (13: limit-periodic rep-tiles, Hirschhorn,
 pregnant-chair, tangram, octiamond reptile, pentiamond AC factor-2,
 pentiamond AC factor-3, pentiamond AD factor-2, pinwheel, the Darb-i
 Imam decagon documentary patch). Categories
