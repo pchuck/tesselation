@@ -19,6 +19,14 @@ Kaplan §3.5 design-element motifs (`hankin_motifs::build_cells_with_motifs`) on
 
 - Kaplan (2111), *Beyond the Islamic Geometric Standard*, §3.5 (design elements), §3.5.4 (extension operator; child angle θ′ = θ − π/n, erratum against the printed θ/2).
 
+The label is measured from geometry, not from colour: symmetry labels in
+this catalog come from the declared group of the emitted tile set (colour
+mode is a display layer), and what reduces the substrate's p6m to pmm is
+that the two hexagons carry different motif classes — a 24-segment
+rosette and a 12-segment extended star — a distinction visible in the
+segment multiset. Single-construction relatives keep the higher group
+(`hexagon` and `hankin-hex-two-point`, p6m).
+
 ## See also
 
 - Family doc (catalog table + build arcs): [docs/families/islamic.md](../families/islamic.md)

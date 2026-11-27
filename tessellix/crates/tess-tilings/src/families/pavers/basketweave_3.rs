@@ -25,6 +25,25 @@
 //! convention (cf. basketweave, M39), and the group probe below
 //! measures the symmetries of the true, finer lattice.
 //!
+//! # Why this bond reads as bands (review A6)
+//!
+//! The woven look of a classic basketweave needs 3:1 bricks: three of
+//! them side by side form a square block, and alternating those blocks
+//! by 90° gives the weave. With 2:1 dominoes three bricks side by side
+//! are a 3×2 rectangle, not a square, so the paver trade's "triple
+//! basketweave" is the course bond shipped here — three horizontal
+//! courses abutting one wall of vertical bricks, period 5 — and that
+//! pattern is banded by construction, at any aspect ratio of the brick.
+//! The 90°-alternating woven relative in this registry is `basketweave`
+//! (M39, p4g), whose clusters are square.
+//!
+//! The "15 per cell" figure is exact and pinned twice over: the group
+//! battery (`basketweave_3_wallpaper_group_is_pmm`) enumerates the 15
+//! dominoes of one cell in doubled integer coordinates — 9 horizontal
+//! (4×2 at x ∈ {0,4,8}, y ∈ {0,2,4}) plus 6 vertical (2×4 along y = 6) —
+//! and `lattice_area_identity_over_the_lattice_class` checks the
+//! bookkeeping 15 · 2 = 30 = |det ⟨(6,0),(0,5)⟩|.
+//!
 //! # Non-edge-to-edge note
 //!
 //! At brick scale a domino's long side is a 2-unit edge, so the raw

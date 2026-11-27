@@ -432,7 +432,7 @@ mod zellige_tests {
     use crate::zellige;
     use tess_core::geometry::{BBox, Vec2};
     use tess_core::params::ParamSet;
-    use tess_core::tiling::Tiling;
+    use tess_core::tiling::{Query, Tiling};
 
     fn v2(x: f64, y: f64) -> Vec2 {
         Vec2::new(x, y)
@@ -485,6 +485,149 @@ mod zellige_tests {
                 &p,
                 BBox::new(v2(-4.0, -3.0), v2(14.0, 12.0)),
             );
+        }
+    }
+
+    /// Review A4 asked which polygram the shipped star actually is: the
+    /// classic star-and-cross is sometimes drawn as the `{8/2}` compound
+    /// of two overlaid squares. The emitted star answers the question
+    /// directly, and the discriminator is the density: for `{8/n}` the
+    /// outline joins tip `i` to tip `i + n`, so in a `{8/3}` star the
+    /// notch between two consecutive tips is the crossing of the skip-3
+    /// chords — the notch lies exactly on the line through tips `i` and
+    /// `i + 3`, and measurably off the skip-2 line through `i` and
+    /// `i + 2` that the two-square construction would give. Equivalently
+    /// (and cross-checked here) the notch/tip radius ratio is
+    /// √((2−√2)/2) = 0.541196… for `{8/3}` against cos(π/4)/cos(π/8) =
+    /// 0.765368… for the `{8/2}` outline, and the tip apex angle is the
+    /// `{8/3}` vertex angle π(8 − 2·3)/8 = 45° (the `{8/2}` compound
+    /// closes at 90°). Pinned at the kissing default and at a gapped
+    /// radius: the whole one-parameter family keeps the density.
+    #[test]
+    fn star_cross_star_is_the_8_3_octagram_not_the_8_2_compound() {
+        use std::f64::consts::{FRAC_PI_4, PI};
+
+        // Notch/tip radius ratio of the `{8/3}` octagram outline
+        // (the crossing of the skip-3 chords): √((2−√2)/2).
+        let r83: f64 = ((2.0 - 2.0f64.sqrt()) / 2.0).sqrt(); // 0.541196…
+        // Notch/tip radius ratio of the `{8/2}` two-square outline:
+        // cos(π/4)/cos(π/8).
+        let r82: f64 = (FRAC_PI_4).cos() / (PI / 8.0).cos(); // 0.765368…
+        assert!(
+            (r83 - 0.5411961001461969).abs() <= 1e-12 && (r82 - 0.7653668647301796).abs() <= 1e-12,
+            "the two ratios must be the documented constants"
+        );
+
+        let t = zellige::StarCrossTiling;
+        for radius in [0.5_f64, 0.3] {
+            let mut p = ParamSet::default_for(t.params());
+            p.set(
+                zellige::STAR_RADIUS_ID,
+                tess_core::params::ParamValue::Float(radius),
+            );
+            let r = t.generate(
+                &p,
+                &Query {
+                    region: BBox::new(v2(-1.5, -1.5), v2(2.5, 2.5)),
+                },
+            );
+            // The star is the 16-gon whose vertex mean lands on the
+            // lattice point (0, 0); crosses centre on cell centres.
+            let mean = |pts: &Vec<Vec2>| {
+                let s: Vec2 = pts.iter().fold(Vec2::new(0.0, 0.0), |a, p| a + *p);
+                s * (1.0 / pts.len() as f64)
+            };
+            let star = r
+                .tiles
+                .iter()
+                .map(|tile| &tile.poly.pts)
+                .filter(|pts| pts.len() == 16)
+                .min_by(|a, b| mean(a).length().total_cmp(&mean(b).length()))
+                .expect("a 16-gon star centred near the origin")
+                .clone();
+
+            let c = mean(&star);
+            let rad = |q: Vec2| (q - c).length();
+            let rmax = star.iter().map(|q| rad(*q)).fold(f64::MIN, f64::max);
+            let rmin = star.iter().map(|q| rad(*q)).fold(f64::MAX, f64::min);
+            let tips: Vec<Vec2> = star
+                .iter()
+                .copied()
+                .filter(|q| rad(*q) > (rmax + rmin) / 2.0)
+                .collect();
+            let notches: Vec<Vec2> = star
+                .iter()
+                .copied()
+                .filter(|q| rad(*q) <= (rmax + rmin) / 2.0)
+                .collect();
+            assert_eq!(tips.len(), 8, "r={radius}: star must have 8 tips");
+            assert_eq!(notches.len(), 8, "r={radius}: star must have 8 notches");
+            assert!(
+                (rmax - radius).abs() <= 1e-12,
+                "r={radius}: tip radius {rmax} != the star_radius parameter"
+            );
+
+            // The radius-ratio form of the same discriminator.
+            let ratio = rmin / rmax;
+            assert!(
+                (ratio - r83).abs() <= 1e-12,
+                "r={radius}: notch/tip ratio {ratio} is not the {{8/3}} crossing ratio {r83}"
+            );
+            assert!(
+                (ratio - r82).abs() > 0.2,
+                "r={radius}: notch/tip ratio {ratio} would be the {{8/2}} two-square outline"
+            );
+
+            // Density test, index-free: every notch is the crossing of
+            // two skip-3 chords (perpendicular distance 0 from a tip→tip+3
+            // segment), while the nearest skip-2 chord (the two-square
+            // rule) stays a macroscopic distance away.
+            let line_dist = |a: Vec2, b: Vec2, q: Vec2| -> f64 {
+                let e = b - a;
+                let s = (q - a).dot(e) / e.dot(e);
+                if s < -0.01 || s > 1.01 {
+                    return f64::INFINITY;
+                }
+                e.cross(q - a).abs() / e.length()
+            };
+            for (k, notch) in notches.iter().enumerate() {
+                let d3 = (0..8)
+                    .map(|i| line_dist(tips[i], tips[(i + 3) % 8], *notch))
+                    .fold(f64::INFINITY, f64::min);
+                let d2 = (0..8)
+                    .map(|i| line_dist(tips[i], tips[(i + 2) % 8], *notch))
+                    .fold(f64::INFINITY, f64::min);
+                assert!(
+                    d3 <= 1e-12 * radius.max(1.0),
+                    "r={radius}: notch {k} is off every skip-3 chord by {d3} — not {{8/3}}"
+                );
+                assert!(
+                    d2 >= 0.1 * radius,
+                    "r={radius}: notch {k} sits on a skip-2 chord (d2 = {d2}) — that is {{8/2}}"
+                );
+            }
+
+            // Apex test: the angle of each tip between its two adjacent
+            // notches is the {8/3} vertex angle π(8 − 2·3)/8 = π/4.
+            for (k, &tip) in tips.iter().enumerate() {
+                let mut ordered = notches.clone();
+                ordered.sort_by(|p, q| {
+                    ((*p - tip).length()).total_cmp(&(*q - tip).length())
+                });
+                let ds: Vec<f64> = ordered.iter().map(|n| (*n - tip).length()).collect();
+                let (a, b) = (ordered[0] - tip, ordered[1] - tip);
+                let apex = (a.dot(b) / (a.length() * b.length())).clamp(-1.0, 1.0).acos();
+                assert!(
+                    (apex - FRAC_PI_4).abs() <= 1e-12,
+                    "r={radius}: tip {k} apex angle {apex} != π/4 (the {{8/3}} vertex angle)"
+                );
+                // and the two adjacent notches are the equidistant nearest
+                // pair (the star is a regular 8-pointed star).
+                assert!(
+                    (ds[0] - ds[1]).abs() <= 1e-12 && (ds[1] - ds[2]).abs() > 1e-9,
+                    "r={radius}: tip {k} adjacency not the two equidistant notches ({ds:?})"
+                );
+            }
         }
     }
 }

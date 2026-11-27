@@ -21,6 +21,23 @@
 //! midpoint, while rot60/rot120 about both centres, the 30° mirror,
 //! rot90 and the half-diagonal translation all fail as expected (motif
 //! battery kaplan-22a, `final_out.txt`).
+//!
+//! # Colour is not what makes it pmm (review A7)
+//!
+//! Symmetry labels in this catalog are measured from tile GEOMETRY and
+//! never from the colouring (`tess_core::symmetry` carries the group and
+//! lattice the tiling declares; the `Pattern` colour mode is a display
+//! decoration on top of it — the same group label is shown in every
+//! colour mode). So the pmm above does not depend on "the coloured rows
+//! counting": what the probe actually checks is that the A/B assignment
+//! is preserved, and A and B are different MOTIF CLASSES — a 24-segment
+//! rosette versus a 12-segment extended star — i.e. a geometric
+//! distinction visible in the emitted segment multiset, not a paint
+//! distinction. The single-class tilings are separate registry entries
+//! with the higher group: the plain regular hexagonal 6³ tiling
+//! (`hexagon`, p6m) and the single-construction Hankin hex weave
+//! (`hankin-hex-two-point`, p6m), where every hexagon carries the same
+//! motif.
 
 use tess_core::TilingCategory;
 use tess_core::geometry::Vec2;

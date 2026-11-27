@@ -7,6 +7,18 @@
 //!   arrangement, a 16-gon cross); for T < 1/2 a flat gap opens along each
 //!   cell edge and the cross grows to a 20-gon.
 //!
+//! Which polygram (review A4): the star is the `{8/3}` octagram by
+//! construction — each notch is the crossing of the density-3 chords, so
+//! it lies exactly on the line joining tips `i` and `i + 3` — hence
+//! notch/tip radius `√((2−√2)/2)` = 0.541196… and the `{8/3}` vertex
+//! angle 45° at every tip. It is NOT the `{8/2}` compound of two overlaid
+//! squares (notch/tip `cos(π/4)/cos(π/8)` = 0.765368…, 90° points), which
+//! is a different figure on the same square lattice: that one is the
+//! octagram core `pic-4-8-8` draws.
+//! `star_cross_star_is_the_8_3_octagram_not_the_8_2_compound` pins the
+//! skip-3 / skip-2 discrimination on the emitted tile, at the kissing
+//! radius and at a gapped one.
+//!
 //! Unlike the Archimedean tables, these tiles are concave polygons; the
 //! geometry engine's even-odd containment and Sutherland–Hodgman clipping
 //! handle them without special cases.

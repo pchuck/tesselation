@@ -55,6 +55,20 @@
 //! (`declared_symmetry_is_legal_and_matches_the_measured_lattice`)
 //! pins `LatticeKind::CenteredRectangular` here.
 //!
+//! Review A10 flagged the card for reading "p1 · centered" while the
+//! Wallpaper tab files it in the **oblique** section. Both are correct
+//! and they answer different questions: the card's lattice token is this
+//! tiling's *measured* translation-lattice kind, whereas the tab's
+//! section headings are `WallpaperGroup::conventional_lattice`, the
+//! textbook display mapping of the declared GROUP (p1/p2 oblique,
+//! pm/pg/pmm/pgg/pmg rectangular, cm/cmm centered, p4* square, p3*/p6*
+//! hexagonal) — the same mapping documents itself in `tess-core/src/
+//! symmetry.rs` and `browse::section_key`, which cite this tiling as the
+//! p1-on-a-centered-lattice example. A group's conventional lattice is
+//! the coarsest lattice the group constrains; a tiling may realize its
+//! translations on a more structured one, which is exactly what happens
+//! here.
+//!
 //! # Seeds and protos
 //!
 //! `proto` = cell index (the single hexomino); `seed` = orientation

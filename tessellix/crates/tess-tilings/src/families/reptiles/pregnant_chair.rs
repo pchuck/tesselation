@@ -474,15 +474,21 @@ fn seed_chairs(region: &BBox, depth: u32) -> Vec<Chair> {
 /// refinement steps: a proven orientation-agnostic superset. The
 /// rule tiles each frame exactly, so `r` further refinements of
 /// this chair fill exactly √3^`r`·shape(chair), and the shape is
-/// `R(m)(K0) + T` ⊂ T + [−6, 6]² (large: spans 6, 2√3) or
-/// T + [−2, 2]² (small: spans √3, 2) under every dihedral
-/// orientation. Scaling that loose shape box about the ring-scaled
-/// translation anchors the descendants' union exactly.
+/// `R(m)(K0) + T` with K0_L spanning 6 × 2√3 and K0_S spanning
+/// 2√3 × 2, every dihedral image inside T + [−6, 6]² (large) or
+/// T + [−2√3, 2√3]² (small: the portrait classes m ∈ {2, 6} put the
+/// span-2√3 axis on x). Hence half-extents 6√3^r and 2√3^(r+1).
+/// Review A8: the small branch used 2√3^r, which under-covered
+/// portrait small chairs by √3 — the cull then dropped the leaves
+/// that reach left of their anchor, and the app showed exactly that
+/// strip of holes at region left edges. Scaling that loose shape box
+/// about the ring-scaled translation anchors the descendants' union
+/// exactly.
 fn cover_box(c: &Chair, r: u32) -> BBox {
     let half = if c.kind == 0 {
         zf(zs3n((6, 0), r)) // 6√3^r
     } else {
-        zf(zs3n((2, 0), r)) // 2√3^r
+        zf(zs3n((0, 2), r)) // 2√3^(r+1)
     };
     let ax = zf(zs3n(c.tx, r));
     let ay = zf(zs3n(c.ty, r));
@@ -1187,6 +1193,50 @@ mod pregnant_chair_tests {
             &p,
             BBox::new(v2(-8.0, -6.0), v2(8.0, 6.0)),
         );
+    }
+
+    /// Review A8 regression: the descendant cull box for SMALL chairs
+    /// once used a half-extent of 2√3^`r`, but the portrait dihedral
+    /// classes (m ∈ {2, 6}) span 2√3 — √3 wider — so the cull dropped
+    /// the leaves reaching left of their anchor, and the app showed a
+    /// strip of background through at region LEFT edges. Pin coverage
+    /// on the regions that caught it (the same offsets and jitter the
+    /// diagnosis sweep used): a jittered 0.25 grid, every sample
+    /// inside some emitted chair.
+    #[test]
+    fn pregnant_chair_left_edge_covers() {
+        let t = PregnantChairTiling;
+        let mut p = ParamSet::default_for(t.params());
+        p.set(SCALE_ID, ParamValue::Float(1.0));
+        for &(w, xo) in &[
+            (12.0, -17.0),
+            (12.0, 13.0),
+            (20.0, -17.0),
+            (20.0, -4.0),
+            (40.0, -4.0),
+            (40.0, 13.0),
+        ] {
+            let region = BBox::new(v2(xo, -w / 2.0), v2(xo + w, w / 2.0));
+            let r = t.generate(&p, &Query { region });
+            assert!(r.message.is_none(), "w={w} xo={xo}: {:?}", r.message);
+            let step = 0.25;
+            let gx = (region.size().x / step).ceil() as i64;
+            let gy = (region.size().y / step).ceil() as i64;
+            for j in 0..gy {
+                for i in 0..gx {
+                    let pt = v2(
+                        region.min.x + (i as f64 + 0.5 + 0.618_034_0 * 0.37) * step,
+                        region.min.y + (j as f64 + 0.5 + 0.754_877_7 * 0.53) * step,
+                    );
+                    assert!(
+                        r.tiles.iter().any(|tl| tl.poly.contains(pt)),
+                        "w={w} xo={xo}: gap at ({}, {})",
+                        pt.x,
+                        pt.y
+                    );
+                }
+            }
+        }
     }
 
     /// The standard rotated + scaled coverage check.
