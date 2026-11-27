@@ -1883,12 +1883,11 @@ mod tests {
         // the isohedral class and attribution.
         assert_eq!(line2("pentagon-6"), "2-isohedral · Kershner 1968");
         // Cairo joins the Pentagon tab as the typed type-4 member.
-        // "type 4" is in the name, so the summary leads with the face
-        // config (no longer echoed by the name), the isohedral class,
-        // and the dual.
+        // "type 4" and the face config are in the name, so the summary
+        // leads with the isohedral class and the dual.
         assert_eq!(
             line2("cairo-pentagonal"),
-            "V3.3.4.3.4 · 1-isohedral · dual: snub square"
+            "1-isohedral · dual: snub square"
         );
         assert_eq!(line1("cairo-pentagonal"), "p4g · square");
         // Quasiperiodic: the symmetry line replaces "— · —" with the

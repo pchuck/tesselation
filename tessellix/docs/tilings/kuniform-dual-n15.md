@@ -1,4 +1,4 @@
-# Dual of 2-uniform (3⁶; 3³.4²)₂
+# 2-uniform dual (V3⁶; V3³.4²)₂
 
 `kuniform-dual-n15` · family [Two-Uniform](../families/kuniform.md) (`kuniform`) · wallpaper group `cmm` · centered lattice
 

@@ -96,7 +96,7 @@ pub fn cairo_pentagonal() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "cairo-pentagonal",
-        name: "Type 4 · Cairo",
+        name: "Type 4 · Cairo (V3.3.4.3.4)",
         description: "Cairo pentagonal tiling — Catalan dual of the snub square tiling (p4g). Tangential pentagons; the minimum-perimeter pentagonal tiling. Vertex figures 3.3.3 / 4.4.4.4. An integer-coordinate 'collinear' variant of the same pattern exists: two perpendicular flattened hexagonal tilings give pentagons with angles 143.13°/108.43°/108.43°/90°/90°, edges 4×√10+4, integral vertices, and a square 72-area cell.",
         lattice: [
             Vec2::new(L, 0.0),

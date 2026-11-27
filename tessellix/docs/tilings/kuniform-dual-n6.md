@@ -1,4 +1,4 @@
-# Dual of 2-uniform (3.4².6; 3.6.3.6)₂
+# 2-uniform dual (V3.4².6; V3.6.3.6)₂
 
 `kuniform-dual-n6` · family [Two-Uniform](../families/kuniform.md) (`kuniform`) · wallpaper group `cmm` · centered lattice
 

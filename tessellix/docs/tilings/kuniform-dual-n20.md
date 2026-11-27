@@ -1,4 +1,4 @@
-# Dual of 2-uniform (V3⁶; V3⁴.6)₁
+# 2-uniform dual (V3⁶; V3⁴.6)₁
 
 `kuniform-dual-n20` · family [Two-Uniform](../families/kuniform.md) (`kuniform`) · wallpaper group `p6` · hexagonal lattice
 

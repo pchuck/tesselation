@@ -1,4 +1,4 @@
-# Dual of 2-uniform (V3.6.3.6; V3².6²)
+# 2-uniform dual (V3.6.3.6; V3².6²)
 
 `kuniform-dual-pmm` · family [Two-Uniform](../families/kuniform.md) (`kuniform`) · wallpaper group `pmm` · rectangular lattice
 

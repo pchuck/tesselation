@@ -524,7 +524,7 @@ pub fn floret_pentagonal() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "floret-pentagonal",
-        name: "Type 5 · Floret",
+        name: "Type 5 · Floret (V3.3.3.3.6)",
         description: "Laves tiling V3.3.3.3.6 (floret pentagonal tiling) — chiral pentagons (four 120-degree and one 60-degree angle), dual of the snub trihexagonal tiling (p6).",
         lattice: [Vec2::new(2.5, -H), Vec2::new(2.0, 2.0 * H)],
         cells: vec![

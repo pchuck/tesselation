@@ -15,7 +15,7 @@ every dual is the face-centroid dual of an exact primal table.
 
 | id | face config | group | primal | notes |
 |---|---|---|---|---|
-| `cairo-pentagonal` | V3.3.4.3.4 | p4g | snub-square | "Type 4 · Cairo"; tangential pentagons; minimum-perimeter pentagonal tiling; the collinear-vertex variant (143.13/108.43/108.43/90/90°, edges 4×√10 + 4, integral vertices, square 72-area cell) is documented in the card description (M76) |
+| `cairo-pentagonal` | V3.3.4.3.4 | p4g | snub-square | "Type 4 · Cairo (V3.3.4.3.4)"; tangential pentagons; minimum-perimeter pentagonal tiling; the collinear-vertex variant (143.13/108.43/108.43/90/90°, edges 4×√10 + 4, integral vertices, square 72-area cell) is documented in the card description (M76) |
 | `tetrakis-square` | V4.8.8 | p4m | truncated-square | right isosceles triangles, 45°×8 at octagon centers; 4 proper pattern colors |
 | `rhombille` | V3.6.3.6 | p6m | trihexagonal | 60°/120° rhombi, 3 per cell; pattern 3-colors by orientation (cube illusion) |
 | `triakis-triangular` | V3.12.12 | p6m | truncated-hexagonal | 120°-apex isosceles triangles; triangular lattice of dodecagon centers, each cell split three ways |

@@ -1,4 +1,4 @@
-# Type 4 · Cairo
+# Type 4 · Cairo (V3.3.4.3.4)
 
 `cairo-pentagonal` · family [Laves / Catalan duals](../families/laves.md) (`laves`) · wallpaper group `p4g` · square lattice
 

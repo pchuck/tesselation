@@ -1,4 +1,4 @@
-# Dual of 2-uniform (3³.4²; 3².4.3.4)₂
+# 2-uniform dual (V3².4.3.4; V3³.4²)₂
 
 `kuniform-dual-n17` · family [Two-Uniform](../families/kuniform.md) (`kuniform`) · wallpaper group `pgg` · rectangular lattice
 

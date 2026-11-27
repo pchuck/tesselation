@@ -323,7 +323,7 @@ pub fn kuniform_dual_p6m() -> LatticeTiling {
     build(
         &kuniform::kuniform_p6m(),
         "kuniform-dual-p6m",
-        "Dual of 2-uniform (V3⁶; V3².6²)",
+        "2-uniform dual (V3⁶; V3².6²)",
         "Face-centroid dual of the 2-uniform (3⁶; 3².6²) tiling (p6m) — one regular hexagon plus six congruent quadrilaterals per cell.",
     )
     .expect("kuniform-p6m dual: non-degenerate lattice")
@@ -342,7 +342,7 @@ pub fn kuniform_dual_n18() -> LatticeTiling {
     build(
         &kuniform::kuniform_n18(),
         "kuniform-dual-n18",
-        "Dual of 2-uniform (V3⁶; V3².4.3.4)",
+        "2-uniform dual (V3⁶; V3².4.3.4)",
         "Face-centroid dual of the 2-uniform (3⁶; 3².4.3.4) tiling (p6m) — one regular hexagon plus six congruent pentagons per cell.",
     )
     .expect("kuniform-n18 dual: non-degenerate lattice")
@@ -364,7 +364,7 @@ pub fn kuniform_dual_n9() -> LatticeTiling {
     build(
         &kuniform::kuniform_n9(),
         "kuniform-dual-n9",
-        "Dual of 2-uniform (V3.4.6.4; V3².4.3.4)",
+        "2-unif dual (V3.4.6.4; V3².4.3.4)",
         "Face-centroid dual of the 2-uniform (3.4.6.4; 3².4.3.4) tiling (p6m) — six quadrilaterals and six pentagons per cell.",
     )
     .expect("kuniform-n9 dual: non-degenerate lattice")
@@ -383,7 +383,7 @@ pub fn kuniform_dual_n8() -> LatticeTiling {
     build(
         &kuniform::kuniform_n8(),
         "kuniform-dual-n8",
-        "Dual of 2-uniform (V3.4.6.4; V3³.4²)",
+        "2-uniform dual (V3.4.6.4; V3³.4²)",
         "Face-centroid dual of the 2-uniform (3.4.6.4; 3³.4²) tiling (p6m) — six quadrilaterals and six pentagons per cell.",
     )
     .expect("kuniform-n8 dual: non-degenerate lattice")
@@ -405,7 +405,7 @@ pub fn kuniform_dual_n5() -> LatticeTiling {
     build(
         &kuniform::kuniform_n5(),
         "kuniform-dual-n5",
-        "Dual of 2-uniform (V3.4.6.4; V3.4².6)",
+        "2-uniform dual (V3.4.6.4; V3.4².6)",
         "Face-centroid dual of the 2-uniform (3.4.6.4; 3.4².6) tiling (p6m) — six quadrilaterals and twelve congruent quadrilaterals per cell.",
     )
     .expect("kuniform-n5 dual: non-degenerate lattice")
@@ -427,7 +427,7 @@ pub fn kuniform_dual_n1() -> LatticeTiling {
     build(
         &kuniform::kuniform_n1(),
         "kuniform-dual-n1",
-        "Dual of 2-uniform (V4.6.12; V3.4.6.4)",
+        "2-uniform dual (V4.6.12; V3.4.6.4)",
         "Face-centroid dual of the 2-uniform (4.6.12; 3.4.6.4) tiling (p6m) — twelve 30°/60°/90° triangles plus six congruent quadrilaterals per cell.",
     )
     .expect("kuniform-n1 dual: non-degenerate lattice")
@@ -447,7 +447,7 @@ pub fn kuniform_dual_n13() -> LatticeTiling {
     build(
         &kuniform::kuniform_n13(),
         "kuniform-dual-n13",
-        "Dual of 2-uniform (V3⁶; V3².4.12)",
+        "2-uniform dual (V3⁶; V3².4.12)",
         "Face-centroid dual of the 2-uniform (3⁶; 3².4.12) tiling (p6m) — two regular hexagons plus twelve congruent quadrilaterals per cell.",
     )
     .expect("kuniform-n13 dual: non-degenerate lattice")
@@ -467,7 +467,7 @@ pub fn kuniform_dual_n20() -> LatticeTiling {
     build(
         &kuniform::kuniform_n20(),
         "kuniform-dual-n20",
-        "Dual of 2-uniform (V3⁶; V3⁴.6)₁",
+        "2-uniform dual (V3⁶; V3⁴.6)₁",
         "Face-centroid dual of the 2-uniform (3⁶; 3⁴.6)₁ tiling (p6) — six regular hexagons plus six congruent pentagons per cell.",
     )
     .expect("kuniform-n20 dual: non-degenerate lattice")
@@ -492,7 +492,7 @@ pub fn kuniform_dual_pmm() -> LatticeTiling {
     build(
         &kuniform::kuniform_pmm(),
         "kuniform-dual-pmm",
-        "Dual of 2-uniform (V3.6.3.6; V3².6²)",
+        "2-uniform dual (V3.6.3.6; V3².6²)",
         "Face-centroid dual of the 2-uniform (3.6.3.6; 3².6²) tiling (pmm) — one rhombus plus two congruent quadrilaterals per cell.",
     )
     .expect("kuniform-pmm dual: non-degenerate lattice")
@@ -520,7 +520,7 @@ pub fn kuniform_dual_n12() -> LatticeTiling {
     build(
         &kuniform::kuniform_n12(),
         "kuniform-dual-n12",
-        "Dual of 2-uniform (V3².6²; V3⁴.6)",
+        "2-uniform dual (V3².6²; V3⁴.6)",
         "Face-centroid dual of the 2-uniform (3².6²; 3⁴.6) tiling (cmm) — two quadrilaterals and two congruent pentagons per cell.",
     )
     .expect("kuniform-n12 dual: non-degenerate lattice")
@@ -544,7 +544,7 @@ pub fn kuniform_dual_n19() -> LatticeTiling {
     build(
         &kuniform::kuniform_n19(),
         "kuniform-dual-n19",
-        "Dual of 2-uniform (V3⁶; V3⁴.6)₂",
+        "2-uniform dual (V3⁶; V3⁴.6)₂",
         "Face-centroid dual of the 2-uniform (3⁶; 3⁴.6)₂ tiling (p6m) — six congruent pentagons plus two regular hexagons per cell.",
     )
     .expect("kuniform-n19 dual: non-degenerate lattice")
@@ -570,7 +570,7 @@ pub fn kuniform_dual_n2() -> LatticeTiling {
     build(
         &kuniform::kuniform_n2(),
         "kuniform-dual-n2",
-        "Dual of 2-uniform (3.12.12; 3.4.3.12)",
+        "2-unif dual (V3.4.3.12; V3.12.12)",
         "Face-centroid dual of the 2-uniform (3.12.12; 3.4.3.12) tiling (p4m) — four kites plus four isosceles triangles per cell.",
     )
     .expect("kuniform-n2 dual: non-degenerate lattice")
@@ -599,7 +599,7 @@ pub fn kuniform_dual_n16() -> LatticeTiling {
     build(
         &kuniform::kuniform_n16(),
         "kuniform-dual-n16",
-        "Dual of 2-uniform (3³.4²; 3².4.3.4)₁",
+        "2-uniform dual (V3².4.3.4; V3³.4²)₁",
         "Face-centroid dual of the 2-uniform (3³.4²; 3².4.3.4)₁ tiling (p4g) — eight plus four congruent pentagons per cell (the key-lock tiling).",
     )
     .expect("kuniform-n16 dual: non-degenerate lattice")
@@ -666,7 +666,7 @@ pub fn kuniform_dual_n4() -> LatticeTiling {
         build(
             &kuniform::kuniform_n4(),
             "kuniform-dual-n4",
-            "Dual of 2-uniform (4⁴; 3³.4²)₁",
+            "2-uniform dual (V4⁴; V3³.4²)₁",
             "Face-centroid dual of the 2-uniform (4⁴; 3³.4²)₁ tiling (cmm) — two pentagons plus one square per cell.",
         )
         .expect("kuniform-n4 dual: non-degenerate lattice"),
@@ -704,7 +704,7 @@ pub fn kuniform_dual_n3() -> LatticeTiling {
         build(
             &kuniform::kuniform_n3(),
             "kuniform-dual-n3",
-            "Dual of 2-uniform (4⁴; 3³.4²)₂",
+            "2-uniform dual (V4⁴; V3³.4²)₂",
             "Face-centroid dual of the 2-uniform (4⁴; 3³.4²)₂ tiling (cmm) — two pentagons plus two squares per cell.",
         )
         .expect("kuniform-n3 dual: non-degenerate lattice"),
@@ -747,7 +747,7 @@ pub fn kuniform_dual_n14() -> LatticeTiling {
         build(
             &kuniform::kuniform_n14(),
             "kuniform-dual-n14",
-            "Dual of 2-uniform (3⁶; 3³.4²)₁",
+            "2-uniform dual (V3⁶; V3³.4²)₁",
             "Face-centroid dual of the 2-uniform (3⁶; 3³.4²)₁ tiling (pmm) — two pentagons plus one hexagon per cell.",
         )
         .expect("kuniform-n14 dual: non-degenerate lattice"),
@@ -787,7 +787,7 @@ pub fn kuniform_dual_n15() -> LatticeTiling {
         build(
             &kuniform::kuniform_n15(),
             "kuniform-dual-n15",
-            "Dual of 2-uniform (3⁶; 3³.4²)₂",
+            "2-uniform dual (V3⁶; V3³.4²)₂",
             "Face-centroid dual of the 2-uniform (3⁶; 3³.4²)₂ tiling (cmm) — two pentagons plus two hexagons per cell.",
         )
         .expect("kuniform-n15 dual: non-degenerate lattice"),
@@ -820,7 +820,7 @@ pub fn kuniform_dual_n7() -> LatticeTiling {
         build(
             &kuniform::kuniform_n7(),
             "kuniform-dual-n7",
-            "Dual of 2-uniform (3.4².6; 3.6.3.6)₁",
+            "2-uniform dual (V3.4².6; V3.6.3.6)₁",
             "Face-centroid dual of the 2-uniform (3.4².6; 3.6.3.6)₁ tiling (pmm) — four quadrilaterals plus one rhombus per cell.",
         )
         .expect("kuniform-n7 dual: non-degenerate lattice"),
@@ -851,7 +851,7 @@ pub fn kuniform_dual_n6() -> LatticeTiling {
         build(
             &kuniform::kuniform_n6(),
             "kuniform-dual-n6",
-            "Dual of 2-uniform (3.4².6; 3.6.3.6)₂",
+            "2-uniform dual (V3.4².6; V3.6.3.6)₂",
             "Face-centroid dual of the 2-uniform (3.4².6; 3.6.3.6)₂ tiling (cmm) — four quadrilaterals plus one rhombus per cell.",
         )
         .expect("kuniform-n6 dual: non-degenerate lattice"),
@@ -889,7 +889,7 @@ pub fn kuniform_dual_n17() -> LatticeTiling {
         build(
             &kuniform::kuniform_n17(),
             "kuniform-dual-n17",
-            "Dual of 2-uniform (3³.4²; 3².4.3.4)₂",
+            "2-uniform dual (V3².4.3.4; V3³.4²)₂",
             "Face-centroid dual of the 2-uniform (3³.4²; 3².4.3.4)₂ tiling (pgg) — eight pentagons per cell.",
         )
         .expect("kuniform-n17 dual: non-degenerate lattice"),

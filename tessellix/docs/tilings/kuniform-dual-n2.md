@@ -1,4 +1,4 @@
-# Dual of 2-uniform (3.12.12; 3.4.3.12)
+# 2-unif dual (V3.4.3.12; V3.12.12)
 
 `kuniform-dual-n2` · family [Two-Uniform](../families/kuniform.md) (`kuniform`) · wallpaper group `p4m` · square lattice
 

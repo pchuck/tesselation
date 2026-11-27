@@ -83,7 +83,10 @@ pub(crate) const TILING: IhTiling = IhTiling {
     name: "IH1 hexagon (p1)",
     description: "IH1 incidence symbol\nKaplan isohedral template IH1 — the unconstrained asymmetric \
                   hexagon tiling, wallpaper group p1, three freeform (J) edge orbits; incidence \
-                  symbol over the 6³ honeycomb net with shaped edges as exact per-orbit polylines.",
+                  symbol over the 6³ honeycomb net with shaped edges as exact per-orbit polylines. \
+                  The Pattern fill is uniform by construction: the p1 action has a single aspect, \
+                  so every tile carries the same pattern index — the even fill is the mathematics, \
+                  not a rendering gap.",
     data: &DATA,
     shape_ids: &SHAPE_IDS,
     defaults: &DEFAULTS,

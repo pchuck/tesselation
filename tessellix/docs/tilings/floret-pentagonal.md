@@ -1,4 +1,4 @@
-# Type 5 · Floret
+# Type 5 · Floret (V3.3.3.3.6)
 
 `floret-pentagonal` · family [Laves / Catalan duals](../families/laves.md) (`laves`) · wallpaper group `p6` · hexagonal lattice
 

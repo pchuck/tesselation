@@ -151,7 +151,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "girih-quasiperiodic" => TilingClass {
             families: &["Islamic", "Quasiperiodic"],
-            method: Some("Darb-i Imam substitution"),
+            method: Some("Darb-i Imam"),
             inflation: Some("2φ³"),
             point_order: Some(10),
             prototiles: Some(3),
@@ -176,7 +176,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "andritz-bowtie-hexagon" => TilingClass {
             families: &["Islamic", "Quasiperiodic"],
-            method: Some("sigma-frame walk substitution"),
+            method: Some("σ-frame walk"),
             inflation: Some("φ²"),
             point_order: Some(10),
             prototiles: Some(2),
@@ -185,7 +185,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "andritz-bowtie-hexagon-10gon-1" => TilingClass {
             families: &["Islamic", "Quasiperiodic"],
-            method: Some("sigma-frame walk substitution"),
+            method: Some("σ-frame walk"),
             inflation: Some("φ²"),
             point_order: Some(10),
             prototiles: Some(3),
@@ -194,7 +194,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "andritz-bowtie-hexagon-10gon-2" => TilingClass {
             families: &["Islamic", "Quasiperiodic"],
-            method: Some("sigma-frame walk substitution"),
+            method: Some("σ-frame walk"),
             inflation: Some("3 + 2φ"),
             point_order: Some(10),
             prototiles: Some(3),
@@ -203,7 +203,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         },
         "andritz-bowtie-hexagon-10gon-3" => TilingClass {
             families: &["Islamic", "Quasiperiodic"],
-            method: Some("sigma-frame walk substitution"),
+            method: Some("σ-frame walk"),
             inflation: Some("φ⁴"),
             point_order: Some(10),
             prototiles: Some(3),
