@@ -599,8 +599,8 @@ pub fn kuniform_dual_n16() -> LatticeTiling {
     build(
         &kuniform::kuniform_n16(),
         "kuniform-dual-n16",
-        "Dual of 2-uniform (3³.4²; 3².4.3.4)",
-        "Face-centroid dual of the 2-uniform (3³.4²; 3².4.3.4) tiling (p4g) — eight plus four congruent pentagons per cell (the key-lock tiling).",
+        "Dual of 2-uniform (3³.4²; 3².4.3.4)₁",
+        "Face-centroid dual of the 2-uniform (3³.4²; 3².4.3.4)₁ tiling (p4g) — eight plus four congruent pentagons per cell (the key-lock tiling).",
     )
     .expect("kuniform-n16 dual: non-degenerate lattice")
 }

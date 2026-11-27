@@ -1,4 +1,4 @@
-//! Pentagon type 9 (Marjorie Rice, 1977) tiling — 2-isohedral, edge-to-edge,
+//! Pentagon type 9 (Marjorie Rice, 1976) tiling — 2-isohedral, edge-to-edge,
 //! wallpaper group pgg.
 //!
 //! Type 9 is one of the four families Rice discovered in 1976–77.  It is a
@@ -57,7 +57,7 @@ pub(crate) fn tile_area() -> f64 {
     141.0 * s3()
 }
 
-/// Pentagon type 9 (Rice 1977): 2-isohedral, 8 tiles per rectangular
+/// Pentagon type 9 (Rice 1976): 2-isohedral, 8 tiles per rectangular
 /// cell, wallpaper group pgg.
 pub fn spec() -> LatticeTiling {
     let s3 = s3();
@@ -126,7 +126,7 @@ pub fn spec() -> LatticeTiling {
     LatticeTiling {
         id: "pentagon-9",
         name: "Pentagon type 9 (Rice)",
-        description: "Pentagonal tiling of type 9 (Marjorie Rice, 1977): A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; edge-to-edge, 2-isohedral (seeds 0/1), 8 tiles per rectangular cell, wallpaper group pgg (two perpendicular glide families squaring to the primitive translations, no mirrors).",
+        description: "Pentagonal tiling of type 9 (Marjorie Rice, 1976): A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; edge-to-edge, 2-isohedral (seeds 0/1), 8 tiles per rectangular cell, wallpaper group pgg (two perpendicular glide families squaring to the primitive translations, no mirrors).",
         lattice: [Vec2::new(-30.0, 6.0 * s3), Vec2::new(-141.0 / 7.0, -235.0 / 7.0 * s3)],
         cells: vec![
             Cell { poly: t1, seed: 0 },

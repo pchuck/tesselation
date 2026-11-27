@@ -22,9 +22,9 @@ shipped hirschhorn member's type-8 label (it is type 1).
 | `pentagon-13` | Rice pentagon, type 13 (1977, A = 120°) | p2 | 2-isohedral chiral pair (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3); long side split into two collinear a-edges (M49) |
 | `pentagon-14` | Stein pentagon, type 14 (completely determined) | p2 | 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, exact Q(√57, β) with β = √((11√57−25)/8); long sides split into two collinear unit fine edges — 7/5/6-vertex cells (M50) |
 | `pentagon-15` | Mann pentagon, type 15 (MMVD 2015) | pgg | 3-isohedral (seeds 0/1/2), 12 tiles per rectangular cell = 4 congruent 3-tile blocks, exact Q(√3) (a = 2, b = d = e = 1, c = √(2+√3), all vertices on the (p+q√3)/2 grid); non-edge-to-edge — 4 T-split edges per cell (M55) |
-| `pentagon-9` | Rice pentagon, type 9 (Rice 1977) | pgg | 2-isohedral (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3) (A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; vertices on the (Z+Z√3)/7 grid); edge-to-edge, vertex stars {A,A,C}, {D,E,E}, {B,B,C,D}; two perpendicular glide families squaring to the primitive translations, no mirrors (M59) |
-| `pentagon-11` | Rice pentagon, type 11 (Rice 1977) | pgg | 2-isohedral (seeds 0/1, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile with bounded-precision floats (A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, a = r = 0.0946641…, b = s = 1.0568030…, c = 1, d = e = 1 + 2r — the family conditions 2a + c = d = e, 2B + C = 360°, C + E = 180° hold to ~1e-12); non-edge-to-edge — every d-side carries one c-side and two a-sides; vertex stars {C,B,B}, {A,A,180°}, {D,D,E}, {C,E,180°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M60) |
-| `pentagon-12` | Rice pentagon, type 12 (Rice 1977) | pgg | 2-isohedral (seeds 0/1: {0,3,4,7} / {1,2,5,6}, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile closed to exact Q(√3) surds at the shipped B = 150° member (A = 90°, B = 150°, C = 60°, D = E = 120°, a = 1, b = √3, c = 1, d = 2, e = 1 — the family conditions 2a = d = c + e, 2B + C = 360° hold to ~1e-12); non-edge-to-edge — every d-side splits at its exact midpoint into two unit halves, all other sides full-side matched (b↔b, c↔c, e↔e); vertex stars {90°,90°,180°}, {60°,120°,180°}, {120°,120°,120°}, {60°,150°,150°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M62) |
+| `pentagon-9` | Rice pentagon, type 9 (Rice 1976) | pgg | 2-isohedral (seeds 0/1), 8 tiles per rectangular cell, exact Q(√3) (A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; vertices on the (Z+Z√3)/7 grid); edge-to-edge, vertex stars {A,A,C}, {D,E,E}, {B,B,C,D}; two perpendicular glide families squaring to the primitive translations, no mirrors (M59) |
+| `pentagon-11` | Rice pentagon, type 11 (Rice 1976) | pgg | 2-isohedral (seeds 0/1, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile with bounded-precision floats (A = 90°, B = 156°, C = 48°, D = 114°, E = 132°, a = r = 0.0946641…, b = s = 1.0568030…, c = 1, d = e = 1 + 2r — the family conditions 2a + c = d = e, 2B + C = 360°, C + E = 180° hold to ~1e-12); non-edge-to-edge — every d-side carries one c-side and two a-sides; vertex stars {C,B,B}, {A,A,180°}, {D,D,E}, {C,E,180°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M60) |
+| `pentagon-12` | Rice pentagon, type 12 (Rice 1976) | pgg | 2-isohedral (seeds 0/1: {0,3,4,7} / {1,2,5,6}, each orbit mixing both chiralities), 8 tiles per rectangular cell, runtime-computed prototile closed to exact Q(√3) surds at the shipped B = 150° member (A = 90°, B = 150°, C = 60°, D = E = 120°, a = 1, b = √3, c = 1, d = 2, e = 1 — the family conditions 2a = d = c + e, 2B + C = 360° hold to ~1e-12); non-edge-to-edge — every d-side splits at its exact midpoint into two unit halves, all other sides full-side matched (b↔b, c↔c, e↔e); vertex stars {90°,90°,180°}, {60°,120°,180°}, {120°,120°,120°}, {60°,150°,150°}; two perpendicular glide families squaring to w1 and −w2, no mirrors (M62) |
 | `pentagon-10` | James pentagon, type 10 (James 1975) | cmm | 3-isohedral (seeds 0/1/2: {0,2}, {1,3}, {4,5}), 6 tiles per centered-rectangular cell w1 = (3,3), w2 = (−2,5), det 21 = 6 × area (7/2) (M76 basis; the M63 cell basis (5,−2)/(8,1) spans the same lattice); exact at the shipped B = 90° member (A = B = E = 90°, C = D = 135°, a = b = 2, c = e = 1, d = √2; family a = b = c + e, A = 90°, B + E = 180° with d² = c² + e²); non-edge-to-edge — both length-2 sides split at their exact midpoints into two unit halves (integer T-junctions), all other sides full-side matched (c↔c, d↔d, e↔e); vertex figures {90°,135°,135°} 71×, {90°,90°,180°} 50×, {90°,90°,90°,90°} 13× (134 interior vertices); group cmm by exact audit — mirrors x+y = 3k and x−y = 7k, half-turn at the origin, genuine glide g = T(5,−2)∘R2 with g² = (7,−7) (axis x+y = 3/2, no pure-reflection conjugate), R90 negative; centered rectangular lattice (index-2 sublattice Z(3,3)+Z(−7,7) with centre (−2,5) ∈ L∖L', no orthogonal Z-basis for L) — cmm, not pmm (M63) |
 | `pentagon-3` | Reinhardt pentagon, type 3 (family 3, 1918) | p2 | 1-isohedral (single orbit), 2 tiles per oblique cell, exact Q(√3) (pinned integral member (a,b,c,d,e) = (2,2,1,4,3): A = B = C = D = 120°, E = 60° — a = b, d = c + e, B + E = 180°; area 5√3); non-edge-to-edge — only the d = 4 sides split, at their exact midpoints between two length-2 (a/b) partner sides, all other sides full-side matched; vertex stars {60°,120°,180°} (A/E-type) and {120°,120°,120°} (B/C/D-type); chiral prototile, one chirality used — the classical three-tile type-3 pinwheel admits no periodic cell for this member (complete det-15 closure search + norm-form x²+3y²=120), so the shipped structure is the discovered minimal 2-tile p2 cell, four half-turn classes d/2 + Λ/2, no mirrors or glides (M64) |
 | `pentagon-6` | Kershner pentagon, type 6 (1968) | p2 | 2-isohedral (seeds 0/1, orbits {0,1}/{2,3}), 4 tiles per oblique cell w1 = (1, 2√3), w2 = (−3, √3) (det = 7√3 = 4 × area 7√3/4), exact Q(√3) at the unique 30°-grid-pinnable member (A = B = D = E = 120°, C = 60°, a = d = e = 1, b = c = 2; A = 2C, C + E = 180°); edge-to-edge — all 20 stored sides exactly once reverse-glued under an involution (4 in-unit pairs + 6 across ±w1, ±w2, ±(w1−w2); census a-a:1, a-d:2, b-b:1, b-c:2, c-c:1, d-e:2, e-e:1), 20 directed sides → 18 torus classes with one double-covered arc; vertex stars {60°,60°,120°,120°} 340 + {120°,120°,120°} 682 in the 787-tile window (1022 of 1286 interior vertices, all 360°); p2: half-turns one coset c0 + Λ/2 (c0 = (1/2, 0)), no mirrors — 22-ray search, 0 genuine, no candidate direction normalizes Λ; achiral prototile congruent to the floret-pentagonal tile (one pentagon, two tilings: p2 2-iso vs floret p6 1-iso) (M74) |
@@ -52,12 +52,12 @@ briefs cite them as `§N`.
 > census's first exact-Q(√57) surd field; type 15 (Mann/McLoud-Mann/
 > Von Derau 2015) third: a 12-tile rectangular unit in exact Q(√3) —
 > the arc's first pgg — with two perpendicular glide families; type 9
-> (Rice 1977) fourth: an 8-tile rectangular unit in exact Q(√3), the
+> (Rice 1976) fourth: an 8-tile rectangular unit in exact Q(√3), the
 > arc's second pgg and its first edge-to-edge pentagon-level Rice type;
-> type 11 (Rice 1977) fifth: the arc's first non-surd instance — a
+> type 11 (Rice 1976) fifth: the arc's first non-surd instance — a
 > bounded-precision 8-tile rectangular unit pinned to the reference
 > animation's B = 156° member of Rice's family, and the arc's first
-> non-edge-to-edge pgg; type 12 (Rice 1977) sixth: the arc's first
+> non-edge-to-edge pgg; type 12 (Rice 1976) sixth: the arc's first
 > surd-pinnable Rice instance — the B = 150° member of the
 > 2a = d = c + e family closes to exact Q(√3) (a = 1, b = √3, c = 1,
 > d = 2, e = 1), 8-tile rectangular unit, group pgg, non-edge-to-edge
@@ -256,7 +256,7 @@ briefs cite them as `§N`.
 - **Status:** committed (M55). 54 tilings, 353 tests at the commit.
 
 
-### 18. Pentagon type 9 (Rice 1977) ✅ (M59)
+### 18. Pentagon type 9 (Rice 1976) ✅ (M59)
 
 - **Motif:** Rice's type-9 convex pentagonal tiling — a
   two-parameter family with b = c = d = e and 2A + C = D + 2E = 360°.
@@ -311,7 +311,7 @@ briefs cite them as `§N`.
 
 
 
-### 20. Pentagon type 11 (Rice 1977) ✅ (M60)
+### 20. Pentagon type 11 (Rice 1976) ✅ (M60)
 
 - **Motif:** Rice's type-11 convex pentagonal tiling — the
   two-parameter family with 2a + c = d = e, A = 90°, 2B + C = 360°,
@@ -383,7 +383,7 @@ briefs cite them as `§N`.
 - **Status:** committed (M60). 57 tilings, 371 tests at the commit.
 
 
-### 21. Pentagon type 12 (Rice 1977) ✅ (M62)
+### 21. Pentagon type 12 (Rice 1976) ✅ (M62)
 
 - **Motif:** Rice's type-12 convex pentagonal tiling — the
   two-parameter family with 2a = d = c + e, A = 90°, 2B + C = 360°

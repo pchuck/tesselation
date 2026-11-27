@@ -1,4 +1,4 @@
-//! Pentagon type 12 (Rice, 1977) tiling — 2-isohedral,
+//! Pentagon type 12 (Rice, 1976) tiling — 2-isohedral,
 //! non-edge-to-edge at the pentagon level, wallpaper group pgg.
 //!
 //! Type 12 is one of the four pentagon families discovered by Marjorie
@@ -135,7 +135,7 @@ fn cell_polygons() -> [Vec<Vec2>; 8] {
     })
 }
 
-/// Pentagon type 12 (Rice 1977): 2-isohedral, 8 tiles per rectangular
+/// Pentagon type 12 (Rice 1976): 2-isohedral, 8 tiles per rectangular
 /// cell, wallpaper group pgg, non-edge-to-edge (each d-side is split at
 /// its midpoint between two unit sides).
 pub fn spec() -> LatticeTiling {
@@ -147,7 +147,7 @@ pub fn spec() -> LatticeTiling {
     LatticeTiling {
         id: "pentagon-12",
         name: "Pentagon type 12 (Rice)",
-        description: "Pentagonal tiling of type 12 (Rice, 1977): A = 90°, B = 150°, C = 60°, D = 120°, E = 120°, sides a = 1, b = √3, c = 1, d = 2, e = 1 (2a = d = c + e); non-edge-to-edge (each d-side is split at its midpoint between two unit sides), 2-isohedral (seeds 0/1), 8 tiles per rectangular cell, wallpaper group pgg (two perpendicular glide families with axes along the lattice directions, squaring to w1 and −w2, no mirrors).",
+        description: "Pentagonal tiling of type 12 (Rice, 1976): A = 90°, B = 150°, C = 60°, D = 120°, E = 120°, sides a = 1, b = √3, c = 1, d = 2, e = 1 (2a = d = c + e); non-edge-to-edge (each d-side is split at its midpoint between two unit sides), 2-isohedral (seeds 0/1), 8 tiles per rectangular cell, wallpaper group pgg (two perpendicular glide families with axes along the lattice directions, squaring to w1 and −w2, no mirrors).",
         lattice: [
             Vec2::new(-2.598076211353316, -4.5),
             Vec2::new(3.4641016151377544, -2.0),

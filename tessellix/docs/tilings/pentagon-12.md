@@ -2,7 +2,7 @@
 
 `pentagon-12` · family [Pentagon Types](../families/pentagons.md) (`pentagons`) · wallpaper group `pgg` · rectangular lattice
 
-pentagonal (Rice 1977): A = 90°, B = 150°, C = 60°, D = E = 120°, 2a = d = c + e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side is split at its exact midpoint into two unit halves), two perpendicular glide families squaring to w1 and −w2
+pentagonal (Rice 1976): A = 90°, B = 150°, C = 60°, D = E = 120°, 2a = d = c + e (reference instance with c = 1); 2-isohedral, 8 tiles per rectangular cell, non-edge-to-edge (every d-side is split at its exact midpoint into two unit halves), two perpendicular glide families squaring to w1 and −w2
 
 ## See also
 

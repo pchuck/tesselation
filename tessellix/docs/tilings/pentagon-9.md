@@ -2,7 +2,7 @@
 
 `pentagon-9` · family [Pentagon Types](../families/pentagons.md) (`pentagons`) · wallpaper group `pgg` · rectangular lattice
 
-pentagonal (Rice 1977): A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; 2-isohedral, 8 tiles per rectangular cell, two perpendicular glide families squaring to the primitive translations
+pentagonal (Rice 1976): A = C = 120°, cos B = 1/7, cos D = 23/98, cos E = −11/14, a = 6, b = c = d = e = 14; 2-isohedral, 8 tiles per rectangular cell, two perpendicular glide families squaring to the primitive translations
 
 ## See also
 

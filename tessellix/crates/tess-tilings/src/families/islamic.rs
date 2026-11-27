@@ -161,7 +161,7 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             ..TilingClass::EMPTY
         },
         "girih-decagon-patch" => TilingClass {
-            families: &["Islamic"],
+            families: &["Islamic", "Nonperiodic"],
             method: Some("Darb-i Imam substitution (finite patch)"),
             inflation: Some("2φ³"),
             point_order: Some(10),
@@ -169,7 +169,11 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             tile_set: Some("girih decagon + bow-tie closed-cluster infill"),
             source: Some("Lu & Steinhardt"),
             year: Some("2007"),
-            translational: Some("finite patch"),
+            // "finite patch (non-periodic)" so the Nonperiodic-tab card
+            // line states the finite-patch character while satisfying
+            // the tess-tui invariant that a group-less card names its
+            // translational character (review E17/A12).
+            translational: Some("finite patch (non-periodic)"),
             ..TilingClass::EMPTY
         },
         "andritz-bowtie-hexagon" => TilingClass {

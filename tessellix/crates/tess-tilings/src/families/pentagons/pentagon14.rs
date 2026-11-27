@@ -19,7 +19,14 @@
 //! D-class poses, the two M-class poses, and the two salmon poses) with
 //! wallpaper group **p2** (orbifold 2222). The 2-fold centre
 //! `O = (β + p/2, q/2)` maps each class onto itself, so the group stays
-//! p2 with the classes distinguished (seeds 0, 1, 2).
+//! p2 with the classes distinguished (seeds 0, 1, 2). The p2 label is
+//! exact, not a colouring convention: the translation lattice is a
+//! generic oblique lattice (`w1·w2 ≠ 0`, `|w1| ≠ |w2|`), so its
+//! normaliser in O(2) is {I, −I} and no mirror or glide can normalise
+//! the translations at all — pinned by
+//! `pentagon_14_lattice_rules_out_pg_glide_groups` (the "type 14 is
+//! pgg" claim would require a rectangular lattice; the pgg-family
+//! Rice types are 9–13, and Stein's tiling is unique).
 //!
 //! Not edge-to-edge at the pentagon level: every long side (length 2) is
 //! split into two collinear unit fine edges, giving 7-vertex D-class
@@ -159,7 +166,7 @@ pub fn spec() -> LatticeTiling {
     LatticeTiling {
         id: "pentagon-14",
         name: "Pentagon type 14 (Stein)",
-        description: "Pentagonal tiling of type 14 (Stein 1985): 2a = 2c = d = e (a = c = 1, d = e = 2, b = βa), A = 90°, 2B + C = 360°, C + E = 180°; 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, long sides split into two collinear unit fine edges.",
+        description: "Pentagonal tiling of type 14 (Stein 1985): 2a = 2c = d = e (a = c = 1, d = e = 2, b = βa), A = 90°, 2B + C = 360°, C + E = 180°; 3-isohedral (seeds 0/1/2), 6 tiles per oblique cell, long sides split into two collinear unit fine edges. Wallpaper group p2 is exact: the generic oblique lattice admits no mirrors or glides.",
         lattice: [w1(), w2()],
         cells: vec![
             Cell { poly: d0, seed: 0 },

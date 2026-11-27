@@ -251,8 +251,10 @@ mod tests {
         //   secondaries), Wallpaper 17 (the group
         //   catalog — one card per represented group; M85 completed it),
         //   Isohedral 5 (the Kaplan IH instances, primary since the
-        //   2026-11-24 tab chore), PentagonTypes 17, Islamic 30,
-        //   Arrangements 8, Quasiperiodic 23, Aperiodic 12, Nonperiodic 11.
+        //   2026-11-24 tab chore), PentagonTypes 17, Islamic 29,
+        //   Arrangements 8, Quasiperiodic 23, Aperiodic 12, Nonperiodic 12
+        //   (girih-decagon-patch moved Islamic -> Nonperiodic, review
+        //   E17/A12: a finite patch must not render a wallpaper group).
         // Membership census 187 = 166 primaries + 21 secondaries
         // (3 regular Laves + 5 isohedral->Laves + 9 Wallpaper
         // + 2 typed PentagonTypes: cairo-pentagonal (type 4)
@@ -428,7 +430,7 @@ mod tests {
         let sizes: Vec<usize> = tabs.iter().map(|t| t.cards.len()).collect();
         assert_eq!(
             sizes,
-vec![11, 20, 33, 17, 15, 5, 30, 8, 23, 11, 12],
+vec![11, 20, 33, 17, 15, 5, 29, 8, 23, 11, 13],
             "per-tab census (update when adding tilings)"
         );
 assert_eq!(r.len(), 166, "built-in tiling count (update when adding tilings)");

@@ -118,7 +118,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             method: Some("paver bond"),
             tile_set: Some("2:1 dominoes"),
             cell_content: Some("2 dominoes per cell"),
-            chirality: Some("homochiral"),
             ..TilingClass::EMPTY
         },
         "basketweave-3" => TilingClass {
@@ -140,7 +139,6 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             method: Some("paver bond"),
             tile_set: Some("2:1 dominoes"),
             cell_content: Some("2 dominoes per cell"),
-            chirality: Some("homochiral"),
             ..TilingClass::EMPTY
         },
         _ => return None,

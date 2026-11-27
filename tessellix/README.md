@@ -106,7 +106,7 @@ secondary members), **Isohedral** (5: Kaplan IH templates — IH1/IH6/IH7
 hexagons on the 6³ net, IH27/IH29 pentagons on the Cairo net; the
 two Cairo-net templates are isohedral variants — deliberate edge
 deformations, not pentagon types),
-**Islamic** (30), **Bonds & dissections** (8),
+**Islamic** (29), **Bonds & dissections** (8),
 **Quasiperiodic** (23: Penrose family, Ammann–Beenker (both variants),
 Stampfli, shield, golden bee, golden triangle, golden rhomboid,
 fractalizing 3.12.12, girih Darb-i Imam, GLB binary n=7, Andritz
@@ -118,7 +118,8 @@ Taylor-Socolar, Jeandel-Rao 11-tile Wang tiles, half-hex, domino
 (table), period-doubling, thue-morse, period-tripling), and
 **Nonperiodic** (12: limit-periodic rep-tiles, Hirschhorn,
 pregnant-chair, tangram, octiamond reptile, pentiamond AC factor-2,
-pentiamond AC factor-3, pentiamond AD factor-2, pinwheel). Categories
+pentiamond AC factor-3, pentiamond AD factor-2, pinwheel, the Darb-i
+Imam decagon documentary patch). Categories
 are declared on the tiling (never derived from its symmetry), so the
 grouping is honest about what the mathematics distinguishes; see
 `tess-core/src/category.rs`.

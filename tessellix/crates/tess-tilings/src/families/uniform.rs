@@ -136,7 +136,10 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             uniformity: Some("semiregular"),
             dual_of: Some("floret pentagonal"),
             k: Some(1),
-            chirality: Some("homochiral"),
+            // The prototiles (regular triangle/hexagon) are achiral, so
+            // "homochiral" would say nothing: the chirality here is the
+            // tiling's own — no reflection symmetry (p6, not p6m).
+            chirality: Some("chiral"),
             ..TilingClass::EMPTY
         },
         _ => return None,

@@ -2281,8 +2281,8 @@ pub fn kuniform_n16() -> LatticeTiling {
     ]);
     LatticeTiling {
         id: "kuniform-n16",
-        name: "2-uniform (3³.4²; 3².4.3.4)",
-        description: "2-uniform tiling (3³.4²; 3².4.3.4) — staggered square rows and triangle bands in the snub-square-related 4-isohedral form, diagonal glide mirrors (p4g).",
+        name: "2-uniform (3³.4²; 3².4.3.4)₁",
+        description: "2-uniform tiling (3³.4²; 3².4.3.4)₁ — staggered square rows and triangle bands in the snub-square-related 4-isohedral form, diagonal glide mirrors (p4g).",
         lattice: [
             Vec2::new(3.0 / 2.0 + H, -(3.0 / 2.0 + H)),
             Vec2::new(3.0 / 2.0 + H, 3.0 / 2.0 + H),

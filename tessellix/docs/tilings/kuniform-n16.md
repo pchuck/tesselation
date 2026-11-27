@@ -1,4 +1,4 @@
-# 2-uniform (3³.4²; 3².4.3.4)
+# 2-uniform (3³.4²; 3².4.3.4)₁
 
 `kuniform-n16` · family [Two-Uniform](../families/kuniform.md) (`kuniform`) · wallpaper group `p4g` · square lattice
 

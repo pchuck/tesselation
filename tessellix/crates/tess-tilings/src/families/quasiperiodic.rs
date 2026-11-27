@@ -124,7 +124,12 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             families: &["Quasiperiodic"],
             method: Some("substitution"),
             inflation: Some("φ"),
-            point_order: Some(6),
+            // No point_order: the shipped tiling is the single-seed 60°
+            // wedge grown from R0 (see golden_rhomboid.rs "Covered
+            // domain") — no nontrivial rotation maps it to itself, so a
+            // 6-fold badge would overstate the geometry (review A5).
+            // The substitution's 18 anchored frames are C6-equivariant,
+            // but equivariant frames are not a realized symmetry.
             source: Some("Andritz"),
             translational: Some("quasiperiodic"),
             ..TilingClass::EMPTY

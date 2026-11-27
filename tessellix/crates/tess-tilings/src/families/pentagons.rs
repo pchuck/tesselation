@@ -58,10 +58,10 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
         "pentagon-6" => pentagon(&["Pentagon"], 6, 2, "Kershner", "1968", Some("achiral")),
         "pentagon-7" => pentagon(&["Pentagon"], 7, 2, "Kershner", "1968", Some("mixed")),
         "pentagon-8" => pentagon(&["Pentagon"], 8, 2, "Kershner", "1968", Some("mixed")),
-        "pentagon-9" => pentagon(&["Pentagon"], 9, 2, "Rice", "1977", None),
+        "pentagon-9" => pentagon(&["Pentagon"], 9, 2, "Rice", "1976", None),
         "pentagon-10" => pentagon(&["Pentagon"], 10, 3, "James", "1975", None),
-        "pentagon-11" => pentagon(&["Pentagon"], 11, 2, "Rice", "1977", None),
-        "pentagon-12" => pentagon(&["Pentagon"], 12, 2, "Rice", "1977", None),
+        "pentagon-11" => pentagon(&["Pentagon"], 11, 2, "Rice", "1976", None),
+        "pentagon-12" => pentagon(&["Pentagon"], 12, 2, "Rice", "1976", None),
         "pentagon-13" => pentagon(&["Pentagon"], 13, 2, "Rice", "1977", Some("mixed")),
         "pentagon-14" => pentagon(&["Pentagon"], 14, 3, "Stein", "1985", None),
         "pentagon-15" => pentagon(&["Pentagon"], 15, 3, "Mann et al.", "2015", None),
@@ -421,11 +421,256 @@ mod pentagon13_tests {
         assert_eq!(t.category, TilingCategory::PentagonTypes);
         assert_eq!(t.cells[0].seed, 0, "the prototile is the L0 cell (seed 0)");
     }
+
+    /// Vertex-set key on the 1e-6 grid (shared joints computed along
+    /// different routes agree to ~1e-14, distinct vertices are ≫1e-6 apart).
+    fn key13(pts: &[Vec2]) -> Vec<(i64, i64)> {
+        let mut v: Vec<(i64, i64)> = pts
+            .iter()
+            .map(|q| ((q.x * 1e6).round() as i64, (q.y * 1e6).round() as i64))
+            .collect();
+        v.sort_unstable();
+        v
+    }
+
+    /// Seed-blind table census: key of every cell polygon translated by
+    /// n1·w1 + n2·w2, n ∈ [−9, 9].  A symmetry maps the base cell onto a
+    /// table copy inside this window.
+    fn shifted_cells(
+        t: &crate::lattice::LatticeTiling,
+    ) -> std::collections::HashMap<Vec<(i64, i64)>, (usize, i32, i32)> {
+        let (w1, w2) = (t.lattice[0], t.lattice[1]);
+        let mut map = std::collections::HashMap::new();
+        for (j, cl) in t.cells.iter().enumerate() {
+            for n1 in -9..=9i32 {
+                for n2 in -9..=9i32 {
+                    let sh: Vec<Vec2> = cl
+                        .poly
+                        .pts
+                        .iter()
+                        .map(|q| {
+                            Vec2::new(
+                                q.x + (n1 as f64) * w1.x + (n2 as f64) * w2.x,
+                                q.y + (n1 as f64) * w1.y + (n2 as f64) * w2.y,
+                            )
+                        })
+                        .collect();
+                    map.insert(key13(&sh), (j, n1, n2));
+                }
+            }
+        }
+        map
+    }
+
+    /// Seed-blind test for the isometry g(x) = M·x + v: every cell
+    /// polygon maps onto a table cell plus a lattice translation, the
+    /// (cell, translation) assignments being distinct.  Such a table map
+    /// is injective, hence surjective on the (finite-cell) tiling, so g
+    /// is a symmetry of the UNCOLOURED pattern (seeds ignored).
+    fn table_symmetry(
+        t: &crate::lattice::LatticeTiling,
+        idx: &std::collections::HashMap<Vec<(i64, i64)>, (usize, i32, i32)>,
+        m: (f64, f64, f64, f64),
+        v: Vec2,
+    ) -> bool {
+        let (a, b, c, d) = m;
+        let mut used = std::collections::HashSet::new();
+        for cl in &t.cells {
+            let img: Vec<Vec2> = cl
+                .poly
+                .pts
+                .iter()
+                .map(|q| Vec2::new(a * q.x + b * q.y + v.x, c * q.x + d * q.y + v.y))
+                .collect();
+            match idx.get(&key13(&img)) {
+                None => return false,
+                Some(&p) => {
+                    if !used.insert(p) {
+                        return false;
+                    }
+                }
+            }
+        }
+        true
+    }
+
+    /// Complete candidate list of translation parts v (mod the lattice)
+    /// for a symmetry with linear part M: cell 0's vertex 0 must map to
+    /// SOME vertex of SOME table cell plus a lattice translation, so
+    /// v ≡ p_jk − M·p_00 (mod Λ) over all cells j and vertices k.
+    /// Enumerating these finitely many candidates misses no symmetry.
+    fn coset_candidates(
+        t: &crate::lattice::LatticeTiling,
+        m: (f64, f64, f64, f64),
+    ) -> Vec<Vec2> {
+        let (a, b, c, d) = m;
+        let (w1, w2) = (t.lattice[0], t.lattice[1]);
+        let det = w1.x * w2.y - w1.y * w2.x;
+        let p0 = t.cells[0].poly.pts[0];
+        let (m00, m01) = (a * p0.x + b * p0.y, c * p0.x + d * p0.y);
+        let _ = det;
+        let mut out = Vec::new();
+        for cl in &t.cells {
+            for q in &cl.poly.pts {
+                out.push(Vec2::new(q.x - m00, q.y - m01));
+            }
+        }
+        out
+    }
+
+    /// The UNCOLOURED type-13 pattern (chiral pair not distinguished) is
+    /// pgg on the rectangular lattice; the shipped p2 is the
+    /// seeds-distinguished (homochiral) subgroup — exactly the Wikipedia
+    /// dichotomy "pgg, or p2 if mirror-image tiles are considered
+    /// distinct".  Programmatic census over the complete candidate set
+    /// (vertex correspondence, so nothing is missed):
+    ///
+    /// * the declared lattice is rectangular and NOT square (w1·w2 = 0,
+    ///   |w1| = 3|w2|) and no shorter translation exists, so the only
+    ///   possible point groups are subgroups of {I, −I, M1, M2, ±90°, M3, M4};
+    /// * translations: exactly Λ (no extra identity-coset hits);
+    /// * the −I coset contains symmetries (the shipped half-turn about
+    ///   the long-side midpoint is one of them);
+    /// * the two reflection cosets M1 (axis ∥ w1), M2 (axis ∥ w2) contain
+    ///   half-period GLIDES — g² = a nonzero translation along the axis —
+    ///   and NO pure reflection (v + Mv = 0) exists anywhere;
+    /// * the ±90° rotations and the diagonal reflection cosets M3, M4
+    ///   contain no symmetries (so the pattern is not p4g/p4m/cmm).
+    ///
+    /// Translations + half-turns + two perpendicular mirror-free glide
+    /// families, nothing more: the uncoloured orbifold is 22* = pgg.
+    /// The seeded label P2 stays pinned by
+    /// `pentagon_13_c2_rotation_is_a_symmetry` and
+    /// `pentagon_13_seeds_track_the_chiral_pair`.
+    #[test]
+    fn pentagon_13_uncolored_pattern_is_pgg() {
+        let t = spec();
+        let (w1, w2) = (t.lattice[0], t.lattice[1]);
+        let dot = w1.x * w2.x + w1.y * w2.y;
+        let n1 = (w1.x * w1.x + w1.y * w1.y).sqrt();
+        let n2 = (w2.x * w2.x + w2.y * w2.y).sqrt();
+        assert!(dot.abs() < 1e-9 * n1 * n2, "w1 ⟂ w2 (rectangular lattice)");
+        assert!(
+            (n1 / n2 - 3.0).abs() < 1e-9,
+            "|w1| = 3|w2|: rectangular, not square"
+        );
+        let idx = shifted_cells(&t);
+        let hits = |m: (f64, f64, f64, f64)| -> Vec<Vec2> {
+            coset_candidates(&t, m)
+                .into_iter()
+                .filter(|&v| table_symmetry(&t, &idx, m, v))
+                .collect()
+        };
+        let is_zero_mod = |v: Vec2| -> bool {
+            let det = w1.x * w2.y - w1.y * w2.x;
+            let al = (v.x * w2.y - v.y * w2.x) / det;
+            let be = (w1.x * v.y - w1.y * v.x) / det;
+            (al - al.round()).abs() < 1e-6 && (be - be.round()).abs() < 1e-6
+        };
+        // (1) Translations: exactly the declared lattice.
+        let id = (1.0, 0.0, 0.0, 1.0);
+        let id_hits = hits(id);
+        assert!(
+            id_hits.iter().all(|&v| is_zero_mod(v)),
+            "no translation outside the declared lattice: uncoloured translation \
+             lattice is exactly ⟨w1, w2⟩ ({} extra hits)",
+            id_hits.iter().filter(|&v| !is_zero_mod(*v)).count()
+        );
+        // (2) Half-turns exist — including the shipped 2-fold centre.
+        let mi = (-1.0, 0.0, 0.0, -1.0);
+        let rot_hits = hits(mi);
+        assert!(
+            !rot_hits.is_empty(),
+            "the −I coset must contain half-turns"
+        );
+        let c0 = t.cells[0].poly.pts[3];
+        assert!(
+            table_symmetry(&t, &idx, mi, c0 * 2.0),
+            "the shipped half-turn centre pts[3] must survive seed-blindness"
+        );
+        // (3) Reflection cosets: M1 axis ∥ (1,1) ∥ w1; M2 axis ∥ (1,−1) ∥ w2;
+        //     M3 axis ∥ (1,0); M4 axis ∥ (0,1).
+        let ms: [(f64, f64, f64, f64); 4] = [
+            (0.0, 1.0, 1.0, 0.0),
+            (0.0, -1.0, -1.0, 0.0),
+            (1.0, 0.0, 0.0, -1.0),
+            (-1.0, 0.0, 0.0, 1.0),
+        ];
+        let mut glide_counts = [0usize; 4];
+        let mut pure_total = 0usize;
+        let mut found_glide: Option<((f64, f64, f64, f64), Vec2)> = None;
+        for (i, &m) in ms.iter().enumerate() {
+            for v in hits(m) {
+                // g² = translation by v + M·v, always along the mirror axis.
+                let sq = Vec2::new(
+                    v.x + m.0 * v.x + m.1 * v.y,
+                    v.y + m.2 * v.x + m.3 * v.y,
+                );
+                let sqn = (sq.x * sq.x + sq.y * sq.y).sqrt();
+                if sqn < 1e-7 * n2 {
+                    pure_total += 1;
+                } else {
+                    glide_counts[i] += 1;
+                    found_glide.get_or_insert((m, v));
+                }
+            }
+        }
+        assert_eq!(
+            pure_total, 0,
+            "no pure reflection anywhere (pgg, not pmm/cmm/p4m)"
+        );
+        assert!(
+            glide_counts[0] > 0 && glide_counts[1] > 0,
+            "both lattice-parallel reflection cosets contain glides: {:?}",
+            glide_counts
+        );
+        assert_eq!(
+            glide_counts[2], 0,
+            "the diagonal reflection coset M3 (axis ∥ x) has no symmetry: the \
+             point group is exactly {{I, −I, M1, M2}} (exotic finer-lattice \
+             scenarios excluded)"
+        );
+        assert_eq!(glide_counts[3], 0, "the diagonal reflection coset M4 (axis ∥ y) likewise has none");
+        // (4) No 4-fold rotations: the group is not p4g/p4m.
+        for r4 in [
+            (0.0, -1.0, 1.0, 0.0),
+            (0.0, 1.0, -1.0, 0.0),
+        ] {
+            assert!(
+                hits(r4).is_empty(),
+                "no quarter-turn symmetry (group is not p4-family)"
+            );
+        }
+        // (5) The glides are TRUE half-period glides: g² is a nonzero
+        //     primitive lattice translation along the axis.  Check one.
+        let (gm, gv) = found_glide.expect("glide found above");
+        let sq = Vec2::new(
+            gv.x + gm.0 * gv.x + gm.1 * gv.y,
+            gv.y + gm.2 * gv.x + gm.3 * gv.y,
+        );
+        let prim = if gm.0 == 0.0 {
+            w1
+        } else {
+            w2
+        };
+        let par = sq.x * prim.y - sq.y * prim.x;
+        let scale = (sq.x * prim.x + sq.y * prim.y) / (prim.x * prim.x + prim.y * prim.y);
+        assert!(
+            par.abs() < 1e-7 * n1,
+            "g² ∥ axis (glides along ⟨w⟩): cross {:.2e}",
+            par
+        );
+        assert!(
+            (scale - scale.round()).abs() < 1e-6 && scale.abs() > 0.4,
+            "g² = {}·w is a nonzero lattice translation along the axis (true glide)",
+            scale.round()
+        );
+    }
 }
 
 #[cfg(test)]
 mod pentagon14_tests {
-    use super::pentagon14::{beta, bp, bq, p, pq, q, s57, tile_area};
+    use super::pentagon14::{beta, bp, bq, p, pq, q, s57, tile_area, w1, w2};
     use crate::tests::{check_coverage, check_det, check_rotated};
     use crate::pentagon14::spec;
     use tess_core::category::TilingCategory;
@@ -675,6 +920,44 @@ mod pentagon14_tests {
             set_a, set_b,
             "180° rotation about the 2-fold centre O must preserve the tiling"
         );
+    }
+
+    /// The wallpaper group is p2, NOT pgg, for Stein's unique tiling:
+    /// the translation lattice is a generic oblique lattice — w1·w2 ≠ 0
+    /// (not rectangular) and |w1| ≠ |w2| (not rhombic) — so the
+    /// normaliser of the lattice in O(2) is exactly {I, −I} and NO
+    /// orientation-reversing isometry (mirror or glide) can normalise
+    /// the translations at all.  Together with the verified half-turn
+    /// (`pentagon_14_c2_symmetry`) this pins the group to p2 (orbifold
+    /// 2222).  The user-reported "standard tilings are pgg" applies to
+    /// the Rice types 9–13 (all pgg here on rectangular lattices,
+    /// modulo chiral-pair colouring); a pgg group would require a
+    /// rectangular translation lattice, which this oblique lattice is
+    /// not — and Stein's tiling is unique up to the tile's own
+    /// symmetries (MathWorld, Grünbaum), so no alternative pgg packing
+    /// exists for this member.
+    #[test]
+    fn pentagon_14_lattice_rules_out_pg_glide_groups() {
+        let (w1, w2) = (w1(), w2());
+        let dot = w1.x * w2.x + w1.y * w2.y;
+        let n1 = (w1.x * w1.x + w1.y * w1.y).sqrt();
+        let n2 = (w2.x * w2.x + w2.y * w2.y).sqrt();
+        // Generic oblique: not perpendicular, not equal-length.
+        assert!(
+            dot.abs() > 1e-3 * n1 * n2,
+            "w1·w2 ≠ 0 (|cos| ≈ {:.3}): not a rectangular lattice, so no \
+             pmm/pgg-family group can realise on it",
+            dot / (n1 * n2)
+        );
+        assert!(
+            (n1 / n2 - 1.0).abs() > 1e-3,
+            "|w1| ≠ |w2| ({:.4} vs {:.4}): not a rhombic lattice, so no \
+             cmm/p4-family point symmetry can normalise it",
+            n1,
+            n2
+        );
+        // |cos| far from 1 too: genuinely oblique, not degenerate.
+        assert!((dot / (n1 * n2)).abs() < 0.999);
     }
 }
 
@@ -8738,4 +9021,5 @@ mod pentagon6_tests {
         );
     }
 }
+
 

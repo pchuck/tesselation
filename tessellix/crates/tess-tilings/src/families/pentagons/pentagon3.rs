@@ -26,9 +26,16 @@
 //! both chiralities, T-junctions admitted; ~1.7 × 10⁶ pairing trials)
 //! finds no 3-tile periodic cell, and the hexagonal lattice routes are
 //! dead by the norm-form test x² + 3y² = 120 (det 6 in tile units;
-//! cell-6/cell-9 variants scale to 240/360, also insoluble).  The
-//! shipped structure is therefore the discovered minimal periodic cell:
-//! **2 tiles, p2**.
+//! cell-6/cell-9 variants scale to 240/360, also insoluble).  Note this
+//! obstruction is **member-specific**, not a denial of the textbook
+//! fact: the p3 (333) three-tile pentagonal tiling exists for other
+//! members of the type-3 family (e.g. the triangular-lattice
+//! construction with pinwheel radius ratio 2 : 3).  An order-3 rotation
+//! must act integrally on the translation lattice, forcing it to be
+//! hexagonal, and it is exactly that requirement the norm-form test
+//! refutes for (2, 2, 1, 4, 3).  The label p3 on another type-3 member
+//! would be correct; here it would not.  The shipped structure is
+//! therefore the discovered minimal periodic cell: **2 tiles, p2**.
 //!
 //! The primitive cell is `T0` (the prototile) plus `T1`, the half-turn
 //! image of `T0` about the midpoint of its long side d; the tiling is
@@ -168,7 +175,7 @@ pub fn spec() -> LatticeTiling {
     LatticeTiling {
         id: "pentagon-3",
         name: "Pentagon type 3 (Reinhardt)",
-        description: "Pentagonal tiling of type 3 (Reinhardt, 1918): A = B = C = D = 120°, E = 60°, sides a = b = 2, c = 1, d = 4, e = 3 (a = b, d = c + e); non-edge-to-edge (each d-side is split at its midpoint between two length-2 sides), 1-isohedral, 2 tiles per oblique cell, wallpaper group p2 (chiral prototile, one chirality used; four half-turn classes d/2 + Λ/2, no mirrors or glides; the classical three-tile type-3 pinwheel admits no periodic cell for this member).",
+        description: "Pentagonal tiling of type 3 (Reinhardt, 1918): A = B = C = D = 120°, E = 60°, sides a = b = 2, c = 1, d = 4, e = 3 (a = b, d = c + e); non-edge-to-edge (each d-side is split at its midpoint between two length-2 sides), 1-isohedral, 2 tiles per oblique cell, wallpaper group p2 (chiral prototile, one chirality used; four half-turn classes d/2 + Λ/2, no mirrors or glides). The textbook p3 three-tile type-3 pinwheel exists for other members of the one-parameter family; it is ruled out for this integral member because an order-3 rotation forces a hexagonal translation lattice and the norm-form test x² + 3y² = 120 has no solution.",
         lattice: [Vec2::new(0.5, 1.5 * s3()), Vec2::new(-6.5, 0.5 * s3())],
         cells,
         offset: Vec2::ZERO,

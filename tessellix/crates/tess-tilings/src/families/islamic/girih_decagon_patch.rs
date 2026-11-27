@@ -856,7 +856,19 @@ impl Tiling for GirihDecagonPatchTiling {
     }
 
     fn category(&self) -> TilingCategory {
-        TilingCategory::Islamic
+        // Classified Nonperiodic, not Islamic (review E17/A12): this is a
+        // FINITE patch, and the browse card renders the wallpaper-group
+        // line ("p1 · none") for every periodic category. As a
+        // Nonperiodic primary the card omits the meaningless group and
+        // states the declared translational character instead
+        // ("finite patch (non-periodic) · 10-fold"), consistent with the
+        // other non-repeating cards; the Hirschhorn pentagon is the
+        // established precedent for a non-repeating structure carried by
+        // a family register (Islamic here) with a Nonperiodic primary
+        // tab. The islamic family docs and registration are unchanged —
+        // the family docs guard keys on the register function, not the
+        // category.
+        TilingCategory::Nonperiodic
     }
 
     fn params(&self) -> &'static [ParamSpec] {

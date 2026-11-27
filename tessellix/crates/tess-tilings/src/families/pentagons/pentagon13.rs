@@ -14,7 +14,13 @@
 //! (0 = the CCW class, 1 = its mirror). The uncoloured pattern has
 //! wallpaper group pgg (two perpendicular glide families, no mirrors);
 //! treating the chiral pair as distinct reduces it to **p2**, the group
-//! shipped here.
+//! shipped here. Both sides are pinned: the shipped p2 by
+//! `pentagon_13_c2_rotation_is_a_symmetry`, the uncoloured pgg by a
+//! complete coset census of the lattice normaliser in
+//! `pentagon_13_uncolored_pattern_is_pgg` (half-turns exist; both
+//! reflection cosets contain true half-period glides and no pure
+//! reflections; no shorter translation lattice and no 4-fold rotations
+//! exist, so the uncoloured group cannot be anything but pgg).
 //!
 //! Not edge-to-edge at the pentagon level: the long side d is split into
 //! two collinear a-edges (midpoint vertex `M`), so every joint in the
@@ -150,7 +156,7 @@ pub fn spec() -> LatticeTiling {
     LatticeTiling {
         id: "pentagon-13",
         name: "Pentagon type 13 (Rice, 1977)",
-        description: "Pentagonal tiling of type 13 (Rice, 1977), canonical A = 120°: d = 2a = 2e, B = E = 90°, 2A + D = 360°; 2-isohedral chiral pair (seeds 0/1), 8 tiles per cell, long side split into two collinear a-edges.",
+        description: "Pentagonal tiling of type 13 (Rice, 1977), canonical A = 120°: d = 2a = 2e, B = E = 90°, 2A + D = 360°; 2-isohedral chiral pair (seeds 0/1), 8 tiles per cell, long side split into two collinear a-edges. The lattice is genuinely rectangular (T1 ⊥ T2, |T1| = 3|T2|); uncoloured the pattern is pgg, and p2 is the group of the shipped chiral-pair colouring.",
         lattice: [Vec2::new(3.0 * s, 3.0 * s), Vec2::new(s, -s)],
         cells: vec![
             Cell { poly: l0, seed: 0 },
