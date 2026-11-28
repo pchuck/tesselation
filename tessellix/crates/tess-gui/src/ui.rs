@@ -703,6 +703,47 @@ fn is_depth_param(spec: &tess_core::params::ParamSpec) -> bool {
     matches!(spec.kind, ParamKind::Int { .. }) && spec.id.as_str() == DEPTH_PARAM_ID
 }
 
+/// The per-tiling citation segment `summary_line` composes from the
+/// classification record — `{source} {year}` / `{source}` / `{year}`,
+/// skipped (like every other segment) when the card name already
+/// echoes it. E13: this is the one schema segment the card no longer
+/// paints — the citation lives in the detail view's PART 2 source
+/// line (and the Islamic F3 block), never on the card. `None` when
+/// the card declares no citation at all.
+fn citation_segment(card: &tess_core::CardMeta) -> Option<String> {
+    let class = &card.class;
+    let seg = match (class.source, class.year) {
+        (Some(s), Some(y)) => format!("{s} {y}"),
+        (Some(s), None) => s.to_string(),
+        (None, Some(y)) => y.to_string(),
+        (None, None) => return None,
+    };
+    let seg = seg.trim().to_string();
+    if seg.is_empty() || card.name.to_lowercase().contains(&seg.to_lowercase()) {
+        return None;
+    }
+    Some(seg)
+}
+
+/// Drop the citation segment from a composed summary line. Segments
+/// are " · "-joined and the citation is the only schema segment that
+/// can equal the citation string (every other segment is a distinct
+/// declared fact — a card whose name echoes the citation already
+/// skips it in `summary_line`, so nothing is present to drop), so an
+/// exact-match filter is safe. An empty result is the caller's
+/// signal to fall back to the description fragment — the same
+/// treatment an empty summary already gets.
+fn strip_citation(summary: &str, citation: Option<&str>) -> String {
+    let Some(cite) = citation else {
+        return summary.to_string();
+    };
+    let kept: Vec<&str> = summary
+        .split(" · ")
+        .filter(|s| *s != cite)
+        .collect();
+    kept.join(" · ")
+}
+
 impl GuiApp {
     pub fn new() -> Self {
         let app = tess_core::App::new(tess_tilings::registry(), 60.0);
@@ -1607,7 +1648,15 @@ impl GuiApp {
         // description fragment when the schema adds nothing). An empty
         // label still reserves the row's height, so a card without a
         // summary keeps the uniform card size.
+        //
+        // E13: the per-tiling citation (source/year — the one schema
+        // segment `summary_line` composes for it) is dropped here.
+        // The citation lives in the detail view's PART 2 source line
+        // (and the Islamic F3 block), never on the card — tess-core is
+        // not reachable from this job, so the strip is the card-side
+        // half of the move.
         let (sym, summary) = tess_core::browse::attr_lines(card);
+        let summary = strip_citation(&summary, citation_segment(card).as_deref());
         let desc = if summary.is_empty() {
             truncate_text(card.description, DESC_CHARS)
         } else {
@@ -4422,5 +4471,200 @@ mod tests {
         assert_eq!(count("§3 — Hankin constructions"), 15, "§3 must hold 15 ids");
         assert_eq!(count("§4 — Najm templates"), 3, "§4 must hold 3 ids");
         assert_eq!(count("Andritz σ-frame walks"), 4, "Andritz must hold 4 ids");
+    }
+
+    // ---- E13: citations move to the detail view -------------------------
+    //
+    // The per-tiling citation (source/year) is the one schema segment
+    // the card no longer paints: it lives in the detail view's PART 2
+    // source line (and the Islamic F3 block). The card-side mechanism is
+    // a post-filter on the composed summary — tess-core is untouched.
+
+    /// One headless egui pass of the card grid for an already-configured
+    /// `gui` (the `headless_grid_at` helper builds its own `GuiApp`;
+    /// this one takes a caller-configured one, so an E13 pin can switch
+    /// tabs/selection before the pass).
+    fn card_grid_pass(
+        gui: &mut super::GuiApp,
+        screen: egui::Rect,
+    ) -> egui::FullOutput {
+        let ctx = egui::Context::default();
+        let mut out = egui::FullOutput::default();
+        for _ in 0..3 {
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            out = ctx.run(input, |ctx| {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    egui::ScrollArea::vertical().id_salt("browser").show(ui, |ui| {
+                        gui.draw_card_grid(ctx, ui);
+                    });
+                });
+            });
+        }
+        out
+    }
+
+    #[test]
+    fn citation_segment_builds_source_and_year_pair() {
+        let mut card = card_fix("demo", tess_core::TilingCategory::Aperiodic, None, None);
+        card.class = tess_core::TilingClass {
+            source: Some("Lu & Steinhardt"),
+            year: Some("2007"),
+            ..tess_core::TilingClass::EMPTY
+        };
+        assert_eq!(
+            super::citation_segment(&card).as_deref(),
+            Some("Lu & Steinhardt 2007"),
+            "source+year must compose as one segment"
+        );
+    }
+
+    #[test]
+    fn citation_segment_source_only_year_only_and_absent() {
+        let mut card = card_fix("demo", tess_core::TilingCategory::Aperiodic, None, None);
+        card.class = tess_core::TilingClass {
+            source: Some("Reinhardt"),
+            ..tess_core::TilingClass::EMPTY
+        };
+        assert_eq!(
+            super::citation_segment(&card).as_deref(),
+            Some("Reinhardt"),
+            "source-only must compose as the bare source"
+        );
+        card.class = tess_core::TilingClass {
+            year: Some("1987"),
+            ..tess_core::TilingClass::EMPTY
+        };
+        assert_eq!(
+            super::citation_segment(&card).as_deref(),
+            Some("1987"),
+            "year-only must compose as the bare year"
+        );
+        card.class = tess_core::TilingClass::EMPTY;
+        assert_eq!(
+            super::citation_segment(&card),
+            None,
+            "no citation declared at all -> no segment"
+        );
+    }
+
+    #[test]
+    fn citation_segment_blank_source_is_none() {
+        let mut card = card_fix("demo", tess_core::TilingCategory::Aperiodic, None, None);
+        card.class = tess_core::TilingClass {
+            source: Some("   "),
+            ..tess_core::TilingClass::EMPTY
+        };
+        assert_eq!(
+            super::citation_segment(&card),
+            None,
+            "a blank source trims to Nothing and must not paint a segment"
+        );
+    }
+
+    #[test]
+    fn citation_segment_skipped_when_name_echoes_the_citation() {
+        // The skip rule (mirroring summary_line's push): a card whose
+        // name already echoes the citation must not paint a segment.
+        let mut card = card_fix(
+            "lu-steinhardt-2007",
+            tess_core::TilingCategory::Aperiodic,
+            None,
+            None,
+        );
+        card.name = "Lu & Steinhardt 2007";
+        card.class = tess_core::TilingClass {
+            source: Some("Lu & Steinhardt"),
+            year: Some("2007"),
+            ..tess_core::TilingClass::EMPTY
+        };
+        assert_eq!(
+            super::citation_segment(&card),
+            None,
+            "the name already echoes the citation; no segment is passed"
+        );
+    }
+
+    #[test]
+    fn strip_citation_drops_only_the_citation_segment() {
+        let s = "substitution · φ · 2 prototiles · Lu & Steinhardt 2007 · self-dual";
+        assert_eq!(
+            super::strip_citation(s, Some("Lu & Steinhardt 2007")),
+            "substitution · φ · 2 prototiles · self-dual",
+            "the citation segment must be dropped; every other segment survives"
+        );
+        // No citation -> untouched.
+        assert_eq!(super::strip_citation(s, None), s);
+        // The citation is the only segment -> empty string (the caller
+        // falls back to the description fragment).
+        assert_eq!(super::strip_citation("Lu & Steinhardt 2007", Some("Lu & Steinhardt 2007")), "");
+    }
+
+    #[test]
+    fn card_summary_strips_the_citation_and_keeps_the_other_segments() {
+        let mut card = card_fix("demo", tess_core::TilingCategory::Aperiodic, None, None);
+        card.class = tess_core::TilingClass {
+            method: Some("substitution"),
+            inflation: Some("φ"),
+            prototiles: Some(2),
+            source: Some("Lu & Steinhardt"),
+            year: Some("2007"),
+            ..tess_core::TilingClass::EMPTY
+        };
+        // The real summary, composed by tess-core (untouched by this job).
+        let (_sym, summary) = tess_core::browse::attr_lines(&card);
+        assert!(
+            summary.contains("Lu & Steinhardt 2007"),
+            "the composed summary must contain the citation: {summary:?}"
+        );
+        let stripped = super::strip_citation(&summary, super::citation_segment(&card).as_deref());
+        assert!(
+            !stripped.contains("Lu & Steinhardt"),
+            "the citation must be dropped from the card summary: {stripped:?}"
+        );
+        assert!(stripped.contains("substitution"), "method segment survives: {stripped:?}");
+        assert!(stripped.contains("φ"), "inflation segment survives: {stripped:?}");
+        assert!(stripped.contains("2 prototiles"), "prototiles segment survives: {stripped:?}");
+    }
+
+    #[test]
+    fn card_grid_paints_no_citation_but_keeps_the_other_segments() {
+        // girih-decagon-patch is the one islamic card that declares a
+        // source/year pair; its grid card must paint no citation, while
+        // the method/inflation/prototiles/tile-set segments survive.
+        let mut gui = super::GuiApp::new();
+        let tab_idx = gui
+            .tabs
+            .iter()
+            .position(|t| t.cards.iter().any(|c| c.id == "girih-decagon-patch"))
+            .expect("girih-decagon-patch card in some tab");
+        gui.active_tab = tab_idx;
+        gui.select_id_synced("girih-decagon-patch");
+        gui.tab_selected[tab_idx] = Some("girih-decagon-patch".to_string());
+        let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 900.0));
+        let out = card_grid_pass(&mut gui, screen);
+        let text = painted_text(&out.shapes).join("\n");
+        assert!(
+            !text.contains("Lu & Steinhardt"),
+            "card grid must not paint the citation: {text:?}"
+        );
+        assert!(!text.contains("2007"), "card grid must not paint the year: {text:?}");
+        assert!(
+            text.contains("Darb-i Imam substitution"),
+            "method segment must survive on the card: {text:?}"
+        );
+        assert!(
+            text.contains("3 prototiles"),
+            "prototiles segment must survive on the card: {text:?}"
+        );
+        // The detail view still owns the citation.
+        let screen = detail_screen();
+        let detail = detail_view_text(&mut gui, screen);
+        assert!(
+            detail.contains("source: Lu & Steinhardt (2007)"),
+            "detail view must still paint the source line: {detail:?}"
+        );
     }
 }
