@@ -209,7 +209,7 @@ impl Tiling for PythagoreanTiling {
                     if !bb.intersects(query.region) {
                         continue;
                     }
-                    tiles.push(Tile {
+                    tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                         proto: *proto,
                         poly: poly.translated(tr),
                         seed: *seed, level: 0,

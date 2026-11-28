@@ -100,6 +100,12 @@ fn palette_slot(palette: &[u8], class: usize) -> u8 {
 }
 
 fn color_index(mode: ColorMode, tile: &Tile) -> usize {
+    // Landing A family palette rule: the shared `paint::family_slot`
+    // override (identity modes + tagged tiles only, slots < 8) keeps
+    // this index space in lockstep with `paint::tile_rgb` (M192 sync).
+    if let Some(slot) = crate::paint::family_slot(mode, tile) {
+        return slot;
+    }
     match mode {
         ColorMode::Single => 0,
         // `PatternGray` shares `Pattern`'s index space; the front end
@@ -311,7 +317,7 @@ mod tests {
     use crate::geometry::Polygon;
 
     fn tile(proto: u8, seed: u32, pts: &[[f64; 2]]) -> Tile {
-        Tile {
+        Tile { family: crate::tiling::FamilyTag::None, reflected: false,
             proto,
             seed, level: 0,
             poly: Polygon::from_slice(

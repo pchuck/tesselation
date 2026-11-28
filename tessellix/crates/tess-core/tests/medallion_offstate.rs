@@ -32,7 +32,7 @@ fn square_grid(n: i32) -> Vec<Tile> {
                 Vec2::new(x + 1.0, y + 1.0),
                 Vec2::new(x, y + 1.0),
             ]);
-            out.push(Tile {
+            out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                 proto: 0,
                 poly,
                 seed: ((i + j) % 2) as u32,
@@ -55,7 +55,7 @@ fn hex_grid() -> Vec<Tile> {
                     Vec2::new(cx + a.cos(), cy + a.sin())
                 })
                 .collect();
-            out.push(Tile {
+            out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                 proto: 0,
                 poly: Polygon::from_slice(&pts),
                 seed: ((col + row).rem_euclid(2)) as u32,
@@ -81,13 +81,13 @@ fn triangle_grid(n: i32) -> Vec<Tile> {
                 Vec2::new(x + 1.5, y + S3 / 2.0),
                 Vec2::new(x + 0.5, y + S3 / 2.0),
             ]);
-            out.push(Tile {
+            out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                 proto: 0,
                 poly: up,
                 seed: 0,
                 level: 0,
             });
-            out.push(Tile {
+            out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                 proto: 1,
                 poly: dn,
                 seed: 1,
@@ -222,7 +222,7 @@ fn named_variant_fires_only_on_open_end_witness_on_layer() {
 
     // The suppressed-hull-rim route: the witness (0, 0) lies on the
     // rim edge of a suppressed tile.
-    let rim_tile = Tile {
+    let rim_tile = Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
         proto: 0,
         poly: Polygon::from_slice(&[
             Vec2::new(0.0, 0.0),

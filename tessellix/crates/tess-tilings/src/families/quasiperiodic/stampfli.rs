@@ -581,7 +581,7 @@ impl Tiling for StampfliTiling {
         for t in &pieces {
             let world = t.poly().transform(&map);
             if world.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: t.kind,
                     seed: t.kind as u32, level: steps as u8,
                     poly: world,

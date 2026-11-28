@@ -220,7 +220,7 @@ impl Tiling for StarCrossTiling {
                 }
                 let poly = Polygon::from_slice(&cp).transform(&map);
                 if poly.aabb().intersects(query.region) {
-                    tiles.push(Tile { proto: 0, seed: 0, level: 0, poly });
+                    tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false, proto: 0, seed: 0, level: 0, poly });
                 }
                 // Star centered on lattice point (i, j) (proto/seed 1).
                 let mut sp = Vec::with_capacity(star.len());
@@ -229,7 +229,7 @@ impl Tiling for StarCrossTiling {
                 }
                 let poly = Polygon::from_slice(&sp).transform(&map);
                 if poly.aabb().intersects(query.region) {
-                    tiles.push(Tile { proto: 1, seed: 1, level: 0, poly });
+                    tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false, proto: 1, seed: 1, level: 0, poly });
                 }
             }
         }

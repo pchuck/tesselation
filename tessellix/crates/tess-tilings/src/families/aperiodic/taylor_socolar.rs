@@ -1920,7 +1920,7 @@ impl Tiling for TaylorSocolarTiling {
                     .collect();
                 let poly = Polygon::from_slice(&pts).transform(&map);
                 if poly.aabb().intersects(query.region) {
-                    tiles.push(Tile {
+                    tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                         proto: piece.proto,
                         seed: seed_of(piece.proto), level: 0,
                         poly,

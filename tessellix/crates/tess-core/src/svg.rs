@@ -65,11 +65,14 @@ fn mirror_point(p: Vec2, cx: f64) -> Vec2 {
 }
 
 /// The mirror images of every tile of the render: polygon vertices
-/// reflected about the frame center, everything else untouched.
+/// reflected about the frame center, everything else untouched except
+/// the `reflected` flag, which flips — a mirror adds one y-axis
+/// reflection to each placement (the mirror pass is an involution on
+/// the flag: canonical ↔ reflected).
 fn mirror_tiles(tiles: &[Tile], cx: f64) -> Vec<Tile> {
     tiles
         .iter()
-        .map(|t| Tile {
+        .map(|t| Tile { family: t.family, reflected: !t.reflected,
             proto: t.proto,
             seed: t.seed,
             level: t.level,
@@ -779,7 +782,7 @@ mod tests {
         Vec2::new(x, y)
     }
     fn tile(pts: &[(f64, f64)]) -> Tile {
-        Tile {
+        Tile { family: crate::tiling::FamilyTag::None, reflected: false,
             proto: 0,
             seed: 0, level: 0,
             poly: Polygon::from_slice(&pts.iter().map(|&(x, y)| pt(x, y)).collect::<Vec<_>>()),
@@ -797,6 +800,40 @@ mod tests {
     }
 
     #[test]
+    fn mirror_tiles_forwards_family_and_flips_reflected() {
+        // Landing A contract: the mirror pass keeps `proto`/`seed`/
+        // `level`/`family` untouched and FLIPS `reflected` — a mirror
+        // adds one y-axis reflection to each placement (the field's
+        // definition), so the pass is an involution on the flag.
+        let mut base = tile(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]);
+        base.family = crate::tiling::FamilyTag::Penrose;
+        base.proto = 7;
+        base.seed = 42;
+        base.level = 3;
+        assert!(!base.reflected);
+        let mirrored = mirror_tiles(&[base.clone()], 0.5);
+        assert_eq!(mirrored.len(), 1);
+        let m = &mirrored[0];
+        assert_eq!(m.family, crate::tiling::FamilyTag::Penrose, "family must survive the mirror");
+        assert!(m.reflected, "mirror must flip false -> true");
+        assert_eq!(m.proto, base.proto);
+        assert_eq!(m.seed, base.seed);
+        assert_eq!(m.level, base.level);
+        // The flip is an involution: mirroring a `reflected` tile yields
+        // a canonical one again (Landing B's Hat tagging will produce
+        // such inputs; set-true semantics would corrupt them).
+        let mut refl = tile(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]);
+        refl.reflected = true;
+        let rm = mirror_tiles(&[refl], 0.5);
+        assert!(!rm[0].reflected, "mirror must flip true -> false");
+        // An untagged tile mirrors to an untagged (but reflected) tile.
+        let plain = tile(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]);
+        let pm = mirror_tiles(&[plain], 0.0);
+        assert_eq!(pm[0].family, crate::tiling::FamilyTag::None);
+        assert!(pm[0].reflected);
+    }
+
+    #[test]
     fn pattern_gray_emission_is_gray_only() {
         // End-to-end SVG emission through tile_rgb: one tile per seed
         // 0..8 → the eight PATTERN_GRAY_PALETTE values, no hue palette
@@ -804,7 +841,7 @@ mod tests {
         let tiles: Vec<Tile> = (0..8u32)
             .map(|seed| {
                 let x = seed as f64;
-                Tile {
+                Tile { family: crate::tiling::FamilyTag::None, reflected: false,
                     proto: 0,
                     seed, level: 0,
                     poly: Polygon::from_slice(&[
@@ -875,7 +912,7 @@ mod tests {
     /// level-2 tile (supertile member), side by side.
     fn mixed_level_tiles() -> Vec<Tile> {
         vec![
-            Tile {
+            Tile { family: crate::tiling::FamilyTag::None, reflected: false,
                 proto: 0,
                 seed: 0,
                 level: 0,
@@ -886,7 +923,7 @@ mod tests {
                     pt(0.0, 1.0),
                 ]),
             },
-            Tile {
+            Tile { family: crate::tiling::FamilyTag::None, reflected: false,
                 proto: 1,
                 seed: 1,
                 level: 2,
@@ -1024,7 +1061,7 @@ mod tests {
         // anywhere: the heavy group holds only the non-degenerate level-2
         // tile's path.
         let mut tiles = mixed_level_tiles();
-        tiles.push(Tile {
+        tiles.push(Tile { family: crate::tiling::FamilyTag::None, reflected: false,
             proto: 2,
             seed: 2,
             level: 2,
@@ -1703,7 +1740,7 @@ mod tests {
     #[test]
     fn mirror_on_degenerate_tiles_stay_degenerate() {
         let mut tiles = mixed_level_tiles();
-        tiles.push(Tile {
+        tiles.push(Tile { family: crate::tiling::FamilyTag::None, reflected: false,
             proto: 2,
             seed: 2,
             level: 0,

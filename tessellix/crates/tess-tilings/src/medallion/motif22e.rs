@@ -148,7 +148,7 @@ mod tests {
     const COS72: f64 = 0.309_016_994_374_947_45;
 
     fn square() -> Tile {
-        Tile {
+        Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
             proto: 0,
             seed: 0,
             level: 0,
@@ -302,7 +302,7 @@ mod tests {
     #[test]
     fn emitter_scales_with_the_substrate_edge() {
         let e = 0.630_5;
-        let scaled = [Tile {
+        let scaled = [Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
             proto: 0,
             seed: 0,
             level: 0,

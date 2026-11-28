@@ -416,8 +416,11 @@ pub fn shape_class(poly: &crate::geometry::Polygon) -> usize {
 
 /// Aperiodic metatile/cluster class (see `crate::view`).
 ///
-/// The `Tile` contract carries only `proto` / `seed` / `poly`, so this
-/// keys on the tile signature. Signatures (verified at `hat.rs:903-908`,
+/// The `Tile` contract carries no shape-classification label, so this
+/// keys on the tile signature. (Family-tagged tiles never reach a
+/// distinguishing read here in practice: the Landing A
+/// [`family_slot`] rule overrides this class for tagged tilings in
+/// `Metatile` mode.) Signatures (verified at `hat.rs:903-908`,
 /// `spectre.rs:469-474`, `turtle.rs:409-415`, `cap.rs:162`/`1087-1090`):
 ///
 /// * **Hat/spectre/turtle-turtle** (monohedral): `proto == 0`, `seed`
@@ -430,8 +433,8 @@ pub fn shape_class(poly: &crate::geometry::Polygon) -> usize {
 ///   emitted by reptiles (armchair/chair/sphinx: `seed` = orientation+1,
 ///   1..=12), pinwheel (`seed` = child-slot+1, 1..=5) and isohedral
 ///   (`seed` = aspect index, 0..na) tiles, which colors by the same bucket
-///   — the mode is not family-scoped and the Tile contract carries no
-///   family identity (documented limitation).
+///   — the mode is not family-scoped and untagged tiles carry no family
+///   identity (documented limitation).
 /// * **Turtle hat-companion** (`proto == 1`, `seed` in 1..=9 = matching-rule
 ///   label+1) is *not* disambiguated from **cap** (`proto` = metatile type,
 ///   `seed` = `SEED_OF[ty]` = `[0, 3, 2, 1][ty]`): the pair
@@ -454,18 +457,134 @@ pub fn metatile_class(tile: &Tile) -> usize {
     (tile.proto as usize) % METATILE_PALETTE.len()
 }
 
+/// Uniform / Two-Uniform polygon-type slot (Landing A palette rule).
+///
+/// The D6 census over all 31 tagged cards (11 archimedean + 20 kuniform,
+/// default preview windows) shows exactly five regular polygon types,
+/// keyed by vertex count in [`shape_signature`]: triangle (3), square
+/// (4), hexagon (6), octagon (8), dodecagon (12) — union size 5 ≤ 8.
+/// Raw [`shape_class`] is NOT injective across that union (octagon and
+/// hexagon both fold to slot 3; they merely never co-occur in one
+/// view, which is why M215 per-view injectivity holds), so the rule
+/// pins five distinct slots and keeps the palette at 8:
+/// triangle 7, square 5, hexagon 3, octagon 1, dodecagon 0 — matching
+/// shape_class wherever shape_class already reads the type cleanly.
+/// Any unexpected shape falls back to `shape_class` (documented
+/// collision risk; none observed registry-wide).
+fn uniform_polygon_slot(poly: &crate::geometry::Polygon) -> usize {
+    let sig = shape_signature(poly);
+    match sig.first().copied().unwrap_or(0) {
+        3 => 7,
+        4 => 5,
+        6 => 3,
+        8 => 1,
+        12 => 0,
+        _ => shape_class(poly),
+    }
+}
+
+/// Penrose family slot: pinned table, the pair `(proto, vertex count)`
+/// across the four cards, except that the golden-triangle half-shapes
+/// key on SHAPE: they are similarity-identical across `penrose` (rhomb
+/// halves) and `penrose_p2` (kite/dart halves) — the acute golden
+/// triangle is simultaneously the half-kite and the half-of-thin-rhomb
+/// — so proto alone would give one shape two colors. A golden gnomon
+/// is recognised by its 108° angle (1884956 in signature units).
+///
+/// * thick quads (fat rhomb `penrose` p0, kite `penrose_p2` p0) → 0;
+/// * thin quads (thin rhomb `penrose` p1, dart `penrose_p2` p1,
+///   diamond `penrose-p1` p3 — the diamond IS the thin rhomb, one
+///   genuinely shared shape type across cards) → 1;
+/// * acute golden triangle (and half-kite) → 2; golden gnomon (and
+///   half-dart) → 3;
+/// * `penrose-p1`: regular pentagon p0 → 4, decagram star p1 → 5,
+///   boat p2 → 6 (with diamond → 1 the card reads {4,5,6,1});
+/// * `penrose-pentagon` (5 pentagon types): 0 → 4, 1 → 2, 2 → 5,
+///   3 → 5 (types 2/3 are a mirrored pair — identical
+///   mirror-invariant signature — so one color), 4 → 6.
+///
+/// Every card sees pairwise-distinct colors for its distinct shapes.
+/// Cross-card color sharing occurs only between DIFFERENT types
+/// (e.g. the P1 regular pentagon and pentagon type 1 both read 4),
+/// which the one-color-per-type constraint permits.
+fn penrose_slot(tile: &Tile) -> usize {
+    let sig = shape_signature(&tile.poly);
+    let n = sig.first().copied().unwrap_or(0);
+    if n == 3 {
+        return if sig.contains(&1_884_956) { 3 } else { 2 };
+    }
+    match (tile.proto, n) {
+        (0, 4) => 0,
+        (1, 4) | (3, 4) => 1,
+        (0, 5) => 4,
+        (1, 10) => 5,
+        (2, 7) => 6,
+        (1, 5) => 2,
+        (2, 5) | (3, 5) => 5,
+        (4, 5) => 6,
+        _ => shape_class(&tile.poly),
+    }
+}
+
+/// Andritz family slot (bowtie-hexagon cards): proto 0 = bowtie hexagon
+/// → 6, proto 1 = regular hexagon → 3 (the regular-hexagon color shared
+/// with the Uniform tabs), proto 2 = regular decagon → 2 (a type absent
+/// from the Uniform union; slot kept distinct within every card view).
+fn andritz_slot(tile: &Tile) -> usize {
+    match tile.proto {
+        0 => 6,
+        1 => 3,
+        2 => 2,
+        _ => shape_class(&tile.poly),
+    }
+}
+
+/// The per-family palette rule (Landing A): a fixed identity-mode slot
+/// for family-tagged tiles, `None` (leave the mode's own decision)
+/// otherwise.
+///
+/// Overrides ONLY the four identity modes — `Pattern`, `Proto`, `Role`,
+/// `Metatile` — and only when `tile.family != FamilyTag::None`;
+/// `Single`/`Gray`/`Shape`/`Orientation`/`Level`/`PatternGray` never
+/// consult it, and untagged tilings are byte-identical everywhere.
+/// `Isohedral`/`Hat`/`Turtle`/`Spectre` carry no rule arm yet (tag is
+/// identity-only this landing). All slots are < 8, inside every
+/// identity-mode index space (8-entry palettes; `Metatile` 9).
+///
+/// This is the single source of truth shared by
+/// [`tile_rgb`] and raster's `color_index` (M192 sync).
+pub fn family_slot(mode: ColorMode, tile: &Tile) -> Option<usize> {
+    match mode {
+        ColorMode::Pattern | ColorMode::Proto | ColorMode::Role | ColorMode::Metatile => {}
+        _ => return None,
+    }
+    match tile.family {
+        crate::tiling::FamilyTag::Uniform | crate::tiling::FamilyTag::TwoUniform => Some(uniform_polygon_slot(&tile.poly)),
+        crate::tiling::FamilyTag::Penrose => Some(penrose_slot(tile)),
+        crate::tiling::FamilyTag::Andritz => Some(andritz_slot(tile)),
+        crate::tiling::FamilyTag::None
+        | crate::tiling::FamilyTag::Isohedral
+        | crate::tiling::FamilyTag::Hat
+        | crate::tiling::FamilyTag::Turtle
+        | crate::tiling::FamilyTag::Spectre => None,
+    }
+}
+
 pub fn tile_rgb(mode: ColorMode, tile: &Tile) -> u32 {
-    let idx = match mode {
-        ColorMode::Single => 0,
-        ColorMode::Pattern => (tile.seed as usize) % PALETTE.len(),
-        ColorMode::PatternGray => (tile.seed as usize) % PALETTE.len(),
-        ColorMode::Shape => shape_class(&tile.poly),
-        ColorMode::Proto => (tile.proto as usize) % PALETTE.len(),
-        ColorMode::Gray => (tile.proto as usize) % GRAY_PALETTE.len(),
-        ColorMode::Role => (tile.seed as usize) % ROLE_PALETTE.len(),
-        ColorMode::Metatile => metatile_class(tile),
-        ColorMode::Orientation => orientation_class(&tile.poly),
-        ColorMode::Level => level_class(tile),
+    let idx = match family_slot(mode, tile) {
+        Some(s) => s,
+        None => match mode {
+            ColorMode::Single => 0,
+            ColorMode::Pattern => (tile.seed as usize) % PALETTE.len(),
+            ColorMode::PatternGray => (tile.seed as usize) % PALETTE.len(),
+            ColorMode::Shape => shape_class(&tile.poly),
+            ColorMode::Proto => (tile.proto as usize) % PALETTE.len(),
+            ColorMode::Gray => (tile.proto as usize) % GRAY_PALETTE.len(),
+            ColorMode::Role => (tile.seed as usize) % ROLE_PALETTE.len(),
+            ColorMode::Metatile => metatile_class(tile),
+            ColorMode::Orientation => orientation_class(&tile.poly),
+            ColorMode::Level => level_class(tile),
+        },
     };
     match mode {
         ColorMode::Gray => GRAY_PALETTE[idx],
@@ -548,7 +667,7 @@ mod tests {
     use crate::geometry::{Polygon, Vec2};
 
     fn tile(proto: u8, seed: u32) -> Tile {
-        Tile {
+        Tile { family: crate::tiling::FamilyTag::None, reflected: false,
             proto,
             seed,
             level: 0,
@@ -563,7 +682,7 @@ mod tests {
 
     /// Unit square with an explicit substitution level (level-mode tests).
     fn tile_lv(proto: u8, seed: u32, level: u8) -> Tile {
-        Tile { level, ..tile(proto, seed) }
+        Tile { family: crate::tiling::FamilyTag::None, reflected: false, level, ..tile(proto, seed) }
     }
 
     #[test]
@@ -705,7 +824,7 @@ mod tests {
     }
 
     fn tile_with_shape(proto: u8, seed: u32, n: usize) -> Tile {
-        Tile { proto, seed, level: 0, poly: poly_with_n_vertices(n) }
+        Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto, seed, level: 0, poly: poly_with_n_vertices(n) }
     }
 
     #[test]
@@ -969,8 +1088,8 @@ mod tests {
         );
         // A square and a 45° rhombus (the AB bug) read different colors
         // even with identical seed/proto.
-        let sq = Tile { proto: 1, seed: 2, level: 0, poly: rect_poly(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]) };
-        let rh = Tile { proto: 1, seed: 2, level: 0, poly: rect_poly(&[[0.0, 0.0], [1.0, 0.0], [1.0 + 45f64.to_radians().cos(), 45f64.to_radians().sin()], [45f64.to_radians().cos(), 45f64.to_radians().sin()]]) };
+        let sq = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 1, seed: 2, level: 0, poly: rect_poly(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]) };
+        let rh = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 1, seed: 2, level: 0, poly: rect_poly(&[[0.0, 0.0], [1.0, 0.0], [1.0 + 45f64.to_radians().cos(), 45f64.to_radians().sin()], [45f64.to_radians().cos(), 45f64.to_radians().sin()]]) };
         assert_ne!(tile_rgb(ColorMode::Shape, &sq), tile_rgb(ColorMode::Shape, &rh));
     }
 
@@ -1001,7 +1120,7 @@ mod tests {
             (6, 2), (7, 2),                          // P
             (8, 3), (9, 3),                          // F
         ] {
-            let t = Tile { proto: 0, seed, level: 0, poly: poly_with_n_vertices(3) };
+            let t = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 0, seed, level: 0, poly: poly_with_n_vertices(3) };
             assert_eq!(metatile_class(&t), expected, "seed {seed}");
         }
     }
@@ -1015,7 +1134,7 @@ mod tests {
             (2, 2, 2),           // P
             (3, 1, 3),           // F
         ] {
-            let t = Tile { proto, seed, level: 0, poly: poly_with_n_vertices(3) };
+            let t = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto, seed, level: 0, poly: poly_with_n_vertices(3) };
             assert_eq!(metatile_class(&t), expected, "proto {proto}");
         }
     }
@@ -1024,22 +1143,22 @@ mod tests {
     fn metatile_class_falls_back_to_proto() {
         // Non-aperiodic shapes (seed 0, or proto > 3): the proto-class fires.
         for proto in 0u8..9 {
-            let t = Tile { proto, seed: 0, level: 0, poly: poly_with_n_vertices(3) };
+            let t = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto, seed: 0, level: 0, poly: poly_with_n_vertices(3) };
             assert_eq!(metatile_class(&t), (proto as usize) % 9);
         }
         // Cap-like signature with a seed NOT matching SEED_OF must not be
         // treated as cap — it follows the hat/spectre seed branch instead.
-        let t = Tile { proto: 0, seed: 5, level: 0, poly: poly_with_n_vertices(3) };
+        let t = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 0, seed: 5, level: 0, poly: poly_with_n_vertices(3) };
         assert_eq!(metatile_class(&t), 1); // seed-5 → hat T bucket
     }
 
     #[test]
     fn tile_rgb_metatile_matches_class() {
         // Cap F (proto=3, seed=1) → class 3 → METATILE_PALETTE[3].
-        let cap = Tile { proto: 3, seed: 1, level: 0, poly: poly_with_n_vertices(6) };
+        let cap = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 3, seed: 1, level: 0, poly: poly_with_n_vertices(6) };
         assert_eq!(tile_rgb(ColorMode::Metatile, &cap), METATILE_PALETTE[3]);
         // Hat F1/F2 (proto=0, seed 8/9) → class 3 → same slot.
-        let hat = Tile { proto: 0, seed: 8, level: 0, poly: poly_with_n_vertices(6) };
+        let hat = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 0, seed: 8, level: 0, poly: poly_with_n_vertices(6) };
         assert_eq!(tile_rgb(ColorMode::Metatile, &hat), METATILE_PALETTE[3]);
     }
 
@@ -1171,8 +1290,8 @@ mod tests {
         // Same quad polygon at 0° vs 90° → distinct colors.
         let h = rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
         let v = rect_poly(&[[0.0, 0.0], [0.0, 2.0], [1.0, 2.0], [1.0, 0.0]]);
-        let h_tile = Tile { proto: 0, seed: 0, level: 0, poly: h };
-        let v_tile = Tile { proto: 0, seed: 0, level: 0, poly: v };
+        let h_tile = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 0, seed: 0, level: 0, poly: h };
+        let v_tile = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 0, seed: 0, level: 0, poly: v };
         assert_eq!(tile_rgb(ColorMode::Orientation, &h_tile), ORIENTATION_PALETTE[0]);
         assert_eq!(tile_rgb(ColorMode::Orientation, &v_tile), ORIENTATION_PALETTE[2]);
         assert_ne!(
@@ -1180,8 +1299,8 @@ mod tests {
             tile_rgb(ColorMode::Orientation, &v_tile)
         );
         // seed/proto must not leak into the selection.
-        let a = Tile { proto: 0, seed: 3, level: 0, poly: rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]) };
-        let b = Tile { proto: 7, seed: 1, level: 0, poly: rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]) };
+        let a = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 0, seed: 3, level: 0, poly: rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]) };
+        let b = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 7, seed: 1, level: 0, poly: rect_poly(&[[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]) };
         assert_eq!(tile_rgb(ColorMode::Orientation, &a), tile_rgb(ColorMode::Orientation, &b));
     }
 

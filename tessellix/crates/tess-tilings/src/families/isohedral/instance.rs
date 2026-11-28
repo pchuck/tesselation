@@ -83,7 +83,7 @@ impl Tiling for IhTiling {
             Ok((tiles, periodic)) => TilingResult {
                 tiles: tiles
                     .into_iter()
-                    .map(|(poly, seed)| Tile {
+                    .map(|(poly, seed)| Tile { family: tess_core::tiling::FamilyTag::Isohedral, reflected: false,
                         proto: 0,
                         poly,
                         seed, level: 0,

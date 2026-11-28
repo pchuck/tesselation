@@ -351,7 +351,7 @@ impl Tiling for PinwheelTiling {
         for (t, slot) in &tris {
             let poly = t.poly().transform(&map);
             if poly.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: 0,
                     seed: *slot as u32, level: depth.min(255) as u8,
                     poly,

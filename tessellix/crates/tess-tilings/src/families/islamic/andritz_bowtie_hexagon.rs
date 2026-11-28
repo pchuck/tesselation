@@ -871,7 +871,7 @@ impl Tiling for AndritzBowtieHexagonTiling {
             let poly = Polygon::from_slice(&pts).transform(&map);
             if poly.aabb().intersects(query.region) {
                 let proto = proto_of(ob.ty);
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::Andritz, reflected: false,
                     proto,
                     seed: proto as u32, level: 0,
                     poly,

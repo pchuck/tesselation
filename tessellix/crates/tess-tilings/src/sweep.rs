@@ -1231,7 +1231,7 @@ pub fn theta_gallery_svg(substrate_id: &str, offset_deg: f64) -> Result<String, 
     }
     let tile_polys: Vec<Tile> = cells
         .iter()
-        .map(|c| Tile {
+        .map(|c| Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
             proto: 0,
             poly: c.poly.clone(),
             seed: c.seed, level: 0,
@@ -1687,7 +1687,7 @@ mod tests {
         let host: Vec<Tile> = hankin_4_8_8_tiles()
             .iter()
             .enumerate()
-            .map(|(i, v)| Tile {
+            .map(|(i, v)| Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                 proto: i as u8,
                 poly: Polygon { pts: v.to_vec() },
                 seed: i as u32, level: 0,

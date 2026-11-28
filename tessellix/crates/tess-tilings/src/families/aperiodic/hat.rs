@@ -900,7 +900,7 @@ impl Tiling for HatTiling {
         for h in &hats {
             let poly = Polygon::from_slice(h.world_pts().as_ref()).transform(&map);
             if poly.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: 0,
                     seed: h.role, level: 0,
                     poly,

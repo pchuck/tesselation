@@ -406,7 +406,7 @@ impl Tiling for TurtleTiling {
             if !poly.aabb().intersects(query.region) {
                 continue;
             }
-            tiles.push(Tile {
+            tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                 proto: lf.shape,
                 seed: lf.label as u32 + 1, level: depth as u8,
                 poly,

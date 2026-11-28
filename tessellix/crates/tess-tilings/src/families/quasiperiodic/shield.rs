@@ -439,7 +439,7 @@ impl Tiling for ShieldTiling {
             let world = t.poly().transform(&map);
             if world.aabb().intersects(query.region) {
                 let proto = proto_of(t.kind);
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto,
                     seed: proto as u32, level: steps as u8,
                     poly: world,

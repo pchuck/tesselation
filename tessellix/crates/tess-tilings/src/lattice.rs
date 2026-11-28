@@ -241,6 +241,17 @@ impl Tiling for LatticeTiling {
             .collect();
         let cell_aabb: Vec<BBox> = world_cells.iter().map(|(p, _)| p.aabb()).collect();
 
+        // Family palette identity derived from the card's registry
+        // category: the Uniform / Two-Uniform polygon-type rule
+        // (`paint::family_slot`) keys off this tag; every other category
+        // (Laves duals, Islamic, pavers, …) sharing this emitter stays
+        // untagged. `TilingCategory` and `FamilyTag` remain distinct
+        // concepts — the mapping is deliberate and closed here.
+        let family = match self.category {
+            TilingCategory::Uniform => tess_core::tiling::FamilyTag::Uniform,
+            TilingCategory::TwoUniform => tess_core::tiling::FamilyTag::TwoUniform,
+            _ => tess_core::tiling::FamilyTag::None,
+        };
         let mut tiles = Vec::new();
         for i in i0..=i1 {
             for j in j0..=j1 {
@@ -252,7 +263,7 @@ impl Tiling for LatticeTiling {
                     if !bb.intersects(query.region) {
                         continue;
                     }
-                    tiles.push(Tile {
+                    tiles.push(Tile { family, reflected: false,
                         proto: ci as u8,
                         poly: poly.translated(tr),
                         seed: base.wrapping_add(*seed), level: 0,

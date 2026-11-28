@@ -281,7 +281,7 @@ fn on_state_keeps_degenerate_tiles_degenerate() {
     // The anatomical pin: a clipped tile whose surviving polygon is
     // degenerate (< 3 vertices) emits no path in either pass.
     let mut tiles = view_of("square");
-    tiles.push(Tile {
+    tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
         proto: 2,
         seed: 2,
         level: 0,

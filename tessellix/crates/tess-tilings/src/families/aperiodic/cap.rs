@@ -1084,7 +1084,7 @@ impl Tiling for CapTiling {
                 query.region.max.x,
                 query.region.max.y,
             ) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: ty,
                     seed: SEED_OF[ty as usize], level: 0,
                     poly,

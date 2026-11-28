@@ -657,7 +657,7 @@ impl Tiling for PenroseP1Tiling {
         for t in &tiles {
             let poly = tile_poly(t).transform(&map);
             if poly.aabb().intersects(query.region) {
-                out.push(Tile {
+                out.push(Tile { family: tess_core::tiling::FamilyTag::Penrose, reflected: false,
                     proto: t.kind,
                     seed: t.kind as u32, level: 0,
                     poly,

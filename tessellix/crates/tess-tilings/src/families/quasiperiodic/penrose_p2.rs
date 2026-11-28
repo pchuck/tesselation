@@ -394,7 +394,7 @@ impl Tiling for PenroseP2Tiling {
             let proto = if *is_dart { 1 } else { 0 };
             let poly = Polygon::from_slice(verts).transform(&map);
             if poly.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::Penrose, reflected: false,
                     proto,
                     seed: proto as u32, level: depth.min(255) as u8,
                     poly,

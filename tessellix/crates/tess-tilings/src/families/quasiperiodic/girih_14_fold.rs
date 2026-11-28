@@ -1559,7 +1559,7 @@ impl Tiling for Girih14FoldTiling {
                 .collect();
             let poly = Polygon::from_slice(&pts);
             if poly.aabb().intersects(query.region) {
-                out.push(Tile {
+                out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: inst.cls,
                     seed: inst.cls as u32, level: n,
                     poly,

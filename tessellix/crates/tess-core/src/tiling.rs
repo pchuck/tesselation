@@ -19,6 +19,46 @@ pub struct Query {
     pub region: BBox,
 }
 
+/// Per-family palette identity of a [`Tile`] — a coarse rendering
+/// contract telling the color functions which fixed palette rule (if
+/// any) shades this tile. **NOT the taxonomy category**
+/// ([`TilingCategory`](crate::category::TilingCategory)): browse
+/// grouping (Uniform/Two-Uniform/Laves/… tabs) and family palette
+/// identity are different concepts — e.g. kuniform duals live in the
+/// Duals-&-variants tab but carry no family tag, while every
+/// Uniform-tab card does.
+///
+/// Closed enum — not `u8` — so `match`es are exhaustive and adding a
+/// variant is a compiler-checked change. `None` (the `Default`) covers
+/// every tiling outside the tagged families.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+pub enum FamilyTag {
+    /// Untagged: every tiling that is not Penrose/Andritz/Uniform/
+    /// TwoUniform/Isohedral (and not Hat/Turtle/Spectre until Landing B).
+    #[default]
+    None,
+    /// The Penrose family (P1/P2/P3 rhomb-pentagon cards): per-card
+    /// pinned proto→slot palette rule.
+    Penrose,
+    /// The Andritz bowtie-hexagon family: per-card pinned proto→slot
+    /// palette rule.
+    Andritz,
+    /// The Uniform (archimedean) set: one color per polygon type.
+    Uniform,
+    /// The Two-Uniform (k=2) set: 20 kuniform — shares the Uniform
+    /// polygon-type rule (one color per polygon type across both tabs).
+    TwoUniform,
+    /// The isohedral gallery (IH1–IH45 subset): tagged for identity;
+    /// no palette rule reads it yet (colors unchanged).
+    Isohedral,
+    /// Hat aperiodic monotile (tag arrives with Landing B; no rule arm).
+    Hat,
+    /// Turtle aperiodic monotile (tag arrives with Landing B; no rule arm).
+    Turtle,
+    /// Spectre aperiodic monotile (tag arrives with Landing B; no rule arm).
+    Spectre,
+}
+
 /// One tile.
 ///
 /// * `proto` — index of the prototile (shape) this tile is a copy of.
@@ -42,12 +82,25 @@ pub struct Query {
 ///   carry genuinely mixed per-tile lineage depths within one view.
 ///   Drives [`ColorMode::Level`](crate::view::ColorMode::Level); never
 ///   affects any other mode's decision function.
+/// * `family` — per-family palette identity ([`FamilyTag`]); `None` for
+///   every tiling outside the palette-ruled families. **NOT the
+///   taxonomy category** ([`TilingCategory`](crate::category::TilingCategory)):
+///   a coarse rendering-contract label, independent of browse grouping.
+///   Drives the family palette rule in [`tile_rgb`](crate::paint::tile_rgb)
+///   and raster's `color_index`; never affects geometry.
+/// * `reflected` — `true` iff this tile's polygon was mirrored
+///   (handedness flipped) relative to the generator's emission, e.g.
+///   by [`mirror_tiles`](crate::svg::mirror_tiles). Emission sites
+///   write `false`. Pure metadata: no color or geometry function
+///   branches on it today.
 #[derive(Debug, Clone)]
 pub struct Tile {
     pub proto: u8,
     pub poly: Polygon,
     pub seed: u32,
     pub level: u8,
+    pub family: FamilyTag,
+    pub reflected: bool,
 }
 
 /// The output of a generation.

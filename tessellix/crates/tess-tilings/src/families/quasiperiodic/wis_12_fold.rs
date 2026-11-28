@@ -848,7 +848,7 @@ impl Tiling for Wis12FoldTiling {
             let pts: Vec<Vec2> = t.1.iter().map(|c| val(*c)).collect();
             let poly = Polygon::new(pts).transform(&map);
             if poly.aabb().intersects(query.region) {
-                out.push(Tile {
+                out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: t.0,
                     seed: t.0 as u32, level: 1,
                     poly,

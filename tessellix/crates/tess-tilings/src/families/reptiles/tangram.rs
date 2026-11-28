@@ -674,7 +674,7 @@ impl Tiling for TangramTiling {
         for t in &tiles {
             let poly = t.poly().transform(&map);
             if poly.aabb().intersects(query.region) {
-                out.push(Tile {
+                out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: t.proto,
                     seed: t.twist as u32 + 1, level: depth as u8,
                     poly,

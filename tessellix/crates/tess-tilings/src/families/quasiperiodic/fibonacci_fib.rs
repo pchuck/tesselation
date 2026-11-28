@@ -404,7 +404,7 @@ impl Tiling for FibonacciFibTiling {
                 .collect();
             let poly = Polygon::new(pts).transform(&map);
             if poly.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: PROTO[t.cls as usize],
                     seed: t.cls as u32, level: d as u8,
                     poly,

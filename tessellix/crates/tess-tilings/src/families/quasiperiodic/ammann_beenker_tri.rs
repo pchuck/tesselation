@@ -372,7 +372,7 @@ impl Tiling for AmmannBeenkerTriTiling {
             };
             let world = t.poly().transform(&map);
             if world.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto,
                     seed, level: steps as u8,
                     poly: world,

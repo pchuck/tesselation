@@ -2615,7 +2615,7 @@ mod lattice_culling_tests {
                     let bb = poly.aabb();
                     let bb = BBox::new(bb.min + tr, bb.max + tr);
                     if bb.intersects(*region) {
-                        out.push(Tile {
+                        out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                             proto: ci as u8,
                             poly: poly.translated(tr),
                             seed: lt.seed_pattern.base(i, j).wrapping_add(*seed),

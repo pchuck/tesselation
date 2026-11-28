@@ -339,7 +339,7 @@ impl Tiling for PenrosePentagonTiling {
         for t in &tiles {
             let world = t.poly(&protos).transform(&map);
             if world.aabb().intersects(query.region) {
-                out.push(Tile {
+                out.push(Tile { family: tess_core::tiling::FamilyTag::Penrose, reflected: false,
                     proto: t.proto,
                     seed: t.proto as u32, level: depth.min(255) as u8,
                     poly: world,

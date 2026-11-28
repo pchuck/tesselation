@@ -424,10 +424,10 @@ mod tests {
             Vec2::new(2.0, 1.0),
             Vec2::new(0.0, 1.0),
         ]);
-        let t = crate::tiling::Tile { poly: poly.clone(), proto: 0, seed: 0, level: 0 };
+        let t = crate::tiling::Tile { family: crate::tiling::FamilyTag::None, reflected: false, poly: poly.clone(), proto: 0, seed: 0, level: 0 };
         assert!((super::mean_tile_side(&[t]) - 1.5).abs() < 1e-9);
         poly = crate::geometry::Polygon::new(vec![Vec2::new(0.0, 0.0); 3]);
-        let t = crate::tiling::Tile { poly, proto: 0, seed: 0, level: 0 };
+        let t = crate::tiling::Tile { family: crate::tiling::FamilyTag::None, reflected: false, poly, proto: 0, seed: 0, level: 0 };
         assert_eq!(super::mean_tile_side(&[t]), 0.0);
         assert_eq!(super::mean_tile_side(&[]), 0.0);
     }

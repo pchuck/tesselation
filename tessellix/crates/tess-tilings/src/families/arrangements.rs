@@ -272,7 +272,7 @@ mod pythagorean_tests {
                         let bb = aabbs[ci];
                         let bb = BBox::new(bb.min + tr, bb.max + tr);
                         if bb.intersects(region) {
-                            brute.push(Tile {
+                            brute.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                                 proto: ci as u8,
                                 poly: poly.translated(tr),
                                 seed: ci as u32, level: 0,

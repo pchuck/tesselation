@@ -177,7 +177,7 @@ fn a1_network_topology_and_gate_truth() {
     }
     let region = BBox::new(Vec2::new(lo.x - 0.5, lo.y - 0.5), Vec2::new(hi.x + 0.5, hi.y + 0.5));
 
-    let hole_tile = Tile {
+    let hole_tile = Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
         proto: 0,
         poly: Polygon::from_slice(
             &host312::hole()

@@ -415,7 +415,7 @@ impl Tiling for GoldenTriangleTiling {
                 .collect();
             let poly = Polygon::new(pts).transform(&map);
             if poly.aabb().intersects(query.region) {
-                out.push(Tile {
+                out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: cls_of(t),
                     seed: (-t.e) as u32, level: (-t.e).min(255) as u8,
                     poly,

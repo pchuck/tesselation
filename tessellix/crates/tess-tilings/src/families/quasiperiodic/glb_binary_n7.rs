@@ -1243,7 +1243,7 @@ impl Tiling for GlbBinaryN7Tiling {
             let pts: Vec<Vec2> = t.v.iter().map(|&w| to_cell(w.vec2())).collect();
             let poly = Polygon::from_slice(&pts).transform(&map);
             if poly.aabb().intersects(query.region) {
-                out.push(Tile {
+                out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: t.shape - 1,
                     seed: (t.shape - 1) as u32, level: d as u8,
                     poly,

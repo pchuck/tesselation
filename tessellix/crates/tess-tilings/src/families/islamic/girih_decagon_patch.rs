@@ -911,7 +911,7 @@ impl Tiling for GirihDecagonPatchTiling {
         for (proto, pts) in patch_polys() {
             let poly = Polygon::from_slice(pts).transform(&map);
             if poly.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: *proto,
                     seed: u32::from(*proto), level: 0,
                     poly,

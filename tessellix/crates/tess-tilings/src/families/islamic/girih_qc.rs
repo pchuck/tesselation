@@ -2084,7 +2084,7 @@ impl Tiling for GirihQuasiperiodicTiling {
             let poly = Polygon::from_slice(&pts).transform(&map);
             if poly.aabb().intersects(query.region) {
                 let proto = proto_of(o.ty);
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto,
                     seed: proto as u32, level: 0,
                     poly,

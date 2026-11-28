@@ -367,7 +367,7 @@ impl Tiling for ArmchairTiling {
         for c in &chairs {
             let poly = c.poly().transform(&map);
             if poly.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: 0,
                     seed: c.o as u32 + 1, level: depth as u8,
                     poly,

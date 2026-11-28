@@ -661,7 +661,7 @@ impl Tiling for PentiamondAcFactor2Tiling {
         for t in &tiles {
             let poly = t.poly().transform(&map);
             if poly.aabb().intersects(query.region) {
-                out.push(Tile {
+                out.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: t.letter,
                     seed: t.label() as u32 + 1, level: depth as u8,
                     poly,

@@ -473,7 +473,7 @@ impl FractalizingTiling {
         for (kind, pts) in plane {
             let world = Polygon::from_slice(&pts).transform(&map);
             if world.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: kind,
                     seed: kind as u32, level: depth as u8,
                     poly: world,

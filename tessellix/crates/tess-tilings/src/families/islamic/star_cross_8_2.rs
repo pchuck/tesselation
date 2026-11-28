@@ -199,13 +199,13 @@ impl Tiling for StarCross82Tiling {
                 let cp: Vec<Vec2> = CROSS.iter().map(|p| *p + tr).collect();
                 let poly = Polygon::from_slice(&cp).transform(&map);
                 if poly.aabb().intersects(query.region) {
-                    tiles.push(Tile { proto: 0, seed: 0, level: 0, poly });
+                    tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false, proto: 0, seed: 0, level: 0, poly });
                 }
                 // {8/2} star centered on lattice point (i, j) (proto/seed 1).
                 let sp: Vec<Vec2> = STAR.iter().map(|p| *p + tr).collect();
                 let poly = Polygon::from_slice(&sp).transform(&map);
                 if poly.aabb().intersects(query.region) {
-                    tiles.push(Tile { proto: 1, seed: 1, level: 0, poly });
+                    tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false, proto: 1, seed: 1, level: 0, poly });
                 }
             }
         }

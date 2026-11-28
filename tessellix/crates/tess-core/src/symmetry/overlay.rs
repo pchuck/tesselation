@@ -860,7 +860,7 @@ mod tests {
     use crate::geometry::Polygon;
 
     fn tile(pts: &[(f64, f64)]) -> Tile {
-        Tile {
+        Tile { family: crate::tiling::FamilyTag::None, reflected: false,
             proto: 0,
             poly: Polygon::from_slice(
                 &pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect::<Vec<Vec2>>(),

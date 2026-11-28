@@ -285,7 +285,7 @@ impl Tiling for DominoTiling {
             ])
             .transform(&map);
             if poly.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: 0,
                     seed: c.ty as u32, level: d as u8,
                     poly,

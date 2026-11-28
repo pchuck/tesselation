@@ -467,7 +467,7 @@ impl Tiling for GoldenBeeTiling {
                 .collect();
             let poly = Polygon::new(pts).transform(&map);
             if poly.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: c.cls,
                     seed: c.e as u32, level: c.e,
                     poly,

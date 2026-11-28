@@ -518,7 +518,7 @@ impl Tiling for AmmannA4Tiling {
         for t in &pieces {
             let world = t.poly().transform(&map);
             if world.aabb().intersects(query.region) {
-                tiles.push(Tile {
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
                     proto: if t.st <= 1 { 0 } else { 1 },
                     seed: if t.st <= 1 { 0 } else { 1 },
                     level: steps as u8,
