@@ -284,6 +284,9 @@ fn off_state_tilings_have_no_layer() {
         assert!(wv.med.is_none(), "{id} must have no medallion layer");
         assert_eq!(wv.walls, tess_core::strapwork::walls(&res.tiles, 45.0), "{id} off-state walls");
     }
-    // The layer table carries exactly the M172 row (M203 scope).
-    assert_eq!(weave::medallion_layer_specs().len(), 1);
+    // The layer table carries the M172 row plus the two §22e motif
+    // rows; the motif rows are gated (medallion_wiring must never
+    // select them — see tests/medallion_22e.rs).
+    assert_eq!(weave::medallion_layer_specs().len(), 3);
+    assert_eq!(weave::motif_carriers("22e"), vec!["ammann-beenker", "penrose"]);
 }

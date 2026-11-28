@@ -44,6 +44,21 @@
 //!                                  the weave, generic ones do not.
 //!     [--band-w W]                 band width in world units for the
 //!                                  decoration (default 0.1 at scale 1)
+//!     [--motif NAME]               §22e motif record layer: fuse the motif's
+//!                                  monster medallion figure at every tiling
+//!                                  vertex into the strapwork wall map —
+//!                                  22e = the {16/8} hexadecagon monster on
+//!                                  ammann-beenker plus the {10/2} decagon
+//!                                  monster on penrose, inflated so the
+//!                                  medallions meet at the tile-edge
+//!                                  midpoints. Requires --strapwork DEG;
+//!                                  mutually exclusive with
+//!                                  --medallion-weave (both select the
+//!                                  medallion third layer); refused with
+//!                                  --deform (the fuse needs a constant
+//!                                  contact angle) and with --dual-overlay.
+//!                                  Unknown motif names and non-carrier
+//!                                  tilings are named refusals.
 //!     [--highlight-supertiles]     outline supertile-member tiles
 //!                                  (substitution level > 0) at 2× the
 //!                                  tile-border stroke, so the
@@ -172,6 +187,7 @@ struct ExportArgs {
     decoration: Option<Decoration>,
     band_w: f64,
     medallion_weave: bool,
+    motif: Option<String>,
     center: Option<(f64, f64)>,
     highlight_supertiles: bool,
     mirror: bool,
@@ -313,6 +329,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         decoration: None,
         band_w: 0.1,
         medallion_weave: false,
+        motif: None,
         center: None,
         highlight_supertiles: false,
         mirror: false,
@@ -374,6 +391,16 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
             }
             "--highlight-supertiles" => a.highlight_supertiles = true,
             "--medallion-weave" => a.medallion_weave = true,
+            "--motif" => {
+                // §22e motif layer selector: value-bearing, and unknown
+                // values are refused by name at parse time (mirroring
+                // --decoration).
+                let v = next(&mut i)?;
+                if v != "22e" {
+                    return Err(format!("bad --motif '{v}': expected 22e"));
+                }
+                a.motif = Some(v);
+            }
             "--mirror" => a.mirror = true,
             "--dual-overlay" => a.dual_overlay = true,
             "--symmetry-overlay" => a.symmetry_overlay = true,
@@ -432,6 +459,21 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
     if a.medallion_weave && a.strapwork.is_none() {
         return Err("--medallion-weave requires --strapwork DEG".into());
     }
+    if a.motif.is_some() && a.deform.is_some() {
+        return Err(
+            "--motif requires --strapwork DEG: the motif record layer fuses at a constant contact angle (deformation profiles are not supported)"
+                .into(),
+        );
+    }
+    if a.motif.is_some() && a.strapwork.is_none() {
+        return Err("--motif requires --strapwork DEG".into());
+    }
+    if a.motif.is_some() && a.medallion_weave {
+        return Err(
+            "--motif and --medallion-weave are mutually exclusive: both select the medallion third layer"
+                .into(),
+        );
+    }
     if band_w_seen && a.decoration.is_none() {
         return Err("--band-w requires --decoration".into());
     }
@@ -459,6 +501,12 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
     if a.dual_overlay && a.medallion_weave {
         return Err(
             "--dual-overlay is not applicable with --medallion-weave (the weave fuses the medallion third layer into the wall map, which the two-group overlay render does not support)"
+                .into(),
+        );
+    }
+    if a.dual_overlay && a.motif.is_some() {
+        return Err(
+            "--dual-overlay is not applicable with --motif (the motif fuses the record layer into the wall map, which the two-group overlay render does not support)"
                 .into(),
         );
     }
@@ -628,6 +676,28 @@ fn export(args: &[String]) -> Result<(), String> {
         )
     } else {
         match a.strapwork {
+            Some(delta) if a.motif.is_some() => {
+                // The §22e motif layer: a tiling that carries no row for
+                // the motif is a named refusal (never a silent fall-back
+                // to the plain pipeline). Parse rejects unknown motifs,
+                // so the carrier list here is never empty in practice.
+                let motif = a.motif.as_deref().unwrap_or("");
+                let wv = tess_tilings::medallion::weave::fused_weave_motif(
+                    tiling,
+                    &result.tiles,
+                    &region,
+                    delta,
+                    motif,
+                )
+                .ok_or_else(|| {
+                    format!(
+                        "--motif {motif} is not carried by tiling '{}' (carriers: {})",
+                        a.tiling,
+                        tess_tilings::medallion::weave::motif_carriers(motif).join(", ")
+                    )
+                })?;
+                (wv.walls, wv.med)
+            }
             Some(delta) if a.medallion_weave => {
                 let wv = tess_tilings::medallion::weave::fused_weave(
                     tiling,
@@ -2173,6 +2243,7 @@ mod tests_export_contract {
             ("ornamentation style", "--decoration"),
             ("band width in world units", "--band-w"),
             ("medallion third layer", "--medallion-weave"),
+            ("monster medallion figure", "--motif"),
             ("supertile-member tiles", "--highlight-supertiles"),
             ("enantiomorph", "--mirror"),
             ("centroid dual", "--dual-overlay"),
@@ -2195,7 +2266,7 @@ mod tests_export_contract {
         let expected: &[&str] = &[
             "--tiling", "--width", "--height", "--scale", "--rotation", "--center",
             "--param", "--mode", "--strapwork", "--deform", "--decoration",
-            "--band-w", "--medallion-weave", "--highlight-supertiles", "--mirror",
+"--band-w", "--medallion-weave", "--motif", "--highlight-supertiles", "--mirror",
             "--dual-overlay", "--symmetry-overlay", "--vertex-orbits", "--out", "-o",
         ];
         for flag in expected {
@@ -2232,6 +2303,7 @@ mod tests_export_contract {
             (&["--tiling", "square", "--strapwork", "45", "--decoration", "fill"], "--decoration"),
             (&["--tiling", "square", "--band-w", "0.2", "--strapwork", "45", "--decoration", "fill"], "--band-w"),
             (&["--tiling", "square", "--strapwork", "45", "--medallion-weave"], "--medallion-weave"),
+            (&["--tiling", "penrose", "--strapwork", "36", "--motif", "22e"], "--motif"),
             (&["--tiling", "square", "--highlight-supertiles"], "--highlight-supertiles"),
             (&["--tiling", "square", "--mirror"], "--mirror"),
             (&["--tiling", "square", "--dual-overlay"], "--dual-overlay"),
@@ -2317,6 +2389,88 @@ mod tests_export_contract {
             .unwrap_or_else(|e| panic!("docs/USAGE.md line {line_no} (--band-w requires --decoration): --band-w WITH --decoration must parse: {e}"));
         parse_export(&args(&["--tiling", "square", "--band-w", "0.2", "--deform", "sine", "60", "15", "1", "--decoration", "fill"]))
             .unwrap_or_else(|e| panic!("docs/USAGE.md line {line_no} (--band-w requires --decoration): --band-w WITH --decoration (deform) must parse: {e}"));
+    }
+
+    // ---- requirement claims: --motif gate row ----------------------------
+
+    /// The doc states that `--motif` "requires `--strapwork DEG`" and is
+    /// "mutually exclusive with `--medallion-weave`" (refused with
+    /// `--deform` and `--dual-overlay`); parse_export enforces every
+    /// claim as a named parse error, unknown motif values are refused by
+    /// name, and the valid combination parses.
+    #[test]
+    fn usage_motif_gates_match_doc() {
+        let doc = usage_doc();
+        let claim = "docs/USAGE.md: --motif gate pin";
+
+        // Doc side: the claims live on the --motif row.
+        let (line_no, _line, cells) =
+            export_table_row(&doc, "monster medallion figure", claim);
+        assert!(
+            cells[1].contains("--motif"),
+            "docs/USAGE.md line {line_no} (--motif row): flag cell {:?} should name --motif",
+            cells[1]
+        );
+        assert!(
+            cells[3].contains("requires `--strapwork DEG`"),
+            "docs/USAGE.md line {line_no} (--motif requires --strapwork): meaning cell {:?} must claim \"requires `--strapwork DEG`\"",
+            cells[3]
+        );
+        assert!(
+            cells[3].contains("mutually exclusive with `--medallion-weave`"),
+            "docs/USAGE.md line {line_no} (--motif exclusions): meaning cell {:?} must claim the --medallion-weave exclusion",
+            cells[3]
+        );
+
+        // Code side: every claim is enforced as a named parse error.
+        let err = parse_export(&args(&["--tiling", "penrose", "--motif", "22e"])).unwrap_err();
+        assert!(
+            err.contains("--motif requires --strapwork DEG"),
+            "docs/USAGE.md line {line_no} (--motif requires --strapwork): named parse error expected, got {err:?}"
+        );
+        let err = parse_export(&args(&[
+            "--tiling", "penrose", "--strapwork", "36", "--motif", "22e", "--medallion-weave",
+        ]))
+        .unwrap_err();
+        assert!(
+            err.contains("--motif") && err.contains("--medallion-weave"),
+            "docs/USAGE.md line {line_no} (--motif exclusions): the collision must name both flags, got {err:?}"
+        );
+        let err = parse_export(&args(&[
+            "--tiling", "penrose", "--deform", "sine", "36", "10", "1", "--motif", "22e",
+        ]))
+        .unwrap_err();
+        assert!(
+            err.contains("--motif") && err.contains("--strapwork"),
+            "docs/USAGE.md line {line_no} (--motif refused with --deform): named parse error expected, got {err:?}"
+        );
+        let err = parse_export(&args(&[
+            "--tiling", "penrose", "--strapwork", "36", "--motif", "22e", "--dual-overlay",
+        ]))
+        .unwrap_err();
+        assert!(
+            err.contains("--motif") && err.contains("--dual-overlay"),
+            "docs/USAGE.md line {line_no} (--motif refused with --dual-overlay): named parse error expected, got {err:?}"
+        );
+
+        // Unknown motif values are refused by name at parse time
+        // (mirroring the --decoration value refusal).
+        let err = parse_export(&args(&[
+            "--tiling", "penrose", "--strapwork", "36", "--motif", "24x",
+        ]))
+        .unwrap_err();
+        assert!(
+            err.contains("bad --motif '24x'") && err.contains("expected 22e"),
+            "docs/USAGE.md line {line_no} (--motif values): unknown motif must name the value and the expected set, got {err:?}"
+        );
+
+        // The valid combination still parses.
+        parse_export(&args(&[
+            "--tiling", "penrose", "--strapwork", "36", "--motif", "22e",
+        ]))
+        .unwrap_or_else(|e| {
+            panic!("docs/USAGE.md line {line_no} (--motif gate pin): valid --motif must parse: {e}")
+        });
     }
 
     // ---- flags documented as required ------------------------------------

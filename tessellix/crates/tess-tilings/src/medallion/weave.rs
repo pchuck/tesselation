@@ -13,6 +13,12 @@
 //! module adds no `Tiling` implementation and no registry movement
 //! (the 169 built-ins / 188 memberships are untouched).
 //!
+//! Rows are either ungated — fused by [`medallion_wiring`] /
+//! [`fused_weave`] under `--medallion-weave` — or **motif-gated**
+//! ([`MedallionLayerSpec::motif`]): a `Some(m)` row fuses only when
+//! `--motif m` names it ([`fused_weave_motif`]), so the §22e monster
+//! layers stay off-state byte-identical under the plain weave.
+//!
 //! [`Tiling::suppressed_seeds`]: tess_core::tiling::Tiling::suppressed_seeds
 //! [`Tiling::extra_walls`]: tess_core::tiling::Tiling::extra_walls
 
@@ -29,19 +35,43 @@ pub struct MedallionLayerSpec {
     pub record: &'static str,
     pub absorption: &'static str,
     pub suppressed: &'static [u32],
+    /// Motif gate: `None` fuses under `--medallion-weave`; `Some(m)`
+    /// fuses only under `--motif m` (the §22e monster layers — the
+    /// medallions are vertex-centered and virtual, so `suppressed`
+    /// stays empty: every tile is a wall carrier).
+    pub motif: Option<&'static str>,
     pub extra: fn(&[Tile]) -> Vec<Wall>,
 }
 
 /// The layer table (see the module docs for why the table exists
 /// beside the registry).
 pub fn medallion_layer_specs() -> &'static [MedallionLayerSpec] {
-    &[MedallionLayerSpec {
-        tiling_id: "dodecagon-hexagram-honeycomb",
-        record: "M172 {12/4} dodecagon \u{2295} {6/2} hexagram",
-        absorption: "LandingIdentity",
-        suppressed: &[0, 1],
-        extra: crate::families::islamic::dodecagon_hexagram_honeycomb::medallion_extra_walls,
-    }]
+    &[
+        MedallionLayerSpec {
+            tiling_id: "dodecagon-hexagram-honeycomb",
+            record: "M172 {12/4} dodecagon \u{2295} {6/2} hexagram",
+            absorption: "LandingIdentity",
+            suppressed: &[0, 1],
+            motif: None,
+            extra: crate::families::islamic::dodecagon_hexagram_honeycomb::medallion_extra_walls,
+        },
+        MedallionLayerSpec {
+            tiling_id: "ammann-beenker",
+            record: "22e {16/8} hexadecagon monster (Ammann-Beenker)",
+            absorption: "LandingIdentity",
+            suppressed: &[],
+            motif: Some("22e"),
+            extra: crate::medallion::motif22e::ab_extra_walls,
+        },
+        MedallionLayerSpec {
+            tiling_id: "penrose",
+            record: "22e {10/2} decagon monster (Penrose)",
+            absorption: "BoundaryInference",
+            suppressed: &[],
+            motif: Some("22e"),
+            extra: crate::medallion::motif22e::penrose_extra_walls,
+        },
+    ]
 }
 
 /// The resolved layer for one emission of one tiling: what was
@@ -58,7 +88,22 @@ pub struct MedallionWiring {
 /// Merge the trait hooks and the layer table for `t`'s current
 /// emission. `None` means no layer at all: the caller must stay on
 /// the plain two-layer pipeline (the off-state, byte-identical).
+/// Only ungated rows ([`MedallionLayerSpec::motif`] `= None`) take
+/// part — motif rows need [`fused_weave_motif`].
 pub fn medallion_wiring(t: &dyn Tiling, tiles: &[Tile], region: &BBox) -> Option<MedallionWiring> {
+    wiring_with(t, tiles, region, None)
+}
+
+/// The shared merge: `motif = None` selects the ungated rows (the
+/// `--medallion-weave` wiring), `motif = Some(m)` the rows gated by
+/// `--motif m`. Trait hooks always contribute (they are the tiling's
+/// own layer, never motif-gated).
+fn wiring_with(
+    t: &dyn Tiling,
+    tiles: &[Tile],
+    region: &BBox,
+    motif: Option<&str>,
+) -> Option<MedallionWiring> {
     let mut seeds = t.suppressed_seeds();
     let mut extra = t.extra_walls(tiles, region);
     let mut labels: Option<(&'static str, &'static str)> = None;
@@ -67,7 +112,7 @@ pub fn medallion_wiring(t: &dyn Tiling, tiles: &[Tile], region: &BBox) -> Option
     }
     if let Some(spec) = medallion_layer_specs()
         .iter()
-        .find(|s| s.tiling_id == t.id())
+        .find(|s| s.tiling_id == t.id() && s.motif == motif)
     {
         for s in spec.suppressed {
             if !seeds.contains(s) {
@@ -134,7 +179,54 @@ pub fn fused_weave(
     region: &BBox,
     delta_deg: f64,
 ) -> FusedWeave {
-    match medallion_wiring(t, tiles, region) {
+    fuse(t, tiles, region, delta_deg, None)
+}
+
+/// The row of `tiling_id` gated by motif `motif`, if any.
+pub fn motif_layer_spec(tiling_id: &str, motif: &str) -> Option<&'static MedallionLayerSpec> {
+    medallion_layer_specs()
+        .iter()
+        .find(|s| s.tiling_id == tiling_id && s.motif == Some(motif))
+}
+
+/// The ids carrying motif `motif` (for the CLI's named refusal).
+pub fn motif_carriers(motif: &str) -> Vec<&'static str> {
+    medallion_layer_specs()
+        .iter()
+        .filter(|s| s.motif == Some(motif))
+        .map(|s| s.tiling_id)
+        .collect()
+}
+
+/// Fuse `t`'s **motif-gated** layer at contact angle `delta_deg`.
+/// `None` means `t` carries no row for `motif`: the caller refuses by
+/// name ([`motif_carriers`]) — never a silent fall back to the plain
+/// pipeline. The ungated rows do not take part; the off-state (no
+/// `--motif`) stays on the byte-identical two-layer path.
+pub fn fused_weave_motif(
+    t: &dyn Tiling,
+    tiles: &[Tile],
+    region: &BBox,
+    delta_deg: f64,
+    motif: &str,
+) -> Option<FusedWeave> {
+    if motif_layer_spec(t.id(), motif).is_none() {
+        return None;
+    }
+    Some(fuse(t, tiles, region, delta_deg, Some(motif)))
+}
+
+/// The shared fusion: build the [`wiring_with`] layer, drop the
+/// suppressed tiles, fuse the record segments through
+/// [`walls_layered`].
+fn fuse(
+    t: &dyn Tiling,
+    tiles: &[Tile],
+    region: &BBox,
+    delta_deg: f64,
+    motif: Option<&str>,
+) -> FusedWeave {
+    match wiring_with(t, tiles, region, motif) {
         None => FusedWeave {
             walls: walls(tiles, delta_deg),
             med: None,

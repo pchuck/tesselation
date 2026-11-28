@@ -41,6 +41,7 @@ pub mod hostwis;
 pub mod infer;
 pub mod khatam_m53;
 pub mod monster;
+pub mod motif22e;
 pub mod rosette_m56;
 pub mod weave;
 pub mod wis_m158;
