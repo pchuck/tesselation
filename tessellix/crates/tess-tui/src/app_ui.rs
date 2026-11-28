@@ -89,10 +89,10 @@ struct Tui {
     /// Render (the selected tiling's own category).
     tab_idx: usize,
     /// Per-tab card cursor, indexed by [`TilingCategory::ALL`] position.
-    cursors: [usize; 10],
+    cursors: [usize; TilingCategory::ALL.len()],
     /// Per-tab grid scroll: index of the topmost grid row, same
     /// indexing. Clamped against the rendered plan on every draw.
-    scroll: [usize; 10],
+    scroll: [usize; TilingCategory::ALL.len()],
     mode: Mode,
     search: String,
     /// Params overlay open in Render mode.
@@ -221,8 +221,8 @@ impl Tui {
             app: App::new(registry, 8.0),
             tabs,
             tab_idx: 0,
-            cursors: [0; 10],
-            scroll: [0; 10],
+            cursors: [0; TilingCategory::ALL.len()],
+            scroll: [0; TilingCategory::ALL.len()],
             mode: Mode::Browse,
             search: String::new(),
             params_open: false,
@@ -1149,9 +1149,10 @@ fn render_status_browse(frame: &mut Frame, tui: &mut Tui, rect: Rect) {
                 None => String::new(),
             };
             format!(
-                " {} (tab {}/10) │ arrows/hjkl move · enter open · tab/1-9/0 tabs · pgup/pgdn/wheel scroll · +/- card size · c/d preview-mode{} · / search · q quit",
+                " {} (tab {}/{}) │ arrows/hjkl move · enter open · tab/1-9/0 tabs · pgup/pgdn/wheel scroll · +/- card size · c/d preview-mode{} · / search · q quit",
                 tui.active_tab().category.label(),
                 tui.tab_idx + 1,
+                tui.tabs.len(),
                 mode_hint
             )
         }
@@ -1395,8 +1396,8 @@ mod tests {
             app: App::new(registry, 8.0),
             tabs,
             tab_idx: 0,
-            cursors: [0; 10],
-            scroll: [0; 10],
+            cursors: [0; TilingCategory::ALL.len()],
+            scroll: [0; TilingCategory::ALL.len()],
             mode: Mode::Browse,
             search: String::new(),
             params_open: false,
@@ -2825,6 +2826,26 @@ mod tests {
         term.draw(|f| render(f, &mut tui)).unwrap();
         let text = buffer_text(&term);
         assert!(text.contains("f:reflect-hl"), "status must show both on flags: {text}");
+    }
+
+    #[test]
+    fn status_bar_tab_denominator_matches_the_tab_count() {
+        let mut tui = fresh_tui();
+        let n = tui.tabs.len();
+        let mut term = Terminal::new(TestBackend::new(120, 40)).unwrap();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        let text = buffer_text(&term);
+        assert!(
+            text.contains(&format!("(tab 1/{n})")),
+            "first tab must show the live denominator ({n} tabs): {text}"
+        );
+        tui.tab_idx = n - 1;
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        let text = buffer_text(&term);
+        assert!(
+            text.contains(&format!("(tab {n}/{n})")),
+            "last tab must show n/n, not a hardcoded denominator: {text}"
+        );
     }
 
     #[test]
