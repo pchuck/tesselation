@@ -7,9 +7,10 @@
 //! tests the tiles whose bounding box covers its cell.
 //!
 //! `palette` is a color-index map: the output pixel value is
-//! `palette[color_index(mode, tile)]`, so each front end passes the
-//! palette of its choice — the TUI passes the 256-cube indices of the
-//! shared 8-color palette, the GUI passes the identity map
+//! `palette[color_index(mode, tile)]`, clamped through
+//! [`palette_slot`]'s last slot — so each front end passes the palette
+//! of its choice (the TUI passes the 256-cube indices of the shared
+//! 8-color palette, the GUI passes the identity map
 //! `[0, 1, ..., 7]` so that the indices are positions in
 //! [`crate::paint::PALETTE`] (full 8-bit colors, no 256-cube loss).
 //!
@@ -79,6 +80,23 @@ impl Raster {
     pub fn at(&self, x: u32, y: u32) -> u8 {
         self.pixels[((self.h - 1 - y) * self.w + x) as usize]
     }
+}
+
+/// Map a `color_index` class to a palette slot, clamping out-of-range
+/// indices to the last slot.
+///
+/// The per-mode index space (`color_index`) is fixed at 8 entries for
+/// `Pattern`/`PatternGray`/`Proto`/`Gray`/`Shape`/`Role` (`Orientation`
+/// is a 4-entry space; [`BORDER`]/[`GAP`] never enter this map), and 9
+/// for `Metatile`/`Level` — but front ends pass palettes of their own
+/// size. The GUI card path passes a hardcoded 8-entry identity map;
+/// without the clamp a `Metatile`/`Level` tile whose class reaches 8
+/// (42 registry tilings, see `tess-tilings/tests/palette_index_reachability.rs`)
+/// indexes one past the palette and panics. Clamping keeps the result
+/// deterministic: valid indices are untouched and the out-of-range slot
+/// degrades to the last palette slot rather than aborting the whole card.
+fn palette_slot(palette: &[u8], class: usize) -> u8 {
+    palette[class.min(palette.len() - 1)]
 }
 
 fn color_index(mode: ColorMode, tile: &Tile) -> usize {
@@ -191,7 +209,7 @@ pub fn raster(
                 let bb = tiles[bucket[0] as usize].poly.aabb();
                 if bb.min.x <= x0 && x0 + sx <= bb.max.x && bb.min.y <= y0 && y0 + sy <= bb.max.y {
                     owner[idx] = bucket[0];
-                    pixels[idx] = palette[color_index(mode, &tiles[bucket[0] as usize])];
+                    pixels[idx] = palette_slot(palette, color_index(mode, &tiles[bucket[0] as usize]));
                     continue;
                 }
             }
@@ -224,7 +242,7 @@ pub fn raster(
                     let ti = bucket[order[0]] as usize;
                     owner[idx] = bucket[order[0]];
                     fg[idx] = true;
-                    pixels[idx] = palette[color_index(mode, &tiles[ti])];
+                    pixels[idx] = palette_slot(palette, color_index(mode, &tiles[ti]));
                     continue;
                 }
             }
@@ -253,7 +271,7 @@ pub fn raster(
                 continue;
             }
             owner[idx] = bucket[best];
-            pixels[idx] = palette[color_index(mode, &tiles[bucket[best] as usize])];
+            pixels[idx] = palette_slot(palette, color_index(mode, &tiles[bucket[best] as usize]));
         }
     }
 
@@ -488,6 +506,50 @@ mod tests {
         t.level = 255;
         assert_eq!(color_index(ColorMode::Level, &t), 7);
         assert!(color_index(ColorMode::Level, &t) < LEVEL_INDEX_SPACE);
+    }
+
+    /// HAZARD 1 pin (b2b4-recon: "raster index-space panic"): the modes
+    /// whose index space runs one past the 8-entry palette the GUI card
+    /// path passes (Metatile: proto % 9; Level: 1 + (level - 1) % 8)
+    /// must render deterministically — the out-of-range class clamps to
+    /// the last palette slot instead of panicking. A valid index is
+    /// untouched by the clamp.
+    #[test]
+    fn b2b4_hazard_metatile_index_8_clamps_instead_of_panicking() {
+        // Metatile: proto 8 -> class 8 (8 % 9), one past the 8-entry palette.
+        let t = tile(8, 0, &[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]]);
+        assert_eq!(color_index(ColorMode::Metatile, &t), 8);
+        let bbox = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(10.0, 10.0));
+        let tiles = vec![t];
+        let r = raster(&tiles, &bbox, 20, 20, ColorMode::Metatile, &PAL);
+        assert!(r.pixels.iter().all(|&p| p == 7 || p == BORDER),
+            "index 8 clamps to the last 8-entry palette slot (7), not a panic");
+        assert!(r.pixels.iter().any(|&p| p == 7), "clamped tile rendered");
+        // A valid index 7 stays 7 (no shift).
+        let t7 = tile(7, 0, &[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]]);
+        assert_eq!(color_index(ColorMode::Metatile, &t7), 7);
+        let r7 = raster(&[t7], &bbox, 20, 20, ColorMode::Metatile, &PAL);
+        assert!(r7.pixels.iter().all(|&p| p == 7 || p == BORDER));
+    }
+
+    #[test]
+    fn b2b4_hazard_level_index_8_clamps_instead_of_panicking() {
+        // Level: level 8 -> class 1 + (8 - 1) % 8 = 8.
+        let mut t = tile(0, 0, &[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]]);
+        t.level = 8;
+        assert_eq!(color_index(ColorMode::Level, &t), 8);
+        let bbox = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(10.0, 10.0));
+        let tiles = vec![t];
+        let r = raster(&tiles, &bbox, 20, 20, ColorMode::Level, &PAL);
+        assert!(r.pixels.iter().all(|&p| p == 7 || p == BORDER),
+            "index 8 clamps to the last 8-entry palette slot (7), not a panic");
+        assert!(r.pixels.iter().any(|&p| p == 7), "clamped tile rendered");
+        // A valid index 7 stays 7.
+        let mut t7 = tile(0, 0, &[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]]);
+        t7.level = 7;
+        assert_eq!(color_index(ColorMode::Level, &t7), 7);
+        let r7 = raster(&[t7], &bbox, 20, 20, ColorMode::Level, &PAL);
+        assert!(r7.pixels.iter().all(|&p| p == 7 || p == BORDER));
     }
 
     /// The Level ramp adds a 9-entry index space (0..=8); sentinels at

@@ -3875,4 +3875,87 @@ mod tests {
         assert_eq!(k.split('|').nth(2), Some(ColorMode::Shape.label()));
         assert!(k.ends_with("|120x90"), "size stays the final |WxH segment for pruning");
     }
+
+    /// Drain the pending texture upload for `handle` from the headless
+    /// `egui::Context`'s texture-manager delta queue. `card_texture` is
+    /// test-only exercised without painting; the delta is the only
+    /// channel through which the production pixel buffer can be read.
+    fn drain_card_texture_bytes(ctx: &egui::Context, handle: &egui::TextureHandle) -> Vec<u8> {
+        let id = handle.id();
+        let delta = ctx.tex_manager().write().take_delta();
+        let mut out = Vec::new();
+        for (tid, img) in delta.set {
+            if tid == id {
+                if let egui::ImageData::Color(c) = img.image {
+                    for p in c.pixels.iter() {
+                        out.extend_from_slice(&[p.r(), p.g(), p.b(), p.a()]);
+                    }
+                }
+            }
+        }
+        assert!(!out.is_empty(), "texture {id:?} must appear in the delta");
+        out
+    }
+
+    /// Render one card in a given preview mode through the production
+    /// `card_texture` path and return its raw RGBA bytes. Each call uses
+    /// a fresh `GuiApp` so the cache starts empty and every mode pays
+    /// the full rasterize+upload path (the M215 precedent).
+    fn card_bytes(mode: tess_core::view::ColorMode) -> Vec<u8> {
+        let ectx = egui::Context::default();
+        let mut gui = fresh_gui();
+        let card = card_fix(
+            "penrose",
+            tess_core::TilingCategory::Uniform,
+            None,
+            None,
+        );
+        gui.set_preview_mode(Some(mode));
+        let handle = gui.card_texture(&ectx, &card, 120, 90);
+        drain_card_texture_bytes(&ectx, &handle)
+    }
+
+    /// b2b4-hazard-verify HAZARD 2 pin: the mode-blind card path.
+    ///
+    /// `card_texture` classifies tiles with the (non-preview) mode —
+    /// `mode = self.card_preview_mode(tiling).preview_mode()` — but the
+    /// final per-pixel lookup is hardcoded `paint::rgb(paint::PALETTE[i
+    /// as usize])`, always the rainbow `PALETTE` regardless of mode.
+    /// The classification index is therefore identical for every mode of
+    /// the SAME index-space group (`Pattern`/`PatternGray`/`Role` all
+    /// classify as `seed % 8`), and the pixel bytes differ ONLY when the
+    /// classification itself differs. That is observable: the same card
+    /// in `Pattern`, `Role` and `PatternGray` produces byte-identical
+    /// buffers even though the three modes promise different ramps
+    /// (`PALETTE` rainbow vs `ROLE_PALETTE` earth tones vs
+    /// `PATTERN_GRAY_PALETTE` grays).
+    #[test]
+    fn card_texture_pixels_are_identical_across_same_index_space_modes() {
+        use tess_core::view::ColorMode;
+        let pattern = card_bytes(ColorMode::Pattern);
+        let role = card_bytes(ColorMode::Role);
+        let pattern_gray = card_bytes(ColorMode::PatternGray);
+        assert_eq!(pattern, role, "Pattern vs Role must be byte-identical (both seed%8, same rainbow ramp)");
+        assert_eq!(pattern, pattern_gray, "Pattern vs PatternGray must be byte-identical (both seed%8, same rainbow ramp)");
+        // Non-vacuous: the card is not a solid block — the preview
+        // genuinely contains more than one distinct color.
+        let distinct: std::collections::HashSet<u32> = pattern
+            .chunks_exact(4)
+            .map(|c| u32::from_le_bytes([c[0], c[1], c[2], 0]))
+            .collect();
+        assert!(distinct.len() >= 2, "card should contain ≥2 distinct colors, got {}", distinct.len());
+    }
+
+    /// The same card in a mode whose classification actually differs
+    /// (`Shape`: polygon-derived similarity class, not seed%8) must
+    /// produce a byte-DIFFERENT buffer — the test above cannot be
+    /// vacuous. Note this is NOT the requested fix: the mode-blindness
+    /// of the final lookup is pinned by the test above.
+    #[test]
+    fn card_texture_pixel_bytes_differ_across_classification_modes() {
+        use tess_core::view::ColorMode;
+        let pattern = card_bytes(ColorMode::Pattern);
+        let shape = card_bytes(ColorMode::Shape);
+        assert_ne!(pattern, shape, "Pattern vs Shape must differ (different classification)");
+    }
 }
