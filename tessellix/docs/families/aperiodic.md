@@ -269,7 +269,7 @@ briefs cite them as `§N`.
   and Cargo.toml is frozen — M74-style deviation, documented in
   `lib.rs`).
 - **Status:** landed (M86), decoration reworked (M86-fix), plane-filling
-presentation (M168). 169 tilings, 188 memberships, all current.
+presentation (M168). 170 tilings, 189 memberships, all current.
 
 
 ### 43. Jeandel–Rao 11-tile aperiodic Wang tiling ✅ (M93)

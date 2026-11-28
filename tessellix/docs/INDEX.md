@@ -11,7 +11,7 @@ tiling, shared cross-cutting reference docs, and frozen history.
    into the tiers below.
 2. **Per-family docs** (`docs/families/<family>.md`) — each family's
    catalog table + numbered build arcs + links to its members.
-3. **Per-tiling documents** (`docs/tilings/<id>.md`, 169 files) — each
+3. **Per-tiling documents** (`docs/tilings/<id>.md`, 170 files) — each
    tiling's full specification: algorithm, exact geometry, verification,
    sources.
 4. **Cross-cutting reference** — DESIGN (architecture), USAGE (TUI/CLI/
@@ -30,7 +30,7 @@ tiling, shared cross-cutting reference docs, and frozen history.
 | reptiles | [docs/families/reptiles.md](families/reptiles.md) | 10 | 10 |
 | aperiodic | [docs/families/aperiodic.md](families/aperiodic.md) | 11 | 10 |
 | pavers | [docs/families/pavers.md](families/pavers.md) | 14 | 14 |
-| islamic | [docs/families/islamic.md](families/islamic.md) | 35 | 28 |
+| islamic | [docs/families/islamic.md](families/islamic.md) | 36 | 28 |
 | isohedral | [docs/families/isohedral.md](families/isohedral.md) | 5 | 1 |
 
 A family doc owns its catalog table (guarded:

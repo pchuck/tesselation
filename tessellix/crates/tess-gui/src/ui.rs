@@ -2670,15 +2670,15 @@ mod tests {
     /// (120x90): probe → shrink-retry window → raster → texture
     /// handle. Generation must not panic, and exactly one texture
     /// handle must be cached per registry id. The count assert is
-    /// pinned to 169, so a registry change fails loudly right here.
+    /// pinned to 170, so a registry change fails loudly right here.
     #[test]
     fn card_generation_sweep_covers_full_registry() {
         let registry = tess_tilings::registry();
         let ids: Vec<&'static str> = registry.iter().map(|t| t.id()).collect();
         assert_eq!(
             ids.len(),
-            169,
-            "sweep must enumerate the full registry — {} ids, expected 169",
+            170,
+            "sweep must enumerate the full registry — {} ids, expected 170",
             ids.len()
         );
 
