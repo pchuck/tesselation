@@ -201,7 +201,7 @@ const A1F: (f64, f64) = (q6(A1.0, A1.1), q6(A1.2, A1.3));
 const A2F: (f64, f64) = (q6(A2.0, A2.1), q6(A2.2, A2.3));
 const DETF: f64 = A1F.0 * A2F.1 - A1F.1 * A2F.0;
 
-/// Depth cap: level `17` has child edge `p^-16 ~ 7e-9` plane units;
+/// Depth cap: level `17` has child edge `p^-16 ~ 7.06e-10` plane units;
 /// deeper views lose sub-tile float precision, so they fail with a
 /// message instead. (The Z[sqrt3] bookkeeping itself stays sound much
 /// deeper — the cap mirrors Stampfli's float horizon.)
