@@ -112,6 +112,16 @@ pub trait Tiling {
     fn default_color_mode(&self) -> ColorMode {
         ColorMode::Pattern
     }
+    /// Default world-space center of the viewport when none is set by
+    /// the user. `None` (the default) keeps the viewport origin-centered —
+    /// byte-identical to the pre-hook behavior. Overridden by the unbounded
+    /// (wedge / finite-patch) tilings whose origin-centered default frame
+    /// cannot fill the pane; the center is applied at `App::new` and at
+    /// `App::reset_view` only — never at selection time, so a user's
+    /// pan/zoom across tiling switches is preserved.
+    fn default_view_center(&self) -> Option<(f64, f64)> {
+        None
+    }
     /// Generate the tiles intersecting `query.region`.
     ///
     /// Implementors must return exactly the tiles (fully or partially)

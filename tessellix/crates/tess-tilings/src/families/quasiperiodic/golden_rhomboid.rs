@@ -465,6 +465,19 @@ impl Tiling for GoldenRhomboidTiling {
         ColorMode::Pattern
     }
 
+    /// View-anchored preview center for the unbounded 60° wedge.
+    ///
+    /// The origin-centered default frame crops across the wedge's
+    /// hypotenuse (measured point-sampled coverage 0.1958 — ~20% of the
+    /// frame, 47 tiles). The wedge is unbounded — a depth-capped growth
+    /// over the whole wedge — so there is no finite union center; the
+    /// pinned value is a *preview-scale* center along the wedge (the
+    /// same recentered frame measures 0.4947 — ~50% of the frame, 113
+    /// tiles), applied at `App::new` / `reset_view` only.
+    fn default_view_center(&self) -> Option<(f64, f64)> {
+        Some((5.14, 3.67))
+    }
+
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {
         let meta = SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None).with_notes(
             "quasiperiodic (Andritz φ-substitution, Bielefeld \
@@ -1648,6 +1661,116 @@ mod golden_rhomboid_tests {
             pos_checksum(&tiles),
             Pt(21554678, 34898364, 9630594, 15619664),
             "depth-12 position checksum"
+        );
+    }
+}
+
+#[cfg(test)]
+mod default_view_center_tests {
+    use super::*;
+
+    /// Point-sampled frame coverage over the derived preview window
+    /// (60×60 grid; deterministic, no randomness).
+    fn coverage(tiles: &[Tile], region: &BBox) -> f64 {
+        let n = 60;
+        let mut inside = 0usize;
+        let mut total = 0usize;
+        let w = region.max.x - region.min.x;
+        let h = region.max.y - region.min.y;
+        for gy in 0..n {
+            for gx in 0..n {
+                let x = region.min.x + (gx as f64 + 0.5) * w / n as f64;
+                let y = region.min.y + (gy as f64 + 0.5) * h / n as f64;
+                let p = Vec2::new(x, y);
+                total += 1;
+                for t in tiles {
+                    if poly_contains_pt(&t.poly.pts, p) {
+                        inside += 1;
+                        break;
+                    }
+                }
+            }
+        }
+        inside as f64 / total as f64
+    }
+
+    /// Ray-casting point-in-polygon for the point-sampled coverage helper.
+    fn poly_contains_pt(pts: &[Vec2], p: Vec2) -> bool {
+        let mut inside = false;
+        let m = pts.len();
+        for i in 0..m {
+            let j = (i + 1) % m;
+            let (a, b) = (pts[i], pts[j]);
+            if (a.y > p.y) != (b.y > p.y)
+                && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x
+            {
+                inside = !inside;
+            }
+        }
+        inside
+    }
+
+    /// The hook returns the brief's view-anchored preview center exactly.
+    #[test]
+    fn default_view_center_is_pinned() {
+        let t = GoldenRhomboidTiling;
+        assert_eq!(
+            t.default_view_center(),
+            Some((5.14, 3.67)),
+            "golden-rhomboid must override the hook with the preview-scale wedge center"
+        );
+    }
+
+    /// Recentered frame: the hook-shifted derived preview window fills
+    /// the frame far better than the origin-centered default. The
+    /// wedge is unbounded (depth-capped growth; not a finite union),
+    /// so the override is a *preview-scale* center along the wedge —
+    /// never a union center.
+    #[test]
+    fn recentered_frame_fills_more_than_the_origin() {
+        let t = GoldenRhomboidTiling;
+        let p = ParamSet::default_for(t.params());
+        let probe = t.generate(
+            &p,
+            &Query { region: BBox::new(Vec2::new(-10.0, -10.0), Vec2::new(10.0, 10.0)) },
+        );
+        assert!(probe.message.is_none(), "probe message: {:?}", probe.message);
+        let mw = tess_core::app::mean_tile_side(&probe.tiles);
+        assert!(mw > 0.0, "probe must return tiles");
+        let win = tess_core::app::preview_window(probe.periodic, mw, 4.0 / 3.0);
+
+        // Pre-hook behavior: origin-centered default frame.
+        let ro = t.generate(&p, &Query { region: win.clone() });
+        assert!(ro.message.is_none());
+        let cov_origin = coverage(&ro.tiles, &win);
+        assert!(
+            (0.17..=0.23).contains(&cov_origin),
+            "origin-centered coverage must stay ~0.196, got {cov_origin:.4}"
+        );
+
+        // Hook behavior: same frame shape, shifted by the hook center.
+        let (cx, cy) = t.default_view_center().unwrap();
+        let hx = (win.max.x - win.min.x) / 2.0;
+        let hy = (win.max.y - win.min.y) / 2.0;
+        let recentered = BBox::new(
+            Vec2::new(cx - hx, cy - hy),
+            Vec2::new(cx + hx, cy + hy),
+        );
+        let rr = t.generate(&p, &Query { region: recentered.clone() });
+        assert!(rr.message.is_none());
+        assert!(
+            rr.tiles.len() >= 100,
+            "recentered preview must show many tiles along the wedge, got {}",
+            rr.tiles.len()
+        );
+        let cov = coverage(&rr.tiles, &recentered);
+        assert!(
+            cov >= 0.45,
+            "recentered preview must fill more of the frame than the origin, got {cov:.4}"
+        );
+        assert!(
+            cov > cov_origin,
+            "recentered must strictly improve frame fill ({cov:.4} vs {cov_origin:.4})"
         );
     }
 }

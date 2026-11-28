@@ -1436,6 +1436,14 @@ impl GuiApp {
     /// captures the lattice basis (or the mean tile extent for
     /// aperiodic patches), `preview_window` fits the card aspect, and
     /// the generation retries with a shrinking window on refusal.
+    ///
+    /// Deliberately stays origin-centered: the `Tiling::default_view_center()`
+    /// hook is consumed by the main view only (`App::new` / `reset_view`,
+    /// via the hooked viewport), so a recentered thumbnail here would
+    /// diverge from the main view's default framing. The ±10-unit probe
+    /// and `preview_window` never read the hook; this card stays an
+    /// identity view exactly like the TUI thumbnail, and the main view's
+    /// per-tiling default is what changes.
     /// Rasterization uses the shared `tess_core::raster` with the
     /// identity palette, so pixel indices are positions in
     /// `paint::PALETTE` (full 8-bit colors; the TUI maps the same
@@ -1886,7 +1894,15 @@ mod tests {
     /// per test, exactly as `new()` does). Private-field access is fine:
     /// these tests are a child module of `ui`.
     fn fresh_gui() -> super::GuiApp {
-        let app = tess_core::App::new(tess_tilings::registry(), 60.0);
+        fresh_gui_with(tess_tilings::registry())
+    }
+
+    /// Variant of [`fresh_gui`] with a caller-supplied registry — used by
+    /// the `default_view_center` hook pin, which needs a single-tiling
+    /// registry so the override (and not the 169-tiling full registry's
+    /// first tiling) is what `App::new` seeds.
+    fn fresh_gui_with(registry: tess_core::Registry) -> super::GuiApp {
+        let app = tess_core::App::new(registry, 60.0);
         // The zoom label's 100% baseline: the construction zoom.
         let zoom_default = app.viewport.zoom;
         // Rebuild the tabs from the shared fixture: cheap (one
@@ -1931,6 +1947,20 @@ mod tests {
             preview_mode: None,
             preview_mode_rects: Vec::new(),
         }
+    }
+
+    #[test]
+    fn gui_app_new_seeds_viewport_from_default_view_center_hook() {
+        use tess_tilings::families::quasiperiodic::golden_rhomboid::GoldenRhomboidTiling;
+        let registry = tess_core::Registry::new().register(GoldenRhomboidTiling);
+        let gui = fresh_gui_with(registry);
+        assert_eq!(gui.app.selected_id(), "golden-rhomboid");
+        let c = gui.app.viewport.center;
+        assert!(
+            (c.x - 5.14).abs() < 1e-12 && (c.y - 3.67).abs() < 1e-12,
+            "GUI GuiApp::new must seed the hook, got {:?}",
+            c
+        );
     }
 
     #[test]

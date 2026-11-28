@@ -36,12 +36,19 @@ impl App {
             param_sets.insert(first_id.clone(), ParamSet::default_for(specs));
         }
         let color_mode = registry.first().map(|t| t.default_color_mode()).unwrap_or_default();
+        let mut viewport = Viewport::new(zoom);
+        // Per-tiling default viewport center (default: origin-centered,
+        // byte-identical to the pre-hook behavior). Applied only at birth —
+        // never at selection time (see [`Self::reset_view`]).
+        if let Some((x, y)) = registry.first().and_then(|t| t.default_view_center()) {
+            viewport.center = Vec2::new(x, y);
+        }
         Self {
             registry,
             selected_id: first_id,
             param_sets,
             param_cursor: 0,
-            viewport: Viewport::new(zoom),
+            viewport,
             color_mode,
             search: String::new(),
         }
@@ -165,9 +172,13 @@ impl App {
         self.viewport.zoom_by(factor, anchor);
     }
 
-    /// Reset the viewport center to the origin (keeps zoom).
+    /// Reset the viewport center to the tiling's default center (keeps
+    /// zoom). Tilings without an override reset to the origin, exactly
+    /// as before the hook.
     pub fn reset_view(&mut self) {
-        self.viewport.center = Vec2::ZERO;
+        self.viewport.center = self.tiling().default_view_center()
+            .map(|(x, y)| Vec2::new(x, y))
+            .unwrap_or(Vec2::ZERO);
     }
 
     pub fn cycle_color_mode(&mut self) {
@@ -303,6 +314,31 @@ mod tests {
         }
     }
 
+    /// A tiling that overrides `default_view_center` — the hook path is
+    /// otherwise unobservable through the empty `Fixed` fixture.
+    struct Centered {
+        id: &'static str,
+        center: (f64, f64),
+    }
+    impl Tiling for Centered {
+        fn id(&self) -> &'static str { self.id }
+        fn name(&self) -> &'static str { "Centered" }
+        fn description(&self) -> &'static str { "fixture" }
+        fn category(&self) -> TilingCategory { TilingCategory::Uniform }
+        fn params(&self) -> &'static [ParamSpec] { &[] }
+        fn generate(&self, _: &ParamSet, _: &Query) -> TilingResult {
+            TilingResult {
+                tiles: vec![],
+                symmetry: SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None),
+                periodic: None,
+                message: None,
+            }
+        }
+        fn default_view_center(&self) -> Option<(f64, f64)> {
+            Some(self.center)
+        }
+    }
+
     fn fixture() -> App {
         let reg = Registry::new()
             .register(Fixed { id: "u1", cat: TilingCategory::Uniform })
@@ -394,6 +430,60 @@ mod tests {
         let t = crate::tiling::Tile { poly, proto: 0, seed: 0, level: 0 };
         assert_eq!(super::mean_tile_side(&[t]), 0.0);
         assert_eq!(super::mean_tile_side(&[]), 0.0);
+    }
+
+    #[test]
+    fn app_new_seeds_viewport_from_default_view_center() {
+        let reg = Registry::new()
+            .register(Centered { id: "first", center: (5.14, 3.67) })
+            .register(Fixed { id: "second", cat: TilingCategory::Uniform });
+        let app = App::new(reg, 10.0);
+        assert_eq!(app.selected_id(), "first");
+        let c = app.viewport.center;
+        assert!((c.x - 5.14).abs() < 1e-12 && (c.y - 3.67).abs() < 1e-12);
+    }
+
+    #[test]
+    fn app_new_origin_centered_without_override() {
+        let reg = Registry::new()
+            .register(Fixed { id: "first", cat: TilingCategory::Uniform })
+            .register(Centered { id: "second", center: (1.0, 2.0) });
+        let app = App::new(reg, 10.0);
+        assert_eq!(app.viewport.center, Vec2::ZERO);
+    }
+
+    #[test]
+    fn reset_view_reseeds_center_from_current_tiling() {
+        let reg = Registry::new()
+            .register(Fixed { id: "plain", cat: TilingCategory::Uniform })
+            .register(Centered { id: "centered", center: (1.366, 0.0) });
+        let mut app = App::new(reg, 10.0);
+        app.select_id("centered");
+        // A user pan changes the center; reset_view re-seeds from the
+        // hook, not from the origin.
+        app.viewport.center = Vec2::new(9.9, 9.9);
+        app.reset_view();
+        let c = app.viewport.center;
+        assert!((c.x - 1.366).abs() < 1e-12 && c.y.abs() < 1e-12);
+        // A tiling without an override resets to the origin, as it did
+        // before the hook.
+        app.select_id("plain");
+        app.reset_view();
+        assert_eq!(app.viewport.center, Vec2::ZERO);
+    }
+
+    #[test]
+    fn select_id_preserves_user_pan_and_zoom() {
+        let reg = Registry::new()
+            .register(Fixed { id: "plain", cat: TilingCategory::Uniform })
+            .register(Centered { id: "centered", center: (1.366, 0.0) });
+        let mut app = App::new(reg, 10.0);
+        app.viewport.center = Vec2::new(3.3, 2.2);
+        app.select_id("centered");
+        // Selection must not snap the camera: the hook applies at
+        // App::new / reset_view only.
+        let c = app.viewport.center;
+        assert!((c.x - 3.3).abs() < 1e-12 && (c.y - 2.2).abs() < 1e-12);
     }
 
     #[test]
