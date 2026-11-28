@@ -2266,7 +2266,7 @@ mod tests_export_contract {
         let expected: &[&str] = &[
             "--tiling", "--width", "--height", "--scale", "--rotation", "--center",
             "--param", "--mode", "--strapwork", "--deform", "--decoration",
-"--band-w", "--medallion-weave", "--motif", "--highlight-supertiles", "--mirror",
+            "--band-w", "--medallion-weave", "--motif", "--highlight-supertiles", "--mirror",
             "--dual-overlay", "--symmetry-overlay", "--vertex-orbits", "--out", "-o",
         ];
         for flag in expected {
