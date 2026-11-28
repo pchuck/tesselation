@@ -16,7 +16,7 @@
 //! * the one catalogued over-capacity tiling (`girih-star-cross`, 536
 //!   distinct similarity classes in its default window — per-instance
 //!   girih strap geometry) shares tones by construction;
-//! * the 42 tilings that collapsed under the old key are enumerated with
+//! * the 43 tilings that collapsed under the old key are enumerated with
 //!   their old vertex-count class count and their new geometric class
 //!   count, which the sweep must reproduce exactly.
 //!
@@ -159,12 +159,12 @@ fn shape_class_is_invariant_under_similarity_of_real_tiles() {
     }
 }
 
-/// The collapsed census: the 42 tilings whose distinct shapes the old
+/// The collapsed census: the 43 tilings whose distinct shapes the old
 /// vertex-count key merged, with the old key's class count and the new
 /// key's geometric class count in the default preview window (the
 /// derived pin list; re-derive with this file's sweep if the registry
 /// or engines change).
-const COLLAPSED: [(&str, usize, usize); 42] = [
+const COLLAPSED: [(&str, usize, usize); 43] = [
         ("alcove-cut-grid", 1, 3),
         ("ammann-beenker", 2, 3),
         ("andritz-bowtie-hexagon", 1, 2),
@@ -201,6 +201,7 @@ const COLLAPSED: [(&str, usize, usize); 42] = [
         ("shifted-trapezoid-courses", 1, 2),
         ("stampfli", 2, 3),
         ("star-cross", 1, 2),
+        ("star-cross-8-2", 1, 2),
         ("tangram", 2, 3),
         ("taylor-socolar", 3, 4),
         ("trapezoid-courses", 1, 2),

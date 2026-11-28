@@ -13,6 +13,7 @@ use crate::classify::{hankin_pic, hankin_greedy};
 
 pub mod hexagram;
 pub mod zellige;
+pub mod star_cross_8_2;
 pub mod girih;
 pub mod girih_bowtie;
 pub mod girih_decagon;
@@ -52,6 +53,7 @@ pub mod rosette_transform;
 /// The family's registry slice, in within-tab order.
 pub fn register(mut r: Registry) -> Registry {
         r = r.register(zellige::StarCrossTiling);
+        r = r.register(star_cross_8_2::StarCross82Tiling);
         r = r.register(hexagram::HexagramTiling);
         r = r.register(khatam_girih::khatam_girih());
         r = r.register(dodecagon_hexagram_honeycomb::dodecagon_hexagram_honeycomb());
@@ -101,6 +103,18 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
             method: Some("star-and-cross"),
             star_type: Some("{8/3}"),
             tile_set: Some("octagram stars + concave crosses"),
+            ..TilingClass::EMPTY
+        },
+        // The A4 "implement both" sibling: star-cross above is the
+        // {8/3} reading — a measured-ornamental one-parameter family
+        // whose decimal tile data stands under the M35 measurement
+        // exception. This card is the classical {8/2} two-square
+        // compound: exact Q(√2) geometry, rigid (no shape parameter).
+        "star-cross-8-2" => TilingClass {
+            families: &["Islamic"],
+            method: Some("star-and-cross"),
+            star_type: Some("{8/2}"),
+            tile_set: Some("two-square octagram stars + 90°-pointed concave crosses"),
             ..TilingClass::EMPTY
         },
         "girih-shesh-band" => TilingClass {
@@ -306,7 +320,8 @@ pub(crate) fn classification(id: &str) -> Option<TilingClass> {
 /// This family's entries for the global lattice-culling cross-check
 /// (`lattice_culling_tests` in `lib.rs`), one per islamic-family tiling
 /// that carries a `LatticeTiling` table. Dedicated tiling types with no
-/// table (e.g. hexagram, zellige star-cross, girih-quasiperiodic,
+/// table (e.g. hexagram, zellige star-cross, star-cross-8-2,
+/// girih-quasiperiodic,
 /// girih-decagon-patch, the andritz bowtie-hexagon set) are out
 /// of scope by construction.
 #[cfg(test)]
@@ -357,6 +372,7 @@ mod census {
     /// registered).
     const IDS: &[&str] = &[
         "star-cross",
+        "star-cross-8-2",
         "girih-shesh-band",
         "girih-star-cross",
         "girih-w85",
@@ -398,7 +414,7 @@ mod census {
         let r = register(Registry::new());
         assert_eq!(
             r.len(),
-            35,
+            36,
             "islamic family census — update when adding a tiling to this family"
         );
         let have: BTreeSet<&str> = r.iter().map(|t| t.id()).collect();

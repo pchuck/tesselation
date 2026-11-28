@@ -8,13 +8,14 @@ Adding a tiling here touches only this family: `families/islamic.rs`
 `lattice_tilings` entries) plus the new module and its doc row below.
 Work briefs: `docs/briefs/TEMPLATE.md`; fleet protocol: `tessellix/AGENTS.md`.
 
-## Implemented (35 tilings)
+## Implemented (36 tilings)
 
 ### 1. Classic compositions
 
 | id | motif | group | notes |
 |---|---|---|---|
 | `star-cross` | {8/3} star and cross | p4m | one-parameter star radius: gapped → kissing (khatam) |
+| `star-cross-8-2` | {8/2} star and cross (two-square compound) | p4m | the classical two-squares-rotated-45° reading of the star-and-cross: 16-gon stars (90° points, notch/tip √(2−√2) = cos45/cos22.5 = 0.765367, notches exactly on the skip-2 tip chords) kissing at cell-edge midpoints + 90°-pointed concave crosses in every gap; rigid exact Q(√2) geometry (denominator 4), edge-to-edge with all 32 prototile edges (√2−1)/2, areas (2−√2) + (√2−1) = |det| exactly; vertex figures 90.90.90.90 / 90.270 / 135.225; no shape parameter (kissing radius forced) — sibling of the measured-ornamental `{8/3}` card above, discrimination pinned both ways (A4 "implement both") |
 | `hexagram` | hexagram and hexagon ({6/2}) | p6m | one-parameter star tip radius: gapped → kissing hexagram-and-hexagon tiling; stars on the hexagonal lattice, interstice split into two hexagons at the kissing radius |
 | `khatam-girih` | khatam ({8/3}) girih-tile decomposition | p4m | classical kissing star-and-cross cut into 8 rhombi + square + 4 pentagons per cell; exact Q(√2) kitab (M36) |
 | `dodecagon-hexagram-honeycomb` | dodecagon + {6/2} hexagram medallion cell on the honeycomb net | p6m | composition family (24d instance 1): dodecagons (circumradius 1/2, vertices 30k°) at the hexagon centers + kissing hexagrams (tip radius 1/2, rot30 of the `hexagram_62` record frame) at the net vertices, interstices filled edge-to-edge by one reflex-hexagon class (6/site, 2 dodecagon + 4 star edges, area √3/6 − 1/8); star tips land on the dodecagon vertices at center–vertex midpoints and kiss tip-to-tip at the net-edge (= dual-edge) midpoints, so the circumcentric dual passes vertex-to-vertex through the partition (dual-net fill; glue sites = hexagon long diagonals); 9 tiles/cell, Σ = 3√3/2 = |det| exact over Q(√3) on the (p+r√3, q+s√3)/12 grid; vertex figures 60.60.120.120 / 60.75.75.150 / 120.240 / 150.210; hole-inference reading deferred (24b) (§82) |
@@ -1074,6 +1075,7 @@ Hard-won lessons:
 Each member's full specification — algorithm, exact geometry, verification, sources — lives in its own document under [docs/tilings/](../tilings/):
 
 - [`star-cross`](../tilings/star-cross.md) — Star and Cross ({8/3})
+- [`star-cross-8-2`](../tilings/star-cross-8-2.md) — Star and Cross ({8/2})
 - [`hexagram`](../tilings/hexagram.md) — Hexagram and Hexagon ({6/2})
 - [`girih-shesh-band`](../tilings/girih-shesh-band.md) — Girih Shesh-Band (6.6.6)
 - [`girih-star-cross`](../tilings/girih-star-cross.md) — Girih Star-and-Cross (periodic)
