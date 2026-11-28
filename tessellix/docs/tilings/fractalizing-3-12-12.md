@@ -25,7 +25,7 @@ limit-periodic fractalizing family over the uniform 3.12.12 (Chavey, Tilings by 
 
 ## Hierarchy visibility
 
-Under zoom the hierarchy becomes visible via successive substitution levels (fractalizing behavior) — each view refines one substitution octave, so the level ramp reads as a color change as you drill in. In Level color mode (M201) the current depth uniformity is shown directly: every tile in one view carries the same level, so a view reads as a single flat depth bucket.
+Under zoom the hierarchy becomes visible via successive substitution levels (fractalizing behavior) — each view refines one substitution octave, so the level ramp reads as a color change as you drill in. In Level color mode (M201) the current depth uniformity is shown directly: every tile in one view carries the same level, so a view reads as a single flat depth bucket. As of M225 the depth is also directly selectable per card via its `depth` parameter (0 = the view-anchored auto rule, 1..=16 pinned deeper substitutions with a named refusal above the tile budget), so the hierarchy can be pinned outright instead of revealed by zooming.
 
 ## See also
 
