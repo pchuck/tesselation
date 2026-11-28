@@ -2,11 +2,12 @@
 //! [`tess_core::browse`] model, plus event loop and rendering.
 //!
 //! * **Browse** — a category tab bar over a responsive card grid.
-//!   Wallpaper cards are grouped into crystal-system sections (oblique,
-//!   rectangular, centered, square, hexagonal) with a bold header row
-//!   above each section; the Wallpaper tab also opens with a catalog
-//!   note (since M85 all 17 groups are represented, it reports the
-//!   completed catalog); the grid scrolls by rows.
+//!   Cards in the Wallpaper and Laves tabs are grouped into section
+//!   runs (crystal systems on the Wallpaper tab — oblique, rectangular,
+//!   centered, square, hexagonal; rank bands on the Laves tab) with a
+//!   bold header row above each section; the Wallpaper tab also opens
+//!   with a catalog note (since M85 all 17 groups are represented, it
+//!   reports the completed catalog); the grid scrolls by rows.
 //!   `c` cycles the grid's preview color mode (through the 10
 //!   [`ColorMode::ALL`] modes, starting from the highlighted card's
 //!   current look), `d` resets to each card's own default preview
@@ -72,9 +73,9 @@ enum Mode {
     Search,
 }
 
-/// One row of the card grid plan: either a crystal-system section
-/// header (or the Wallpaper tab's catalog note) or one row of cards
-/// (indices into the tab's card list).
+/// One row of the card grid plan: either a section header (or the
+/// Wallpaper tab's catalog note) or one row of cards (indices into
+/// the tab's card list).
 #[derive(Debug)]
 enum GridRow {
     Header(String),
@@ -707,10 +708,13 @@ fn grid_cols_rows(area: Rect, card_w: u16) -> (u16, u16, u16, u16) {
 
 /// Plan the grid rows for the visible card indices of a tab: runs of
 /// equal section key, each preceded by a header row when the key is
-/// non-empty, split into rows of `cols` cards. The Wallpaper tab
-/// opens with the explicit catalog note: while any wallpaper group
-/// lacked a realizer it listed them, and since M85 (all 17 groups
-/// represented) it reports the completed catalog.
+/// non-empty, split into rows of `cols` cards. The section keys are
+/// tess-core's `section_key` (crystal systems on the Wallpaper tab,
+/// rank bands on the Laves tab) — the TUI holds no section-key logic
+/// of its own. The Wallpaper tab opens with the explicit catalog note:
+/// while any wallpaper group lacked a realizer it listed them, and
+/// since M85 (all 17 groups represented) it reports the completed
+/// catalog.
 fn plan_grid_rows(tab: &Tab, visible: &[usize], cols: u16) -> Vec<GridRow> {
     let mut rows = Vec::new();
     if tab.category == TilingCategory::Wallpaper && !visible.is_empty() {
@@ -1489,6 +1493,127 @@ mod tests {
             seen,
             vec!["oblique", "rectangular", "centered", "square", "hexagonal"],
             "wallpaper sections must appear in crystal-system order"
+        );
+    }
+
+    /// The Laves tab's grid plan is driven entirely by tess-core's
+    /// `section_key` — the TUI holds no section-key logic of its own
+    /// (the same wiring as the Wallpaper tab). The plan's header rows
+    /// must equal the distinct non-empty keys tess-core reports for
+    /// the Laves cards, in first-appearance order, and the tab must
+    /// never pick up the Wallpaper-only catalog note.
+    ///
+    /// Note the honest state at this checkout: tess-core's section_key
+    /// extension to the Laves tab lands in a separate tess-core/tess-gui
+    /// landing (the Laves tab returns `""` until it lands). This pin
+    /// therefore asserts the contract, not the keys — at HEAD it pins
+    /// zero headers, and the moment the extension lands it pins the
+    /// three contiguous runs in order (11 band / 5 isohedral variants /
+    /// 20 2-uniform duals) with zero TUI-side changes.
+    #[test]
+    fn laves_grid_plan_surfaces_tess_core_section_keys() {
+        let tabs = shared_tabs();
+        let lv = tabs
+            .iter()
+            .find(|t| t.category == TilingCategory::Laves)
+            .unwrap();
+        // Expected headers: distinct non-empty section_key values for
+        // the Laves cards, in first-appearance order.
+        let mut expected: Vec<&'static str> = Vec::new();
+        for c in &lv.cards {
+            let k = browse::section_key(TilingCategory::Laves, c);
+            if !k.is_empty() && !expected.contains(&k) {
+                expected.push(k);
+            }
+        }
+        let visible: Vec<usize> = (0..lv.cards.len()).collect();
+        let plan = plan_grid_rows(lv, &visible, 2);
+        // Card-row integrity: the plan must carry every Laves card in
+        // order, regardless of how many header rows it opens.
+        let carried: Vec<usize> = plan
+            .iter()
+            .filter_map(|r| match r {
+                GridRow::Cards(idxs) => Some(idxs.iter().copied()),
+                _ => None,
+            })
+            .flatten()
+            .collect();
+        assert_eq!(
+            carried, visible,
+            "plan must carry every Laves card in order, in card rows"
+        );
+        let headers: Vec<String> = plan
+            .iter()
+            .filter_map(|r| match r {
+                GridRow::Header(k) => Some(k.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            headers,
+            expected,
+            "Laves grid plan must render exactly the headers tess-core reports"
+        );
+        // The Wallpaper-only catalog note must not leak onto the Laves tab.
+        assert!(
+            !headers.iter().any(|h| h.contains("catalog")),
+            "Laves tab must not render the Wallpaper catalog note: {headers:?}"
+        );
+    }
+
+    /// Painted-grid mirror of the Wallpaper header test
+    /// for the Laves tab: the grid paints Laves cards headlessly, never
+    /// the Wallpaper-only catalog note, and every painted header is a
+    /// key tess-core's section_key reports for the Laves tab.
+    #[test]
+    fn grid_paints_laves_cards_and_sections() {
+        let mut term = Terminal::new(TestBackend::new(120, 30)).unwrap();
+        let mut tui = fresh_tui();
+        key(&mut tui, KeyCode::Char('3')); // Laves tab
+        assert_eq!(tui.tab_idx, 2);
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        let mut text = buffer_text(&term);
+        // First card name painted.
+        assert!(
+            text.contains(tui.tabs[2].cards[0].name),
+            "first Laves card name missing"
+        );
+        assert!(
+            count_symbol(&term, "\u{2580}") > 100,
+            "Laves card thumbnails not painted"
+        );
+        // The Wallpaper-only catalog note must not leak onto the Laves tab.
+        assert!(
+            !text.contains("complete catalog"),
+            "Laves tab must not show the Wallpaper catalog note"
+        );
+        // Scroll through the whole tab collecting painted headers;
+        // every painted header must be a key tess-core reports for the
+        // Laves tab (at this checkout that set is empty; after the
+        // tess-core Laves extension lands it is the rank-band trio).
+        let tabs = shared_tabs();
+        let lv = &tabs[2];
+        let mut expected: Vec<&'static str> = Vec::new();
+        for c in &lv.cards {
+            let k = browse::section_key(TilingCategory::Laves, c);
+            if !k.is_empty() && !expected.contains(&k) {
+                expected.push(k);
+            }
+        }
+        let mut seen: Vec<&str> = Vec::new();
+        for _ in 0..20 {
+            for h in expected.iter().copied().chain(["isohedral variants", "2-uniform duals", "self-dual regulars & Catalan duals"]) {
+                if text.contains(h) && !seen.contains(&h) {
+                    seen.push(h);
+                }
+            }
+            key(&mut tui, KeyCode::PageDown);
+            term.draw(|f| render(f, &mut tui)).unwrap();
+            text = buffer_text(&term);
+        }
+        assert_eq!(
+            seen, expected,
+            "painted Laves headers must equal the keys tess-core reports"
         );
     }
 
