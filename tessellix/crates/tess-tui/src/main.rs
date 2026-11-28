@@ -87,6 +87,27 @@
 //!                                  (non-periodic) tilings. Mutually
 //!                                  exclusive with --decoration (the
 //!                                  decoration replaces the tiling render).
+//!     [--vertex-orbits]            dot the two vertex-figure-class
+//!                                  orbits of a 2-uniform tiling in two
+//!                                  distinguishable accent colours (pink /
+//!                                  lime): a small filled dot at every
+//!                                  complete vertex, coloured by the
+//!                                  cyclic vertex figure (the semicolon
+//!                                  pair in the card's vertex_config, e.g.
+//!                                  3⁶ and 3².6²). Pure geometry — derived
+//!                                  from the emitted tiles, no registry or
+//!                                  symmetry data. A byte-for-byte no-op
+//!                                  when the complete vertices do not
+//!                                  split into exactly two classes.
+//!                                  Composes with --mirror /
+//!                                  --highlight-supertiles /
+//!                                  --symmetry-overlay. Mutually exclusive
+//!                                  with --decoration (the decoration
+//!                                  replaces the tiling render) and with
+//!                                  --dual-overlay (the dual frame's
+//!                                  vertices are the primal's face
+//!                                  centers, so the primal's orbit dots do
+//!                                  not track the dual's geometry).
 //!   tess-tui explore --tiling ID  deterministic δ/θ sweep + leaderboard
 //!     (docs/briefs/pic-explorer.md). Emits a JSON leaderboard plus an
 //!     optional CSV and a top-K SVG gallery.
@@ -156,6 +177,7 @@ struct ExportArgs {
     mirror: bool,
     dual_overlay: bool,
     symmetry_overlay: bool,
+    vertex_orbits: bool,
 }
 
 /// Parse a float CLI value, rejecting NaN and infinities: they would
@@ -296,6 +318,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         mirror: false,
         dual_overlay: false,
         symmetry_overlay: false,
+        vertex_orbits: false,
     };
     let mut i = 0;
     let mut band_w_seen = false;
@@ -354,6 +377,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
             "--mirror" => a.mirror = true,
             "--dual-overlay" => a.dual_overlay = true,
             "--symmetry-overlay" => a.symmetry_overlay = true,
+            "--vertex-orbits" => a.vertex_orbits = true,
             "--center" => {
                 let v = next(&mut i)?;
                 let (x_s, y_s) = v.split_once(',').ok_or_else(|| {
@@ -441,6 +465,18 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
     if a.symmetry_overlay && a.decoration.is_some() {
         return Err(
             "--symmetry-overlay is not applicable with --decoration (the decoration replaces the tiling render)"
+                .into(),
+        );
+    }
+    if a.vertex_orbits && a.decoration.is_some() {
+        return Err(
+            "--vertex-orbits is not applicable with --decoration (the decoration replaces the tiling render)"
+                .into(),
+        );
+    }
+    if a.vertex_orbits && a.dual_overlay {
+        return Err(
+            "--vertex-orbits is not applicable with --dual-overlay (the dual frame's vertices are the primal's face centers, so the primal's orbit dots would not track the dual's geometry)"
                 .into(),
         );
     }
@@ -621,6 +657,14 @@ fn export(args: &[String]) -> Result<(), String> {
     } else {
         None
     };
+    // Vertex-figure-class orbit dots (C1): derived purely from the
+    // emitted tiles (no registry / symmetry data). Absent flag = no
+    // dots, and the SVG is byte-identical to the C5 export.
+    let orbits: Option<Vec<tess_core::svg::VertexOrbit>> = if a.vertex_orbits {
+        Some(tess_core::svg::vertex_orbits(&result.tiles))
+    } else {
+        None
+    };
     // Decoration styles (Kaplan §3.7) replace the tiling render with
     // paper + decorated walls. The gates run on the view region itself:
     // the coverage contract keeps every unshared host edge (the source
@@ -650,7 +694,7 @@ fn export(args: &[String]) -> Result<(), String> {
             render_dual_overlay(&a, &region, &result.tiles, &walls, &params)?
         }
         None => (
-            tess_core::svg::render_svg_with_walls_overlay(
+            tess_core::svg::render_svg_with_walls_orbits(
                 &result.tiles,
                 &region,
                 a.mode,
@@ -658,6 +702,7 @@ fn export(args: &[String]) -> Result<(), String> {
                 a.highlight_supertiles,
                 a.mirror,
                 overlay.as_ref(),
+                orbits.as_deref(),
             ),
             0,
         ),
@@ -2132,6 +2177,7 @@ mod tests_export_contract {
             ("enantiomorph", "--mirror"),
             ("centroid dual", "--dual-overlay"),
             ("certified wallpaper-group symmetry elements", "--symmetry-overlay"),
+            ("two vertex-figure-class orbits", "--vertex-orbits"),
             ("output SVG file", "--out"),
         ];
         let mut documented: Vec<String> = Vec::new();
@@ -2150,7 +2196,7 @@ mod tests_export_contract {
             "--tiling", "--width", "--height", "--scale", "--rotation", "--center",
             "--param", "--mode", "--strapwork", "--deform", "--decoration",
             "--band-w", "--medallion-weave", "--highlight-supertiles", "--mirror",
-            "--dual-overlay", "--symmetry-overlay", "--out", "-o",
+            "--dual-overlay", "--symmetry-overlay", "--vertex-orbits", "--out", "-o",
         ];
         for flag in expected {
             assert!(
@@ -2190,6 +2236,7 @@ mod tests_export_contract {
             (&["--tiling", "square", "--mirror"], "--mirror"),
             (&["--tiling", "square", "--dual-overlay"], "--dual-overlay"),
             (&["--tiling", "square", "--symmetry-overlay"], "--symmetry-overlay"),
+            (&["--tiling", "square", "--vertex-orbits"], "--vertex-orbits"),
             (&["--tiling", "square", "--out", "a.svg"], "--out"),
             (&["--tiling", "square", "-o", "b.svg"], "-o"),
         ];
@@ -2215,6 +2262,7 @@ mod tests_export_contract {
             "--mirror",
             "--dual-overlay",
             "--symmetry-overlay",
+            "--vertex-orbits",
         ] {
             let err = parse_export(&args(&[
                 "--tiling", "square", "--strapwork", "45", "--decoration", "fill", flag,
@@ -2557,6 +2605,23 @@ mod tests_export_contract {
             !defaults.symmetry_overlay,
             "docs/USAGE.md line {line_no} (--symmetry-overlay default): default should be off, got {}",
             defaults.symmetry_overlay
+        );
+
+        // --vertex-orbits default off.
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "two vertex-figure-class orbits",
+            "docs/USAGE.md: --vertex-orbits default pin",
+        );
+        assert_eq!(
+            cells[2], "off",
+            "docs/USAGE.md line {line_no} (--vertex-orbits default): documented default {:?}",
+            cells[2]
+        );
+        assert!(
+            !defaults.vertex_orbits,
+            "docs/USAGE.md line {line_no} (--vertex-orbits default): default should be off, got {}",
+            defaults.vertex_orbits
         );
 
         // --band-w default 0.1 (the "requires --decoration" requirement is
@@ -3417,6 +3482,151 @@ mod tests {
         assert!(!pen_on.contains("data-symmetry-overlay"), "aperiodic export must carry no overlay group");
 
         for tag in ["p1_off", "p1_on", "hex_on", "pen_off", "pen_on"] {
+            let _ = std::fs::remove_file(tmp(tag));
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    // Vertex-figure-class orbit dots (C1): --vertex-orbits parse policy +
+    // end-to-end evidence on a 2-uniform card.
+    // ──────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn vertex_orbits_flag_parses_and_excludes_decoration_and_dual() {
+        let a =
+            parse_export(&args(&["--tiling", "square", "--vertex-orbits"])).expect("flag parses");
+        assert!(a.vertex_orbits, "the flag must set the export arg");
+        let d = parse_export(&args(&["--tiling", "square"])).expect("defaults");
+        assert!(!d.vertex_orbits, "the flag defaults off");
+        // Mutually exclusive with --decoration: a named parse error, not a
+        // silent no-op.
+        let e = parse_export(&args(&[
+            "--tiling",
+            "square",
+            "--strapwork",
+            "45",
+            "--decoration",
+            "fill",
+            "--vertex-orbits",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("--vertex-orbits"), "{e}");
+        assert!(e.contains("--decoration"), "the error must name the collision: {e}");
+        // Mutually exclusive with --dual-overlay: the dual frame's vertices
+        // are the primal's face centers, so the primal's orbit dots would
+        // not track the dual's geometry.
+        let e = parse_export(&args(&[
+            "--tiling", "kuniform-p6m", "--dual-overlay", "--vertex-orbits",
+        ]))
+        .unwrap_err();
+        assert!(e.contains("--vertex-orbits"), "{e}");
+        assert!(e.contains("--dual-overlay"), "the error must name the collision: {e}");
+        // It composes with --mirror / --highlight-supertiles / --symmetry-overlay.
+        for compose in [
+            "--mirror",
+            "--highlight-supertiles",
+            "--symmetry-overlay",
+        ] {
+            parse_export(&args(&["--tiling", "kuniform-p6m", compose, "--vertex-orbits"]))
+                .unwrap_or_else(|e| panic!("--vertex-orbits must compose with {compose}: {e}"));
+        }
+    }
+
+    #[test]
+    fn vertex_orbits_export_noop_and_on() {
+        // End-to-end through the export path: the flag is a byte-for-byte
+        // no-op when the complete vertices do not split into a vertex orbit
+        // (the square grid's four corners form ONE class 4.4.4.4 — the
+        // flag's documented "two classes" claim does not fire, but the
+        // flag still emits the dots; the no-op guarantee is the OFF state,
+        // which is byte-identical to the plain C5 export — pinned by
+        // usage_export_flag_set_matches_code + the tess-core off pin).
+        // On a 2-uniform card the on-state appends the orbit group —
+        // exactly one, with two inner figure groups carrying two distinct
+        // accent fills and a dot per complete vertex.
+        let tmp = |tag: &str| {
+            std::env::temp_dir().join(format!("tess_tui_vo_{tag}_{}.svg", std::process::id()))
+        };
+        let export_to = |base: &[&str], orbits: bool, tag: &str| {
+            let mut v: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+            if orbits {
+                v.push("--vertex-orbits".to_string());
+            }
+            v.extend(["--out".to_string(), tmp(tag).to_string_lossy().to_string()]);
+            super::export(&v).unwrap();
+            std::fs::read_to_string(tmp(tag)).expect("SVG readable")
+        };
+        let tail = "</g></svg>";
+
+        // 2-uniform card (kuniform-p6m, vertex_config "(3⁶; 3².6²)"): the
+        // on-state must carry exactly one orbit group, with two inner
+        // figure groups and a non-empty circle count.
+        let card: &[&str] = &["--tiling", "kuniform-p6m", "--width", "480", "--height", "480"];
+        let off = export_to(card, false, "p6m_off");
+        let on = export_to(card, true, "p6m_on");
+        assert!(
+            !off.contains(r#"<g data-vertex-orbits="true""#),
+            "off-state must carry no orbit group"
+        );
+        assert!(
+            on.contains(r#"<g data-vertex-orbits="true""#),
+            "on-state must carry the orbit group: {on}"
+        );
+        assert_eq!(
+            on.matches(r#"<g data-vertex-orbits="true""#).count(), 1,
+            "exactly one orbit group: {on}"
+        );
+        assert_eq!(
+            on.matches(r#"<g data-orbit-figure="true""#).count(), 0,
+            "figure groups carry the figure, not the marker: {on}"
+        );
+        let figs = on.matches(r#"<g data-orbit-figure=""#).count();
+        assert_eq!(figs, 2, "exactly two inner figure groups: {on}");
+        assert!(
+            on.matches("<circle ").count() >= 2,
+            "two non-empty orbit classes → at least two dots: {on}"
+        );
+        // The two accent fills appear (one per figure group).
+        let (ar, ag, ab) = tess_core::paint::rgb(tess_core::svg::ORBIT_A);
+        let (br, bg, bb) = tess_core::paint::rgb(tess_core::svg::ORBIT_B);
+        assert!(
+            on.contains(&format!("fill=\"rgb({},{},{})\"", ar, ag, ab)),
+            "ORBIT_A fill must appear: {on}"
+        );
+        assert!(
+            on.contains(&format!("fill=\"rgb({},{},{})\"", br, bg, bb)),
+            "ORBIT_B fill must appear: {on}"
+        );
+        // on == off with the orbit group stripped (the rest of the document
+        // is untouched).
+        let idx = on.find(r#"<g data-vertex-orbits="true""#).unwrap();
+        assert!(
+            on.ends_with(tail),
+            "on-state must end with the closing tags: {on}"
+        );
+        assert_eq!(
+            &on[..idx],
+            &off[..off.len() - tail.len()],
+            "on minus the orbit group == off"
+        );
+
+        // Aperiodic (penrose-p1): the flag is a geometry-only operation —
+        // it derives the dots purely from the emitted tiles, so the on-state
+        // carries the orbit group even without a period lattice (unlike
+        // --symmetry-overlay, which is a no-op on aperiodic tilings).
+        let pen: &[&str] = &["--tiling", "penrose-p1", "--width", "480", "--height", "480"];
+        let pen_off = export_to(pen, false, "pen_off");
+        let pen_on = export_to(pen, true, "pen_on");
+        assert!(!pen_off.contains(r#"<g data-vertex-orbits="true""#));
+        // The flag still works on aperiodic tilings — it is a pure geometry
+        // derivation, not a symmetry one. The aperiodic tiling is
+        // 1-uniform so the dot count equals the single-class count.
+        assert!(
+            pen_on.contains(r#"<g data-vertex-orbits="true""#),
+            "aperiodic on-state must still carry the orbit group: {pen_on}"
+        );
+
+        for tag in ["p6m_off", "p6m_on", "pen_off", "pen_on"] {
             let _ = std::fs::remove_file(tmp(tag));
         }
     }

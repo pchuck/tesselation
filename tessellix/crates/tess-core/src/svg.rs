@@ -7,6 +7,9 @@ use crate::symmetry::overlay::SymmetryOverlay;
 use crate::tiling::Tile;
 use crate::view::ColorMode;
 
+mod orbits;
+pub use orbits::{vertex_orbits, VertexOrbit};
+
 /// Render tiles as an SVG string. The y-axis is flipped so that the SVG
 /// matches the math orientation (y up).
 pub fn render_svg(tiles: &[Tile], bbox: &BBox, mode: ColorMode) -> String {
@@ -315,6 +318,23 @@ pub const OVERLAY_ROT_ROSE: u32 = 0xF43F5E;
 pub const OVERLAY_MIRROR_GREEN: u32 = 0x10B981;
 pub const OVERLAY_GLIDE_CYAN: u32 = 0x22D3EE;
 
+/// Vertex-orbit accent colours (C1) — high-saturation filled dots for the
+/// two vertex-figure classes a 2-uniform card displays. The hues are
+/// chosen to sit clear of both the tile palette and the C5 overlay
+/// accents, and to be maximally separable from each other (pink ≈ 330° vs
+/// lime ≈ 83°) so the two classes read apart on the dark background at
+/// the dot's small radius:
+///
+/// * [`ORBIT_A`] — the lexicographically first figure class;
+/// * [`ORBIT_B`] — the lexicographically second figure class.
+///
+/// A 2-uniform tiling always yields exactly two classes, so the
+/// two-colour scheme is complete; if a card ever produced more than two
+/// classes, the colours alternate A/B/A/... in orbit order (documented
+/// behaviour, not a claim about the current registry).
+pub const ORBIT_A: u32 = 0xEC4899;
+pub const ORBIT_B: u32 = 0xA3E635;
+
 /// Full single-tiling render entry (C5): tiles + strapwork walls +
 /// optional supertile highlight + optional mirror (enantiomorph) +
 /// optional certified-symmetry overlay. The two-pass body, the wall pass
@@ -349,6 +369,41 @@ pub fn render_svg_with_walls_overlay(
     s.push_str(&svg_walls(walls, bbox, mirror));
     if let Some(ov) = overlay {
         append_symmetry_overlay(&mut s, ov, bbox);
+    }
+    s.push_str(svg_close());
+    s
+}
+
+/// Full single-tiling render entry (C1, extending the C5 entry): tiles +
+/// strapwork walls + optional supertile highlight + optional mirror +
+/// optional certified-symmetry overlay + optional vertex-figure orbit
+/// dots. Same shared-helper composition as
+/// [`render_svg_with_walls_overlay`], plus the vertex-orbit group
+/// appended after the symmetry overlay (or after the walls when the
+/// overlay is absent) and before [`svg_close`].
+///
+/// With `orbits = None` the output is byte-identical to
+/// [`render_svg_with_walls_overlay`] for every input (the C5/M205
+/// byte-identity contract); `Some(&[])` is the same no-op (an empty orbit
+/// list emits no group).
+pub fn render_svg_with_walls_orbits(
+    tiles: &[Tile],
+    bbox: &BBox,
+    mode: ColorMode,
+    walls: &[Wall],
+    highlight_supertiles: bool,
+    mirror: bool,
+    overlay: Option<&SymmetryOverlay>,
+    orbits: Option<&[VertexOrbit]>,
+) -> String {
+    let mut s = svg_scaffold(bbox);
+    s.push_str(&svg_body(tiles, bbox, mode, highlight_supertiles, mirror));
+    s.push_str(&svg_walls(walls, bbox, mirror));
+    if let Some(ov) = overlay {
+        append_symmetry_overlay(&mut s, ov, bbox);
+    }
+    if let Some(os) = orbits {
+        append_vertex_orbits(&mut s, os, bbox, mirror);
     }
     s.push_str(svg_close());
     s
@@ -527,6 +582,47 @@ fn append_symmetry_overlay(s: &mut String, ov: &SymmetryOverlay, bbox: &BBox) {
         }
     }
 
+    s.push_str("</g>");
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Vertex figure orbit dots (C1).
+// ──────────────────────────────────────────────────────────────────────────
+
+/// Emit the `<g data-vertex-orbits="true">` block (C1): one inner
+/// `<g data-orbit-figure="...">` per orbit (in orbit order — lexicographic
+/// figure order, so orbit 0 = [`ORBIT_A`], orbit 1 = [`ORBIT_B`]; extras
+/// alternate A/B/A/…), then one filled circle per vertex. Deterministic:
+/// orbits arrive sorted by figure key and each orbit's points are sorted
+/// by (x, y). Empty `orbits` emits nothing.
+///
+/// [mirror = true]: every dot is reflected about the frame center
+/// (`x → 2·cx − x`) — the same convention the tile and wall passes apply,
+/// so the dots track the mirrored geometry (not an SVG `transform`).
+fn append_vertex_orbits(s: &mut String, orbits: &[VertexOrbit], bbox: &BBox, mirror: bool) {
+    if orbits.is_empty() {
+        return;
+    }
+    let w = bbox.size().x;
+    let h = bbox.size().y;
+    let radius = (0.008 * w.min(h)).max(0.003);
+    let cx = bbox.center().x;
+    s.push_str(r#"<g data-vertex-orbits="true">"#);
+    for (i, orbit) in orbits.iter().enumerate() {
+        let (r, g, b) = rgb(if i % 2 == 0 { ORBIT_A } else { ORBIT_B });
+        s.push_str(&format!(
+            r#"<g data-orbit-figure="{}" fill="rgb({},{},{})">"#,
+            orbit.figure, r, g, b
+        ));
+        for p in &orbit.points {
+            let p = if mirror { mirror_point(*p, cx) } else { *p };
+            s.push_str(&format!(
+                r#"<circle cx="{:.4}" cy="{:.4}" r="{:.4}"/>"#,
+                p.x, p.y, radius
+            ));
+        }
+        s.push_str("</g>");
+    }
     s.push_str("</g>");
 }
 
@@ -1621,5 +1717,254 @@ mod tests {
         // Degenerate tiles emit no path anywhere (fill or outline).
         assert_eq!(path_tags(&on).len(), path_tags(&off).len());
         assert_eq!(path_tags(&on).iter().filter(|(_, f)| *f).count(), 2, "only the two non-degenerate tiles carry a fill");
+    }
+
+    // ---- vertex figure orbits (C1) ---------------------------------------
+
+    /// A 21-tile 2-uniform-shaped tiling: a 3×3 grid of unit squares, the
+    /// four corner squares split into four triangles each by both
+    /// diagonals. The complete vertices (wedges summing to 2π) are exactly
+    /// the four split-square centers (figure "3.3.3.3": four 90° triangle
+    /// wedges) and the four interior grid junctions (figure
+    /// "3.3.4.4.4": the split corner square contributes two 45° triangle
+    /// wedges, the three unsplit squares one 90° wedge each); every
+    /// patch-boundary vertex has angle sum < 2π and drops out.
+    fn two_class_tiles() -> Vec<Tile> {
+        let mut v: Vec<Tile> = Vec::new();
+        for (i, j) in [
+            (0i64, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2),
+        ] {
+            let (x, y) = (i as f64, j as f64);
+            let is_corner = (i == 0 || i == 2) && (j == 0 || j == 2);
+            if !is_corner {
+                v.push(tile(&[(x, y), (x + 1.0, y), (x + 1.0, y + 1.0), (x, y + 1.0)]));
+                continue;
+            }
+            let c = pt(x + 0.5, y + 0.5);
+            v.push(tile(&[(x, y), (x + 1.0, y), (c.x, c.y)]));
+            v.push(tile(&[(x + 1.0, y), (x + 1.0, y + 1.0), (c.x, c.y)]));
+            v.push(tile(&[(x + 1.0, y + 1.0), (x, y + 1.0), (c.x, c.y)]));
+            v.push(tile(&[(x, y + 1.0), (x, y), (c.x, c.y)]));
+        }
+        v
+    }
+
+    /// The same 3×3 grid but with only the (0,0) corner split: a 12-tile
+    /// tiling carrying three vertex classes ("3.3.3.3" the single center,
+    /// "3.3.4.4" the (1,1) junction, "4.4.4.4" the other three junctions),
+    /// and an asymmetric dot set (good for the mirror-reflection test).
+    fn single_split_tiles() -> Vec<Tile> {
+        let mut v: Vec<Tile> = Vec::new();
+        for (i, j) in [
+            (0i64, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2),
+        ] {
+            let (x, y) = (i as f64, j as f64);
+            if i == 0 && j == 0 {
+                let c = pt(x + 0.5, y + 0.5);
+                v.push(tile(&[(x, y), (x + 1.0, y), (c.x, c.y)]));
+                v.push(tile(&[(x + 1.0, y), (x + 1.0, y + 1.0), (c.x, c.y)]));
+                v.push(tile(&[(x + 1.0, y + 1.0), (x, y + 1.0), (c.x, c.y)]));
+                v.push(tile(&[(x, y + 1.0), (x, y), (c.x, c.y)]));
+                continue;
+            }
+            v.push(tile(&[(x, y), (x + 1.0, y), (x + 1.0, y + 1.0), (x, y + 1.0)]));
+        }
+        v
+    }
+
+    /// Every `<circle cx cy .../>` in `svg` (the orbit dots carry the only
+    /// `<circle>` elements when no symmetry overlay is present), as a
+    /// sorted (x, y) point list.
+    fn circle_points(svg: &str) -> Vec<(f64, f64)> {
+        let mut out = Vec::new();
+        for (i, _) in svg.match_indices("<circle ") {
+            let rest = &svg[i..];
+            let end = rest.find("/>").unwrap();
+            let tag = &rest[..end];
+            let get = |k: &str| -> f64 {
+                let needle = format!("{k}=\"");
+                let p = tag.find(&needle).unwrap() + needle.len();
+                let s = &tag[p..];
+                let e = s.find('"').unwrap();
+                s[..e].parse().unwrap()
+            };
+            out.push((get("cx"), get("cy")));
+        }
+        out.sort_by(|a, b| {
+            a.0.partial_cmp(&b.0)
+                .unwrap()
+                .then_with(|| a.1.partial_cmp(&b.1).unwrap())
+        });
+        out
+    }
+
+    /// The dedup key the orbit derivation uses, restated here for the
+    /// census assertions.
+    fn vk(p: Vec2) -> (i64, i64) {
+        ((p.x * 1e6).round() as i64, (p.y * 1e6).round() as i64)
+    }
+
+    #[test]
+    fn orbits_off_output_is_byte_pinned() {
+        // `orbits = None` must be byte-identical to the legacy C5 entry and
+        // to the exact legacy golden: the new parameter cannot drift the
+        // default export's preamble or body.
+        let tiles = mixed_level_tiles();
+        let bbox = BBox::new(pt(-1.0, -1.0), pt(3.0, 2.0));
+        let legacy =
+            render_svg_with_walls_overlay(&tiles, &bbox, ColorMode::Single, &[], false, false, None);
+        let got =
+            render_svg_with_walls_orbits(&tiles, &bbox, ColorMode::Single, &[], false, false, None, None);
+        assert_eq!(got, legacy, "None orbits must be the C5 bytes");
+        let expected = concat!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4.0000 3.0000">"#,
+            r#"<g transform="translate(1.0000 2.0000) scale(1 -1)">"#,
+            r#"<rect x="-1.0000" y="-1.0000" width="4.0000" height="3.0000" fill="rgb(40,42,58)"/>"#,
+            r#"<path d="M0.0000 0.0000L1.0000 0.0000L1.0000 1.0000L0.0000 1.0000Z" fill="rgb(212,212,212)"/>"#,
+            r#"<path d="M1.0000 0.0000L2.0000 0.0000L2.0000 1.0000L1.0000 1.0000Z" fill="rgb(212,212,212)"/>"#,
+            r#"<g fill="none" stroke="rgb(30,30,46)" stroke-width="0.0120" stroke-linejoin="round">"#,
+            r#"<path d="M0.0000 0.0000L1.0000 0.0000L1.0000 1.0000L0.0000 1.0000Z"/>"#,
+            r#"<path d="M1.0000 0.0000L2.0000 0.0000L2.0000 1.0000L1.0000 1.0000Z"/>"#,
+            r#"</g></g></svg>"#
+        );
+        assert_eq!(got, expected, "off-state golden");
+        assert!(!got.contains("data-vertex-orbits"), "no orbit markup when off");
+    }
+
+    #[test]
+    fn orbits_on_structure_and_zorder() {
+        // On-state: one orbit group (last in the document), two inner
+        // figure groups with the expected dot counts and two distinct
+        // accent fills, on == off with the orbit group stripped.
+        let tiles = two_class_tiles();
+        let ws = walls(&tiles, 45.0);
+        assert!(!ws.is_empty(), "need a non-empty wall set");
+        let bbox = BBox::new(pt(0.0, 0.0), pt(3.0, 3.0));
+        let orbits = vertex_orbits(&tiles);
+        assert_eq!(orbits.len(), 2, "the synthetic tiling has two classes");
+        let off = render_svg_with_walls_orbits(&tiles, &bbox, ColorMode::Pattern, &ws, false, false, None, None);
+        let on = render_svg_with_walls_orbits(&tiles, &bbox, ColorMode::Pattern, &ws, false, false, None, Some(&orbits));
+
+        let marker = r#"<g data-vertex-orbits="true">"#;
+        assert_eq!(on.matches(marker).count(), 1, "one orbit group");
+        let tail = "</g></svg>";
+        assert!(on.ends_with(tail), "{on}");
+        let idx = on.find(marker).unwrap();
+        assert_eq!(&on[..idx], &off[..off.len() - tail.len()], "on minus orbit group == off");
+
+        // Z-order: the orbit group is the LAST group — after the wall group.
+        let spans = outline_group_spans(&on);
+        assert_eq!(spans.len(), 2, "outline + wall groups only (orbit excluded): {on}");
+        assert!(spans[1].1 <= idx, "orbit group must follow the wall group");
+
+        // Two inner figure groups, the census, and the two accent fills.
+        assert_eq!(on.matches(r#"<g data-orbit-figure="#).count(), 2, "two figure groups");
+        let (ar, ag, ab) = rgb(ORBIT_A);
+        let (br, bg_, bb) = rgb(ORBIT_B);
+        assert!(on.contains(&format!("fill=\"rgb({},{},{})\"", ar, ag, ab)), "ORBIT_A present");
+        assert!(on.contains(&format!("fill=\"rgb({},{},{})\"", br, bg_, bb)), "ORBIT_B present");
+        let a_idx = on.find(&format!(r#"<g data-orbit-figure="{}" fill="rgb({},{},{})">"#, orbits[0].figure, ar, ag, ab)).unwrap();
+        let b_idx = on.find(&format!(r#"<g data-orbit-figure="{}" fill="rgb({},{},{})">"#, orbits[1].figure, br, bg_, bb)).unwrap();
+        // Inner figure groups contain only self-closing circles, so the
+        // first `</g>` after each opener is its own close.
+        let a_block_end = on[a_idx..].find("</g>").unwrap() + a_idx;
+        let a_block = &on[a_idx..a_block_end];
+        let b_block_end = on[b_idx..].find("</g>").unwrap() + b_idx;
+        let b_block = &on[b_idx..b_block_end];
+        assert_eq!(a_block.matches("<circle").count(), orbits[0].points.len(), "orbit 0 dot count");
+        assert_eq!(b_block.matches("<circle").count(), orbits[1].points.len(), "orbit 1 dot count");
+    }
+
+    #[test]
+    fn vertex_orbits_census_two_classes() {
+        // The 21-tile synthetic: exactly two classes with the declared
+        // figure keys, the right point counts, the exact point sets, and
+        // deterministic (x, y) order.
+        let tiles = two_class_tiles();
+        assert_eq!(tiles.len(), 21, "five whole squares + four split corners (16 triangles)");
+        let orbits = vertex_orbits(&tiles);
+        assert_eq!(orbits.len(), 2, "exactly two vertex classes");
+        assert_eq!(orbits[0].figure, "3.3.3.3", "lex-first class is the triangle center");
+        assert_eq!(orbits[1].figure, "3.3.4.4.4", "the grid junctions");
+        assert_eq!(orbits[0].points.len(), 4, "four split-square centers");
+        assert_eq!(orbits[1].points.len(), 4, "four interior junctions");
+
+        let centers: std::collections::BTreeSet<(i64, i64)> = orbits[0].points.iter().map(|p| vk(*p)).collect();
+        assert_eq!(
+            centers,
+            std::collections::BTreeSet::from([
+                (500000, 500000), (2500000, 500000), (500000, 2500000), (2500000, 2500000),
+            ]),
+            "the 3.3.3.3 points are exactly the four split-square centers"
+        );
+        let junctions: std::collections::BTreeSet<(i64, i64)> = orbits[1].points.iter().map(|p| vk(*p)).collect();
+        assert_eq!(
+            junctions,
+            std::collections::BTreeSet::from([
+                (1000000, 1000000), (2000000, 1000000), (1000000, 2000000), (2000000, 2000000),
+            ]),
+            "the 3.3.4.4.4 points are exactly the four interior junctions"
+        );
+
+        // Deterministic emission order: strictly increasing (x, y).
+        for o in &orbits {
+            for pair in o.points.windows(2) {
+                let (a, b) = (&pair[0], &pair[1]);
+                assert!(a.x < b.x || (a.x == b.x && a.y < b.y), "orbit not (x, y) sorted: {a:?} then {b:?}");
+            }
+        }
+
+        // Boundary vertices are excluded: total dots = 8, not the ~25 raw
+        // grid/center vertex positions.
+        assert_eq!(orbits.iter().map(|o| o.points.len()).sum::<usize>(), 8);
+    }
+
+    #[test]
+    fn vertex_orbits_mirrored_composition() {
+        // Mirror composes with the dots: the on-state dot set is the
+        // exact reflection of the off-state dot set about the frame
+        // center (x → 2·cx − x, y unchanged), a bijection at 4-decimal
+        // precision. Uses the asymmetric single-split tiling.
+        let tiles = single_split_tiles();
+        let orbits = vertex_orbits(&tiles);
+        assert_eq!(orbits.len(), 3, "the asymmetric tiling has three classes");
+        let bbox = BBox::new(pt(0.0, 0.0), pt(3.0, 3.0));
+        let cx = bbox.center().x;
+        let off = render_svg_with_walls_orbits(&tiles, &bbox, ColorMode::Single, &[], false, false, None, Some(&orbits));
+        let on = render_svg_with_walls_orbits(&tiles, &bbox, ColorMode::Single, &[], false, true, None, Some(&orbits));
+
+        // The reflection x → 2·cx − x reverses the x-order, so the
+        // (x, y)-sorted off list, re-sorted by (−x, y), must equal the
+        // (x, y)-sorted on list. Both lists parse the same 4-decimal
+        // emissions, so a 5e-4 margin is exact for these values.
+        let mut off_pts = circle_points(&off);
+        let on_pts = circle_points(&on);
+        assert_eq!(off_pts.len(), on_pts.len(), "mirror preserves the dot count");
+        assert!(off_pts.len() >= 3, "at least one dot per class");
+        off_pts.sort_by(|a, b| {
+            b.0.partial_cmp(&a.0)
+                .unwrap()
+                .then_with(|| a.1.partial_cmp(&b.1).unwrap())
+        });
+        for (a, b) in off_pts.iter().zip(&on_pts) {
+            assert!(
+                (2.0 * cx - a.0 - b.0).abs() < 5e-4,
+                "dot x {} must reflect to {}",
+                a.0, b.0
+            );
+            assert!((a.1 - b.1).abs() < 5e-4, "dot y is unchanged under mirror");
+        }
+    }
+
+    #[test]
+    fn vertex_orbits_empty_noop() {
+        // Some(&[]) is the same byte no-op as None: an empty orbit list
+        // emits no group at all.
+        let tiles = two_class_tiles();
+        let bbox = BBox::new(pt(0.0, 0.0), pt(3.0, 3.0));
+        let none = render_svg_with_walls_orbits(&tiles, &bbox, ColorMode::Single, &[], false, false, None, None);
+        let empty = render_svg_with_walls_orbits(&tiles, &bbox, ColorMode::Single, &[], false, false, None, Some(&[]));
+        assert_eq!(none, empty, "Some(&[]) must be byte-identical to None");
+        assert!(!none.contains("data-vertex-orbits"), "no orbit group when empty");
     }
 }
