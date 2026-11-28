@@ -406,7 +406,13 @@ impl Tiling for TurtleTiling {
             if !poly.aabb().intersects(query.region) {
                 continue;
             }
-            tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
+            // `reflected` is always false here, honestly: the FLIP of the
+            // turtle→hat substitution is baked into the level placements
+            // (see the module docs), so every emitted leaf is placed
+            // unreflected. The patch's chirality is a whole-patch fact —
+            // the root supertile carries `refl: depth % 2 == 1` — not a
+            // per-tile one, so per-tile highlighting cannot represent it.
+            tiles.push(Tile { family: tess_core::tiling::FamilyTag::Turtle, reflected: false,
                 proto: lf.shape,
                 seed: lf.label as u32 + 1, level: depth as u8,
                 poly,

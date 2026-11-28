@@ -466,7 +466,13 @@ impl Tiling for SpectreTiling {
             if !poly.aabb().intersects(query.region) {
                 continue;
             }
-            tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
+            // `reflected` is always false here, honestly: like the turtle,
+            // the spectre's reflection is baked into the level placements,
+            // so every emitted leaf is placed unreflected. The patch's
+            // chirality is a whole-patch fact — the root supertile carries
+            // `refl: depth % 2 == 1` — not a per-tile one, so per-tile
+            // highlighting cannot represent it.
+            tiles.push(Tile { family: tess_core::tiling::FamilyTag::Spectre, reflected: false,
                 proto: 0,
                 seed: lf.label as u32 + 1, level: depth as u8,
                 poly,

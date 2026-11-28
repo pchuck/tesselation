@@ -43,6 +43,14 @@ use crate::view::ColorMode;
 pub const BORDER: u8 = 255;
 pub const GAP: u8 = 254;
 
+/// A grout cell that belongs to a large-tile accent outline (Landing B's
+/// `--large-tile-outline` / TUI `o` toggle): same geometry as [`BORDER`],
+/// painted by the front end in the outline accent instead of the dark grout.
+/// Written only by [`raster_aperiodic`] with an outline predicate; every
+/// other entry leaves it out of the buffer, so front ends that map it are
+/// never byte-affected while the flag is off.
+pub const OUTLINE: u8 = 253;
+
 /// Supersample grid per contested cell (K×K sub-samples).
 const K: u32 = 4;
 const KS: u32 = K * K;
@@ -158,6 +166,10 @@ fn thinness(tile: &Tile) -> f64 {
     area(&tile.poly.pts) / diag
 }
 
+/// Rasterize `tiles` into a per-pixel color-index buffer.
+///
+/// Exactly [`raster_reflected`] with no reflected-palette: the pre-Landing-B
+/// entry, byte-identical (the M205 delegator precedent).
 pub fn raster(
     tiles: &[Tile],
     bbox: &BBox,
@@ -166,6 +178,68 @@ pub fn raster(
     mode: ColorMode,
     palette: &[u8],
 ) -> Raster {
+    raster_reflected(tiles, bbox, w, h, mode, palette, None)
+}
+
+/// [`raster`] with the reflected-tile highlight (`--highlight-reflected`).
+///
+/// `reflected_palette` is the highlight twin of `palette` — same length,
+/// each entry the lightened variant of the same class (the front end builds
+/// it with [`crate::paint::reflected_palette_256`]). A tile whose `reflected`
+/// flag is set writes its class index through that twin; every other tile
+/// writes through `palette` as before. `None` (or an unreflected view) is
+/// byte-identical to [`raster`].
+///
+/// Only fills are tagged: [`BORDER`] grout and [`GAP`] cells keep their
+/// sentinel indices, so the highlight never recolors the grout pass, and
+/// cells whose owner is a reflected tile keep their ordinary owner/border
+/// bookkeeping (the boundary pass below is untouched).
+pub fn raster_reflected(
+    tiles: &[Tile],
+    bbox: &BBox,
+    w: u32,
+    h: u32,
+    mode: ColorMode,
+    palette: &[u8],
+    reflected_palette: Option<&[u8]>,
+) -> Raster {
+    raster_aperiodic(tiles, bbox, w, h, mode, palette, reflected_palette, None)
+}
+
+/// [`raster_reflected`] plus the large-tile outline pass
+/// (`--large-tile-outline`).
+///
+/// `outline` is the marked-tile predicate (the canvas call sites pass
+/// [`crate::svg::large_tile_outlined`], the family-keyed law). When set, a
+/// grout cell whose ownership touches a marked tile — its own owner, or one
+/// of the four owning neighbours — is written [`OUTLINE`] instead of plain
+/// [`BORDER`]: the accent traces exactly the marked tiles' boundary, one
+/// cell wide, over grout that is already there (the raster draws hairline
+/// strokes as grout cells, so the outline recolors the boundary grout of
+/// the marked family rather than inventing a second stroke geometry). `None`
+/// is byte-identical to [`raster_reflected`].
+///
+/// Like the SVG pass, this is keyed on `tile.family`/`tile.proto`, so it is
+/// inert for cards with no large-tile notion (no cell is ever marked).
+pub fn raster_aperiodic(
+    tiles: &[Tile],
+    bbox: &BBox,
+    w: u32,
+    h: u32,
+    mode: ColorMode,
+    palette: &[u8],
+    reflected_palette: Option<&[u8]>,
+    outline: Option<&dyn Fn(&Tile) -> bool>,
+) -> Raster {
+    // Class → palette index for one tile, choosing the highlight twin for
+    // reflected tiles when the caller supplied one.
+    let slot = |tile: &Tile| -> u8 {
+        let pal = match reflected_palette {
+            Some(rp) if tile.reflected => rp,
+            _ => palette,
+        };
+        palette_slot(pal, color_index(mode, tile))
+    };
     let n = (w * h) as usize;
     let sx = bbox.size().x / w as f64;
     let sy = bbox.size().y / h as f64;
@@ -215,7 +289,7 @@ pub fn raster(
                 let bb = tiles[bucket[0] as usize].poly.aabb();
                 if bb.min.x <= x0 && x0 + sx <= bb.max.x && bb.min.y <= y0 && y0 + sy <= bb.max.y {
                     owner[idx] = bucket[0];
-                    pixels[idx] = palette_slot(palette, color_index(mode, &tiles[bucket[0] as usize]));
+                    pixels[idx] = slot(&tiles[bucket[0] as usize]);
                     continue;
                 }
             }
@@ -248,7 +322,7 @@ pub fn raster(
                     let ti = bucket[order[0]] as usize;
                     owner[idx] = bucket[order[0]];
                     fg[idx] = true;
-                    pixels[idx] = palette_slot(palette, color_index(mode, &tiles[ti]));
+                    pixels[idx] = slot(&tiles[ti]);
                     continue;
                 }
             }
@@ -277,7 +351,7 @@ pub fn raster(
                 continue;
             }
             owner[idx] = bucket[best];
-            pixels[idx] = palette_slot(palette, color_index(mode, &tiles[bucket[best] as usize]));
+            pixels[idx] = slot(&tiles[bucket[best] as usize]);
         }
     }
 
@@ -304,6 +378,41 @@ pub fn raster(
             }
             if border {
                 pixels[idx] = BORDER;
+            }
+        }
+    }
+
+    // Outline pass (Landing B): recolor the boundary grout of the marked
+    // family. Runs after the boundary pass so it sees the finished grout
+    // network; fills and GAP are never touched, and grout that bounds no
+    // marked tile keeps its dark BORDER value.
+    if let Some(mark) = outline {
+        let hits: Vec<bool> = owner
+            .iter()
+            .map(|&o| o != u32::MAX && mark(&tiles[o as usize]))
+            .collect();
+        for cy in 0..h {
+            for cx in 0..w {
+                let idx = (cy * w + cx) as usize;
+                if pixels[idx] != BORDER {
+                    continue;
+                }
+                let mut hit = hits[idx];
+                if !hit && cx > 0 {
+                    hit = hits[idx - 1];
+                }
+                if !hit && cx + 1 < w {
+                    hit = hits[idx + 1];
+                }
+                if !hit && cy > 0 {
+                    hit = hits[idx - w as usize];
+                }
+                if !hit && cy + 1 < h {
+                    hit = hits[idx + w as usize];
+                }
+                if hit {
+                    pixels[idx] = OUTLINE;
+                }
             }
         }
     }
@@ -562,4 +671,163 @@ mod tests {
     /// 254/255 stay collision-free for it too (same argument as the
     /// 8-entry space pin above).
     const LEVEL_INDEX_SPACE: usize = 9;
+
+    // ---- Landing B: reflected-tile highlight (two-palette raster) -------
+
+    /// A highlight twin of [`PAL`] with values no class can produce on its
+    /// own, so "this pixel went through the twin" is unambiguous.
+    const TWIN: [u8; 8] = [100, 101, 102, 103, 104, 105, 106, 107];
+
+    #[test]
+    fn raster_reflected_off_is_byte_identical_to_raster() {
+        // Off-state byte identity, both ways: no twin (`None`), and a twin
+        // present but no reflected tile in the view.
+        let left = tile(0, 1, &[[0.0, 0.0], [5.0, 0.0], [5.0, 10.0], [0.0, 10.0]]);
+        let right = tile(1, 3, &[[5.0, 0.0], [10.0, 0.0], [10.0, 10.0], [5.0, 10.0]]);
+        let tiles = [left, right];
+        let bbox = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(10.0, 10.0));
+        for mode in [
+            ColorMode::Pattern,
+            ColorMode::Metatile,
+            ColorMode::Level,
+            ColorMode::Shape,
+            ColorMode::Orientation,
+        ] {
+            let base = raster(&tiles, &bbox, 20, 20, mode, &PAL);
+            let no_twin = raster_reflected(&tiles, &bbox, 20, 20, mode, &PAL, None);
+            let twin_but_flat = raster_reflected(&tiles, &bbox, 20, 20, mode, &PAL, Some(&TWIN));
+            assert_eq!(base.pixels, no_twin.pixels, "{mode:?}: None twin must be byte-identical");
+            assert_eq!(
+                base.pixels, twin_but_flat.pixels,
+                "{mode:?}: an all-unreflected view must be byte-identical with a twin present"
+            );
+        }
+    }
+
+    #[test]
+    fn raster_reflected_tags_reflected_fills_and_leaves_sentinels() {
+        // Left half reflected, right half not, on a two-class view: the
+        // left interior reads the twin value, the right interior its own,
+        // the seam stays BORDER grout and the outside stays GAP (the
+        // sentinels never enter the palette map, so they cannot be tagged).
+        let mut left = tile(0, 0, &[[0.0, 0.0], [5.0, 0.0], [5.0, 10.0], [0.0, 10.0]]);
+        left.reflected = true;
+        let right = tile(0, 1, &[[5.0, 0.0], [10.0, 0.0], [10.0, 10.0], [5.0, 10.0]]);
+        let bbox = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(10.0, 10.0));
+        let r = raster_reflected(&[left, right], &bbox, 20, 20, ColorMode::Pattern, &PAL, Some(&TWIN));
+        for cy in 0..20 {
+            // Cell interiors (columns 1..9 left, 11..19 right).
+            for cx in 1..9 {
+                assert_eq!(r.at(cx, cy), 100, "reflected left cell ({cx},{cy})");
+            }
+            for cx in 11..19 {
+                assert_eq!(r.at(cx, cy), 1, "unreflected right cell ({cx},{cy})");
+            }
+        }
+        // The seam column is grout, not a tagged fill.
+        assert!((0..20).all(|cy| r.at(10, cy) == BORDER || r.at(10, cy) == 1 || r.at(10, cy) == 100));
+        assert!(
+            (0..20).any(|cy| r.at(10, cy) == BORDER),
+            "the owner change must still paint grout"
+        );
+
+        // GAP: a tile covering a quarter of the frame leaves the rest GAP,
+        // tagged or not.
+        let mut corner = tile(0, 0, &[[0.0, 0.0], [5.0, 0.0], [5.0, 5.0], [0.0, 5.0]]);
+        corner.reflected = true;
+        let big = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(20.0, 20.0));
+        let r2 = raster_reflected(&[corner], &big, 20, 20, ColorMode::Pattern, &PAL, Some(&TWIN));
+        assert!(r2.pixels.iter().any(|&p| p == GAP), "uncovered cells stay GAP");
+        assert!(
+            !r2.pixels.iter().any(|&p| p == 101 || p == 102 || p == 103),
+            "no palette slot other than the tile's own class may appear"
+        );
+    }
+
+    // ---- Landing B: large-tile outline pass -----------------------------
+
+    /// Two squares at `x`..`x+5` (same layout the reflected tests use).
+    fn pair() -> [Tile; 2] {
+        [
+            tile(0, 0, &[[0.0, 0.0], [5.0, 0.0], [5.0, 10.0], [0.0, 10.0]]),
+            tile(1, 1, &[[5.0, 0.0], [10.0, 0.0], [10.0, 10.0], [5.0, 10.0]]),
+        ]
+    }
+
+    #[test]
+    fn raster_aperiodic_outline_off_is_byte_identical() {
+        let tiles = pair();
+        let bbox = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(10.0, 10.0));
+        for mode in [
+            ColorMode::Pattern,
+            ColorMode::Metatile,
+            ColorMode::Level,
+            ColorMode::Orientation,
+        ] {
+            let base = raster(&tiles, &bbox, 20, 20, mode, &PAL);
+            let off =
+                raster_aperiodic(&tiles, &bbox, 20, 20, mode, &PAL, None, Some(&|_| false));
+            let none = raster_aperiodic(&tiles, &bbox, 20, 20, mode, &PAL, None, None);
+            assert_eq!(base.pixels, none.pixels, "{mode:?}: no outline predicate");
+            assert_eq!(
+                base.pixels, off.pixels,
+                "{mode:?}: a predicate that marks nothing must be a byte no-op"
+            );
+            assert!(!off.pixels.iter().any(|&p| p == OUTLINE));
+        }
+    }
+
+    #[test]
+    fn raster_aperiodic_outline_recolors_only_marked_boundary_grout() {
+        // Left tile marked, right not: the shared seam (a four-sample
+        // straddle) and the left tile's outer edge (GAP side, owner =
+        // marked tile) read OUTLINE; a border between two UNMARKED owners
+        // stays BORDER; fills and GAP never change.
+        let tiles = pair();
+        let bbox = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(10.0, 10.0));
+        let off = raster(&tiles, &bbox, 20, 20, ColorMode::Pattern, &PAL);
+        let on = raster_aperiodic(&tiles, &bbox, 20, 20, ColorMode::Pattern, &PAL, None, Some(
+            &|t: &Tile| t.seed == 0,
+        ));
+        // The seam column (cx = 10) is grout in the off state and accent
+        // in the on state.
+        let seam_off = (0..20).filter(|&cy| off.at(10, cy) == BORDER).count();
+        let seam_on = (0..20).filter(|&cy| on.at(10, cy) == OUTLINE).count();
+        assert!(seam_off > 0, "the seam must be grout in the off state");
+        assert_eq!(seam_on, seam_off, "every seam grout cell becomes accent");
+        for cy in 0..20 {
+            assert_eq!(on.at(10, cy), match off.at(10, cy) {
+                BORDER => OUTLINE,
+                v => v,
+            });
+        }
+        // Fills are untouched everywhere.
+        for cy in 0..20 {
+            for cx in 0..20 {
+                if off.at(cx, cy) != BORDER {
+                    assert_eq!(on.at(cx, cy), off.at(cx, cy), "fill at ({cx},{cy}) moved");
+                }
+            }
+        }
+        // Unmarked-only view: two tiles that both fail the predicate keep
+        // plain BORDER.
+        let none = raster_aperiodic(&tiles, &bbox, 20, 20, ColorMode::Pattern, &PAL, None, Some(
+            &|t: &Tile| t.seed == 99,
+        ));
+        assert!(!none.pixels.iter().any(|&p| p == OUTLINE));
+        // GAP side of a marked tile: a half-covering marked tile outlines
+        // its grout rim, not the GAP.
+        let mut half = tile(0, 0, &[[0.0, 0.0], [5.0, 0.0], [5.0, 5.0], [0.0, 5.0]]);
+        half.proto = 4;
+        let big = BBox::new(Vec2::new(0.0, 0.0), Vec2::new(20.0, 20.0));
+        let r = raster_aperiodic(&[half], &big, 20, 20, ColorMode::Pattern, &PAL, None, Some(
+            &|t: &Tile| t.proto == 4,
+        ));
+        assert!(r.pixels.iter().any(|&p| p == OUTLINE), "marked rim outlined");
+        assert!(r.pixels.iter().any(|&p| p == GAP), "GAP stays GAP");
+        assert!(
+            !r.pixels.iter().any(|&p| p == BORDER),
+            "the only tile is marked, so all its boundary grout is accent"
+        );
+    }
 }

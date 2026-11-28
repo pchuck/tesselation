@@ -414,38 +414,79 @@ pub fn shape_class(poly: &crate::geometry::Polygon) -> usize {
     (acc & 7) as usize
 }
 
+/// Hat-band bucket of a matching-rule seed (1..=9): H1-H4 → 0, T1 → 1,
+/// P1-P2 → 2, F1-F2 → 3. `None` for any other seed (a tile that does not
+/// carry the aperiodic matching-rule signature).
+fn hat_band_bucket(seed: u32) -> Option<usize> {
+    match seed {
+        1..=4 => Some(0),
+        5 => Some(1),
+        6..=7 => Some(2),
+        8..=9 => Some(3),
+        _ => None,
+    }
+}
+
 /// Aperiodic metatile/cluster class (see `crate::view`).
 ///
-/// The `Tile` contract carries no shape-classification label, so this
-/// keys on the tile signature. (Family-tagged tiles never reach a
-/// distinguishing read here in practice: the Landing A
-/// [`family_slot`] rule overrides this class for tagged tilings in
-/// `Metatile` mode.) Signatures (verified at `hat.rs:903-908`,
-/// `spectre.rs:469-474`, `turtle.rs:409-415`, `cap.rs:162`/`1087-1090`):
+/// Landing B dispatches the three tagged aperiodic families first; every
+/// other tile keeps the pre-Landing-B signature rule byte-for-byte. The
+/// family bands never overlap, so the three cards read apart (they used
+/// to share one bucket table — the documented limitation this fixes):
 ///
-/// * **Hat/spectre/turtle-turtle** (monohedral): `proto == 0`, `seed`
-///   in 1..=9 — color by the hat cluster-role bucket (H1-H4 = 1..=4 → 0,
-///   T1 = 5 → 1, P1-P2 = 6..=7 → 2, F1-F2 = 8..=9 → 3). Hat and spectre
-///   emit the *identical* signature (`proto=0, seed 1..=9`) and the
-///   turtle engine uses the same for its turtle-shape tiles, so they
-///   cannot be told apart at paint time — one seed→class mapping applies
-///   to all three (documented limitation). The same signature is also
-///   emitted by reptiles (armchair/chair/sphinx: `seed` = orientation+1,
-///   1..=12), pinwheel (`seed` = child-slot+1, 1..=5) and isohedral
-///   (`seed` = aspect index, 0..na) tiles, which colors by the same bucket
-///   — the mode is not family-scoped and untagged tiles carry no family
-///   identity (documented limitation).
-/// * **Turtle hat-companion** (`proto == 1`, `seed` in 1..=9 = matching-rule
-///   label+1) is *not* disambiguated from **cap** (`proto` = metatile type,
-///   `seed` = `SEED_OF[ty]` = `[0, 3, 2, 1][ty]`): the pair
-///   `(proto=1, seed=3)` is exactly cap's T *and* turtle's hat-companion
-///   with label 2, so both fall through to the proto-class fallback.
-/// * **Cap**: `proto` is the metatile type (0..=3); the proto-class
-///   fallback below reads it directly. Cap is deliberately NOT matched by
-///   the exact `(proto, seed)` pair — `(proto=0, seed=0)` would
-///   misclassify every lattice cell-0/seed-0 tile as cap-H.
-/// * Everything else: proto-class fallback.
+/// * **Hat** (`FamilyTag::Hat`): the cluster-role buckets in place
+///   (H1-H4 → 0, T1 → 1, P1-P2 → 2, F1-F2 → 3), identical to the old
+///   signature rule, so the hat card is unchanged.
+/// * **Spectre** (`FamilyTag::Spectre`): the same bucket *offset by 4*
+///   (band 4..=7). Spectre and hat emit the identical signature
+///   (`proto = 0`, `seed` = matching-rule label + 1, 1..=9), so the band
+///   is the only way to separate them; the spectre card now reads its own
+///   four tones instead of the hat's.
+/// * **Turtle** (`FamilyTag::Turtle`): the turtle-shape cells
+///   (`proto == 0`) take band slot 8 (sky blue, the one slot no other
+///   family uses), and the Mystic-Sigma hat companion (`proto == 1`,
+///   emitted only at depth 0 for label 0) takes the **hat** bucket of its
+///   own seed — a hat is colored as a hat, which fixes the old behavior
+///   where the companion collapsed onto cap's T tone through the proto
+///   fallback.
+/// * **Untagged tiles**: the pre-Landing-B signature rule, unchanged:
+///   - `proto == 0` with `seed` in 1..=9 → the hat cluster-role bucket.
+///     That signature is also emitted by reptiles (armchair/chair/sphinx:
+///     `seed` = orientation+1, 1..=12 — only 1..=9 bucket), pinwheel
+///     (`seed` = child-slot+1, 1..=5) and isohedral (`seed` = aspect
+///     index) tiles; the mode is not family-scoped and untagged tiles
+///     carry no family identity (documented limitation).
+///   - **Cap** (`proto` = metatile type 0..=3) and everything else: the
+///     proto-class fallback below, read directly. Cap is deliberately NOT
+///     matched by the exact `(proto, seed)` pair — `(proto=0, seed=0)`
+///     would misclassify every lattice cell-0/seed-0 tile as cap-H. The
+///     turtle companion used to be indistinguishable from cap
+///     (`(proto=1, seed=3)` was both); the tag removes that collision for
+///     the turtle card while cap itself is untouched.
+///
+/// Every band stays inside the 9-entry [`METATILE_PALETTE`] index space.
 pub fn metatile_class(tile: &Tile) -> usize {
+    use crate::tiling::FamilyTag;
+    let (band, seed) = match tile.family {
+        FamilyTag::Hat => (0, tile.seed),
+        FamilyTag::Spectre => (4, tile.seed),
+        // Turtle cells read as turtles; the hat companion reads as a hat.
+        FamilyTag::Turtle if tile.proto == 0 => return METATILE_PALETTE.len() - 1,
+        FamilyTag::Turtle => (0, tile.seed),
+        _ => return legacy_metatile_class(tile),
+    };
+    match hat_band_bucket(seed) {
+        Some(bucket) => band + bucket,
+        // Impossible for the three tagged cards (they emit the matching-
+        // rule label + 1, always 1..=9); any other seed falls back to the
+        // pre-Landing-B rule rather than inventing a color.
+        None => legacy_metatile_class(tile),
+    }
+}
+
+/// The pre-Landing-B metatile classification (signature-only, no family
+/// dispatch) — every untagged tile's class, byte-identical by definition.
+fn legacy_metatile_class(tile: &Tile) -> usize {
     if tile.proto == 0 && (1..=9).contains(&tile.seed) {
         return match tile.seed {
             1..=4 => 0,
@@ -547,9 +588,13 @@ fn andritz_slot(tile: &Tile) -> usize {
 /// `Metatile` — and only when `tile.family != FamilyTag::None`;
 /// `Single`/`Gray`/`Shape`/`Orientation`/`Level`/`PatternGray` never
 /// consult it, and untagged tilings are byte-identical everywhere.
-/// `Isohedral`/`Hat`/`Turtle`/`Spectre` carry no rule arm yet (tag is
-/// identity-only this landing). All slots are < 8, inside every
-/// identity-mode index space (8-entry palettes; `Metatile` 9).
+/// `Isohedral` carries no rule arm (tag is identity-only). The three
+/// aperiodic families deliberately carry NO arm here either: in `Metatile`
+/// mode their family dispatch lives in [`metatile_class`] (Landing B, the
+/// 9-entry band scheme), and in `Pattern`/`Proto`/`Role` they keep the
+/// seed/proto classes their engines emit — overriding those would change
+/// the seed-plane reading of the matching rules. All slots are < 8, inside
+/// every identity-mode index space (8-entry palettes; `Metatile` 9).
 ///
 /// This is the single source of truth shared by
 /// [`tile_rgb`] and raster's `color_index` (M192 sync).
@@ -570,7 +615,36 @@ pub fn family_slot(mode: ColorMode, tile: &Tile) -> Option<usize> {
     }
 }
 
+/// Fill color of a tile in `mode`. Exactly [`tile_rgb_reflected`] with
+/// the reflected highlight off (the M205 delegator precedent): every
+/// pre-Landing-B call site is byte-identical.
 pub fn tile_rgb(mode: ColorMode, tile: &Tile) -> u32 {
+    tile_rgb_reflected(mode, tile, false)
+}
+
+/// [`tile_rgb`] with the reflected-tile highlight
+/// (`--highlight-reflected`): when `highlight_reflected` is on and the
+/// tile carries `reflected`, its color is [`reflected_accent`] of the
+/// color the mode picks for it — the mode's own structure survives,
+/// lightened. Off, or for an unreflected tile, the color is exactly
+/// [`tile_rgb`]'s.
+///
+/// This is the single source of truth for the highlight: the SVG fill
+/// pass and the GUI canvas read it here, and the TUI raster reads the
+/// equivalent rule through [`reflected_palette_256`].
+pub fn tile_rgb_reflected(mode: ColorMode, tile: &Tile, highlight_reflected: bool) -> u32 {
+    let base = tile_color(mode, tile);
+    if highlight_reflected && tile.reflected {
+        reflected_accent(base)
+    } else {
+        base
+    }
+}
+
+/// The mode's color for a tile, before any highlight: the palette lookup
+/// only (no `reflected` rule). Shared by [`tile_rgb_reflected`] and
+/// [`reflected_palette_256`].
+fn tile_color(mode: ColorMode, tile: &Tile) -> u32 {
     let idx = match family_slot(mode, tile) {
         Some(s) => s,
         None => match mode {
@@ -586,15 +660,109 @@ pub fn tile_rgb(mode: ColorMode, tile: &Tile) -> u32 {
             ColorMode::Level => level_class(tile),
         },
     };
+    palette_for(mode)[idx]
+}
+
+/// The ramp a mode paints with (the table [`tile_rgb`] indexes after its
+/// class function). Single source for front ends that need the palette
+/// itself rather than per-tile colors — the TUI quantizes these to
+/// xterm-256 indices, [`reflected_palette_256`] lightens them.
+pub fn palette_for(mode: ColorMode) -> &'static [u32] {
     match mode {
-        ColorMode::Gray => GRAY_PALETTE[idx],
-        ColorMode::PatternGray => PATTERN_GRAY_PALETTE[idx],
-        ColorMode::Role => ROLE_PALETTE[idx],
-        ColorMode::Metatile => METATILE_PALETTE[idx],
-        ColorMode::Orientation => ORIENTATION_PALETTE[idx],
-        ColorMode::Level => LEVEL_PALETTE[idx],
-        _ => PALETTE[idx],
+        ColorMode::Gray => &GRAY_PALETTE,
+        ColorMode::PatternGray => &PATTERN_GRAY_PALETTE,
+        ColorMode::Role => &ROLE_PALETTE,
+        ColorMode::Metatile => &METATILE_PALETTE,
+        ColorMode::Orientation => &ORIENTATION_PALETTE,
+        ColorMode::Level => &LEVEL_PALETTE,
+        ColorMode::Single | ColorMode::Pattern | ColorMode::Shape | ColorMode::Proto => &PALETTE,
     }
+}
+
+/// Blend `color` `t/255` of the way toward white, per 8-bit channel,
+/// rounded half-up. `t = 0` is `color`; `t = 255` is white.
+pub fn lighten(color: u32, t: u32) -> u32 {
+    let blend = |v: u32| v + ((255 - v) * t + 127) / 255;
+    let (r, g, b) = ((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
+    (blend(r) << 16) | (blend(g) << 8) | blend(b)
+}
+
+/// The reflected-tile highlight accent: [`lighten`] by
+/// [`REFLECTED_ACCENT_T`] of the way toward white.
+///
+/// The accent is deliberately a *lightened copy of the tile's own mode
+/// color* rather than a single fixed hue: the class structure the mode
+/// encodes (seed, prototile, metatile band, level, orientation) stays
+/// readable inside the highlighted subset, and the highlighted tiles stay
+/// in the mode's hue family instead of all collapsing onto one accent
+/// color. At `t = 140` (≈55%) the map is per-channel strictly increasing
+/// — so distinct base colors stay distinct — and no lightened entry lands
+/// on any base entry of the same ramp (pinned in the tests below for all
+/// seven ramps, with the worst-case Rec.709 luma lift pinned at ≥ 20).
+pub fn reflected_accent(color: u32) -> u32 {
+    lighten(color, REFLECTED_ACCENT_T)
+}
+
+/// How far toward white a highlighted tile's color moves (see
+/// [`reflected_accent`]). Chosen as the largest blend that keeps every
+/// ramp's lightened table both injective and disjoint from its own base
+/// table at 8-bit precision (verified for all seven ramps and four
+/// candidate blends at Landing B time).
+pub const REFLECTED_ACCENT_T: u32 = 140;
+
+/// The reflected-highlight twin of a front-end palette: for each entry of
+/// the ramp, the xterm-256 index nearest [`reflected_accent`] of that color,
+/// skipping indices an earlier entry already took and the two raster
+/// sentinel indices. Single quantization (lighten first, then map once) keeps
+/// the best available fidelity — requantizing the already-quantized palette
+/// loses more of the 256-cube.
+///
+/// The scan makes the twin injective for every shipped ramp even where the
+/// 256-cube is coarser than the ramp (see [`nearest_free_256`]), so a
+/// highlighted view never loses a class distinction that the un-highlighted
+/// view keeps.
+pub fn reflected_palette_256(ramp: &[u32]) -> Vec<u8> {
+    let mut twin: Vec<u8> = Vec::with_capacity(ramp.len());
+    for &c in ramp {
+        twin.push(nearest_free_256(reflected_accent(c), &twin));
+    }
+    twin
+}
+
+/// Nearest xterm-256 index to `color` that `taken` does not already use and
+/// that is not one of the raster sentinels ([`crate::raster::BORDER`] /
+/// [`crate::raster::GAP`] / [`crate::raster::OUTLINE`], indices 255/254/253).
+///
+/// Plain [`rgb_to_256`] is not enough for a highlight twin: lightening the
+/// light gray reads pure white, whose nearest index is 255 — a pixel written
+/// with that value draws as grout, not as a tile — and the blend compresses
+/// the light ends of the gray ramps, so two classes can quantize onto one
+/// index (0x898989 and 0x858585 both lighten into the same cube cell). A
+/// free-index scan fixes both, at the cost of at most one gray step
+/// (228/238 are the only values the two sentinels remove).
+fn nearest_free_256(color: u32, taken: &[u8]) -> u8 {
+    let (tr, tg, tb) = rgb(color);
+    let mut best: u8 = 0;
+    let mut best_d = f64::MAX;
+    for i in 0u16..256 {
+        let i = i as u8;
+        if taken.contains(&i)
+            || i == crate::raster::BORDER
+            || i == crate::raster::GAP
+            || i == crate::raster::OUTLINE
+        {
+            continue;
+        }
+        let (r, g, b) = xterm_256(i);
+        let d = (tr as f64 - r as f64).powi(2)
+            + (tg as f64 - g as f64).powi(2)
+            + (tb as f64 - b as f64).powi(2);
+        if d < best_d {
+            best_d = d;
+            best = i;
+        }
+    }
+    best
 }
 
 pub fn rgb(color: u32) -> (u8, u8, u8) {
@@ -1150,6 +1318,234 @@ mod tests {
         // treated as cap — it follows the hat/spectre seed branch instead.
         let t = Tile { family: crate::tiling::FamilyTag::None, reflected: false, proto: 0, seed: 5, level: 0, poly: poly_with_n_vertices(3) };
         assert_eq!(metatile_class(&t), 1); // seed-5 → hat T bucket
+    }
+
+    #[test]
+    fn metatile_class_untagged_is_the_legacy_signature_rule() {
+        // Landing B D4 byte-identity: EVERY untagged tile keeps the
+        // pre-Landing-B class. Exhaustive over the whole space that the
+        // rule can read (proto 0..=255 × seed 0..=12) — the class is a
+        // pure function of (proto, seed), so a full sweep is the exact
+        // proof, not a sample.
+        use crate::tiling::FamilyTag;
+        for proto in 0u8..=255 {
+            for seed in 0u32..=12 {
+                let t = Tile {
+                    family: FamilyTag::None,
+                    reflected: false,
+                    proto,
+                    seed,
+                    level: 0,
+                    poly: poly_with_n_vertices(3),
+                };
+                let want = if proto == 0 && (1..=9).contains(&seed) {
+                    match seed {
+                        1..=4 => 0,
+                        5 => 1,
+                        6..=7 => 2,
+                        _ => 3,
+                    }
+                } else {
+                    (proto as usize) % 9
+                };
+                assert_eq!(metatile_class(&t), want, "untagged proto {proto} seed {seed}");
+            }
+        }
+        // The Isohedral tag carries no metatile arm (identity-only), so it
+        // too reads the legacy rule.
+        for seed in 0u32..=12 {
+            let t = Tile {
+                family: FamilyTag::Isohedral,
+                reflected: false,
+                proto: 2,
+                seed,
+                level: 0,
+                poly: poly_with_n_vertices(3),
+            };
+            assert_eq!(metatile_class(&t), 2, "isohedral seed {seed}");
+        }
+    }
+
+    #[test]
+    fn metatile_class_family_bands_are_disjoint() {
+        // Landing B D4: the three aperiodic cards own disjoint bands of
+        // the 9-entry ramp — hat 0..=3 (unchanged), spectre 4..=7, turtle
+        // cell 8, turtle hat-companion 0..=3 (a hat colors as a hat).
+        use crate::tiling::FamilyTag;
+        let mk = |family, proto: u8, seed: u32| Tile {
+            family,
+            reflected: false,
+            proto,
+            seed,
+            level: 0,
+            poly: poly_with_n_vertices(13),
+        };
+        // Hat: the cluster-role buckets, exactly as before Landing B.
+        assert_eq!(
+            (1..=9).map(|s| metatile_class(&mk(FamilyTag::Hat, 0, s))).collect::<Vec<_>>(),
+            vec![0, 0, 0, 0, 1, 2, 2, 3, 3]
+        );
+        // Spectre: the same buckets, offset by 4 — a distinct ramp half.
+        assert_eq!(
+            (1..=9).map(|s| metatile_class(&mk(FamilyTag::Spectre, 0, s))).collect::<Vec<_>>(),
+            vec![4, 4, 4, 4, 5, 6, 6, 7, 7]
+        );
+        // Turtle: its own cells take slot 8; the Mystic-Sigma hat
+        // companion (proto 1, only emitted at depth 0 for label 0) reads
+        // the hat band of its own seed, not cap's T tone.
+        for seed in 1..=9u32 {
+            assert_eq!(metatile_class(&mk(FamilyTag::Turtle, 0, seed)), 8, "turtle cell seed {seed}");
+            assert_eq!(
+                metatile_class(&mk(FamilyTag::Turtle, 1, seed)),
+                metatile_class(&mk(FamilyTag::Hat, 0, seed)),
+                "turtle companion seed {seed} must equal the hat class"
+            );
+        }
+        // Band values are pinned to the ramp: hat H1 mint, spectre H1 teal,
+        // turtle cell sky blue.
+        assert_eq!(tile_rgb(ColorMode::Metatile, &mk(FamilyTag::Hat, 0, 1)), METATILE_PALETTE[0]);
+        assert_eq!(tile_rgb(ColorMode::Metatile, &mk(FamilyTag::Spectre, 0, 1)), METATILE_PALETTE[4]);
+        assert_eq!(tile_rgb(ColorMode::Metatile, &mk(FamilyTag::Turtle, 0, 1)), METATILE_PALETTE[8]);
+        // No class leaves the 9-entry index space, and an impossible seed
+        // on a tagged tile falls back to the legacy rule instead of
+        // inventing a band slot.
+        for family in [FamilyTag::Hat, FamilyTag::Turtle, FamilyTag::Spectre] {
+            for seed in 0u32..=12 {
+                for proto in 0u8..=2 {
+                    let c = metatile_class(&mk(family, proto, seed));
+                    assert!(c < METATILE_PALETTE.len(), "{family:?} {proto}/{seed} → {c}");
+                }
+            }
+        }
+        assert_eq!(metatile_class(&mk(FamilyTag::Hat, 0, 0)), 0, "hat seed 0 → proto fallback");
+        assert_eq!(metatile_class(&mk(FamilyTag::Spectre, 2, 0)), 2, "spectre seed 0 → proto fallback");
+    }
+
+    #[test]
+    fn reflected_accent_is_injective_and_disjoint_per_ramp() {
+        // Landing B D2: the lightened ramp must stay a valid palette —
+        // distinct within itself, disjoint from the ramp it lightens (a
+        // highlighted tile never impersonates another class), and clearly
+        // lifted in luma.
+        let luma = |c: u32| {
+            let (r, g, b) = rgb(c);
+            0.2126 * r as f64 + 0.7152 * g as f64 + 0.0722 * b as f64
+        };
+        for mode in ColorMode::ALL {
+            let ramp = palette_for(mode);
+            let light: Vec<u32> = ramp.iter().map(|&c| reflected_accent(c)).collect();
+            for (base, acc) in ramp.iter().zip(&light) {
+                assert_ne!(base, acc, "{mode:?} {base:#06x}: the accent must differ from its base");
+                assert!(
+                    !ramp.contains(acc),
+                    "{mode:?}: lightened {acc:#06x} collides with a base entry of the ramp"
+                );
+                let lift = luma(*acc) - luma(*base);
+                assert!(lift >= 20.0, "{mode:?} {base:#06x}: luma lift {lift:.1} < 20");
+            }
+            for (i, a) in light.iter().enumerate() {
+                for (j, b) in light.iter().enumerate() {
+                    if i != j {
+                        assert_ne!(a, b, "{mode:?}: lightened entries {i} and {j} merge");
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn reflected_accent_table_is_byte_pinned() {
+        // The blend law `c + (255 - c)·140/255` (rounded) is the recorded
+        // design decision; the table is pinned so a later ratio change is
+        // a deliberate edit, not a silent drift.
+        assert_eq!(REFLECTED_ACCENT_T, 140);
+        assert_eq!(lighten(0x000000, 0), 0x000000);
+        assert_eq!(lighten(0x000000, 255), 0xFFFFFF);
+        assert_eq!(lighten(0xFFFFFF, 140), 0xFFFFFF);
+        let want: [(u32, u32); 8] = [
+            (0xD4D4D4, 0xECECEC),
+            (0x5B8DEF, 0xB5CCF8),
+            (0xE06C75, 0xF1BDC1),
+            (0x98C379, 0xD1E4C3),
+            (0xE5C07B, 0xF3E3C3),
+            (0xC678DD, 0xE5C2F0),
+            (0x56B6C2, 0xB3DEE3),
+            (0xD19A66, 0xEAD1BA),
+        ];
+        for (base, acc) in want {
+            assert_eq!(reflected_accent(base), acc, "{base:#06x}");
+        }
+    }
+
+    #[test]
+    fn tile_rgb_reflected_off_is_tile_rgb_and_on_only_moves_reflected() {
+        // Off = byte identity for every mode × tile shape; on = exactly the
+        // accent for reflected tiles and untouched for the rest.
+        use crate::tiling::FamilyTag;
+        let mk = |family, reflected: bool, proto: u8, seed: u32| Tile {
+            family,
+            reflected,
+            proto,
+            seed,
+            level: 1,
+            poly: poly_with_n_vertices(13),
+        };
+        for family in [
+            FamilyTag::None,
+            FamilyTag::Penrose,
+            FamilyTag::Hat,
+            FamilyTag::Turtle,
+            FamilyTag::Spectre,
+        ] {
+            for reflected in [false, true] {
+                for (proto, seed) in [(0u8, 1u32), (0, 5), (1, 3), (2, 9), (3, 12)] {
+                    let t = mk(family, reflected, proto, seed);
+                    for mode in ColorMode::ALL {
+                        assert_eq!(
+                            tile_rgb_reflected(mode, &t, false),
+                            tile_rgb(mode, &t),
+                            "{mode:?} off-state must be byte-identical"
+                        );
+                        let on = tile_rgb_reflected(mode, &t, true);
+                        if reflected {
+                            assert_eq!(on, reflected_accent(tile_rgb(mode, &t)), "{mode:?} on-state");
+                            assert_ne!(on, tile_rgb(mode, &t), "{mode:?}: a reflected tile must move");
+                        } else {
+                            assert_eq!(on, tile_rgb(mode, &t), "{mode:?}: unreflected tiles are inert");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn reflected_palette_256_is_injective_and_sentinel_free() {
+        // The TUI twin palette: exactly one xterm index per class, never a
+        // raster sentinel (254/255 would draw a highlighted tile as GAP or
+        // grout), and never further from the ideal lightened tone than one
+        // gray step (the collision/sentinel scan must not distort colors).
+        for mode in ColorMode::ALL {
+            let ramp = palette_for(mode);
+            let twin = reflected_palette_256(ramp);
+            assert_eq!(twin.len(), ramp.len());
+            for (i, &idx) in twin.iter().enumerate() {
+                assert_ne!(idx, crate::raster::BORDER, "{mode:?} entry {i} reads BORDER");
+                assert_ne!(idx, crate::raster::GAP, "{mode:?} entry {i} reads GAP");
+                assert_ne!(idx, crate::raster::OUTLINE, "{mode:?} entry {i} reads OUTLINE");
+                for (j, &other) in twin.iter().enumerate() {
+                    if i != j {
+                        assert_ne!(idx, other, "{mode:?}: twin entries {i} and {j} merge");
+                    }
+                }
+                let (r, g, b) = xterm_256(idx);
+                let (ar, ag, ab) = rgb(reflected_accent(ramp[i]));
+                let d = ((r as i32 - ar as i32).pow(2)
+                    + (g as i32 - ag as i32).pow(2)
+                    + (b as i32 - ab as i32).pow(2)) as f64;
+                assert!(d.sqrt() <= 60.0, "{mode:?} entry {i}: {d:.0} off the ideal accent");
+            }
+        }
     }
 
     #[test]

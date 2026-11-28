@@ -119,6 +119,25 @@ struct Tui {
     /// xterm-256 indices of the level ramp (`paint::LEVEL_PALETTE`),
     /// selected when the color mode is `Level`.
     palette256_level: Vec<u8>,
+    /// Highlight twins of the seven ramps, in the selection order of
+    /// [`Tui::twin256_for`] (rainbow, gray, pattern-gray, role, metatile,
+    /// orientation, level). Built once with
+    /// [`paint::reflected_palette_256`] — the `f` toggle passes the twin
+    /// for the active ramp to [`raster::raster_aperiodic`], which paints
+    /// reflected tiles through it.
+    twin256: [Vec<u8>; 7],
+    /// xterm-256 index of the large-tile outline accent: the cells
+    /// [`raster::OUTLINE`] (the `o` toggle) paint with, the raster twin of
+    /// [`tess_core::svg::LARGE_TILE_ACCENT`].
+    outline256: u8,
+    /// Render-canvas toggle `f`: highlight reflected tiles (Landing B's
+    /// `--highlight-reflected` for the canvas). TUI-local state, like
+    /// `preview_mode`; off by default.
+    highlight_reflected: bool,
+    /// Render-canvas toggle `o`: outline the aperiodic family cards' large
+    /// tiles (Landing B's `--large-tile-outline` for the canvas). Off by
+    /// default.
+    large_tile_outline: bool,
     border256: u8,
     gap256: u8,
     /// Last rendered canvas size; pans scale with it.
@@ -188,6 +207,16 @@ impl Tui {
             .iter()
             .map(|&c| paint::rgb_to_256(c))
             .collect();
+        let twin256: [Vec<u8>; 7] = [
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Pattern)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Gray)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::PatternGray)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Role)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Metatile)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Orientation)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Level)),
+        ];
+        let outline256 = paint::rgb_to_256(0xFF7A1A);
         Self {
             app: App::new(registry, 8.0),
             tabs,
@@ -204,6 +233,10 @@ impl Tui {
             palette256_metatile,
             palette256_orientation,
             palette256_level,
+            twin256,
+            outline256,
+            highlight_reflected: false,
+            large_tile_outline: false,
             border256: paint::rgb_to_256(paint::BORDER),
             gap256: 124,
             canvas_size: (0, 0),
@@ -391,6 +424,22 @@ impl Tui {
         }
     }
 
+    /// The highlight twin of the ramp selected for `mode` — the same mode
+    /// match as the base `palette256*` selection at the raster call, in
+    /// [`Tui::twin256`] slot order (rainbow, gray, pattern-gray, role,
+    /// metatile, orientation, level).
+    fn twin256_for(&self, mode: ColorMode) -> &[u8] {
+        match mode {
+            ColorMode::Gray => &self.twin256[1],
+            ColorMode::PatternGray => &self.twin256[2],
+            ColorMode::Role => &self.twin256[3],
+            ColorMode::Metatile => &self.twin256[4],
+            ColorMode::Orientation => &self.twin256[5],
+            ColorMode::Level => &self.twin256[6],
+            _ => &self.twin256[0],
+        }
+    }
+
     /// Select a card and enter the full-screen Render view. The browse
     /// cursor is kept in sync so `Esc` returns to this card.
     fn open_render(&mut self, card_idx: usize) {
@@ -567,6 +616,14 @@ impl Tui {
                 }
                 KeyCode::Char('c') => self.cycle_preview_mode(),
                 KeyCode::Char('d') => self.set_preview_mode(None),
+                KeyCode::Char('f') => {
+                    self.highlight_reflected = !self.highlight_reflected;
+                    self.dirty = true;
+                }
+                KeyCode::Char('o') => {
+                    self.large_tile_outline = !self.large_tile_outline;
+                    self.dirty = true;
+                }
                 KeyCode::Char('r') => {
                     self.app.reset_view();
                     self.dirty = true;
@@ -1152,13 +1209,21 @@ fn render_render_view(frame: &mut Frame, tui: &mut Tui, area: Rect) {
                 ColorMode::Level => &tui.palette256_level,
                 _ => &tui.palette256,
             };
-            let r = raster::raster(
+            // Landing B canvas toggles: `f` threads the ramp's highlight
+            // twin (reflected tiles paint through it), `o` marks the
+            // aperiodic family cards' large tiles (grout cells of their
+            // boundary read raster::OUTLINE). Both off ⇒ both `None` ⇒
+            // byte-identical to the pre-Landing-B raster.
+            let r = raster::raster_aperiodic(
                 &result.tiles,
                 &bbox,
                 w,
                 h,
                 tui.app.color_mode,
                 palette256,
+                tui.highlight_reflected.then(|| tui.twin256_for(tui.app.color_mode)),
+                tui.large_tile_outline
+                    .then_some(&tess_core::svg::large_tile_outlined as &dyn Fn(&_) -> bool),
             );
             let buf = frame.buffer_mut();
             for sy in 0..h {
@@ -1166,6 +1231,7 @@ fn render_render_view(frame: &mut Frame, tui: &mut Tui, area: Rect) {
                     let px = match r.at(sx, sy) {
                         raster::BORDER => Color::Indexed(tui.border256),
                         raster::GAP => Color::Indexed(tui.gap256),
+                        raster::OUTLINE => Color::Indexed(tui.outline256),
                         c => Color::Indexed(c),
                     };
                     let cell = &mut buf[Position {
@@ -1184,12 +1250,22 @@ fn render_render_view(frame: &mut Frame, tui: &mut Tui, area: Rect) {
     }
 
     let t = tui.app.tiling();
+    // Active Landing B canvas toggles show in the status line (off adds
+    // nothing, keeping the line's pre-Landing-B bytes intact).
+    let mut aperiodic_flags = String::new();
+    if tui.highlight_reflected {
+        aperiodic_flags.push_str(" · f:reflect-hl");
+    }
+    if tui.large_tile_outline {
+        aperiodic_flags.push_str(" · o:large-outline");
+    }
     let status = format!(
-        " {} [{}] · {} · tiles {} │ esc back · ←/→ prev/next · hjkl pan · +/- zoom · c/d color cycle/reset · r reset · p params",
+        " {} [{}] · {} · tiles {}{} │ esc back · ←/→ prev/next · hjkl pan · +/- zoom · c/d color cycle/reset · f/o aperiodic toggles · r reset · p params",
         t.name(),
         t.id(),
         result.symmetry.group,
         result.tiles.len(),
+        aperiodic_flags,
     );
     frame.render_widget(
         Paragraph::new(truncate(&status, outer[2].width as usize))
@@ -1305,6 +1381,16 @@ mod tests {
             .iter()
             .map(|&c| paint::rgb_to_256(c))
             .collect();
+        let twin256: [Vec<u8>; 7] = [
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Pattern)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Gray)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::PatternGray)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Role)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Metatile)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Orientation)),
+            paint::reflected_palette_256(paint::palette_for(ColorMode::Level)),
+        ];
+        let outline256 = paint::rgb_to_256(0xFF7A1A);
         Tui {
             app: App::new(registry, 8.0),
             tabs,
@@ -1321,6 +1407,10 @@ mod tests {
             palette256_metatile,
             palette256_orientation,
             palette256_level,
+            twin256,
+            outline256,
+            highlight_reflected: false,
+            large_tile_outline: false,
             border256: paint::rgb_to_256(paint::BORDER),
             gap256: 124,
             canvas_size: (0, 0),
@@ -2695,5 +2785,97 @@ mod tests {
             .copied()
             .collect();
         assert!(distinct.len() >= 2, "card should contain ≥2 distinct colors, got {}", distinct.len());
+    }
+
+    // ---- Landing B: canvas toggles (f / o) -------------------------------
+
+    /// The Render canvas's background colors, cell by cell — the canvas's
+    /// complete visible state (fills and grout are pure bg color on space
+    /// glyphs).
+    fn canvas_bgs(tui: &mut Tui) -> Vec<Option<Color>> {
+        let mut term = Terminal::new(TestBackend::new(120, 40)).unwrap();
+        term.draw(|f| render(f, tui)).unwrap();
+        let buf = term.backend().buffer();
+        (0..buf.area.height as usize * buf.area.width as usize)
+            .map(|i| buf.content[i].style().bg)
+            .collect()
+    }
+
+    #[test]
+    fn aperiodic_toggle_keys_and_status() {
+        let mut tui = fresh_tui();
+        assert!(
+            !tui.highlight_reflected && !tui.large_tile_outline,
+            "both canvas toggles default off"
+        );
+        tui.app.select_id("hat");
+        tui.mode = Mode::Render;
+        key(&mut tui, KeyCode::Char('f'));
+        assert!(tui.highlight_reflected, "'f' turns the reflect highlight on");
+        key(&mut tui, KeyCode::Char('o'));
+        assert!(tui.large_tile_outline, "'o' turns the large-tile outline on");
+        key(&mut tui, KeyCode::Char('f'));
+        assert!(!tui.highlight_reflected, "'f' toggles back off");
+        let mut term = Terminal::new(TestBackend::new(120, 40)).unwrap();
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        let text = buffer_text(&term);
+        assert!(text.contains("o:large-outline"), "status must show the on flag: {text}");
+        assert!(!text.contains("f:reflect-hl"), "off flag adds no status segment: {text}");
+        key(&mut tui, KeyCode::Char('f'));
+        term.draw(|f| render(f, &mut tui)).unwrap();
+        let text = buffer_text(&term);
+        assert!(text.contains("f:reflect-hl"), "status must show both on flags: {text}");
+    }
+
+    #[test]
+    fn twin256_for_selects_the_active_ramp() {
+        let tui = fresh_tui();
+        for mode in ColorMode::ALL {
+            let twin = tui.twin256_for(mode);
+            assert_eq!(
+                twin.len(),
+                paint::palette_for(mode).len(),
+                "{mode:?}: the twin must follow its ramp"
+            );
+            for &i in twin {
+                assert!(
+                    i < raster::OUTLINE,
+                    "{mode:?}: twin index {i} collides with a raster sentinel"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn render_canvas_applies_the_aperiodic_toggles() {
+        // Hat card: `o` paints accent outline cells; `f` moves the
+        // reflected H1 hats' fill colors. Untagged square: both on is the
+        // same canvas, cell for cell.
+        let mut tui = fresh_tui();
+        tui.app.select_id("hat");
+        tui.mode = Mode::Render;
+        let off = canvas_bgs(&mut tui);
+        tui.large_tile_outline = true;
+        let on_o = canvas_bgs(&mut tui);
+        assert_ne!(off, on_o, "the hat canvas must show the outline");
+        let accent = Some(Color::Indexed(tui.outline256));
+        assert!(on_o.contains(&accent), "accent outline cells must be painted");
+        assert!(
+            !off.contains(&accent),
+            "the accent index must appear only with the flag on"
+        );
+        tui.large_tile_outline = false;
+        tui.highlight_reflected = true;
+        let on_f = canvas_bgs(&mut tui);
+        assert_ne!(off, on_f, "the hat canvas must highlight its reflected H1 hats");
+        assert!(!on_f.contains(&accent), "f alone must not outline");
+
+        tui.large_tile_outline = true;
+        tui.app.select_id("square");
+        let sq_on = canvas_bgs(&mut tui);
+        tui.highlight_reflected = false;
+        tui.large_tile_outline = false;
+        let sq_off = canvas_bgs(&mut tui);
+        assert_eq!(sq_on, sq_off, "untagged, unreflected canvas: both toggles are no-ops");
     }
 }

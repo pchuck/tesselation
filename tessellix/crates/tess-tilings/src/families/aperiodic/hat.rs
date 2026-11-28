@@ -896,11 +896,18 @@ impl Tiling for HatTiling {
 
         // Emit. Monohedral: `proto` is always 0; `seed` is the cluster
         // role + 1 (1..=9) — see the module docs.
+        //
+        // `reflected` is the hat's own placement chirality (`Hat::refl`,
+        // from [`CLUSTER_HATS`]): within every metatile cluster H1 (seed
+        // 1) is the only reflected hat and the flag survives the
+        // metatile substitution unchanged — metatiles themselves are
+        // never reflected, so composition preserves each leaf's chirality.
+        // This is therefore a genuine per-tile fact at every depth.
         let mut tiles = Vec::with_capacity(hats.len());
         for h in &hats {
             let poly = Polygon::from_slice(h.world_pts().as_ref()).transform(&map);
             if poly.aabb().intersects(query.region) {
-                tiles.push(Tile { family: tess_core::tiling::FamilyTag::None, reflected: false,
+                tiles.push(Tile { family: tess_core::tiling::FamilyTag::Hat, reflected: h.refl,
                     proto: 0,
                     seed: h.role, level: 0,
                     poly,

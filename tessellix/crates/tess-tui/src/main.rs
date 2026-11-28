@@ -123,6 +123,32 @@
 //!                                  vertices are the primal's face
 //!                                  centers, so the primal's orbit dots do
 //!                                  not track the dual's geometry).
+//!     [--highlight-reflected]      fill reflected tiles in the lightened
+//!                                  accent of their own mode colour (each
+//!                                  class stays distinguishable inside the
+//!                                  highlighted subset). The hat card emits
+//!                                  one reflected hat per cluster (the H1
+//!                                  role), so its view highlights genuinely
+//!                                  flipped hats; for every other card the
+//!                                  flag first becomes visible combined with
+//!                                  --mirror (which flips tile chirality —
+//!                                  the enantiomorph's highlights are the
+//!                                  mirrored tiles). A byte-for-byte no-op
+//!                                  on an all-canonical view. Mutually
+//!                                  exclusive with --decoration (the
+//!                                  decoration replaces the tiling render).
+//!     [--large-tile-outline]       accent-outline the large tile of an
+//!                                  aperiodic family card — hat and spectre
+//!                                  are monohedral (every tile outlined),
+//!                                  the turtle card outlines its turtle
+//!                                  cells (not the Mystic Sigma's companion
+//!                                  hat) — in a vivid orange stroke at 2×
+//!                                  the tile-border weight, appended as one
+//!                                  marked group after the tile borders.
+//!                                  A byte-for-byte no-op on cards without
+//!                                  an aperiodic family tag. Mutually
+//!                                  exclusive with --decoration (the
+//!                                  decoration replaces the tiling render).
 //!   tess-tui explore --tiling ID  deterministic δ/θ sweep + leaderboard
 //!     (docs/briefs/pic-explorer.md). Emits a JSON leaderboard plus an
 //!     optional CSV and a top-K SVG gallery.
@@ -194,6 +220,14 @@ struct ExportArgs {
     dual_overlay: bool,
     symmetry_overlay: bool,
     vertex_orbits: bool,
+    /// `--highlight-reflected`: fill reflected tiles (the hat card's H1
+    /// cluster hats, or any tile flipped by `--mirror`) in the lightened
+    /// accent of their own mode color. Landing B.
+    highlight_reflected: bool,
+    /// `--large-tile-outline`: accent-outline the large tile of each
+    /// aperiodic family card (hat/spectre: every tile; turtle: the turtle
+    /// cells). Landing B.
+    large_tile_outline: bool,
 }
 
 /// Parse a float CLI value, rejecting NaN and infinities: they would
@@ -336,6 +370,8 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         dual_overlay: false,
         symmetry_overlay: false,
         vertex_orbits: false,
+        highlight_reflected: false,
+        large_tile_outline: false,
     };
     let mut i = 0;
     let mut band_w_seen = false;
@@ -390,6 +426,8 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
                 a.band_w = finite(&next(&mut i)?, "--band-w")?;
             }
             "--highlight-supertiles" => a.highlight_supertiles = true,
+            "--highlight-reflected" => a.highlight_reflected = true,
+            "--large-tile-outline" => a.large_tile_outline = true,
             "--medallion-weave" => a.medallion_weave = true,
             "--motif" => {
                 // §22e motif layer selector: value-bearing, and unknown
@@ -528,6 +566,18 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
                 .into(),
         );
     }
+    if a.highlight_reflected && a.decoration.is_some() {
+        return Err(
+            "--highlight-reflected is not applicable with --decoration (the decoration replaces the tiling render)"
+                .into(),
+        );
+    }
+    if a.large_tile_outline && a.decoration.is_some() {
+        return Err(
+            "--large-tile-outline is not applicable with --decoration (the decoration replaces the tiling render)"
+                .into(),
+        );
+    }
     Ok(a)
 }
 
@@ -579,7 +629,7 @@ fn render_dual_overlay(
             "note: 'square' is self-dual — the dual overlay double-paints nearly identical geometry (the dual is the same grid shifted by half a cell); the SVG is still written"
         );
     }
-    let svg = tess_core::svg::render_svg_dual_overlay(
+    let svg = tess_core::svg::render_svg_dual_overlay_aperiodic(
         primal_tiles,
         &dual_result.tiles,
         region,
@@ -587,6 +637,10 @@ fn render_dual_overlay(
         walls,
         a.highlight_supertiles,
         a.mirror,
+        tess_core::svg::AperiodicToggles {
+            highlight_reflected: a.highlight_reflected,
+            large_tile_outline: a.large_tile_outline,
+        },
     );
     Ok((svg, dual_result.tiles.len()))
 }
@@ -735,6 +789,12 @@ fn export(args: &[String]) -> Result<(), String> {
     } else {
         None
     };
+    // The Landing B toggles bundle: both off (the default) is byte-identical
+    // to the pre-Landing-B render through the delegating entries.
+    let aperiodic = tess_core::svg::AperiodicToggles {
+        highlight_reflected: a.highlight_reflected,
+        large_tile_outline: a.large_tile_outline,
+    };
     // Decoration styles (Kaplan §3.7) replace the tiling render with
     // paper + decorated walls. The gates run on the view region itself:
     // the coverage contract keeps every unshared host edge (the source
@@ -764,7 +824,7 @@ fn export(args: &[String]) -> Result<(), String> {
             render_dual_overlay(&a, &region, &result.tiles, &walls, &params)?
         }
         None => (
-            tess_core::svg::render_svg_with_walls_orbits(
+            tess_core::svg::render_svg_with_walls_orbits_aperiodic(
                 &result.tiles,
                 &region,
                 a.mode,
@@ -773,6 +833,7 @@ fn export(args: &[String]) -> Result<(), String> {
                 a.mirror,
                 overlay.as_ref(),
                 orbits.as_deref(),
+                aperiodic,
             ),
             0,
         ),
@@ -2249,6 +2310,8 @@ mod tests_export_contract {
             ("centroid dual", "--dual-overlay"),
             ("certified wallpaper-group symmetry elements", "--symmetry-overlay"),
             ("two vertex-figure-class orbits", "--vertex-orbits"),
+            ("lightened accent of their own mode color", "--highlight-reflected"),
+            ("large tile of an aperiodic family", "--large-tile-outline"),
             ("output SVG file", "--out"),
         ];
         let mut documented: Vec<String> = Vec::new();
@@ -2267,7 +2330,8 @@ mod tests_export_contract {
             "--tiling", "--width", "--height", "--scale", "--rotation", "--center",
             "--param", "--mode", "--strapwork", "--deform", "--decoration",
             "--band-w", "--medallion-weave", "--motif", "--highlight-supertiles", "--mirror",
-            "--dual-overlay", "--symmetry-overlay", "--vertex-orbits", "--out", "-o",
+            "--dual-overlay", "--symmetry-overlay", "--vertex-orbits",
+            "--highlight-reflected", "--large-tile-outline", "--out", "-o",
         ];
         for flag in expected {
             assert!(
@@ -2309,6 +2373,8 @@ mod tests_export_contract {
             (&["--tiling", "square", "--dual-overlay"], "--dual-overlay"),
             (&["--tiling", "square", "--symmetry-overlay"], "--symmetry-overlay"),
             (&["--tiling", "square", "--vertex-orbits"], "--vertex-orbits"),
+            (&["--tiling", "hat", "--highlight-reflected"], "--highlight-reflected"),
+            (&["--tiling", "hat", "--large-tile-outline"], "--large-tile-outline"),
             (&["--tiling", "square", "--out", "a.svg"], "--out"),
             (&["--tiling", "square", "-o", "b.svg"], "-o"),
         ];
@@ -2335,6 +2401,8 @@ mod tests_export_contract {
             "--dual-overlay",
             "--symmetry-overlay",
             "--vertex-orbits",
+            "--highlight-reflected",
+            "--large-tile-outline",
         ] {
             let err = parse_export(&args(&[
                 "--tiling", "square", "--strapwork", "45", "--decoration", "fill", flag,
@@ -2776,6 +2844,40 @@ mod tests_export_contract {
             !defaults.vertex_orbits,
             "docs/USAGE.md line {line_no} (--vertex-orbits default): default should be off, got {}",
             defaults.vertex_orbits
+        );
+
+        // --highlight-reflected default off (Landing B).
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "lightened accent of their own mode color",
+            "docs/USAGE.md: --highlight-reflected default pin",
+        );
+        assert_eq!(
+            cells[2], "off",
+            "docs/USAGE.md line {line_no} (--highlight-reflected default): documented default {:?}",
+            cells[2]
+        );
+        assert!(
+            !defaults.highlight_reflected,
+            "docs/USAGE.md line {line_no} (--highlight-reflected default): default should be off, got {}",
+            defaults.highlight_reflected
+        );
+
+        // --large-tile-outline default off (Landing B).
+        let (line_no, _line, cells) = export_table_row(
+            &doc,
+            "large tile of an aperiodic family",
+            "docs/USAGE.md: --large-tile-outline default pin",
+        );
+        assert_eq!(
+            cells[2], "off",
+            "docs/USAGE.md line {line_no} (--large-tile-outline default): documented default {:?}",
+            cells[2]
+        );
+        assert!(
+            !defaults.large_tile_outline,
+            "docs/USAGE.md line {line_no} (--large-tile-outline default): default should be off, got {}",
+            defaults.large_tile_outline
         );
 
         // --band-w default 0.1 (the "requires --decoration" requirement is
@@ -3545,6 +3647,207 @@ mod tests {
         for tag in ["flat_off", "flat_on", "chair_off", "chair_on"] {
             let _ = std::fs::remove_file(tmp(tag));
         }
+    }
+
+    // ---- Landing B: --highlight-reflected / --large-tile-outline --------
+
+    #[test]
+    fn aperiodic_toggle_flags_parse_and_exclude_decoration() {
+        for flag in ["--highlight-reflected", "--large-tile-outline"] {
+            let set = |a: &super::ExportArgs| match flag {
+                "--highlight-reflected" => a.highlight_reflected,
+                _ => a.large_tile_outline,
+            };
+            let a = parse_export(&args(&["--tiling", "hat", flag])).expect("flag parses");
+            assert!(set(&a), "{flag} must set the export arg");
+            let d = parse_export(&args(&["--tiling", "hat"])).expect("defaults");
+            assert!(!set(&d), "{flag} must default off");
+            // Mutually exclusive with --decoration: a named parse error.
+            let e = parse_export(&args(&[
+                "--tiling", "square", "--strapwork", "45", "--decoration", "fill", flag,
+            ]))
+            .unwrap_err();
+            assert!(e.contains(flag), "{e}");
+            assert!(e.contains("--decoration"), "the error must name the collision: {e}");
+        }
+    }
+
+    /// The `fill="rgb(r,g,b)"` values of an SVG in document order,
+    /// background rect included (position 0).
+    fn svg_fills(svg: &str) -> Vec<(u32, u32, u32)> {
+        let mut out = Vec::new();
+        let mut rest = svg;
+        while let Some(i) = rest.find(r#"fill="rgb("#) {
+            let r = &rest[i + r#"fill="rgb("#.len()..];
+            let end = r.find(')').unwrap();
+            let mut it = r[..end].split(',');
+            out.push((
+                it.next().unwrap().parse().unwrap(),
+                it.next().unwrap().parse().unwrap(),
+                it.next().unwrap().parse().unwrap(),
+            ));
+            rest = &r[end + 1..];
+        }
+        out
+    }
+
+    /// The Landing B accent blend re-derived here from the spec — per
+    /// channel `c + ((255 − c)·140 + 127) / 255` — deliberately not calling
+    /// `tess_core::paint::lighten`, so the pin tests the export against the
+    /// arithmetic rather than against itself.
+    fn spec_lighten((r, g, b): (u32, u32, u32)) -> (u32, u32, u32) {
+        let f = |v: u32| v + ((255 - v) * 140 + 127) / 255;
+        (f(r), f(g), f(b))
+    }
+
+    /// Run `tess-tui export` with extra flags into a per-tag temp file and
+    /// read the SVG back.
+    fn export_svg(tag: &str, base: &[&str], extra: &[&str]) -> String {
+        let path = std::env::temp_dir().join(format!("tess_tui_b_{tag}_{}.svg", std::process::id()));
+        let mut argv: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        argv.extend(extra.iter().map(|s| s.to_string()));
+        argv.extend(["--out".to_string(), path.to_string_lossy().to_string()]);
+        super::export(&argv).unwrap_or_else(|e| panic!("{tag} export failed: {e}"));
+        let svg = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{tag}: {e}"));
+        let _ = std::fs::remove_file(&path);
+        svg
+    }
+
+    #[test]
+    fn highlight_reflected_export_lightens_by_the_spec_blend() {
+        // Off = byte-identical on every card (no reflected tile: square)
+        // and visibly active on the hat card (the H1 cluster hats), with
+        // the diff confined to fill values and every changed fill exactly
+        // the spec blend of its off-state counterpart.
+        let square: &[&str] = &["--tiling", "square", "--width", "320", "--height", "320"];
+        assert_eq!(
+            export_svg("sq_off", square, &[]),
+            export_svg("sq_on", square, &["--highlight-reflected"]),
+            "an all-canonical view must be a byte-for-byte no-op"
+        );
+
+        let hat: &[&str] = &["--tiling", "hat", "--width", "600", "--height", "600"];
+        let off = export_svg("hat_off", hat, &[]);
+        let on = export_svg("hat_on", hat, &["--highlight-reflected"]);
+        assert_ne!(off, on, "the hat card must show the highlight");
+        let (fo, fn_) = (svg_fills(&off), svg_fills(&on));
+        assert_eq!(fo.len(), fn_.len(), "only fill VALUES may change");
+        // Same geometry and groups: strip every fill value and compare.
+        let strip = |s: &str| {
+            let mut out = String::new();
+            let mut rest = s;
+            while let Some(i) = rest.find(r#"fill="rgb("#) {
+                let r = &rest[i + r#"fill="rgb("#.len()..];
+                out.push_str(&rest[..i]);
+                rest = &r[r.find(')').unwrap() + 1..];
+            }
+            out.push_str(rest);
+            out
+        };
+        assert_eq!(strip(&off), strip(&on), "geometry must not move at all");
+        let mut changed = 0;
+        for (a, b) in fo.iter().zip(&fn_) {
+            if a != b {
+                changed += 1;
+                assert_eq!(*b, spec_lighten(*a), "changed fill {a:?} → {b:?} is not the blend");
+            }
+        }
+        assert!(changed > 0, "the hat view must contain reflected (H1) hats");
+    }
+
+    #[test]
+    fn large_tile_outline_export_appends_one_group_for_aperiodic_cards() {
+        // Off: byte-identical everywhere. On: a non-aperiodic card is a
+        // no-op; hat/spectre outline every tile; the turtle card outlines
+        // a strict subset-or-all of the emitted fills (turtle cells only —
+        // never more paths than there are tiles), and the group is exactly
+        // an insertion: removing it restores the off bytes.
+        let open = r#"<g data-large-tile-outline="true""#;
+        let strip_group = |s: &str| {
+            let Some(i) = s.find(open) else { return s.to_string() };
+            let tail = &s[i..];
+            let end = tail.find("</g>").unwrap() + 4;
+            format!("{}{}", &s[..i], &tail[end..])
+        };
+
+        // No family tag: inert even composed with a real --dual-overlay
+        // (the dual's own fills/strokes carry no family and no chirality).
+        let square: &[&str] = &["--tiling", "square", "--width", "400", "--height", "400"];
+        assert_eq!(
+            export_svg("sq_dual_off", square, &["--dual-overlay"]),
+            export_svg(
+                "sq_dual_on",
+                square,
+                &["--dual-overlay", "--large-tile-outline", "--highlight-reflected"]
+            ),
+            "untagged, unreflected dual: both flags must be a byte no-op"
+        );
+
+        for (id, want_all) in [("hat", true), ("spectre", true), ("turtle", false)] {
+            let base = ["--tiling", id, "--width", "600", "--height", "600"];
+            let off = export_svg(&format!("{id}_off"), &base, &[]);
+            let on = export_svg(&format!("{id}_on"), &base, &["--large-tile-outline"]);
+            assert_ne!(off, on, "{id}: the outline must appear");
+            assert!(on.contains(open), "{id}: the marked group is missing");
+            assert_eq!(strip_group(&on), off, "{id}: only the group may be inserted");
+            let group = {
+                let i = on.find(open).unwrap();
+                let tail = &on[i..];
+                tail[..tail.find("</g>").unwrap() + 4].to_string()
+            };
+            let outlined = group.matches("<path ").count();
+            // Pass 1 fills are the only `fill="rgb(` paths (Pass 2/3 paths
+            // carry no fill attr); the background rect is the one non-path
+            // `fill="rgb(` element.
+            let tiles = off.matches(r#"" fill="rgb("#).count() - 1;
+            assert!(outlined > 0, "{id}: empty group");
+            assert!(outlined <= tiles, "{id}: outlined {outlined} > tiles {tiles}");
+            if want_all {
+                assert_eq!(outlined, tiles, "{id}: monohedral card must outline every tile");
+            }
+            assert!(group.contains(r#"stroke="rgb(255,122,26)""#), "{id}: accent color");
+        }
+    }
+
+    #[test]
+    fn aperiodic_toggles_compose_with_mirror_and_supertiles() {
+        // --large-tile-outline keys on the family tag, so it is a byte
+        // no-op even under --mirror on an untagged card, and --highlight-
+        // supertiles bytes are untouched by either new pass.
+        let chair: &[&str] = &["--tiling", "chair", "--width", "400", "--height", "400"];
+        let off = export_svg("ch_off", chair, &["--highlight-supertiles", "--mirror"]);
+        let on = export_svg(
+            "ch_on",
+            chair,
+            &["--highlight-supertiles", "--mirror", "--large-tile-outline"],
+        );
+        assert_eq!(off, on, "untagged chair: the outline flag is a byte no-op even mirrored");
+
+        // Landing A law, pinned through the export: --mirror FLIPS
+        // `reflected` on every tile, so the mirrored chair is ALL reflected
+        // and --highlight-reflected lightens every tile fill (background
+        // rect included in positions but never painted through the ramp, so
+        // exactly the tile fills move).
+        let cm_off = export_svg("chm_off", chair, &["--mirror"]);
+        let cm_on = export_svg("chm_on", chair, &["--mirror", "--highlight-reflected"]);
+        let (fo, fn_) = (svg_fills(&cm_off), svg_fills(&cm_on));
+        assert_eq!(fo.len(), fn_.len(), "only fill VALUES may change");
+        let mut changed = 0;
+        for (a, b) in fo.iter().zip(&fn_) {
+            if a != b {
+                changed += 1;
+                assert_eq!(*b, spec_lighten(*a), "changed fill {a:?} → {b:?} is not the blend");
+            }
+        }
+        assert!(changed >= 2, "mirrored chair: every tile is reflected and lightened");
+
+        // Hat + mirror: the plain and mirrored highlighted exports differ
+        // (a different set of hats is reflected) while each stays a pure
+        // fill-level change of its unhighlighted twin.
+        let hat: &[&str] = &["--tiling", "hat", "--width", "500", "--height", "500"];
+        let pm = export_svg("hat_mh_off", hat, &["--mirror"]);
+        let pm_on = export_svg("hat_mh_on", hat, &["--mirror", "--highlight-reflected"]);
+        assert_ne!(pm, pm_on, "the mirrored hat view must highlight the mirrored hats");
     }
 
     #[test]

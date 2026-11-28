@@ -244,6 +244,16 @@ pub struct GuiApp {
     /// every selection so an explicit choice sticks across card clicks
     /// until the band's `default` clears it.
     preview_mode: Option<ColorMode>,
+    /// Render-canvas toggle: highlight reflected (mirror-image) tiles in a
+    /// lightened accent of their own mode color — the canvas twin of the
+    /// TUI's `f` key and the export's `--highlight-reflected` (Landing B).
+    /// Off paints byte-identically to the pre-Landing-B canvas.
+    highlight_reflected: bool,
+    /// Render-canvas toggle: outline the aperiodic family cards' large
+    /// tiles (all hats / all spectres / turtle prototile cells) in the
+    /// orange accent — the canvas twin of the TUI's `o` key and the
+    /// export's `--large-tile-outline`. Off adds no shape at all.
+    large_tile_outline: bool,
     /// Diagnostics for the headless selector test: each preview-band
     /// mode label's `(mode, rect)` recorded by the last
     /// `draw_preview_mode_row` pass (`None` = the `default` label).
@@ -741,6 +751,8 @@ impl GuiApp {
             zoom_default,
             about_open: false,
             preview_mode: None,
+            highlight_reflected: false,
+            large_tile_outline: false,
             preview_mode_rects: Vec::new(),
         }
     }
@@ -1202,6 +1214,22 @@ impl GuiApp {
                     if ui.button("⟲ reset").clicked() {
                         self.app.reset_view();
                     }
+                    ui.separator();
+                    // Landing B aperiodic canvas toggles (right-to-left
+                    // layout: declared after the zoom cluster, they land
+                    // left of it). Off states draw the canvas exactly as
+                    // before; each hover explains the family law.
+                    ui.checkbox(&mut self.large_tile_outline, "large-tile outline")
+                        .on_hover_text(
+                            "Outline the large tiles of an aperiodic family card \
+                             (all hats / all spectres / the turtle prototile) in orange — \
+                             the canvas twin of --large-tile-outline",
+                        );
+                    ui.checkbox(&mut self.highlight_reflected, "highlight reflected")
+                        .on_hover_text(
+                            "Fill reflected (mirror-image) tiles in a lightened accent of \
+                             their own mode color — the canvas twin of --highlight-reflected",
+                        );
                     ui.separator();
                     // Physical zoom cluster (wheel/pinch don't arrive on
                     // every desktop): +/− step around the canvas center,
@@ -1983,6 +2011,18 @@ impl GuiApp {
         };
 
         let border = egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(br, bg_, bb));
+        // Landing B large-tile accent stroke (the `large_tile_outline`
+        // toggle): the same family law as the SVG Pass 3
+        // (`tess_core::svg::large_tile_outlined`) at
+        // `LARGE_TILE_STROKE_FACTOR` × the base grout width, painted over
+        // all grout. Off emits no shape at all.
+        let accent = egui::Stroke::new(
+            1.0_f32 * tess_core::svg::LARGE_TILE_STROKE_FACTOR as f32,
+            {
+                let (r, g, b) = paint::rgb(tess_core::svg::LARGE_TILE_ACCENT);
+                egui::Color32::from_rgb(r, g, b)
+            },
+        );
         // One ear-clipped triangulation per (proto, vertex-count, layout)
         // triple: the index triples transfer between two copies of a
         // prototile only when their vertex lists are *directly similar
@@ -2022,13 +2062,18 @@ impl GuiApp {
         // into the surrounding hexagon. Emitting all outlines after all
         // fills makes the border symmetric and order-independent.
         let mut outline_pts: Vec<Vec<egui::Pos2>> = Vec::with_capacity(result.tiles.len());
+        let mut accent_pts: Vec<Vec<egui::Pos2>> = Vec::new();
         for tile in &result.tiles {
             let pts = &tile.poly.pts;
             if pts.len() < 3 {
                 continue;
             }
             let screen: Vec<egui::Pos2> = pts.iter().map(|p| to_screen(*p)).collect();
-            let (r, g, b) = paint::rgb(paint::tile_rgb(self.app.color_mode, tile));
+            let (r, g, b) = paint::rgb(paint::tile_rgb_reflected(
+                self.app.color_mode,
+                tile,
+                self.highlight_reflected,
+            ));
             let color = egui::Color32::from_rgb(r, g, b);
             let tris = tri_cache
                 .entry((tile.proto, pts.len(), layout_fingerprint(pts)))
@@ -2041,10 +2086,18 @@ impl GuiApp {
                 mesh.add_triangle(t[0], t[1], t[2]);
             }
             painter.add(egui::Shape::Mesh(mesh));
-            outline_pts.push(screen);
+            outline_pts.push(screen.clone());
+            if self.large_tile_outline && tess_core::svg::large_tile_outlined(tile) {
+                accent_pts.push(screen);
+            }
         }
         for screen in &outline_pts {
             painter.add(egui::Shape::closed_line(screen.clone(), border));
+        }
+        // The accent trails every grout line (document order = paint
+        // order), mirroring the SVG pass-3 ordering.
+        for screen in &accent_pts {
+            painter.add(egui::Shape::closed_line(screen.clone(), accent));
         }
     }
 
@@ -2199,6 +2252,8 @@ mod tests {
             zoom_default,
             about_open: false,
             preview_mode: None,
+            highlight_reflected: false,
+            large_tile_outline: false,
             preview_mode_rects: Vec::new(),
         }
     }
@@ -3682,6 +3737,146 @@ mod tests {
             assert_eq!(meshes, expect, "{id}: fill count != non-degenerate tile count");
             assert_eq!(outlines, expect, "{id}: outline count != non-degenerate tile count");
         }
+    }
+
+    /// Landing B canvas toggles, pinned headlessly on the emitted shape
+    /// list (off = the exact pre-Landing-B list; on = the documented
+    /// addition): `highlight_reflected` lightens reflected tiles' mesh
+    /// fills by the spec blend without touching geometry, and
+    /// `large_tile_outline` appends one orange 2-px `closed_line` per
+    /// marked tile after ALL grout (mirroring the SVG pass order). An
+    /// untagged, unreflected card keeps the identical shape list even
+    /// with both on. The browse thumbnails are deliberately untouched by
+    /// both toggles (documented call — the cards are identity previews).
+    #[test]
+    fn canvas_aperiodic_toggles_shape_list() {
+        fn walk(shape: &egui::Shape, out: &mut Vec<egui::Shape>) {
+            match shape {
+                egui::Shape::Vec(inner) => inner.iter().for_each(|s| walk(s, out)),
+                s => out.push(s.clone()),
+            }
+        }
+        let accent32 = {
+            let (r, g, b) = super::paint::rgb(tess_core::svg::LARGE_TILE_ACCENT);
+            egui::Color32::from_rgb(r, g, b)
+        };
+        let pass = |gui: &mut super::GuiApp| -> Vec<egui::Shape> {
+            let ctx = egui::Context::default();
+            let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
+            let input = egui::RawInput {
+                screen_rect: Some(screen),
+                ..Default::default()
+            };
+            let out = ctx.run(input, |ctx| gui.draw_canvas(ctx));
+            let mut shapes = Vec::new();
+            for cs in &out.shapes {
+                walk(&cs.shape, &mut shapes);
+            }
+            shapes
+        };
+        // Per-mesh fill color (all vertices of one mesh share it).
+        let mesh_colors = |shapes: &[egui::Shape]| -> Vec<egui::Color32> {
+            shapes
+                .iter()
+                .filter_map(|s| match s {
+                    egui::Shape::Mesh(m) => m.vertices.first().map(|v| v.color),
+                    _ => None,
+                })
+                .collect()
+        };
+
+        let mut gui = super::GuiApp::new();
+        assert!(
+            !gui.highlight_reflected && !gui.large_tile_outline,
+            "both canvas toggles default off"
+        );
+        gui.app.select_id("hat");
+        let off = pass(&mut gui);
+        let (expect, marked) = {
+            let r = &gui.render_cache.as_ref().unwrap().result;
+            assert!(r.message.is_none(), "default hat view refused: {:?}", r.message);
+            (
+                r.tiles.iter().filter(|t| t.poly.pts.len() >= 3).count(),
+                r.tiles
+                    .iter()
+                    .filter(|t| t.poly.pts.len() >= 3 && tess_core::svg::large_tile_outlined(t))
+                    .count(),
+            )
+        };
+        assert!(expect > 0, "hat view must paint tiles");
+        assert_eq!(
+            off.iter().filter(|s| matches!(s, egui::Shape::Mesh(_))).count(),
+            expect
+        );
+        assert!(
+            !off.iter().any(|s| matches!(s, egui::Shape::Path(p) if p.stroke.color == egui::epaint::ColorMode::Solid(accent32))),
+            "no accent stroke while the outline toggle is off"
+        );
+
+        // Outline on: one accent path per marked tile, trailing all grout,
+        // at 2× the base 1.0 px stroke; fills byte-identical.
+        gui.large_tile_outline = true;
+        let on_o = pass(&mut gui);
+        let accents: Vec<usize> = on_o
+            .iter()
+            .enumerate()
+            .filter(|(_, s)| matches!(s, egui::Shape::Path(p) if p.stroke.color == egui::epaint::ColorMode::Solid(accent32)))
+            .map(|(i, _)| i)
+            .collect();
+        assert_eq!(accents.len(), marked, "{marked} marked tiles must carry accent strokes");
+        let last_base = on_o
+            .iter()
+            .rposition(|s| matches!(s, egui::Shape::Path(p) if p.stroke.color != egui::epaint::ColorMode::Solid(accent32)))
+            .unwrap();
+        assert!(
+            accents.iter().all(|&i| i > last_base),
+            "accents must paint after every grout line"
+        );
+        for &i in &accents {
+            if let egui::Shape::Path(p) = &on_o[i] {
+                assert!(p.closed, "accent is a closed outline");
+                assert_eq!(p.stroke.width, 2.0, "accent is 2× the base grout width");
+            }
+        }
+        assert_eq!(
+            mesh_colors(&off),
+            mesh_colors(&on_o),
+            "the outline toggle must not move any fill"
+        );
+
+        // Highlight on: fills follow the spec blend, geometry untouched.
+        gui.large_tile_outline = false;
+        gui.highlight_reflected = true;
+        let on_f = pass(&mut gui);
+        let (co, cf) = (mesh_colors(&off), mesh_colors(&on_f));
+        assert_eq!(co.len(), cf.len(), "highlight adds/removes no meshes");
+        let blend = |v: u8| (v as u32 + ((255 - v as u32) * 140 + 127) / 255) as u8;
+        let changed = co.iter().zip(&cf).filter(|(a, b)| a != b).count();
+        assert!(changed > 0, "the hat view contains reflected (H1) hats");
+        for (a, b) in co.iter().zip(&cf) {
+            if a != b {
+                assert_eq!(
+                    *b,
+                    egui::Color32::from_rgb(blend(a.r()), blend(a.g()), blend(a.b())),
+                    "highlighted fill is not the spec blend"
+                );
+            }
+        }
+
+        // Untagged, unreflected card: both on is the identical shape list.
+        gui.app.select_id("square");
+        gui.highlight_reflected = false;
+        gui.large_tile_outline = false;
+        let sq_off = pass(&mut gui);
+        gui.highlight_reflected = true;
+        gui.large_tile_outline = true;
+        let sq_on = pass(&mut gui);
+        assert_eq!(mesh_colors(&sq_off), mesh_colors(&sq_on), "square: no fill moves");
+        assert_eq!(sq_off.len(), sq_on.len(), "square: no shape is added");
+        assert!(
+            !sq_on.iter().any(|s| matches!(s, egui::Shape::Path(p) if p.stroke.color == egui::epaint::ColorMode::Solid(accent32))),
+            "square: no accent strokes"
+        );
     }
 
     /// `cache_key` is exactly the geometry the generator reads —

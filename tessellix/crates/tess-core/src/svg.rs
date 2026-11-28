@@ -1,7 +1,7 @@
 //! SVG rendering of a tiling (shared by CLI export).
 
 use crate::geometry::{BBox, Polygon, Vec2};
-use crate::paint::{rgb, tile_rgb, BORDER, BACKGROUND};
+use crate::paint::{rgb, tile_rgb_reflected, BORDER, BACKGROUND};
 use crate::strapwork::{DecorationPlan, Wall};
 use crate::symmetry::overlay::SymmetryOverlay;
 use crate::tiling::Tile;
@@ -39,6 +39,59 @@ pub fn render_svg_with_walls(
 /// `0.004·min(w, h)` (0.08 world units ≈ 3.2 px at the 1200×800
 /// default export).
 pub const SUPERTILE_STROKE_FACTOR: f64 = 2.0;
+
+/// Accent color of the Landing B large-tile outline pass
+/// ([`AperiodicToggles::large_tile_outline`]): vivid orange. Deliberately a
+/// hue NO tiling ramp uses and distinct from every annotation accent already
+/// in the file ([`OVERLAY_CELL_GOLD`], [`OVERLAY_ROT_ROSE`],
+/// [`OVERLAY_MIRROR_GREEN`], [`OVERLAY_GLIDE_CYAN`], [`ORBIT_A`],
+/// [`ORBIT_B`]), so the outline stays readable when the flags compose with
+/// `--symmetry-overlay` or `--vertex-orbits`.
+pub const LARGE_TILE_ACCENT: u32 = 0xFF7A1A;
+
+/// Stroke-weight multiplier of that pass against the base tile-border
+/// stroke. Its own constant (the same value as
+/// [`SUPERTILE_STROKE_FACTOR`] today) because the two passes are keyed
+/// differently — substitution depth vs. family — and must be able to diverge
+/// without touching each other.
+pub const LARGE_TILE_STROKE_FACTOR: f64 = 2.0;
+
+/// The Landing B render toggles: the two passes that read per-tile family
+/// and chirality facts. Bundled into one `Copy` struct so the full render
+/// entries stay readable instead of growing a seventh and eighth positional
+/// `bool`, and so `Default` is exactly "both off = the pre-Landing-B render".
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct AperiodicToggles {
+    /// `--highlight-reflected`: fill reflected tiles (`tile.reflected`) in
+    /// the lightened accent of their own mode color
+    /// ([`crate::paint::tile_rgb_reflected`]). Off ⇒ byte-identical.
+    pub highlight_reflected: bool,
+    /// `--large-tile-outline`: append a family-keyed accent outline group
+    /// over the whole render (see [`large_tile_outlined`]). Off ⇒ nothing is
+    /// appended, byte-identical.
+    pub large_tile_outline: bool,
+}
+
+/// Which tiles the [`AperiodicToggles::large_tile_outline`] pass marks —
+/// the "large tile" of each aperiodic family, i.e. the tile the family card
+/// is ABOUT. Public because the TUI canvas marks exactly the same set
+/// ([`crate::raster::raster_aperiodic`]): one law, both surfaces:
+///
+/// * `FamilyTag::Hat` / `FamilyTag::Spectre`: monohedral cards — every
+///   tile is the prototile, so every tile is outlined.
+/// * [`FamilyTag::Turtle`]: the turtle shape (`proto == 0`) only. The Mystic
+///   Sigma's companion hat (`proto == 1`) is the other tile type, not the
+///   card's subject, and stays unoutlined.
+/// * Any other family (untagged cards included): nothing. The flag is a
+///   no-op rather than an error, so a script can pass it uniformly.
+pub fn large_tile_outlined(tile: &Tile) -> bool {
+    use crate::tiling::FamilyTag;
+    match tile.family {
+        FamilyTag::Hat | FamilyTag::Spectre => true,
+        FamilyTag::Turtle => tile.proto == 0,
+        _ => false,
+    }
+}
 
 /// Path data (SVG `d`) for a tile's polygon, or `None` for degenerate
 /// tiles. Shared by the fill pass and the outline pass(es) so both emit
@@ -205,6 +258,46 @@ fn svg_body(
     highlight_supertiles: bool,
     mirror: bool,
 ) -> String {
+    svg_body_aperiodic(
+        tiles,
+        bbox,
+        mode,
+        highlight_supertiles,
+        mirror,
+        AperiodicToggles::default(),
+    )
+}
+
+/// [`svg_body`] with the Landing B toggles. Both off (the delegator above)
+/// is byte-identical by construction: `highlight_reflected = false` makes
+/// [`tile_rgb_reflected`] read exactly [`crate::paint::tile_rgb`], and
+/// `large_tile_outline = false` appends no group at all — every existing
+/// byte golden (the M205 off-state pin included) stays green.
+///
+/// On-states, and why they sit where they do:
+///
+/// * `highlight_reflected` changes only the fill colors of pass 1, so the
+///   outline passes (legacy single group or M205 level split) are untouched
+///   and keep their own geometry and stroke weights. The two highlights are
+///   orthogonal: M205 keys on `tile.level` (stroke weight), this keys on
+///   `tile.reflected` (fill).
+/// * `large_tile_outline` is a THIRD group appended after the last outline
+///   pass, never a re-split of pass 2 — it must paint over every tile
+///   border (that is the point of an outline of a whole patch region) and it
+///   must not disturb the level split above it. Family-keyed membership
+///   ([`large_tile_outlined`]); empty membership emits nothing, so the flag
+///   is a no-op for every non-aperiodic card.
+///
+/// `mirror` reflects everything, including both new passes (the tiles slice
+/// below is already the mirrored one).
+fn svg_body_aperiodic(
+    tiles: &[Tile],
+    bbox: &BBox,
+    mode: ColorMode,
+    highlight_supertiles: bool,
+    mirror: bool,
+    toggles: AperiodicToggles,
+) -> String {
     let cx = bbox.center().x;
     let owned_tiles;
     let tiles: &[Tile] = if mirror {
@@ -223,7 +316,7 @@ fn svg_body(
     // Pass 1: all fills, no outlines.
     for tile in tiles {
         if let Some(d) = path_d(tile) {
-            let (r, g, b) = rgb(tile_rgb(mode, tile));
+            let (r, g, b) = rgb(tile_rgb_reflected(mode, tile, toggles.highlight_reflected));
             s.push_str(&format!(r#"<path d="{}" fill="rgb({},{},{})"/>"#, d, r, g, b));
         }
     }
@@ -264,6 +357,28 @@ fn svg_body(
                 r#"<g fill="none" stroke="rgb({br},{bg_},{bb})" stroke-width="{heavy:.4}" stroke-linejoin="round">"#
             ));
             for tile in heavy_tiles {
+                if let Some(d) = path_d(tile) {
+                    s.push_str(&format!(r#"<path d="{}"/>"#, d));
+                }
+            }
+            s.push_str("</g>");
+        }
+    }
+    // Pass 3 (Landing B): the large-tile outline, over everything above.
+    // Appended, never interleaved: the two-pass discipline (all fills, then
+    // all grout) stays exactly as it was, and this reads as one clearly
+    // marked annotation group — `data-large-tile-outline` — that a test or a
+    // stylesheet can address. Off, or for a family with no marked tile,
+    // nothing is emitted at all.
+    if toggles.large_tile_outline {
+        let marked: Vec<&Tile> = tiles.iter().filter(|t| large_tile_outlined(t)).collect();
+        if !marked.is_empty() {
+            let (ar, ag, ab) = rgb(LARGE_TILE_ACCENT);
+            let accent = stroke * LARGE_TILE_STROKE_FACTOR;
+            s.push_str(&format!(
+                r#"<g data-large-tile-outline="true" fill="none" stroke="rgb({ar},{ag},{ab})" stroke-width="{accent:.4}" stroke-linejoin="round">"#
+            ));
+            for tile in marked {
                 if let Some(d) = path_d(tile) {
                     s.push_str(&format!(r#"<path d="{}"/>"#, d));
                 }
@@ -412,6 +527,47 @@ pub fn render_svg_with_walls_orbits(
     s
 }
 
+/// Full single-tiling render entry (Landing B, extending the C1 entry):
+/// everything [`render_svg_with_walls_orbits`] takes, plus
+/// [`AperiodicToggles`]. Same helper composition, with the toggles threaded
+/// into the body; the outline group lands inside the body (after the outline
+/// passes), the wall/overlay/orbit groups after it in the same order as
+/// before.
+///
+/// `toggles == AperiodicToggles::default()` is byte-identical to
+/// [`render_svg_with_walls_orbits`] for every input — the same off-state
+/// contract the M205/C5/C1 entries hold, so every existing golden holds.
+pub fn render_svg_with_walls_orbits_aperiodic(
+    tiles: &[Tile],
+    bbox: &BBox,
+    mode: ColorMode,
+    walls: &[Wall],
+    highlight_supertiles: bool,
+    mirror: bool,
+    overlay: Option<&SymmetryOverlay>,
+    orbits: Option<&[VertexOrbit]>,
+    toggles: AperiodicToggles,
+) -> String {
+    let mut s = svg_scaffold(bbox);
+    s.push_str(&svg_body_aperiodic(
+        tiles,
+        bbox,
+        mode,
+        highlight_supertiles,
+        mirror,
+        toggles,
+    ));
+    s.push_str(&svg_walls(walls, bbox, mirror));
+    if let Some(ov) = overlay {
+        append_symmetry_overlay(&mut s, ov, bbox);
+    }
+    if let Some(os) = orbits {
+        append_vertex_orbits(&mut s, os, bbox, mirror);
+    }
+    s.push_str(svg_close());
+    s
+}
+
 /// Primal + dual in one frame (C2): two groups inside one `<svg>` —
 /// `<g id="primal">` over the primal tiles, then `<g id="dual">` over the
 /// dual tiles, so the dual (the card's subject) paints on top — sharing
@@ -432,12 +588,57 @@ pub fn render_svg_dual_overlay(
     highlight_supertiles: bool,
     mirror: bool,
 ) -> String {
+    render_svg_dual_overlay_aperiodic(
+        primal,
+        dual,
+        bbox,
+        mode,
+        walls,
+        highlight_supertiles,
+        mirror,
+        AperiodicToggles::default(),
+    )
+}
+
+/// [`render_svg_dual_overlay`] with the Landing B toggles
+/// (`--highlight-reflected` / `--large-tile-outline` compose with
+/// `--dual-overlay`). Both groups receive the toggles, exactly as
+/// `highlight_supertiles` and `mirror` do; the toggles key on per-tile facts
+/// the centroid dual does not carry, so on the dual group they are inert by
+/// construction — dual cells are generated untagged (`FamilyTag::None`, so
+/// the outline pass marks none) and unreflected (`reflected: false`, so no
+/// fill is lightened). Default toggles are byte-identical to
+/// [`render_svg_dual_overlay`].
+pub fn render_svg_dual_overlay_aperiodic(
+    primal: &[Tile],
+    dual: &[Tile],
+    bbox: &BBox,
+    mode: ColorMode,
+    walls: &[Wall],
+    highlight_supertiles: bool,
+    mirror: bool,
+    toggles: AperiodicToggles,
+) -> String {
     let mut s = svg_scaffold(bbox);
     s.push_str(r#"<g id="primal">"#);
-    s.push_str(&svg_body(primal, bbox, mode, highlight_supertiles, mirror));
+    s.push_str(&svg_body_aperiodic(
+        primal,
+        bbox,
+        mode,
+        highlight_supertiles,
+        mirror,
+        toggles,
+    ));
     s.push_str("</g>");
     s.push_str(r#"<g id="dual">"#);
-    s.push_str(&svg_body(dual, bbox, mode, highlight_supertiles, mirror));
+    s.push_str(&svg_body_aperiodic(
+        dual,
+        bbox,
+        mode,
+        highlight_supertiles,
+        mirror,
+        toggles,
+    ));
     s.push_str("</g>");
     s.push_str(&svg_walls(walls, bbox, mirror));
     s.push_str(svg_close());
@@ -2003,5 +2204,380 @@ mod tests {
         let empty = render_svg_with_walls_orbits(&tiles, &bbox, ColorMode::Single, &[], false, false, None, Some(&[]));
         assert_eq!(none, empty, "Some(&[]) must be byte-identical to None");
         assert!(!none.contains("data-vertex-orbits"), "no orbit group when empty");
+    }
+
+    // ---- Landing B: aperiodic toggles ---------------------------------
+
+    /// A tile with the emitted hat/spectre/turtle signature at `x`:
+    /// `proto` as asked, `seed` = matching-rule label + 1.
+    fn fam_tile(family: crate::tiling::FamilyTag, proto: u8, seed: u32, x: f64) -> Tile {
+        Tile {
+            family,
+            reflected: false,
+            proto,
+            seed,
+            level: 0,
+            poly: Polygon::from_slice(&[pt(x, 0.0), pt(x + 1.0, 0.0), pt(x + 1.0, 1.0), pt(x, 1.0)]),
+        }
+    }
+
+    /// `fill="rgb(...)"` values in document order (pass-1 fills only: the
+    /// groups and wall lines carry `fill="none"`, pass-2 paths carry none).
+    /// The background rect's fill is skipped: it is scaffold, not a tile.
+    fn fills(svg: &str) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut rest = &svg[svg.find("/>").unwrap() + 2..];
+        while let Some(i) = rest.find(r#"fill="rgb("#) {
+            let r = &rest[i + r#"fill="rgb("#.len()..];
+            let end = r.find(')').unwrap();
+            out.push(format!("rgb({})", &r[..end]));
+            rest = &r[end + 1..];
+        }
+        out
+    }
+
+    /// Every byte except the pass-1 fill values (geometry + groups + tail).
+    fn without_fills(svg: &str) -> String {
+        let mut out = String::with_capacity(svg.len());
+        let mut rest = svg;
+        while let Some(i) = rest.find(r#"fill="rgb("#) {
+            let r = &rest[i + r#"fill="rgb("#.len()..];
+            let end = r.find(')').unwrap();
+            out.push_str(&rest[..i]);
+            rest = &r[end + 1..];
+        }
+        out.push_str(rest);
+        out
+    }
+
+    /// The contents of the large-tile-outline group (empty `String` when the
+    /// group is absent).
+    fn outline_group(svg: &str) -> String {
+        let Some(start) = svg.find(r#"<g data-large-tile-outline="true""#) else {
+            return String::new();
+        };
+        let tail = &svg[start..];
+        let end = tail.find("</g>").unwrap() + "</g>".len();
+        tail[..end].to_string()
+    }
+
+    /// The large-tile-outline group removed: every other byte kept.
+    fn without_outline_group(svg: &str) -> String {
+        let Some(start) = svg.find(r#"<g data-large-tile-outline="true""#) else {
+            return svg.to_string();
+        };
+        let tail = &svg[start..];
+        let end = tail.find("</g>").unwrap() + "</g>".len();
+        let mut out = String::with_capacity(svg.len());
+        out.push_str(&svg[..start]);
+        out.push_str(&tail[end..]);
+        out
+    }
+
+    #[test]
+    fn aperiodic_toggles_off_is_byte_identical() {
+        // The off-state contract for BOTH new entries and BOTH flags: the
+        // default struct is byte-for-byte the pre-Landing-B render. Includes
+        // the mirror path and a supertile view with the M205 split on.
+        let flat = square_grid(2);
+        let flat_box = BBox::new(pt(-0.5, -0.5), pt(2.5, 2.5));
+        let mixed = mixed_level_tiles();
+        let mixed_box = BBox::new(pt(-1.0, -1.0), pt(3.0, 2.0));
+        for (tiles, bbox) in [(&flat, &flat_box), (&mixed, &mixed_box)] {
+            for mirror in [false, true] {
+                for hl in [false, true] {
+                    let base =
+                        render_svg_with_walls_orbits(tiles, bbox, ColorMode::Pattern, &[], hl, mirror, None, None);
+                    let off = render_svg_with_walls_orbits_aperiodic(
+                        tiles,
+                        bbox,
+                        ColorMode::Pattern,
+                        &[],
+                        hl,
+                        mirror,
+                        None,
+                        None,
+                        AperiodicToggles::default(),
+                    );
+                    assert_eq!(base, off, "default toggles must be byte-identical (mirror {mirror}, m205 {hl})");
+                }
+            }
+        }
+        // The dual entry too.
+        let dual = square_grid(1);
+        let off = render_svg_dual_overlay(&flat, &dual, &flat_box, ColorMode::Pattern, &[], false, false);
+        let on = render_svg_dual_overlay_aperiodic(
+            &flat,
+            &dual,
+            &flat_box,
+            ColorMode::Pattern,
+            &[],
+            false,
+            false,
+            AperiodicToggles::default(),
+        );
+        assert_eq!(off, on, "default toggles must not move the dual entry");
+    }
+
+    #[test]
+    fn aperiodic_toggles_on_are_inert_without_the_facts() {
+        // Both flags ON for an untagged, unreflected view is still byte
+        // identity: no family matches the outline pass, no tile is reflected.
+        let tiles = square_grid(2);
+        let bbox = BBox::new(pt(-0.5, -0.5), pt(2.5, 2.5));
+        let base = render_svg_with_walls_orbits(&tiles, &bbox, ColorMode::Pattern, &[], false, false, None, None);
+        let on = render_svg_with_walls_orbits_aperiodic(
+            &tiles,
+            &bbox,
+            ColorMode::Pattern,
+            &[],
+            false,
+            false,
+            None,
+            None,
+            AperiodicToggles { highlight_reflected: true, large_tile_outline: true },
+        );
+        assert_eq!(base, on);
+        // The dual entry: centroid cells are untagged/unreflected too.
+        let off = render_svg_dual_overlay(&tiles, &tiles, &bbox, ColorMode::Pattern, &[], false, false);
+        let on = render_svg_dual_overlay_aperiodic(
+            &tiles,
+            &tiles,
+            &bbox,
+            ColorMode::Pattern,
+            &[],
+            false,
+            false,
+            AperiodicToggles { highlight_reflected: true, large_tile_outline: true },
+        );
+        assert_eq!(off, on, "the toggles must be inert on an untagged dual");
+    }
+
+    #[test]
+    fn highlight_reflected_lightens_only_reflected_fills() {
+        use crate::paint::{reflected_accent, rgb, tile_rgb};
+        let mode = ColorMode::Pattern;
+        let mut a = fam_tile(crate::tiling::FamilyTag::Hat, 0, 1, 0.0);
+        a.reflected = true; // the H1 cluster hat
+        let b = fam_tile(crate::tiling::FamilyTag::Hat, 0, 2, 1.0);
+        let tiles = vec![a.clone(), b.clone()];
+        let bbox = BBox::new(pt(-0.5, -0.5), pt(2.5, 1.5));
+        let off = render_svg(&tiles, &bbox, mode);
+        let on = render_svg_with_walls_orbits_aperiodic(
+            &tiles,
+            &bbox,
+            mode,
+            &[],
+            false,
+            false,
+            None,
+            None,
+            AperiodicToggles { highlight_reflected: true, large_tile_outline: false },
+        );
+        let want_base = rgb(tile_rgb(mode, &b));
+        let want_acc = rgb(reflected_accent(tile_rgb(mode, &a)));
+        assert_eq!(
+            fills(&on),
+            vec![
+                format!("rgb({},{},{})", want_acc.0, want_acc.1, want_acc.2),
+                format!("rgb({},{},{})", want_base.0, want_base.1, want_base.2),
+            ],
+            "the reflected tile reads the accent, its neighbour its base color"
+        );
+        // Nothing else moves: same geometry, same outline groups, same tail.
+        assert_eq!(without_fills(&off), without_fills(&on));
+        assert_ne!(fills(&off), fills(&on), "the highlight must be visible");
+    }
+
+    #[test]
+    fn highlight_reflected_follows_the_mirror_involution() {
+        use crate::paint::{reflected_accent, rgb, tile_rgb};
+        let mode = ColorMode::Pattern;
+        let mut a = fam_tile(crate::tiling::FamilyTag::Hat, 0, 1, 0.0);
+        a.reflected = true;
+        let b = fam_tile(crate::tiling::FamilyTag::Hat, 0, 2, 1.0);
+        let tiles = vec![a.clone(), b.clone()];
+        let bbox = BBox::new(pt(0.0, 0.0), pt(2.0, 1.0));
+        let c = |t: &Tile| {
+            let (r, g, b) = rgb(tile_rgb(mode, t));
+            format!("rgb({r},{g},{b})")
+        };
+        let acc = |t: &Tile| {
+            let (r, g, b) = rgb(reflected_accent(tile_rgb(mode, t)));
+            format!("rgb({r},{g},{b})")
+        };
+        let hl = AperiodicToggles { highlight_reflected: true, large_tile_outline: false };
+        let plain = render_svg_with_walls_orbits_aperiodic(&tiles, &bbox, mode, &[], false, false, None, None, hl);
+        let mirrored = render_svg_with_walls_orbits_aperiodic(&tiles, &bbox, mode, &[], false, true, None, None, hl);
+        // Tile order is preserved by the mirror; only WHICH tile is
+        // reflected flips. So the plain export accents a (canonical b),
+        // the mirrored one accents b (now a canonical copy of a).
+        assert_eq!(fills(&plain), vec![acc(&a), c(&b)], "plain: the reflected hat is accented");
+        assert_eq!(fills(&mirrored), vec![c(&a), acc(&b)], "mirrored: exactly the other tile is accented");
+        // The complement is exact: the highlighted SET flips, and every
+        // accent is the lightened form of that same tile's own color.
+        assert_ne!(fills(&plain)[0], fills(&mirrored)[0]);
+    }
+
+    #[test]
+    fn large_tile_outline_group_is_family_keyed() {
+        // Hat/Spectre: every tile (monohedral cards). Turtle: the turtle
+        // cells only — the companion hat (`proto == 1`) is excluded.
+        // Untagged and Isohedral (no large-tile notion): no group at all.
+        use crate::tiling::FamilyTag;
+        let bbox = BBox::new(pt(-0.5, -0.5), pt(2.5, 1.5));
+        for (family, want) in [
+            (FamilyTag::Hat, 3),
+            (FamilyTag::Spectre, 3),
+            (FamilyTag::Turtle, 2),
+            (FamilyTag::None, 0),
+            (FamilyTag::Isohedral, 0),
+            (FamilyTag::Penrose, 0),
+            (FamilyTag::Uniform, 0),
+            (FamilyTag::TwoUniform, 0),
+            (FamilyTag::Andritz, 0),
+        ] {
+            let tiles = vec![
+                fam_tile(family, 0, 1, 0.0),
+                fam_tile(family, 0, 5, 1.0),
+                fam_tile(family, 1, 3, 2.0),
+            ];
+            let on = render_svg_with_walls_orbits_aperiodic(
+                &tiles,
+                &bbox,
+                ColorMode::Metatile,
+                &[],
+                false,
+                false,
+                None,
+                None,
+                AperiodicToggles { highlight_reflected: false, large_tile_outline: true },
+            );
+            let off = render_svg(&tiles, &bbox, ColorMode::Metatile);
+            let group = outline_group(&on);
+            if want == 0 {
+                assert!(group.is_empty(), "{family:?}: must emit no outline group");
+                assert_eq!(on, off, "{family:?}: flag must be a byte no-op");
+            } else {
+                assert_eq!(
+                    group.matches("<path ").count(),
+                    want,
+                    "{family:?}: marked tiles"
+                );
+                // Only the appended group differs: fills and the grout
+                // group(s) are the off-state bytes.
+                let pre = off.strip_suffix("</g></svg>").unwrap();
+                assert!(on.starts_with(pre), "{family:?}: the body must be untouched");
+            }
+        }
+    }
+
+    #[test]
+    fn large_tile_outline_group_bytes_are_pinned() {
+        // Exact opening tag: gold-orange accent at 2× the base stroke.
+        // bbox min side 1.0 → base stroke 0.004 → accent stroke 0.008.
+        let tiles = vec![fam_tile(crate::tiling::FamilyTag::Hat, 0, 1, 0.0)];
+        let bbox = BBox::new(pt(0.0, 0.0), pt(3.0, 1.0));
+        let on = render_svg_with_walls_orbits_aperiodic(
+            &tiles,
+            &bbox,
+            ColorMode::Single,
+            &[],
+            false,
+            false,
+            None,
+            None,
+            AperiodicToggles { highlight_reflected: false, large_tile_outline: true },
+        );
+        assert!(
+            on.contains(
+                r#"<g data-large-tile-outline="true" fill="none" stroke="rgb(255,122,26)" stroke-width="0.0080" stroke-linejoin="round">"#
+            ),
+            "{on}"
+        );
+        assert!(on.ends_with("</g></g></svg>"), "{on}");
+    }
+
+    #[test]
+    fn large_tile_outline_appends_after_the_m205_split_and_before_the_overlays() {
+        // M205 interaction: with `highlight_supertiles` on, the level-split
+        // groups keep their exact bytes and order; the accent group is
+        // APPENDED after them (never a re-split of pass 2).
+        let tiles = mixed_level_tiles();
+        let bbox = BBox::new(pt(-1.0, -1.0), pt(3.0, 2.0));
+        let off = render_svg_with_walls_orbits(&tiles, &bbox, ColorMode::Pattern, &[], true, false, None, None);
+        let on = render_svg_with_walls_orbits_aperiodic(
+            &tiles,
+            &bbox,
+            ColorMode::Pattern,
+            &[],
+            true,
+            false,
+            None,
+            None,
+            AperiodicToggles { highlight_reflected: false, large_tile_outline: true },
+        );
+        // Family None here → no marked tile, so a byte no-op even with the
+        // M205 split on (the strongest form of the interaction pin).
+        assert_eq!(off, on, "an untagged mixed-level view must not change at all");
+
+        // With a family present: the on-state is exactly the off-state with
+        // one group inserted — nothing else moves. Without walls the
+        // insertion point is the very end of the body (after the M205 split);
+        // with walls it is between the grout groups and the wall pass.
+        let hat: Vec<Tile> = tiles
+            .iter()
+            .map(|t| Tile { family: crate::tiling::FamilyTag::Hat, ..t.clone() })
+            .collect();
+        let on_t = AperiodicToggles { highlight_reflected: false, large_tile_outline: true };
+        let off_nowalls =
+            render_svg_with_walls_orbits(&hat, &bbox, ColorMode::Pattern, &[], true, false, None, None);
+        let on_nowalls = render_svg_with_walls_orbits_aperiodic(
+            &hat,
+            &bbox,
+            ColorMode::Pattern,
+            &[],
+            true,
+            false,
+            None,
+            None,
+            on_t,
+        );
+        assert_eq!(without_outline_group(&on_nowalls), off_nowalls);
+        let pre = off_nowalls.strip_suffix("</g></svg>").unwrap();
+        assert!(on_nowalls.starts_with(pre), "the M205 level-split bytes are untouched");
+        let tail = &on_nowalls[pre.len()..];
+        assert!(tail.starts_with(r#"<g data-large-tile-outline="true"#), "{tail}");
+        assert_eq!(tail.matches("<path ").count(), hat.len(), "every hat is outlined");
+        assert!(tail.ends_with("</g></g></svg>"), "{tail}");
+
+        // With walls: the accent group is inside the body, i.e. painted
+        // BEFORE the wall ribbons; the wall bytes themselves are unchanged.
+        let ws = walls(&hat, 45.0);
+        let off = render_svg_with_walls_orbits(&hat, &bbox, ColorMode::Pattern, &ws, true, false, None, None);
+        let on =
+            render_svg_with_walls_orbits_aperiodic(&hat, &bbox, ColorMode::Pattern, &ws, true, false, None, None, on_t);
+        assert_eq!(without_outline_group(&on), off);
+        let idx_outline = on.find(r#"<g data-large-tile-outline="true""#).unwrap();
+        let idx_walls = on.find(r#"stroke-linecap="round""#).unwrap();
+        assert!(idx_outline < idx_walls, "the wall pass paints over the accent");
+
+        // With the symmetry overlay: still before the overlay group (the
+        // certified annotations stay on top).
+        let ov = synth_overlay();
+        let on_ov = render_svg_with_walls_orbits_aperiodic(
+            &hat,
+            &bbox,
+            ColorMode::Pattern,
+            &ws,
+            true,
+            false,
+            Some(&ov),
+            None,
+            on_t,
+        );
+        let idx_overlay = on_ov.find(r#"<g data-symmetry-overlay="true""#).unwrap();
+        let idx_outline_ov = on_ov.find(r#"<g data-large-tile-outline="true""#).unwrap();
+        assert!(idx_outline_ov < idx_overlay, "the annotation overlays stay on top");
     }
 }
