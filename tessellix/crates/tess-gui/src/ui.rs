@@ -619,6 +619,90 @@ fn title_lines(name: &str, per_line: usize) -> [String; 2] {
     [first, truncate_text(&rest, per_line * 2)]
 }
 
+/// The per-tiling doc path shown in the detail view (PART 2) — a
+/// single helper on purpose: the E13 follow-up ("move citations to the
+/// detail view") relocates the attribution lines with one edit here
+/// rather than one edit per call site.
+fn tiling_doc_path(id: &str) -> String {
+    format!("docs/tilings/{id}.md")
+}
+
+/// The Islamic family's library doc — cross-linked by the F3 block,
+/// never duplicated inside the per-tiling PART 2 doc line.
+const ISLAMIC_FAMILY_DOC: &str = "docs/families/islamic.md";
+
+/// The Islamic family's library section number for each tiling. The
+/// 36 `Islamic`-family tilings partition across the five sections of
+/// `docs/families/islamic.md` (§1 Classic compositions, §2 Girih tiles,
+/// §3 Hankin constructions, §4 Najm templates, Andritz σ-frame walks):
+/// 6 + 8 + 15 + 3 + 4 = 36. Static on purpose — the doc is not parsed
+/// at runtime — and held honest by a pin test (see
+/// `islamic_section_table_matches_registry`), which re-checks the
+/// table against the live registry: every id must be registered, carry
+/// the `"Islamic"` family tag, and the section counts must be 6/8/15/3/4.
+const ISLAMIC_SECTION_TABLE: &[(&str, &str)] = &[
+    ("star-cross", "§1 — Classic compositions"),
+    ("star-cross-8-2", "§1 — Classic compositions"),
+    ("hexagram", "§1 — Classic compositions"),
+    ("khatam-girih", "§1 — Classic compositions"),
+    ("dodecagon-hexagram-honeycomb", "§1 — Classic compositions"),
+    ("girih-w85", "§1 — Classic compositions"),
+    ("girih-shesh-band", "§2 — Girih tiles"),
+    ("girih-star-cross", "§2 — Girih tiles"),
+    ("girih-bowtie", "§2 — Girih tiles"),
+    ("girih-decagon", "§2 — Girih tiles"),
+    ("girih-pentagon", "§2 — Girih tiles"),
+    ("girih-rhombus", "§2 — Girih tiles"),
+    ("girih-quasiperiodic", "§2 — Girih tiles"),
+    ("girih-decagon-patch", "§2 — Girih tiles"),
+    ("pic-4-8-8", "§3 — Hankin constructions"),
+    ("pic-3-6-3-6", "§3 — Hankin constructions"),
+    ("pic-3-12-12", "§3 — Hankin constructions"),
+    ("hankin-4-8-8-rosette", "§3 — Hankin constructions"),
+    ("hankin-4-6-12", "§3 — Hankin constructions"),
+    ("hankin-3-12-12", "§3 — Hankin constructions"),
+    ("hankin-3-6-3-6", "§3 — Hankin constructions"),
+    ("hankin-3-4-6-4", "§3 — Hankin constructions"),
+    ("hankin-3-3-3-4-4", "§3 — Hankin constructions"),
+    ("hankin-3-3-4-3-4", "§3 — Hankin constructions"),
+    ("hankin-hex-two-point", "§3 — Hankin constructions"),
+    ("hankin-square-two-point", "§3 — Hankin constructions"),
+    ("hankin-4-8-8-rosette-transform", "§3 — Hankin constructions"),
+    ("hankin-4-8-8-motifs", "§3 — Hankin constructions"),
+    ("hankin-hex-motifs", "§3 — Hankin constructions"),
+    ("najm-63-2e-0-3e-ac", "§4 — Najm templates"),
+    ("najm-44-3e-0-0-a", "§4 — Najm templates"),
+    ("najm-63-motifs", "§4 — Najm templates"),
+    ("andritz-bowtie-hexagon", "Andritz σ-frame walks"),
+    ("andritz-bowtie-hexagon-10gon-1", "Andritz σ-frame walks"),
+    ("andritz-bowtie-hexagon-10gon-2", "Andritz σ-frame walks"),
+    ("andritz-bowtie-hexagon-10gon-3", "Andritz σ-frame walks"),
+];
+
+/// The library section label for an Islamic tiling id, or `None` for
+/// a tiling outside the table (non-Islamic, or a future islamic card
+/// whose row has not yet been added to `docs/families/islamic.md`).
+fn islamic_section_label(id: &str) -> Option<&'static str> {
+    ISLAMIC_SECTION_TABLE
+        .iter()
+        .find(|(i, _)| *i == id)
+        .map(|(_, label)| *label)
+}
+
+/// The depth-kind parameter predicate (PART 4).
+const DEPTH_PARAM_ID: &str = "depth";
+
+/// The PART 4 predicate: `Int` ParamSpecs named `"depth"` — the three
+/// current declarers (`golden-bee` / `golden-triangle` / `glb-binary-n7`)
+/// all use this exact id, kind and type. There is no dedicated
+/// `ParamKind::Depth`, so the predicate is id+kind; a future depth-kind
+/// param (e.g. the `fractalizing-3-12-12` E16 arm) composes only if it
+/// too is named `"depth"` with an `Int` kind — or this predicate is
+/// broadened.
+fn is_depth_param(spec: &tess_core::params::ParamSpec) -> bool {
+    matches!(spec.kind, ParamKind::Int { .. }) && spec.id.as_str() == DEPTH_PARAM_ID
+}
+
 impl GuiApp {
     pub fn new() -> Self {
         let app = tess_core::App::new(tess_tilings::registry(), 60.0);
@@ -918,6 +1002,134 @@ impl GuiApp {
         }
     }
 
+    /// The classification record for the currently selected tiling —
+    /// the detail view reads it from the selected card (the registry
+    /// snapshot Browse renders and the detail panel both carry the
+    /// same record, never a placeholder).
+    fn selected_class(&self) -> tess_core::TilingClass {
+        self.tabs
+            .iter()
+            .flat_map(|t| t.cards.iter())
+            .find(|c| c.id == self.app.selected_id())
+            .map(|c| c.class)
+            .unwrap_or(tess_core::TilingClass::EMPTY)
+    }
+
+    /// Advance the substitution depth by `dir` (−1 / +1) through the
+    /// SAME param-set funnel `draw_params` uses (`step_by` +
+    /// `set_param_value`) — the stepper is not a parallel control.
+    /// Returns true when a depth-kind spec was found and the value
+    /// moved (false when the spec is absent, or the value is pinned
+    /// at the range edge in this direction).
+    fn step_depth(&mut self, dir: i32) -> bool {
+        let Some(spec) = self
+            .app
+            .tiling()
+            .params()
+            .iter()
+            .find(|s| is_depth_param(s))
+        else {
+            return false;
+        };
+        let cur = self.app.param_value(spec.id).unwrap_or_else(|| spec.default_value());
+        let next = spec.step_by(cur, dir);
+        if next == cur {
+            return false;
+        }
+        self.app.set_param_value(spec.id, next);
+        true
+    }
+
+    /// The Render detail view — the bottom panel's state-derived
+    /// section (no new `RenderKey`, no new toggle: the params panel
+    /// is the one collapsible section). Four parts:
+    ///
+    /// * PART 1 — prototile count + tile-set summary from the
+    ///   selected tiling's classification record (vertex config included;
+    ///   `"not declared"` for a missing field).
+    /// * PART 2 — the source/year line (only when declared) and the
+    ///   per-tiling doc path (always; the E13 follow-up relocates the
+    ///   citations with one edit of [`tiling_doc_path`]).
+    /// * PART 3 — a reference to the existing param sliders (no
+    ///   rebuild).
+    /// * PART 4 — a substitution depth stepper, only for tilings that
+    ///   declare a depth-kind param ([`DEPTH_PARAM_ID`]).
+    ///
+    /// plus the F3 block (Islamic family cards only): the θK/δ contact
+    /// angle (only when declared), the library section number from
+    /// [`ISLAMIC_SECTION_TABLE`], and a cross-link to the family doc
+    /// (never a per-tiling duplication of PART 2's doc line).
+    fn draw_detail_view(&mut self, ui: &mut egui::Ui) {
+        let class = self.selected_class();
+        let id = self.app.selected_id().to_string();
+
+        // === PART 1 — prototiles + tile-set summary. ===
+        ui.label(egui::RichText::new("Detail").strong());
+        ui.label(format!(
+            "prototiles: {}",
+            class
+                .prototiles
+                .map(|n| n.to_string())
+                .unwrap_or_else(|| "not declared".to_string())
+        ));
+        ui.label(format!(
+            "tile set: {}",
+            class.tile_set.unwrap_or("not declared")
+        ));
+        ui.label(format!(
+            "vertex config: {}",
+            class.vertex_config.unwrap_or("not declared")
+        ));
+
+        // === PART 2 — source/year + per-tiling doc path. ===
+        if let Some(source) = class.source {
+            let year = class.year.map(|y| format!(" ({y})")).unwrap_or_default();
+            ui.label(format!("source: {source}{year}"));
+        }
+        ui.label(format!("doc: {}", tiling_doc_path(&id)));
+
+        // === PART 3 — reference to the existing sliders. ===
+        let n_params = self.app.tiling().params().len();
+        if n_params > 0 {
+            ui.label(format!("parameters: {n_params} declared — edit in the sliders above"));
+        }
+
+        // === PART 4 — substitution depth stepper (same funnel as draw_params). ===
+        // `params()` returns a `&'static [ParamSpec]`, so the borrow
+        // is a plain static slice — no borrow of `self` survives.
+        let depth_spec = self
+            .app
+            .tiling()
+            .params()
+            .iter()
+            .find(|s| is_depth_param(s));
+        if let Some(spec) = depth_spec {
+            let cur = self.app.param_value(spec.id).unwrap_or_else(|| spec.default_value());
+            let cur_display = cur.display();
+            ui.horizontal(|ui| {
+                ui.label("substitution depth");
+                if ui.button("−").clicked() {
+                    self.step_depth(-1);
+                }
+                ui.label(cur_display);
+                if ui.button("+").clicked() {
+                    self.step_depth(1);
+                }
+            });
+        }
+
+        // === F3 — Islamic parameters (Islamic family cards only). ===
+        if class.families.contains(&"Islamic") {
+            ui.separator();
+            if let Some(label) = islamic_section_label(&id) {
+                ui.label(format!("islamic family: {label} · {ISLAMIC_FAMILY_DOC}"));
+            }
+            if let Some(contact) = class.contact_angle {
+                ui.label(format!("θK/δ: {contact}"));
+            }
+        }
+    }
+
     /// The Browse preview band's color-mode row: `default` (follow
     /// each tiling's own preview mode) plus the same ten options as
     /// the Render detail panel, through the shared
@@ -1033,6 +1245,8 @@ impl GuiApp {
                 if let Some(n) = m.symmetry.notes {
                     ui.label(n);
                 }
+                ui.separator();
+                self.draw_detail_view(ui);
             });
         }
 
@@ -3991,5 +4205,222 @@ mod tests {
         let pattern = card_bytes(ColorMode::Pattern);
         let shape = card_bytes(ColorMode::Shape);
         assert_ne!(pattern, shape, "Pattern vs Shape must differ (different classification)");
+    }
+
+    // ---- F1+F3 detail view: four parts + Islamic parameters block ----
+    //
+    // These pins drive the production `draw_detail_view` headlessly
+    // through the same shape as the M199 About and M215 band tests: a
+    // factory-built `fresh_gui`, a single `ectx.run`, `painted_text` on
+    // the returned shapes. The M215 click recipe (hover + press +
+    // release in one pass, hover first) is reused for the stepper.
+
+    /// One headless egui pass of the detail view, optionally injecting
+    /// a primary-button press+release at `click_at` (hovered first).
+    fn detail_view_pass(
+        gui: &mut super::GuiApp,
+        ectx: &egui::Context,
+        screen: egui::Rect,
+        click_at: Option<egui::Pos2>,
+    ) -> egui::FullOutput {
+        let mut events: Vec<egui::Event> = Vec::new();
+        if let Some(pos) = click_at {
+            events.push(egui::Event::PointerMoved(pos));
+            events.push(egui::Event::PointerButton {
+                pos,
+                button: egui::PointerButton::Primary,
+                pressed: true,
+                modifiers: egui::Modifiers::NONE,
+            });
+            events.push(egui::Event::PointerButton {
+                pos,
+                button: egui::PointerButton::Primary,
+                pressed: false,
+                modifiers: egui::Modifiers::NONE,
+            });
+        }
+        let input = egui::RawInput {
+            screen_rect: Some(screen),
+            events,
+            ..Default::default()
+        };
+        ectx.run(input, |ectx| {
+            egui::CentralPanel::default().show(ectx, |ui| gui.draw_detail_view(ui));
+        })
+    }
+
+    fn detail_view_text(gui: &mut super::GuiApp, screen: egui::Rect) -> String {
+        let ectx = egui::Context::default();
+        let out = detail_view_pass(gui, &ectx, screen, None);
+        painted_text(&out.shapes).join("\n")
+    }
+
+    fn detail_screen() -> egui::Rect {
+        egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(640.0, 480.0))
+    }
+
+    /// The text-rect of a painted galley whose label is exactly `want`.
+    /// `painted_text_rects` and `painted_text` walk the same shapes in
+    /// the same order, so the zip is aligned.
+    fn galley_rect(out: &egui::FullOutput, want: &str) -> Option<egui::Rect> {
+        let rects = painted_text_rects(&out.shapes);
+        let texts = painted_text(&out.shapes);
+        rects
+            .iter()
+            .zip(texts.iter())
+            .find(|(_, t)| t.as_str() == want)
+            .map(|(r, _)| *r)
+    }
+
+    #[test]
+    fn detail_view_paints_part1_and_part2_for_known_card() {
+        let screen = detail_screen();
+        let mut gui = fresh_gui();
+        gui.select_card("square");
+        let ectx = egui::Context::default();
+        let out = detail_view_pass(&mut gui, &ectx, screen, None);
+        let text = painted_text(&out.shapes).join("\n");
+        assert!(text.contains("prototiles: not declared"), "square missing prototiles line: {text:?}");
+        assert!(text.contains("tile set: not declared"), "square missing tile-set line: {text:?}");
+        assert!(text.contains("vertex config: 4⁴"), "square missing vertex config: {text:?}");
+        assert!(text.contains("doc: docs/tilings/square.md"), "doc path missing: {text:?}");
+        assert!(!text.contains("source:"), "square declares no source; got a source line: {text:?}");
+        assert!(!text.contains("substitution depth"), "square has no depth param; got a depth row: {text:?}");
+        assert!(!text.contains("islamic family"), "square is not Islamic; got the F3 block: {text:?}");
+    }
+
+    #[test]
+    fn detail_view_paints_source_and_islamic_block_for_girih_decagon_patch() {
+        // The one islamic-family card that declares a source/year pair.
+        let screen = detail_screen();
+        let mut gui = fresh_gui();
+        gui.select_card("girih-decagon-patch");
+        let ectx = egui::Context::default();
+        let out = detail_view_pass(&mut gui, &ectx, screen, None);
+        let text = painted_text(&out.shapes).join("\n");
+        assert!(text.contains("prototiles: 3"), "girih-decagon-patch missing prototiles: {text:?}");
+        assert!(
+            text.contains("tile set: girih decagon + bow-tie closed-cluster infill"),
+            "girih-decagon-patch missing tile set: {text:?}"
+        );
+        assert!(text.contains("source: Lu & Steinhardt (2007)"), "source/year line wrong: {text:?}");
+        assert!(text.contains("doc: docs/tilings/girih-decagon-patch.md"), "doc path missing: {text:?}");
+        assert!(
+            text.contains("islamic family: §2 — Girih tiles · docs/families/islamic.md"),
+            "F3 section line missing: {text:?}"
+        );
+        assert!(
+            !text.contains("θK/δ:"),
+            "girih-decagon-patch declares no contact angle; got a placeholder: {text:?}"
+        );
+    }
+
+    #[test]
+    fn detail_view_paints_part3_reference_for_param_bearing_card() {
+        let screen = detail_screen();
+        let mut gui = fresh_gui();
+        gui.select_card("glb-binary-n7");
+        let text = detail_view_text(&mut gui, screen);
+        assert!(
+            text.contains("parameters: 3 declared"),
+            "glb-binary-n7 (3 params) missing the PART 3 reference: {text:?}"
+        );
+        assert!(text.contains("substitution depth"), "missing depth stepper: {text:?}");
+    }
+
+    #[test]
+    fn detail_view_depth_stepper_click_advances_param_via_shared_funnel() {
+        use tess_tilings::families::quasiperiodic::glb_binary_n7::DEPTH_ID;
+        let screen = detail_screen();
+        let mut gui = fresh_gui();
+        gui.select_card("glb-binary-n7");
+        let ectx = egui::Context::default();
+        // Pass 1: paint and locate the "+" button galley.
+        let out = detail_view_pass(&mut gui, &ectx, screen, None);
+        assert_eq!(
+            gui.app.param_value(DEPTH_ID).and_then(|v| v.as_i64()),
+            Some(0),
+            "glb-binary-n7 depth default must be 0"
+        );
+        let plus = galley_rect(&out, "+").expect("+ button galley painted");
+        // Pass 2: a real headless click on "+".
+        detail_view_pass(&mut gui, &ectx, screen, Some(plus.center()));
+        assert_eq!(
+            gui.app.param_value(DEPTH_ID).and_then(|v| v.as_i64()),
+            Some(1),
+            "+ click must advance the depth by one (shared step_by + set_param_value funnel)"
+        );
+    }
+
+    #[test]
+    fn detail_view_depth_stepper_present_for_golden_bee() {
+        let screen = detail_screen();
+        let mut gui = fresh_gui();
+        gui.select_card("golden-bee");
+        let text = detail_view_text(&mut gui, screen);
+        assert!(text.contains("substitution depth"), "golden-bee missing depth stepper: {text:?}");
+        assert!(text.contains("parameters: 3 declared"), "golden-bee missing PART 3: {text:?}");
+    }
+
+    #[test]
+    fn detail_view_f3_block_shows_contact_angle_for_pic_4_8_8() {
+        let screen = detail_screen();
+        let mut gui = fresh_gui();
+        gui.select_card("pic-4-8-8");
+        let text = detail_view_text(&mut gui, screen);
+        assert!(text.contains("θK/δ: θK 45°"), "pic-4-8-8 missing verbatim contact angle: {text:?}");
+        assert!(
+            text.contains("islamic family: §3 — Hankin constructions"),
+            "pic-4-8-8 missing section label: {text:?}"
+        );
+        assert!(text.contains("docs/families/islamic.md"), "family doc cross-link missing: {text:?}");
+    }
+
+    #[test]
+    fn detail_view_f3_block_omits_contact_angle_when_undeclared() {
+        // hexagram declares nothing but the family tag — the F3 block
+        // must still paint the section label, never a placeholder angle.
+        let screen = detail_screen();
+        let mut gui = fresh_gui();
+        gui.select_card("hexagram");
+        let text = detail_view_text(&mut gui, screen);
+        assert!(
+            text.contains("islamic family: §1 — Classic compositions"),
+            "hexagram missing section label: {text:?}"
+        );
+        assert!(text.contains("docs/families/islamic.md"), "family doc cross-link missing: {text:?}");
+        assert!(!text.contains("θK/δ:"), "hexagram declares no contact angle; got a placeholder: {text:?}");
+    }
+
+    #[test]
+    fn islamic_section_table_covers_the_registry() {
+        // The static table must partition the islamic-family ids
+        // exactly — no missing id, no unknown id, counts 6/8/15/3/4.
+        let app = tess_core::App::new(tess_tilings::registry(), 60.0);
+        let ids: Vec<&'static str> = app.registry().iter().map(|t| t.id()).collect();
+        let mut islamic: Vec<&'static str> = ids
+            .iter()
+            .copied()
+            .filter(|id| tess_tilings::classification(id).families.contains(&"Islamic"))
+            .collect();
+        islamic.sort_unstable();
+        let mut table_ids: Vec<&'static str> = super::ISLAMIC_SECTION_TABLE.iter().map(|(id, _)| *id).collect();
+        table_ids.sort_unstable();
+        assert_eq!(
+            table_ids, islamic,
+            "islamic section table must cover exactly the islamic-family ids"
+        );
+        assert_eq!(table_ids.len(), 36, "expected 36 islamic tilings");
+        let count = |label: &str| {
+            super::ISLAMIC_SECTION_TABLE
+                .iter()
+                .filter(|(_, l)| *l == label)
+                .count()
+        };
+        assert_eq!(count("§1 — Classic compositions"), 6, "§1 must hold 6 ids");
+        assert_eq!(count("§2 — Girih tiles"), 8, "§2 must hold 8 ids");
+        assert_eq!(count("§3 — Hankin constructions"), 15, "§3 must hold 15 ids");
+        assert_eq!(count("§4 — Najm templates"), 3, "§4 must hold 3 ids");
+        assert_eq!(count("Andritz σ-frame walks"), 4, "Andritz must hold 4 ids");
     }
 }
