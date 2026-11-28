@@ -191,7 +191,7 @@ pub fn nonperiodic_rank(c: &CardMeta) -> u8 {
 
 /// The section key for a card displayed in the tab `tab_category`:
 /// the header text a card grid should draw above the first card of
-/// each section. The Wallpaper and Laves tabs have sections:
+/// each section. The Wallpaper, Laves and Islamic tabs have sections:
 ///
 /// * **Wallpaper** — the group catalog is sorted by crystal system,
 ///   and the key is the card's *conventional* lattice (see
@@ -209,6 +209,19 @@ pub fn nonperiodic_rank(c: &CardMeta) -> u8 {
 ///   (self-dual regulars, then the Laves proper, then the 2-uniform
 ///   duals), and the key is derived from the same declared facts,
 ///   never the card id (see [`laves_section_key`]).
+/// * **Islamic** — the key is derived from the declared construction
+///   facts, never the card id (see [`islamic_section_key`]): the
+///   five `docs/families/islamic.md` sections, §1 Classic compositions
+///   (the residual bucket — the method-less hexagram sorts here), §2
+///   Girih tiles, §3 Hankin constructions, §4 Najm templates, and the
+///   Andritz σ-frame walks. Only the 30 primary-Islamic cards are on
+///   the Islamic tab (classic 6 / girih 6 / hankin 15 / najm 3, in
+///   register order); the 6 off-tab family members (the two
+///   Darb-i-Imam realizations, primary Quasiperiodic/Nonperiodic, and
+///   the four Andritz walks, primary Quasiperiodic) still derive their
+///   §-key through [`islamic_section_key`] directly — the GUI detail
+///   view's F3 block consumes that entry point, so the label it prints
+///   can never drift from the section the card would sort under.
 ///
 /// Cards in every other tab return `""` (no header).
 pub fn section_key(tab_category: TilingCategory, card: &CardMeta) -> &'static str {
@@ -222,6 +235,7 @@ pub fn section_key(tab_category: TilingCategory, card: &CardMeta) -> &'static st
             _ => "",
         },
         TilingCategory::Laves => laves_section_key(card),
+        TilingCategory::Islamic => islamic_section_key(card),
         _ => "",
     }
 }
@@ -259,6 +273,73 @@ fn laves_section_key(card: &CardMeta) -> &'static str {
         Some(0) | Some(1) => "self-dual regulars & Catalan duals",
         Some(2) => "2-uniform duals",
         _ => "",
+    }
+}
+
+/// The Islamic family's library section key for a card: the header text
+/// a card grid should draw above the first card of each section, derived
+/// from the declared classification facts (the construction `method`
+/// plus the `[p,q]` substrate `base_tiling`), never the card id. The
+/// five sections of `docs/families/islamic.md`:
+///
+/// * **§1 Classic compositions** — the hand-drawn star-and-cross, khatam,
+///   medallion and Wichmann-panel realizations. This section is also the
+///   *residual bucket*: a card with no declared method (the hexagram) —
+///   and any future card whose method is not a named girih/hankin/najm/
+///   andritz construction — sorts here rather than failing.
+/// * **§2 Girih tiles** — the girih strapwork and prototile tilings plus
+///   the two Darb-i-Imam realizations (the quasiperiodic girih and the
+///   finite decagon patch, both off-tab but family members).
+/// * **§3 Hankin constructions** — the polygons-in-contact, greedy-
+///   inference, two-point, rosette-transform and motif-library
+///   inferences.
+/// * **§4 Najm templates** — the `[p,q]`-substrate najm templates. The
+///   bracketed substrate is the discriminator: it also pulls
+///   `najm-63-motifs` out of the Hankin motif band, whose method string
+///   it shares with the two Hankin motif cards.
+/// * **Andritz σ-frame walks** — the four quasiperiodic σ-frame walks
+///   (off-tab, family members only).
+///
+/// Total over every `Islamic`-family card. The `[p,q]`-substrate guard
+/// runs before the method match so the substrate fact outranks the
+/// borrowed method string.
+pub fn islamic_section_key(card: &CardMeta) -> &'static str {
+    const CLASSIC: &str = "§1 — Classic compositions";
+    const GIRIH: &str = "§2 — Girih tiles";
+    const HANKIN: &str = "§3 — Hankin constructions";
+    const NAJM: &str = "§4 — Najm templates";
+    const ANDRITZ: &str = "Andritz σ-frame walks";
+
+    let c = &card.class;
+    // The [p,q] bracket substrate is the najm-template signature; it
+    // takes precedence over the method so the motif variant that borrows
+    // the Hankin motif-library method still sorts under §4.
+    if c.base_tiling.map_or(false, |b| b.starts_with('[')) {
+        return NAJM;
+    }
+    match c.method {
+        // §2 Girih — the strapwork and prototile tilings plus the two
+        // Darb-i-Imam realizations.
+        Some("girih strapwork")
+        | Some("girih prototile tiling")
+        | Some("Darb-i Imam")
+        | Some("Darb-i Imam substitution (finite patch)") => GIRIH,
+        // §3 Hankin — the PIC / greedy-inference / two-point /
+        // rosette-transform / motif-library inferences.
+        Some("Hankin polygons-in-contact")
+        | Some("Hankin greedy inference")
+        | Some("Kaplan two-point")
+        | Some("rosette transform + Hankin inference")
+        | Some("Kaplan §3.5 motif library") => HANKIN,
+        // §4 Najm — the named najm templates (the [p,q]-substrate motif
+        // variant is caught by the guard above).
+        Some("Najm template") => NAJM,
+        // Andritz — the quasiperiodic σ-frame walks.
+        Some("σ-frame walk") => ANDRITZ,
+        // §1 Classic — the star-and-cross, khatam, medallion and
+        // Wichmann compositions, plus the method-less hexagram (and any
+        // unrecognized method).
+        _ => CLASSIC,
     }
 }
 
@@ -1028,6 +1109,261 @@ mod tests {
                 ("2-uniform duals", 20),
             ],
             "exactly three contiguous runs, in first-appearance order"
+        );
+    }
+
+    /// The 36 islamic-family cards in register order, each carrying the
+    /// primary tab category (Islamic for the 30 on-tab primaries;
+    /// Quasiperiodic / Nonperiodic for the 6 off-tab family members) and
+    /// the declared facts `islamic_section_key` reads: the construction
+    /// `method` plus the `[p,q]`-substrate `base_tiling`. `families` is
+    /// carried so the full-family walk can select exactly the
+    /// `Islamic`-tagged cards. The facts are verbatim from
+    /// `tess-tilings`'s `islamic::classification` arms.
+    fn islamic_class(
+        families: &'static [&'static str],
+        method: Option<&'static str>,
+        base_tiling: Option<&'static str>,
+    ) -> TilingClass {
+        TilingClass { families, method, base_tiling, ..TilingClass::EMPTY }
+    }
+
+    fn islamic_specs() -> Vec<(&'static str, TilingCategory, TilingClass)> {
+        use TilingCategory as C;
+        let isl: &'static [&'static str] = &["Islamic"];
+        let isl_q: &'static [&'static str] = &["Islamic", "Quasiperiodic"];
+        let isl_n: &'static [&'static str] = &["Islamic", "Nonperiodic"];
+        let mut s = Vec::new();
+        // §1 Classic compositions (6, on-tab) — register block 1.
+        s.push(("star-cross", C::Islamic, islamic_class(isl, Some("star-and-cross"), None)));
+        s.push(("star-cross-8-2", C::Islamic, islamic_class(isl, Some("star-and-cross"), None)));
+        s.push(("hexagram", C::Islamic, islamic_class(isl, None, None)));
+        s.push(("khatam-girih", C::Islamic, islamic_class(isl, Some("girih decomposition"), None)));
+        s.push(("dodecagon-hexagram-honeycomb", C::Islamic, islamic_class(isl, Some("medallion composition on a periodic net (24d)"), Some("6.6.6"))));
+        s.push(("girih-w85", C::Islamic, islamic_class(isl, Some("Wichmann panel data"), None)));
+        // §2 Girih tiles (8 total: 6 on-tab + 2 off-tab).
+        s.push(("girih-shesh-band", C::Islamic, islamic_class(isl, Some("girih strapwork"), None)));
+        s.push(("girih-star-cross", C::Islamic, islamic_class(isl, Some("girih strapwork"), None)));
+        s.push(("girih-bowtie", C::Islamic, islamic_class(isl, Some("girih prototile tiling"), None)));
+        s.push(("girih-decagon", C::Islamic, islamic_class(isl, Some("girih prototile tiling"), None)));
+        s.push(("girih-pentagon", C::Islamic, islamic_class(isl, Some("girih prototile tiling"), None)));
+        s.push(("girih-rhombus", C::Islamic, islamic_class(isl, Some("girih prototile tiling"), None)));
+        s.push(("girih-quasiperiodic", C::Quasiperiodic, islamic_class(isl_q, Some("Darb-i Imam"), None)));
+        s.push(("girih-decagon-patch", C::Nonperiodic, islamic_class(isl_n, Some("Darb-i Imam substitution (finite patch)"), None)));
+        // §3 Hankin constructions (15, on-tab) — register block 3.
+        s.push(("pic-4-8-8", C::Islamic, islamic_class(isl, Some("Hankin polygons-in-contact"), Some("4.8.8"))));
+        s.push(("pic-3-6-3-6", C::Islamic, islamic_class(isl, Some("Hankin polygons-in-contact"), Some("3.6.3.6"))));
+        s.push(("pic-3-12-12", C::Islamic, islamic_class(isl, Some("Hankin polygons-in-contact"), Some("3.12.12"))));
+        s.push(("hankin-4-8-8-rosette", C::Islamic, islamic_class(isl, Some("Hankin greedy inference"), Some("4.8.8"))));
+        s.push(("hankin-4-6-12", C::Islamic, islamic_class(isl, Some("Hankin greedy inference"), Some("4.6.12"))));
+        s.push(("hankin-3-12-12", C::Islamic, islamic_class(isl, Some("Hankin greedy inference"), Some("3.12.12"))));
+        s.push(("hankin-3-6-3-6", C::Islamic, islamic_class(isl, Some("Hankin greedy inference"), Some("3.6.3.6"))));
+        s.push(("hankin-3-4-6-4", C::Islamic, islamic_class(isl, Some("Hankin greedy inference"), Some("3.4.6.4"))));
+        s.push(("hankin-3-3-3-4-4", C::Islamic, islamic_class(isl, Some("Hankin greedy inference"), Some("3.3.3.4.4"))));
+        s.push(("hankin-3-3-4-3-4", C::Islamic, islamic_class(isl, Some("Hankin greedy inference"), Some("3.3.4.3.4"))));
+        s.push(("hankin-hex-two-point", C::Islamic, islamic_class(isl, Some("Kaplan two-point"), Some("6.6.6"))));
+        s.push(("hankin-square-two-point", C::Islamic, islamic_class(isl, Some("Kaplan two-point"), Some("4.4.4.4"))));
+        s.push(("hankin-4-8-8-rosette-transform", C::Islamic, islamic_class(isl, Some("rosette transform + Hankin inference"), Some("4.8.8"))));
+        s.push(("hankin-4-8-8-motifs", C::Islamic, islamic_class(isl, Some("Kaplan §3.5 motif library"), Some("4.8.8"))));
+        s.push(("hankin-hex-motifs", C::Islamic, islamic_class(isl, Some("Kaplan §3.5 motif library"), Some("6.6.6"))));
+        // §4 Najm templates (3, on-tab) — register block 4.
+        s.push(("najm-63-2e-0-3e-ac", C::Islamic, islamic_class(isl, Some("Najm template"), Some("[6,3]; 2e, 0, 3e (AC)"))));
+        s.push(("najm-44-3e-0-0-a", C::Islamic, islamic_class(isl, Some("Najm template"), Some("[4,4]; 3e, 0, 0 (A)"))));
+        s.push(("najm-63-motifs", C::Islamic, islamic_class(isl, Some("Kaplan §3.5 motif library"), Some("[6,3]; 2e, 0, 3e (AC)"))));
+        // Andritz σ-frame walks (4, all off-tab) — register block 5.
+        s.push(("andritz-bowtie-hexagon", C::Quasiperiodic, islamic_class(isl_q, Some("σ-frame walk"), None)));
+        s.push(("andritz-bowtie-hexagon-10gon-1", C::Quasiperiodic, islamic_class(isl_q, Some("σ-frame walk"), None)));
+        s.push(("andritz-bowtie-hexagon-10gon-2", C::Quasiperiodic, islamic_class(isl_q, Some("σ-frame walk"), None)));
+        s.push(("andritz-bowtie-hexagon-10gon-3", C::Quasiperiodic, islamic_class(isl_q, Some("σ-frame walk"), None)));
+        s
+    }
+
+    /// A registry holding all 36 islamic cards (in register order), plus
+    /// the `(id, category, class)` facts keyed by id.
+    fn islamic_fixture() -> (Registry, Vec<(&'static str, TilingCategory, TilingClass)>) {
+        let mut r = Registry::new();
+        let mut facts: Vec<(&'static str, TilingCategory, TilingClass)> = Vec::new();
+        for (id, cat, class) in islamic_specs() {
+            r = r.register(Fixed {
+                id,
+                cat,
+                secondary: &[],
+                group: WallpaperGroup::P6m,
+                lattice: LatticeKind::Hexagonal,
+                params: 0,
+            });
+            facts.push((id, cat, class));
+        }
+        (r, facts)
+    }
+
+    /// The browse tabs for the islamic fixture, with the declared facts
+    /// injected through the classification lookup (the same seam both
+    /// UIs use).
+    fn islamic_tabs(
+        r: &Registry,
+        facts: &[(&'static str, TilingCategory, TilingClass)],
+    ) -> Vec<Tab> {
+        browse_tabs_with(r, |id| {
+            facts
+                .iter()
+                .find(|(i, _, _)| *i == id)
+                .map(|(_, _, c)| *c)
+                .unwrap_or(TilingClass::EMPTY)
+        })
+    }
+
+    /// Every Islamic-family card across all tabs, in browse order.
+    fn all_islamic_cards(tabs: &[Tab]) -> Vec<&CardMeta> {
+        let mut cards = Vec::new();
+        for t in tabs {
+            for c in &t.cards {
+                if c.class.families.contains(&"Islamic") {
+                    cards.push(c);
+                }
+            }
+        }
+        cards
+    }
+
+    #[test]
+    fn section_keys_follow_islamic_declared_facts() {
+        // The derivation is id-free and total over the full family:
+        // walk all 36 `Islamic`-family cards and pin the edge cases that
+        // make the mapping non-trivial (the method-less fallback and the
+        // `[p,q]`-substrate guard that outranks a borrowed method).
+        let (r, facts) = islamic_fixture();
+        let tabs = islamic_tabs(&r, &facts);
+        let cards = all_islamic_cards(&tabs);
+        assert_eq!(cards.len(), 36, "the islamic family is 36 cards");
+        let key_of = |id: &str| -> Option<&'static str> {
+            cards.iter().find(|c| c.id == id).map(|c| islamic_section_key(*c))
+        };
+        // Classic residual: the method-less hexagram sorts to §1.
+        assert_eq!(
+            key_of("hexagram"),
+            Some("§1 — Classic compositions"),
+            "the method-less hexagram falls to the classic residual bucket"
+        );
+        // The [p,q]-substrate guard outranks the borrowed Hankin motif
+        // method, pulling najm-63-motifs under §4.
+        assert_eq!(
+            key_of("najm-63-motifs"),
+            Some("§4 — Najm templates"),
+            "the [p,q]-substrate motif variant sorts under §4 despite the Hankin motif method"
+        );
+        // Off-tab family members still derive their section.
+        assert_eq!(
+            key_of("girih-quasiperiodic"),
+            Some("§2 — Girih tiles"),
+            "the off-tab quasiperiodic Darb-i-Imam card"
+        );
+        assert_eq!(
+            key_of("girih-decagon-patch"),
+            Some("§2 — Girih tiles"),
+            "the off-tab finite-patch Darb-i-Imam card"
+        );
+        assert_eq!(
+            key_of("andritz-bowtie-hexagon"),
+            Some("Andritz σ-frame walks"),
+            "the off-tab σ-frame walk"
+        );
+    }
+
+    #[test]
+    fn islamic_family_partition_counts() {
+        // Full family (36): classic 6 / girih 8 / hankin 15 / najm 3 /
+        // andritz 4. On the Islamic tab (30): the 6 off-tab family
+        // members drop out → classic 6 / girih 6 / hankin 15 / najm 3.
+        let (r, facts) = islamic_fixture();
+        let tabs = islamic_tabs(&r, &facts);
+
+        // Full-family partition over every Islamic-family card.
+        let cards = all_islamic_cards(&tabs);
+        let (mut classic, mut girih, mut hankin, mut najm, mut andritz) =
+            (0usize, 0usize, 0usize, 0usize, 0usize);
+        for c in &cards {
+            match islamic_section_key(*c) {
+                "§1 — Classic compositions" => classic += 1,
+                "§2 — Girih tiles" => girih += 1,
+                "§3 — Hankin constructions" => hankin += 1,
+                "§4 — Najm templates" => najm += 1,
+                "Andritz σ-frame walks" => andritz += 1,
+                k => panic!("{}: unexpected section key {k}", c.id),
+            }
+        }
+        assert_eq!(classic, 6, "classic compositions");
+        assert_eq!(girih, 8, "girih tiles (6 on-tab + 2 off-tab Darb-i-Imam)");
+        assert_eq!(hankin, 15, "hankin constructions");
+        assert_eq!(najm, 3, "najm templates");
+        assert_eq!(andritz, 4, "andritz σ-frame walks (off-tab only)");
+
+        // On-tab partition over the Islamic tab alone.
+        let isl = tabs.iter().find(|t| t.category == TilingCategory::Islamic).unwrap();
+        assert_eq!(isl.cards.len(), 30, "the Islamic tab holds the 30 primary-Islamic cards");
+        let (mut o_classic, mut o_girih, mut o_hankin, mut o_najm) =
+            (0usize, 0usize, 0usize, 0usize);
+        for c in &isl.cards {
+            match section_key(TilingCategory::Islamic, c) {
+                "§1 — Classic compositions" => o_classic += 1,
+                "§2 — Girih tiles" => o_girih += 1,
+                "§3 — Hankin constructions" => o_hankin += 1,
+                "§4 — Najm templates" => o_najm += 1,
+                k => panic!("{}: unexpected on-tab section key {k}", c.id),
+            }
+        }
+        assert_eq!(o_classic, 6, "on-tab classic");
+        assert_eq!(o_girih, 6, "on-tab girih (the 2 off-tab Darb-i-Imam drop out)");
+        assert_eq!(o_hankin, 15, "on-tab hankin");
+        assert_eq!(o_najm, 3, "on-tab najm");
+    }
+
+    #[test]
+    fn islamic_section_keys_appear_in_first_appearance_order() {
+        // Mirrors `laves_section_keys_appear_in_first_appearance_order`:
+        // the distinct keys come out in first-appearance order, and the
+        // Islamic tab is exactly four contiguous runs (the Andritz
+        // section has no on-tab member, so it never appears).
+        let (r, facts) = islamic_fixture();
+        let tabs = islamic_tabs(&r, &facts);
+        let isl = tabs.iter().find(|t| t.category == TilingCategory::Islamic).unwrap();
+        let mut seen: Vec<&'static str> = Vec::new();
+        for c in &isl.cards {
+            let k = section_key(TilingCategory::Islamic, c);
+            if !k.is_empty() && !seen.contains(&k) {
+                seen.push(k);
+            }
+        }
+        assert_eq!(
+            seen,
+            vec![
+                "§1 — Classic compositions",
+                "§2 — Girih tiles",
+                "§3 — Hankin constructions",
+                "§4 — Najm templates",
+            ],
+            "sections must appear in first-appearance order"
+        );
+        let mut runs: Vec<(&'static str, usize)> = Vec::new();
+        let mut i = 0;
+        while i < isl.cards.len() {
+            let k = section_key(TilingCategory::Islamic, &isl.cards[i]);
+            let mut j = i + 1;
+            while j < isl.cards.len() && section_key(TilingCategory::Islamic, &isl.cards[j]) == k {
+                j += 1;
+            }
+            runs.push((k, j - i));
+            i = j;
+        }
+        assert_eq!(
+            runs,
+            vec![
+                ("§1 — Classic compositions", 6),
+                ("§2 — Girih tiles", 6),
+                ("§3 — Hankin constructions", 15),
+                ("§4 — Najm templates", 3),
+            ],
+            "exactly four contiguous runs in first-appearance order"
         );
     }
 

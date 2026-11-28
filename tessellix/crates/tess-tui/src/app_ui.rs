@@ -710,7 +710,8 @@ fn grid_cols_rows(area: Rect, card_w: u16) -> (u16, u16, u16, u16) {
 /// equal section key, each preceded by a header row when the key is
 /// non-empty, split into rows of `cols` cards. The section keys are
 /// tess-core's `section_key` (crystal systems on the Wallpaper tab,
-/// rank bands on the Laves tab) — the TUI holds no section-key logic
+/// rank bands on the Laves tab, the five `docs/families/islamic.md`
+/// sections on the Islamic tab) — the TUI holds no section-key logic
 /// of its own. The Wallpaper tab opens with the explicit catalog note:
 /// while any wallpaper group lacked a realizer it listed them, and
 /// since M85 (all 17 groups represented) it reports the completed
@@ -1570,6 +1571,79 @@ mod tests {
         assert!(
             !headers.iter().any(|h| h.contains("catalog")),
             "Laves tab must not render the Wallpaper catalog note: {headers:?}"
+        );
+    }
+
+    /// Contract pin for the Islamic tab (D3): the grid plan for the
+    /// Islamic tab surfaces exactly the section headers tess-core's
+    /// `section_key` derives for the Islamic cards (in first-appearance
+    /// order), and the card rows stay intact. The derivation is id-free
+    /// (declared construction facts), so the pin asserts the live
+    /// partition: the 30 on-tab cards form four contiguous runs —
+    /// §1 Classic compositions / §2 Girih tiles / §3 Hankin
+    /// constructions / §4 Najm templates.
+    #[test]
+    fn islamic_grid_plan_surfaces_tess_core_section_keys() {
+        let tabs = shared_tabs();
+        let isl = tabs
+            .iter()
+            .find(|t| t.category == TilingCategory::Islamic)
+            .unwrap();
+        // Expected headers: distinct non-empty section_key values for
+        // the Islamic cards, in first-appearance order.
+        let mut expected: Vec<&'static str> = Vec::new();
+        for c in &isl.cards {
+            let k = browse::section_key(TilingCategory::Islamic, c);
+            if !k.is_empty() && !expected.contains(&k) {
+                expected.push(k);
+            }
+        }
+        let visible: Vec<usize> = (0..isl.cards.len()).collect();
+        let plan = plan_grid_rows(isl, &visible, 2);
+        // Card-row integrity: the plan must carry every Islamic card in
+        // order, regardless of how many header rows it opens.
+        let carried: Vec<usize> = plan
+            .iter()
+            .filter_map(|r| match r {
+                GridRow::Cards(idxs) => Some(idxs.iter().copied()),
+                _ => None,
+            })
+            .flatten()
+            .collect();
+        assert_eq!(
+            carried, visible,
+            "plan must carry every Islamic card in order, in card rows"
+        );
+        let headers: Vec<String> = plan
+            .iter()
+            .filter_map(|r| match r {
+                GridRow::Header(k) => Some(k.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            headers,
+            expected,
+            "Islamic grid plan must render exactly the headers tess-core reports"
+        );
+        // The distinct section keys are the four on-tab §-sections, in
+        // first-appearance order (the Andritz section has no on-tab
+        // member, so it never appears).
+        assert_eq!(
+            expected,
+            vec![
+                "§1 — Classic compositions",
+                "§2 — Girih tiles",
+                "§3 — Hankin constructions",
+                "§4 — Najm templates",
+            ],
+            "the Islamic tab sections are the four on-tab §-sections in first-appearance order"
+        );
+        // The Wallpaper-only catalog note must not leak onto the
+        // Islamic tab.
+        assert!(
+            !headers.iter().any(|h| h.contains("catalog")),
+            "Islamic tab must not render the Wallpaper catalog note: {headers:?}"
         );
     }
 

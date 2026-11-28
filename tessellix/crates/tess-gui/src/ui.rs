@@ -631,63 +631,19 @@ fn tiling_doc_path(id: &str) -> String {
 /// never duplicated inside the per-tiling PART 2 doc line.
 const ISLAMIC_FAMILY_DOC: &str = "docs/families/islamic.md";
 
-/// The Islamic family's library section number for each tiling. The
-/// 36 `Islamic`-family tilings partition across the five sections of
-/// `docs/families/islamic.md` (§1 Classic compositions, §2 Girih tiles,
-/// §3 Hankin constructions, §4 Najm templates, Andritz σ-frame walks):
-/// 6 + 8 + 15 + 3 + 4 = 36. Static on purpose — the doc is not parsed
-/// at runtime — and held honest by a pin test (see
-/// `islamic_section_table_matches_registry`), which re-checks the
-/// table against the live registry: every id must be registered, carry
-/// the `"Islamic"` family tag, and the section counts must be 6/8/15/3/4.
-const ISLAMIC_SECTION_TABLE: &[(&str, &str)] = &[
-    ("star-cross", "§1 — Classic compositions"),
-    ("star-cross-8-2", "§1 — Classic compositions"),
-    ("hexagram", "§1 — Classic compositions"),
-    ("khatam-girih", "§1 — Classic compositions"),
-    ("dodecagon-hexagram-honeycomb", "§1 — Classic compositions"),
-    ("girih-w85", "§1 — Classic compositions"),
-    ("girih-shesh-band", "§2 — Girih tiles"),
-    ("girih-star-cross", "§2 — Girih tiles"),
-    ("girih-bowtie", "§2 — Girih tiles"),
-    ("girih-decagon", "§2 — Girih tiles"),
-    ("girih-pentagon", "§2 — Girih tiles"),
-    ("girih-rhombus", "§2 — Girih tiles"),
-    ("girih-quasiperiodic", "§2 — Girih tiles"),
-    ("girih-decagon-patch", "§2 — Girih tiles"),
-    ("pic-4-8-8", "§3 — Hankin constructions"),
-    ("pic-3-6-3-6", "§3 — Hankin constructions"),
-    ("pic-3-12-12", "§3 — Hankin constructions"),
-    ("hankin-4-8-8-rosette", "§3 — Hankin constructions"),
-    ("hankin-4-6-12", "§3 — Hankin constructions"),
-    ("hankin-3-12-12", "§3 — Hankin constructions"),
-    ("hankin-3-6-3-6", "§3 — Hankin constructions"),
-    ("hankin-3-4-6-4", "§3 — Hankin constructions"),
-    ("hankin-3-3-3-4-4", "§3 — Hankin constructions"),
-    ("hankin-3-3-4-3-4", "§3 — Hankin constructions"),
-    ("hankin-hex-two-point", "§3 — Hankin constructions"),
-    ("hankin-square-two-point", "§3 — Hankin constructions"),
-    ("hankin-4-8-8-rosette-transform", "§3 — Hankin constructions"),
-    ("hankin-4-8-8-motifs", "§3 — Hankin constructions"),
-    ("hankin-hex-motifs", "§3 — Hankin constructions"),
-    ("najm-63-2e-0-3e-ac", "§4 — Najm templates"),
-    ("najm-44-3e-0-0-a", "§4 — Najm templates"),
-    ("najm-63-motifs", "§4 — Najm templates"),
-    ("andritz-bowtie-hexagon", "Andritz σ-frame walks"),
-    ("andritz-bowtie-hexagon-10gon-1", "Andritz σ-frame walks"),
-    ("andritz-bowtie-hexagon-10gon-2", "Andritz σ-frame walks"),
-    ("andritz-bowtie-hexagon-10gon-3", "Andritz σ-frame walks"),
-];
-
-/// The library section label for an Islamic tiling id, or `None` for
-/// a tiling outside the table (non-Islamic, or a future islamic card
-/// whose row has not yet been added to `docs/families/islamic.md`).
-fn islamic_section_label(id: &str) -> Option<&'static str> {
-    ISLAMIC_SECTION_TABLE
-        .iter()
-        .find(|(i, _)| *i == id)
-        .map(|(_, label)| *label)
-}
+/// The library section label for an Islamic tiling is *derived*, not
+/// tabulated: [`tess_core::browse::islamic_section_key`] maps each
+/// `CardMeta` to the five sections of `docs/families/islamic.md` (§1
+/// Classic compositions, §2 Girih tiles, §3 Hankin constructions,
+/// §4 Najm templates, Andritz σ-frame walks) from the declared
+/// classification facts (the construction `method` plus the `[p,q]`
+/// substrate `base_tiling`). The F3 block below consumes that single
+/// entry point — the same one the browse grid uses to section the
+/// Islamic tab — so the label the detail view prints can never drift
+/// from the section the card would sort under. The 36 `Islamic`-family
+/// cards partition 6 + 8 + 15 + 3 + 4 = 36 (the 6 off-tab family
+/// members, primary Quasiperiodic/Nonperiodic, still derive their
+/// §-key); held honest by `islamic_section_keys_partition_the_registry`.
 
 /// The depth-kind parameter predicate (PART 4).
 const DEPTH_PARAM_ID: &str = "depth";
@@ -1048,12 +1004,19 @@ impl GuiApp {
     /// snapshot Browse renders and the detail panel both carry the
     /// same record, never a placeholder).
     fn selected_class(&self) -> tess_core::TilingClass {
+        self.selected_card().map(|c| c.class).unwrap_or(tess_core::TilingClass::EMPTY)
+    }
+
+    /// The full browse card for the currently selected tiling, or
+    /// `None` when nothing is selected (empty tab). `CardMeta` is
+    /// `Copy`, so the caller owns a value and no borrow of `self.tabs`
+    /// survives the call.
+    fn selected_card(&self) -> Option<tess_core::CardMeta> {
         self.tabs
             .iter()
             .flat_map(|t| t.cards.iter())
             .find(|c| c.id == self.app.selected_id())
-            .map(|c| c.class)
-            .unwrap_or(tess_core::TilingClass::EMPTY)
+            .copied()
     }
 
     /// Advance the substitution depth by `dir` (−1 / +1) through the
@@ -1097,9 +1060,10 @@ impl GuiApp {
     ///   declare a depth-kind param ([`DEPTH_PARAM_ID`]).
     ///
     /// plus the F3 block (Islamic family cards only): the θK/δ contact
-    /// angle (only when declared), the library section number from
-    /// [`ISLAMIC_SECTION_TABLE`], and a cross-link to the family doc
-    /// (never a per-tiling duplication of PART 2's doc line).
+    /// angle (only when declared), the library section key derived by
+    /// [`tess_core::browse::islamic_section_key`], and a cross-link to
+    /// the family doc (never a per-tiling duplication of PART 2's doc
+    /// line).
     fn draw_detail_view(&mut self, ui: &mut egui::Ui) {
         let class = self.selected_class();
         let id = self.app.selected_id().to_string();
@@ -1162,7 +1126,8 @@ impl GuiApp {
         // === F3 — Islamic parameters (Islamic family cards only). ===
         if class.families.contains(&"Islamic") {
             ui.separator();
-            if let Some(label) = islamic_section_label(&id) {
+            if let Some(card) = self.selected_card() {
+                let label = tess_core::browse::islamic_section_key(&card);
                 ui.label(format!("islamic family: {label} · {ISLAMIC_FAMILY_DOC}"));
             }
             if let Some(contact) = class.contact_angle {
@@ -4442,35 +4407,71 @@ mod tests {
     }
 
     #[test]
-    fn islamic_section_table_covers_the_registry() {
-        // The static table must partition the islamic-family ids
-        // exactly — no missing id, no unknown id, counts 6/8/15/3/4.
+    fn islamic_section_keys_partition_the_registry() {
+        // The tess-core derivation must partition the live islamic-family
+        // cards exactly — the full 36-card family across the five
+        // sections (classic 6 / girih 8 / hankin 15 / najm 3 / andritz
+        // 4), and the 30 primary-Islamic cards on the Islamic tab across
+        // the four on-tab sections (classic 6 / girih 6 / hankin 15 /
+        // najm 3). Live-registry counterpart of the tess-core fixture
+        // tests; the label the F3 block prints can never drift from the
+        // section the browse grid sorts under.
         let app = tess_core::App::new(tess_tilings::registry(), 60.0);
         let ids: Vec<&'static str> = app.registry().iter().map(|t| t.id()).collect();
-        let mut islamic: Vec<&'static str> = ids
+        let islamic: Vec<&'static str> = ids
             .iter()
             .copied()
             .filter(|id| tess_tilings::classification(id).families.contains(&"Islamic"))
             .collect();
-        islamic.sort_unstable();
-        let mut table_ids: Vec<&'static str> = super::ISLAMIC_SECTION_TABLE.iter().map(|(id, _)| *id).collect();
-        table_ids.sort_unstable();
+        assert_eq!(islamic.len(), 36, "expected 36 islamic-family tilings");
+
+        // Full-family partition over the live browse model: every
+        // Islamic-family card, wherever its primary tab is (the 6
+        // off-tab members sit under Quasiperiodic / Nonperiodic).
+        let tabs = shared_tabs();
+        let islamic_cards: Vec<&tess_core::CardMeta> = tabs
+            .iter()
+            .flat_map(|t| t.cards.iter())
+            .filter(|c| c.class.families.contains(&"Islamic"))
+            .collect();
+        assert_eq!(islamic_cards.len(), 36, "the browse model carries all 36 islamic cards");
+        let mut browse_ids: Vec<&'static str> = islamic_cards.iter().map(|c| c.id).collect();
+        let mut sorted_live = islamic.clone();
+        sorted_live.sort_unstable();
+        browse_ids.sort_unstable();
         assert_eq!(
-            table_ids, islamic,
-            "islamic section table must cover exactly the islamic-family ids"
+            browse_ids, sorted_live,
+            "browse-model islamic ids == live-registry islamic ids"
         );
-        assert_eq!(table_ids.len(), 36, "expected 36 islamic tilings");
-        let count = |label: &str| {
-            super::ISLAMIC_SECTION_TABLE
-                .iter()
-                .filter(|(_, l)| *l == label)
-                .count()
-        };
-        assert_eq!(count("§1 — Classic compositions"), 6, "§1 must hold 6 ids");
-        assert_eq!(count("§2 — Girih tiles"), 8, "§2 must hold 8 ids");
-        assert_eq!(count("§3 — Hankin constructions"), 15, "§3 must hold 15 ids");
-        assert_eq!(count("§4 — Najm templates"), 3, "§4 must hold 3 ids");
-        assert_eq!(count("Andritz σ-frame walks"), 4, "Andritz must hold 4 ids");
+        let mut counts: std::collections::BTreeMap<&'static str, usize> = std::collections::BTreeMap::new();
+        for c in &islamic_cards {
+            *counts.entry(tess_core::browse::islamic_section_key(c)).or_insert(0) += 1;
+        }
+        assert_eq!(counts.get("§1 — Classic compositions"), Some(&6), "§1 must hold 6 ids");
+        assert_eq!(counts.get("§2 — Girih tiles"), Some(&8), "§2 must hold 8 ids");
+        assert_eq!(counts.get("§3 — Hankin constructions"), Some(&15), "§3 must hold 15 ids");
+        assert_eq!(counts.get("§4 — Najm templates"), Some(&3), "§4 must hold 3 ids");
+        assert_eq!(counts.get("Andritz σ-frame walks"), Some(&4), "Andritz must hold 4 ids");
+        assert_eq!(counts.values().sum::<usize>(), 36, "full family partitions to 36");
+
+        // On-tab partition over the Islamic tab alone: the 6 off-tab
+        // family members drop out, and the Andritz section has no
+        // on-tab member.
+        let isl = tabs
+            .iter()
+            .find(|t| t.category == tess_core::TilingCategory::Islamic)
+            .expect("Islamic tab exists");
+        assert_eq!(isl.cards.len(), 30, "the Islamic tab holds the 30 primary-Islamic cards");
+        let mut on_counts: std::collections::BTreeMap<&'static str, usize> = std::collections::BTreeMap::new();
+        for c in &isl.cards {
+            *on_counts.entry(tess_core::section_key(tess_core::TilingCategory::Islamic, c)).or_insert(0) += 1;
+        }
+        assert_eq!(on_counts.get("§1 — Classic compositions"), Some(&6), "on-tab §1");
+        assert_eq!(on_counts.get("§2 — Girih tiles"), Some(&6), "on-tab §2");
+        assert_eq!(on_counts.get("§3 — Hankin constructions"), Some(&15), "on-tab §3");
+        assert_eq!(on_counts.get("§4 — Najm templates"), Some(&3), "on-tab §4");
+        assert_eq!(on_counts.len(), 4, "on-tab has exactly four sections (Andritz is off-tab only)");
+        assert_eq!(on_counts.values().sum::<usize>(), 30, "on-tab partitions to 30");
     }
 
     // ---- E13: citations move to the detail view -------------------------
