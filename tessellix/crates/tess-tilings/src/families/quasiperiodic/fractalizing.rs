@@ -63,15 +63,26 @@
 //! (constant 69 tiles per cell); tests pin the span law and the
 //! nested-view identity `render(d+1, scale p, V) == render(d, scale 1, V)`
 //! to float rounding (`<= 1e-9` absolute at unit scale).
+//!
+//! **Depth param.** A `depth` `Int` param (appended last, default 0)
+//! exposes the substitution level the auto rule picks from the view —
+//! 0 = the view-anchored auto rule below (byte-identical to the
+//! unparameterized path); 1..=16 = the pinned level, skipping the
+//! view-anchored pick (the level-16 child edge is ~2.6e-9 plane units —
+//! deeper would lose sub-tile float precision, so 17+ is a named
+//! refusal, never a silent snap). The pinned path routes through the
+//! same `generate_forced` and the same pre-guard, so an over-deep view
+//! still fails with the named "too many tiles" message rather than
+//! silently emitting a wall of cells.
 
 use tess_core::geometry::{BBox, Polygon, Vec2};
-use tess_core::params::{ParamSet, ParamSpec};
+use tess_core::params::{ParamId, ParamSet, ParamSpec};
 use tess_core::symmetry::{LatticeKind, SymmetryMeta, WallpaperGroup};
 use tess_core::tiling::{Query, Tile, Tiling, TilingResult};
 use tess_core::view::ColorMode;
 use tess_core::TilingCategory;
 
-use crate::lattice::{similarity_map, MAX_TILES, SIMILARITY_PARAMS};
+use crate::lattice::{similarity_map, MAX_TILES, ROTATION_ID, SCALE_ID};
 
 const SQRT3: f64 = 1.732_050_807_568_877_2;
 /// Fractalizing inflation factor `p = 2 + sqrt(3)`.
@@ -375,6 +386,24 @@ fn level0_tiles(region: &BBox) -> Vec<(u8, Vec<Vec2>)> {
     out
 }
 
+/// Stable id for the substitution-depth param (the only `Int` param
+/// on this tiling): 0 = the view-anchored auto rule above, 1..=16 =
+/// pinned level (same honest ceiling as the auto rule's own cap).
+pub const DEPTH_ID: ParamId = ParamId::new("depth");
+
+const PARAMS: [ParamSpec; 3] = [
+    // Plane-filling presentation: identical to the shared similarity
+    // defaults (default 1.0 scale — the view-anchored auto rule picks
+    // the level from the diagonal, so the scale only sets tile fineness).
+    ParamSpec::float(SCALE_ID, "scale", 0.1, 50.0, 0.05, 1.0),
+    ParamSpec::angle(ROTATION_ID, "rotation (deg)", 0.0, 360.0, 5.0, 0.0),
+    // Depth selection: 0 (default) = the view-anchored auto rule
+    // (nearest level whose tiles still span the view, floored at 0);
+    // 1..=16 pins the substitution level outright. Depth is a pure
+    // generation-budget knob — every geometry constant below stays.
+    ParamSpec::int(DEPTH_ID, "depth", 0, STEP_CAP as i64, 1, 0),
+];
+
 /// Fractalizing 3.12.12: limit-periodic dodecagon-dense fractal family
 /// (triangles, squares, hexagons, dodecagons; inflation 2+sqrt3/level).
 pub struct FractalizingTiling;
@@ -482,7 +511,7 @@ impl Tiling for FractalizingTiling {
     }
 
     fn params(&self) -> &'static [ParamSpec] {
-        &SIMILARITY_PARAMS
+        &PARAMS
     }
 
     fn default_color_mode(&self) -> ColorMode {
@@ -490,6 +519,24 @@ impl Tiling for FractalizingTiling {
     }
 
     fn generate(&self, params: &ParamSet, query: &Query) -> TilingResult {
+        // Depth selection. The `depth` param pins the substitution
+        // level outright (1..=STEP_CAP); 0 (the default) keeps the
+        // view-anchored auto rule below, byte-identical to the
+        // unparameterized path. Anything else is a named refusal,
+        // never a silent snap.
+        let depth_req = params.int(DEPTH_ID, 0);
+        if depth_req != 0 {
+            if depth_req < 1 || depth_req > STEP_CAP as i64 {
+                let meta = SymmetryMeta::new(WallpaperGroup::P1, LatticeKind::None);
+                return TilingResult {
+                    tiles: Vec::new(),
+                    symmetry: meta,
+                    periodic: None,
+                    message: Some("unsupported depth — must be 0 (auto) or 1..=16"),
+                };
+            }
+            return self.generate_forced(params, query, depth_req as usize);
+        }
         let map = similarity_map(params);
         let inv = map.inverse();
         let mut lo = Vec2::new(f64::MAX, f64::MAX);
@@ -1046,6 +1093,223 @@ mod tests {
             d.contains("depth uniformity"),
             "card note must state the depth-uniformity reading, got: {d}"
         );
+    }
+
+    // --- depth param (E16 remainder, mirrors the M210 golden-bee
+    // pattern): 0 = the view-anchored auto rule (byte-identical), 1..=16
+    // = pinned level, out-of-range = named refusal. -------------------
+
+    fn coverage(tiles: &[Tile], region: &BBox) -> f64 {
+        let n = 60; // grid per axis
+        let mut inside = 0usize;
+        let mut total = 0usize;
+        let w = region.max.x - region.min.x;
+        let h = region.max.y - region.min.y;
+        for gy in 0..n {
+            for gx in 0..n {
+                let x = region.min.x + (gx as f64 + 0.5) * w / n as f64;
+                let y = region.min.y + (gy as f64 + 0.5) * h / n as f64;
+                let p = Vec2::new(x, y);
+                total += 1;
+                for t in tiles {
+                    if poly_contains_pt(&t.poly.pts, p) {
+                        inside += 1;
+                        break;
+                    }
+                }
+            }
+        }
+        inside as f64 / total as f64
+    }
+
+    /// Ray-casting point-in-polygon for the coverage helper.
+    fn poly_contains_pt(pts: &[Vec2], p: Vec2) -> bool {
+        let mut inside = false;
+        let m = pts.len();
+        for i in 0..m {
+            let j = (i + 1) % m;
+            let (a, b) = (pts[i], pts[j]);
+            if (a.y > p.y) != (b.y > p.y)
+                && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x
+            {
+                inside = !inside;
+            }
+        }
+        inside
+    }
+
+    fn gen_with_depth(t: &FractalizingTiling, depth: i64, window: BBox) -> TilingResult {
+        let mut p = ParamSet::default_for(t.params());
+        p.set(DEPTH_ID, tess_core::params::ParamValue::Int(depth));
+        t.generate(&p, &Query { region: window })
+    }
+
+    #[test]
+    fn depth_spec_pins_int_appended_last() {
+        let t = FractalizingTiling;
+        let specs = t.params();
+        assert_eq!(specs.len(), 3, "scale, rotation, depth (appended last)");
+        let depth = &specs[2];
+        assert_eq!(depth.id, DEPTH_ID);
+        assert_eq!(depth.label, "depth");
+        match depth.kind {
+            tess_core::params::ParamKind::Int { min, max, step, default } => {
+                assert_eq!(default, 0);
+                assert_eq!(min, 0);
+                assert_eq!(max, STEP_CAP as i64);
+                assert_eq!(step, 1);
+            }
+            other => panic!("depth spec must be Int, got {other:?}"),
+        }
+    }
+
+    // Out-of-range depth is a named refusal (never a silent snap).
+    #[test]
+    fn depth_refusal_names_exact_bounds() {
+        let t = FractalizingTiling;
+        let mut explicit = ParamSet::default_for(t.params());
+        explicit.set(DEPTH_ID, tess_core::params::ParamValue::Int(17));
+        let r = t.generate(
+            &explicit,
+            &Query { region: BBox::new(Vec2::new(-4.0, -4.0), Vec2::new(4.0, 4.0)) },
+        );
+        assert_eq!(
+            r.message,
+            Some("unsupported depth — must be 0 (auto) or 1..=16")
+        );
+        // Negative is refused the same way.
+        let mut neg = ParamSet::default_for(t.params());
+        neg.set(DEPTH_ID, tess_core::params::ParamValue::Int(-1));
+        let r = t.generate(
+            &neg,
+            &Query { region: BBox::new(Vec2::new(-4.0, -4.0), Vec2::new(4.0, 4.0)) },
+        );
+        assert_eq!(
+            r.message,
+            Some("unsupported depth — must be 0 (auto) or 1..=16")
+        );
+    }
+
+    // Explicit depth 0 is byte-identical to the default auto rule; a
+    // pinned depth is a different rule (more tiles at pinned depth 2).
+    #[test]
+    fn depth_zero_is_default_and_pin_changes_output() {
+        let t = FractalizingTiling;
+        let window = BBox::new(Vec2::new(-2.0, -2.0), Vec2::new(2.0, 2.0));
+        let mut explicit = ParamSet::default_for(t.params());
+        explicit.set(DEPTH_ID, tess_core::params::ParamValue::Int(0));
+        let r_explicit = t.generate(&explicit, &Query { region: window.clone() });
+        let r_default = t.generate(&ParamSet::default_for(t.params()), &Query { region: window.clone() });
+        assert_eq!(r_explicit.message, r_default.message);
+        assert_eq!(r_explicit.tiles.len(), r_default.tiles.len(), "explicit depth 0 == default");
+        for (a, b) in r_explicit.tiles.iter().zip(r_default.tiles.iter()) {
+            assert_eq!(a.proto, b.proto);
+            assert_eq!(a.poly.aabb(), b.poly.aabb(), "explicit depth 0 reproduces the default");
+        }
+        let r_pin2 = gen_with_depth(&t, 2, window);
+        assert!(r_pin2.message.is_none());
+        assert!(
+            r_pin2.tiles.len() > r_explicit.tiles.len(),
+            "pinned depth 2 emits more tiles than the auto rule"
+        );
+    }
+
+    // Tile counts grow monotonically with the pinned level at a fixed
+    // window (the growth law: p^2 more tiles per level, modulo culling).
+    #[test]
+    fn depth_param_tile_counts_grow_per_level() {
+        let t = FractalizingTiling;
+        let window = BBox::new(Vec2::new(-2.0, -2.0), Vec2::new(2.0, 2.0));
+        let mut counts = Vec::new();
+        for d in 1..=4usize {
+            let r = gen_with_depth(&t, d as i64, window.clone());
+            assert!(r.message.is_none(), "depth {d}: {:?}", r.message);
+            counts.push(r.tiles.len());
+            assert!(r.tiles.len() > 0, "depth {d} produced tiles");
+        }
+        for w in counts.windows(2) {
+            assert!(w[1] > w[0], "counts not monotone: {counts:?}");
+        }
+    }
+
+    // Honest ceiling, documented by the pre-guard, not by the spec:
+    // at the 4×4 window, depths 5+ exceed MAX_TILES and refuse with
+    // the named "too many tiles" message — the same pre-guard the auto
+    // path uses, never a silent snap (spec range 0..=16 stays; per-view
+    // budget is what bites).
+    #[test]
+    fn depth_param_pre_guard_refuses_oversized_pins() {
+        let t = FractalizingTiling;
+        let window = BBox::new(Vec2::new(-2.0, -2.0), Vec2::new(2.0, 2.0));
+        for d in 5..=16usize {
+            let r = gen_with_depth(&t, d as i64, window.clone());
+            assert!(r.message.is_some(), "depth {d} must not silently emit");
+            assert!(
+                r.message.unwrap().contains("too many tiles"),
+                "depth {d}: {:?}",
+                r.message
+            );
+        }
+    }
+
+    // UI-derived window: the same probe → mean-tile-side → preview-window
+    // loop the UIs use. The default (auto) presentation covers ≥ 0.85 of
+    // the frame; deeper pinned levels fill it MORE (the hierarchy
+    // becomes visible and selectable instead of hidden under the auto
+    // rule). Coverage is point-sampled, mirroring the M210 pin.
+    #[test]
+    fn depth_param_ui_window_fills_frame() {
+        let t = FractalizingTiling;
+        let p = ParamSet::default_for(t.params());
+        let probe = t.generate(&p, &Query {
+            region: BBox::new(Vec2::new(-10.0, -10.0), Vec2::new(10.0, 10.0)),
+        });
+        assert!(probe.message.is_none());
+        let mw = tess_core::app::mean_tile_side(&probe.tiles);
+        assert!(mw > 0.0, "probe must return tiles");
+        let win = tess_core::app::preview_window(probe.periodic, mw, 4.0 / 3.0);
+        let r = t.generate(&p, &Query { region: win.clone() });
+        assert!(r.message.is_none());
+        let cov = coverage(&r.tiles, &win);
+        assert!(cov >= 0.85, "default UI window must fill the frame (coverage {cov:.2})");
+        // Pinned depth at a fixed (smaller) window that both auto and
+        // the pin can render: deeper levels only add tiles (same window,
+        // plane-tiled) — coverage stays ≥ 0.85 and the user can select
+        // the deeper level to see the hierarchy.
+        let pin_window = BBox::new(Vec2::new(-1.5, -1.5), Vec2::new(1.5, 1.5));
+        for d in 1..=3usize {
+            let r = gen_with_depth(&t, d as i64, pin_window.clone());
+            assert!(r.message.is_none(), "depth {d}: {:?}", r.message);
+            let cov = coverage(&r.tiles, &pin_window);
+            assert!(cov >= 0.85, "depth {d} window must fill the frame (coverage {cov:.2})");
+        }
+    }
+
+    // Pinned depth routes through the same emission code as the auto
+    // rule: a grown (larger, origin-anchored) window at the same pinned
+    // level must contain every tile the smaller base view produced.
+    // (The scale-p nested-view float identity itself is pinned by the
+    // growth/nesting tests above — this only pins that the pinned path
+    // is not a divergent emission route.)
+    #[test]
+    fn depth_param_nested_view_contains_base_tiles() {
+        let t = FractalizingTiling;
+        let base = BBox::new(Vec2::new(-1.0, -0.75), Vec2::new(1.0, 0.75));
+        let grown = BBox::new(Vec2::new(-1.5, -1.125), Vec2::new(1.5, 1.125));
+        for d in 2..=3usize {
+            let r_base = gen_with_depth(&t, d as i64, base.clone());
+            let r_grown = gen_with_depth(&t, d as i64, grown.clone());
+            assert!(r_base.message.is_none(), "depth {d} base: {:?}", r_base.message);
+            assert!(r_grown.message.is_none(), "depth {d} grow: {:?}", r_grown.message);
+            for tb in &r_base.tiles {
+                let cb = centroid(&tb.poly.pts);
+                let found = r_grown.tiles.iter().any(|tg| {
+                    let cg = centroid(&tg.poly.pts);
+                    (cg - cb).length() < 1e-9 && tg.proto == tb.proto
+                });
+                assert!(found, "depth {d}: base tile at {cb:?} missing from grown view");
+            }
+        }
     }
 
     #[test]
