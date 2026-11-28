@@ -1445,14 +1445,21 @@ impl GuiApp {
     /// identity view exactly like the TUI thumbnail, and the main view's
     /// per-tiling default is what changes.
     /// Rasterization uses the shared `tess_core::raster` with the
-    /// identity palette, so pixel indices are positions in
-    /// `paint::PALETTE` (full 8-bit colors; the TUI maps the same
+    /// identity palette, so pixel indices are positions in the
+    /// effective mode's ramp (full 8-bit colors; the TUI maps the same
     /// indices to xterm-256). Colors follow the effective preview mode
     /// ([`GuiApp::card_preview_mode`]: the preview band's override
     /// while one is set, else the tiling's default) through
     /// [`ColorMode::preview_mode`] (`Single` falls back to `Proto`,
     /// which would render a featureless slab) — the TUI thumb
-    /// semantics when no override is active.
+    /// semantics when no override is active. The ramp is selected per
+    /// mode (mirroring [`paint::tile_rgb`]'s match) before the pixel
+    /// loop: `Gray`/`PatternGray`/`Role`/`Metatile`/`Orientation`/
+    /// `Level` each use their dedicated ramp; `Single`/`Pattern`/`Proto`
+    /// /`Shape` fall back to the shared rainbow `PALETTE`. The identity
+    /// palette has one entry per slot of the selected ramp, so a
+    /// classification class lands on the ramp's own slot — the
+    /// 8-entry rainbow-only map was hazard 2 and is gone.
     ///
     /// `glb-binary-n7` is the one tiling whose preview is rendered
     /// with overridden params (see `preview_params`): at its default
@@ -1517,6 +1524,25 @@ impl GuiApp {
             result = tiling.generate(&preview_params, &tess_core::Query { region: window });
             shrink *= 0.4;
         }
+        // Ramp selection, once per mode (mirroring `paint::tile_rgb`'s
+        // match): the fixed 8-entry rainbow-only map was hazard 2 —
+        // every non-rainbow mode rendered rainbow. Each mode shades
+        // from its own categorical ramp; `Single`(→`Proto` fallback)/
+        // `Pattern`/`Proto`/`Shape` fall back to the shared rainbow
+        // `PALETTE`.
+        let ramp: &[u32] = match mode {
+            ColorMode::Gray => &paint::GRAY_PALETTE,
+            ColorMode::PatternGray => &paint::PATTERN_GRAY_PALETTE,
+            ColorMode::Role => &paint::ROLE_PALETTE,
+            ColorMode::Metatile => &paint::METATILE_PALETTE,
+            ColorMode::Orientation => &paint::ORIENTATION_PALETTE,
+            ColorMode::Level => &paint::LEVEL_PALETTE,
+            _ => &paint::PALETTE,
+        };
+        // Identity palette with one entry per slot of the selected
+        // ramp: raster outputs a slot index in `0..ramp.len()` and the
+        // pixel loop maps it through the ramp.
+        let identity: Vec<u8> = (0..ramp.len()).map(|i| i as u8).collect();
         let raster = if result.tiles.is_empty() {
             None
         } else {
@@ -1526,7 +1552,7 @@ impl GuiApp {
                 w,
                 h,
                 mode,
-                &[0, 1, 2, 3, 4, 5, 6, 7],
+                &identity,
             ))
         };
         let (br, bgr, bb) = paint::rgb(paint::BORDER);
@@ -1540,7 +1566,7 @@ impl GuiApp {
                 let (r, g, b) = match idx {
                     tess_core::raster::BORDER => (br, bgr, bb),
                     tess_core::raster::GAP => (ar, ag, ab),
-                    i => paint::rgb(paint::PALETTE[i as usize]),
+                    i => paint::rgb(ramp[i as usize]),
                 };
                 let o = ((y * w + x) as usize) * 4;
                 pixels[o] = r;
@@ -3915,28 +3941,36 @@ mod tests {
         drain_card_texture_bytes(&ectx, &handle)
     }
 
-    /// b2b4-hazard-verify HAZARD 2 pin: the mode-blind card path.
+    /// b2b4-hazard-verify HAZARD 2 pin, resolved by the ramp-selection
+    /// fix: the mode-aware card path.
     ///
-    /// `card_texture` classifies tiles with the (non-preview) mode —
-    /// `mode = self.card_preview_mode(tiling).preview_mode()` — but the
-    /// final per-pixel lookup is hardcoded `paint::rgb(paint::PALETTE[i
-    /// as usize])`, always the rainbow `PALETTE` regardless of mode.
-    /// The classification index is therefore identical for every mode of
-    /// the SAME index-space group (`Pattern`/`PatternGray`/`Role` all
-    /// classify as `seed % 8`), and the pixel bytes differ ONLY when the
-    /// classification itself differs. That is observable: the same card
-    /// in `Pattern`, `Role` and `PatternGray` produces byte-identical
-    /// buffers even though the three modes promise different ramps
-    /// (`PALETTE` rainbow vs `ROLE_PALETTE` earth tones vs
-    /// `PATTERN_GRAY_PALETTE` grays).
+    /// `card_texture` classifies tiles with the effective preview mode
+    /// (`mode = self.card_preview_mode(tiling).preview_mode()`) — the
+    /// same classification indexes every mode of the SAME index-space
+    /// group (`Pattern`/`PatternGray`/`Role` all classify as `seed % 8`) —
+    /// and now maps each index through the mode's OWN ramp. The
+    /// pre-fix pin asserted byte-identity across that group (both
+    /// palettes were the same hardcoded rainbow `PALETTE`); the fix
+    /// flips the pin: the same card in `Pattern`, `Role` and
+    /// `PatternGray` now produces DIFFERENT buffers even though the
+    /// classification index is identical — the three modes promise
+    /// different ramps (`PALETTE` rainbow vs `ROLE_PALETTE` earth tones
+    /// vs `PATTERN_GRAY_PALETTE` grays) and the card must show them.
+    /// Same-ramp modes stay byte-identical: `Pattern` vs `Single`
+    /// (Single falls back to `Proto` via `preview_mode` and the penrose
+    /// card's `seed == proto`, so both render `PALETTE[seed % 8]`).
+    /// The pre-fix `Pattern`/`Role` byte-identity was evidence of the
+    /// mode-blind cop-out and is no longer a valid invariant.
     #[test]
-    fn card_texture_pixels_are_identical_across_same_index_space_modes() {
+    fn card_texture_pixels_differ_across_same_index_space_modes() {
         use tess_core::view::ColorMode;
         let pattern = card_bytes(ColorMode::Pattern);
         let role = card_bytes(ColorMode::Role);
         let pattern_gray = card_bytes(ColorMode::PatternGray);
-        assert_eq!(pattern, role, "Pattern vs Role must be byte-identical (both seed%8, same rainbow ramp)");
-        assert_eq!(pattern, pattern_gray, "Pattern vs PatternGray must be byte-identical (both seed%8, same rainbow ramp)");
+        let single = card_bytes(ColorMode::Single);
+        assert_ne!(pattern, role, "Pattern vs Role must differ (same index space, different ramps)");
+        assert_ne!(pattern, pattern_gray, "Pattern vs PatternGray must differ (same index space, different ramps)");
+        assert_eq!(pattern, single, "Pattern vs Single must stay byte-identical (same identity ramp; Single falls back to Proto)");
         // Non-vacuous: the card is not a solid block — the preview
         // genuinely contains more than one distinct color.
         let distinct: std::collections::HashSet<u32> = pattern
@@ -3948,9 +3982,9 @@ mod tests {
 
     /// The same card in a mode whose classification actually differs
     /// (`Shape`: polygon-derived similarity class, not seed%8) must
-    /// produce a byte-DIFFERENT buffer — the test above cannot be
-    /// vacuous. Note this is NOT the requested fix: the mode-blindness
-    /// of the final lookup is pinned by the test above.
+    /// produce a byte-DIFFERENT buffer — the contrast pin shows the
+    /// same-index-space pin cannot be vacuous: differing indices really
+    /// land in this buffer, not just identical ramps.
     #[test]
     fn card_texture_pixel_bytes_differ_across_classification_modes() {
         use tess_core::view::ColorMode;

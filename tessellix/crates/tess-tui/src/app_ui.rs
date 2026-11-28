@@ -1012,10 +1012,22 @@ fn render_card(
         .preview_mode
         .unwrap_or_else(|| t.default_color_mode())
         .preview_mode();
+    // Ramp selection, mirroring the Render canvas's match: the fixed
+    // rainbow-only palette was the same mode-blind hazard 2 the GUI
+    // browse path had — every non-rainbow mode rendered rainbow thumbnails.
+    let palette256: &[u8] = match mode {
+        ColorMode::Gray => &tui.palette256_gray,
+        ColorMode::PatternGray => &tui.palette256_pattern_gray,
+        ColorMode::Role => &tui.palette256_role,
+        ColorMode::Metatile => &tui.palette256_metatile,
+        ColorMode::Orientation => &tui.palette256_orientation,
+        ColorMode::Level => &tui.palette256_level,
+        _ => &tui.palette256,
+    };
     let pv = tui.thumbs.get_or_generate(
         t,
         &params,
-        &tui.palette256,
+        palette256,
         iw as u32,
         thumb_rows as u32,
         mode,
@@ -2551,5 +2563,63 @@ mod tests {
         key(&mut tui, KeyCode::Enter);
         term.draw(|f| render(f, &mut tui)).unwrap();
         println!("\n=== render ===\n{}", buffer_text(&term));
+    }
+
+    // ---- browse-card ramp selection (hazard 2 TUI mirror) -----------
+
+    /// The xterm-256 ramp for `mode`, selected exactly as the browse
+    /// path selects it (mirroring the Render canvas's match) — kept
+    /// inline here so the pin exercises the same contract the call site
+    /// enforces.
+    fn browse_palette256(tui: &Tui, mode: ColorMode) -> &[u8] {
+        match mode {
+            ColorMode::Gray => &tui.palette256_gray,
+            ColorMode::PatternGray => &tui.palette256_pattern_gray,
+            ColorMode::Role => &tui.palette256_role,
+            ColorMode::Metatile => &tui.palette256_metatile,
+            ColorMode::Orientation => &tui.palette256_orientation,
+            ColorMode::Level => &tui.palette256_level,
+            _ => &tui.palette256,
+        }
+    }
+
+    /// Render one card through the production `generate_for` path with
+    /// the browse path's palette selection (same as the browse-grid
+    /// thumbnail), and return its packed half-block rows.
+    fn card_rows(tui: &Tui, mode: ColorMode, w: u32, h: u32) -> Vec<Vec<(u8, u8)>> {
+        let reg = tess_tilings::registry();
+        let t = reg.get("penrose").expect("penrose registered");
+        let params = ParamSet::default_for(t.params());
+        let palette256 = browse_palette256(tui, mode);
+        let p = thumb::generate_for(t, &params, palette256, w, h, mode.preview_mode());
+        p.thumb.rows
+    }
+
+    /// TUI mirror of the GUI's hazard-2 pin (`card_texture_pixels_differ_
+    /// across_same_index_space_modes`): the browse-grid path selects
+    /// the mode's own ramp, so same-index-space modes (`Pattern`/
+    /// `PatternGray`/`Role` — all `seed % 8`) produce DIFFERENT
+    /// thumbnails, while same-ramp modes (`Pattern` vs `Single` —
+    /// `Single` falls back to `Proto` and the penrose card's
+    /// `seed == proto`) stay byte-identical.
+    #[test]
+    fn browse_card_pixels_differ_across_same_index_space_modes() {
+        let tui = fresh_tui();
+        let pattern = card_rows(&tui, ColorMode::Pattern, 24, 8);
+        let role = card_rows(&tui, ColorMode::Role, 24, 8);
+        let pattern_gray = card_rows(&tui, ColorMode::PatternGray, 24, 8);
+        let single = card_rows(&tui, ColorMode::Single, 24, 8);
+        assert_ne!(pattern, role, "Pattern vs Role must differ (same index space, different ramps)");
+        assert_ne!(pattern, pattern_gray, "Pattern vs PatternGray must differ (same index space, different ramps)");
+        assert_eq!(pattern, single, "Pattern vs Single must stay byte-identical (same identity ramp; Single falls back to Proto)");
+        // Non-vacuous: the card is not a solid block — the preview
+        // genuinely contains more than one distinct color.
+        let distinct: std::collections::HashSet<(u8, u8)> = pattern
+            .iter()
+            .flatten()
+            .filter(|(a, b)| *a != raster::GAP && *b != raster::GAP)
+            .copied()
+            .collect();
+        assert!(distinct.len() >= 2, "card should contain ≥2 distinct colors, got {}", distinct.len());
     }
 }
