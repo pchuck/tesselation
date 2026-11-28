@@ -82,6 +82,15 @@ registry name.
   composite degree-6 transfers verbatim (s₀ = 21, p = 43 square-class
   extension certificate); corrected per-family applicability table,
   spike-validated, no code yet
+- [docs/sayawen-21-substitution-design.md](sayawen-21-substitution-design.md) —
+  Say-awen 21-fold substitution design (M232): prototiles T_{n,k} text-exact
+  from arXiv:2408.17082v2, boundary replications text-forced, interiors
+  derived & spike-certified (two-family rhomb attachment algebra); certified
+  rows k = 1/2/10, exhaustive negative at k = 9 (the vocabulary binds),
+  cap-bounded k = 3/8, k = 4..7 at the quantified |P₄| wall; inflation σ₂₁
+  in K₂₁ (μ₂₁ non-Pisot, p = 43 square-class extension certificate);
+  per-prototile exact tables + engine data contract + battery design B1–B9,
+  implementation-ready, no code yet
 - [docs/TAXONOMY.md](TAXONOMY.md) — the eleven-tab gallery taxonomy (M76; Isohedral added 2026-11-24)
 - [docs/2D_Tilings_Reference.md](2D_Tilings_Reference.md) — mathematical
   background (uniform/Laves/wallpaper/quasiperiodic/aperiodic reference)

@@ -666,6 +666,14 @@ parentheses:
 
 ### 8.4 Census deltas and registry-entry plan (derived from `lib.rs` structure)
 
+**Orchestrator note at integration (2026-11-28, M232):** the census figures in
+this subsection are base-relative to the M183-era tip. At integration the
+fleet has landed through M231 — built-ins **170**, memberships **189**, per-tab
+card sizes `[11, 20, 36, 17, 15, 5, 30, 8, 23, 6, 18]` — so the registration
+deltas below apply to the current tip as **built-ins 170 → 171** and
+**memberships 189 → 190** when the Say-awen 21 implementation lands. All
+other content is the frontier tier's delivery, integrated verbatim.
+
 Current census at the M183 tip: **1545 tests** (84 + 40 + 1353 + 68)
 and, in `registry_groups_are_complete_and_canonically_ordered`,
 **165 built-in tilings**, **186 tab memberships** (11 categories,
