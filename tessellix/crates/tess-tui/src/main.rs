@@ -138,7 +138,11 @@ struct ExportArgs {
     width: u32,
     height: u32,
     out: String,
-    scale: f64,
+    /// `--scale` as passed on the CLI; `None` = flag absent (the export
+    /// then resolves the tiling's declared default scale via the same
+    /// `ParamSet::default_for(specs)` path the GUI uses — never a hardcoded
+    /// 1.0). Explicit wins: `Some(v)` is used verbatim.
+    scale: Option<f64>,
     rotation: f64,
     mode: ColorMode,
     params: Vec<(String, String)>,
@@ -278,7 +282,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
         width: 1200,
         height: 800,
         out: "tessellix.svg".into(),
-        scale: 1.0,
+        scale: None,
         rotation: 0.0,
         mode: ColorMode::Pattern,
         params: Vec::new(),
@@ -322,7 +326,7 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
                     .map_err(|_| "bad --height".to_string())?
             }
             "--out" | "-o" => a.out = next(&mut i)?,
-            "--scale" => a.scale = finite(&next(&mut i)?, "--scale")?,
+            "--scale" => a.scale = Some(finite(&next(&mut i)?, "--scale")?),
             "--rotation" => a.rotation = finite(&next(&mut i)?, "--rotation")?,
             "--mode" => {
                 a.mode = ColorMode::parse(&next(&mut i)?).ok_or_else(|| "bad --mode".to_string())?
@@ -379,8 +383,10 @@ fn parse_export(args: &[String]) -> Result<ExportArgs, String> {
     if a.width == 0 || a.height == 0 {
         return Err("--width and --height must be > 0".into());
     }
-    if a.scale <= 0.0 {
-        return Err("--scale must be a positive number".into());
+    if let Some(s) = a.scale {
+        if s <= 0.0 {
+            return Err("--scale must be a positive number".into());
+        }
     }
     if a.strapwork.is_some() && a.deform.is_some() {
         return Err(
@@ -509,7 +515,17 @@ fn export(args: &[String]) -> Result<(), String> {
         .get(&a.tiling)
         .ok_or_else(|| format!("unknown tiling: {}", a.tiling))?;
     let mut params = tess_core::params::ParamSet::default_for(tiling.params());
-    params.set(tess_tilings::lattice::SCALE_ID, ParamValue::Float(a.scale));
+    // Export-path fallback (E14): an explicit --scale wins (Some(v)); absent
+    // the flag, the tiling's declared default scale is used — the same
+    // ParamSet::default_for(specs) path the GUI uses — instead of a
+    // hardcoded 1.0. Tilings with no declared scale spec fall back to 1.0.
+    let scale = a.scale.unwrap_or_else(|| {
+        params
+            .get(tess_tilings::lattice::SCALE_ID)
+            .and_then(|v| v.as_f64())
+            .unwrap_or(1.0)
+    });
+    params.set(tess_tilings::lattice::SCALE_ID, ParamValue::Float(scale));
     params.set(
         tess_tilings::lattice::ROTATION_ID,
         ParamValue::Angle(a.rotation),
@@ -548,7 +564,7 @@ fn export(args: &[String]) -> Result<(), String> {
     }
 
     // View centered at --center (default origin), ~20 world units tall at scale 1.
-    let world_h = 20.0 / a.scale.max(1e-9);
+    let world_h = 20.0 / scale.max(1e-9);
     let world_w = world_h * a.width as f64 / a.height as f64;
     let (cx, cy) = a.center.unwrap_or((0.0, 0.0));
     let region = tess_core::BBox::new(
@@ -2303,19 +2319,31 @@ mod tests_export_contract {
             defaults.height
         );
 
-        // --scale default 1.0.
-        let (line_no, _line, cells) = export_table_row(
+        // --scale: the parse layer records absence when the flag is not
+        // passed (None) — the export resolves the tiling's declared default
+        // scale, never a hardcoded 1.0. The doc's "1.0" default cell (and
+        // the claim "1.0 → ~20 world units tall", otherwise pinned below)
+        // is stale after the E14 export-path fallback landed; the USAGE
+        // fold is orchestrator work at integration, so this pin records
+        // the NEW contract instead of asserting the stale default.
+        let (line_no, _line, _cells) = export_table_row(
             &doc,
             "uniform scale",
             "docs/USAGE.md: --scale default pin",
         );
-        let doc_scale: f64 = cells[2].parse().unwrap_or_else(|_| {
-            panic!("docs/USAGE.md line {line_no} (--scale default): cells[2] {:?}", cells[2])
-        });
-        assert_eq!(
-            defaults.scale, doc_scale,
-            "docs/USAGE.md line {line_no} (--scale default): documented {doc_scale} vs parsed {}",
+        let _ = line_no;
+        assert!(
+            defaults.scale.is_none(),
+            "docs/USAGE.md (--scale default): --scale must record absence (None) when not passed, got {:?}",
             defaults.scale
+        );
+        let with_flag = parse_export(&args(&["--tiling", "square", "--scale", "2.0"]))
+            .expect("--scale 2.0 parses");
+        assert_eq!(
+            with_flag.scale,
+            Some(2.0),
+            "docs/USAGE.md (--scale default): --scale 2.0 must be recorded verbatim, got {:?}",
+            with_flag.scale
         );
 
         // --rotation default 0.
@@ -2623,6 +2651,108 @@ mod tests_export_contract {
             "docs/USAGE.md line {line_no} (world units): SVG tokens must be finite"
         );
         let _ = std::fs::remove_file(&svg_path);
+    }
+
+    // ---- E14: --scale resolution fallback (explicit > declared > 1.0) ----
+
+    /// The E14 residual: the export path must honor the tiling's declared
+    /// default scale (the GUI's own `ParamSet::default_for(specs)` path)
+    /// when `--scale` is absent, and the explicit `--scale` value must win.
+    /// Pinned live against real exports — the background rect height is the
+    /// frame's world-unit height (`20.0 / scale`).
+    #[test]
+    fn usage_scale_resolution_fallback_matches_doc() {
+        let registry = tess_tilings::registry();
+
+        // Registry-wide: the ONLY tilings with a non-1.0 declared SCALE_ID
+        // default are golden-bee (3.5), golden-triangle (3.5),
+        // glb-binary-n7 (2.75) and hirschhorn (2.5).
+        let mut found: Vec<(&'static str, f64)> = Vec::new();
+        for t in registry.iter() {
+            for spec in t.params() {
+                if spec.id.as_str() == tess_tilings::lattice::SCALE_ID.as_str() {
+                    if let tess_core::params::ParamKind::Float { default, .. } = spec.kind {
+                        if (default - 1.0).abs() > 1e-12 {
+                            found.push((t.id(), default));
+                        }
+                    }
+                }
+            }
+        }
+        found.sort_by(|a, b| a.0.cmp(b.0));
+        assert_eq!(
+            found,
+            vec![
+                ("glb-binary-n7", 2.75),
+                ("golden-bee", 3.5),
+                ("golden-triangle", 3.5),
+                ("hirschhorn", 2.5),
+            ],
+            "non-1.0 declared SCALE_ID defaults must be exactly the four pinned tilings: {:?}",
+            found
+        );
+
+        // hirschhorn (declared 2.5) default export: frame is 20/2.5 = 8 world units tall.
+        let default_svg = temp_svg("e14_default");
+        let mut argv = args(&["--tiling", "hirschhorn", "--width", "1200", "--height", "900"]);
+        argv.push("--out".to_string());
+        argv.push(default_svg.to_string_lossy().into_owned());
+        export(&argv).expect("hirschhorn default export must succeed");
+        let svg = std::fs::read_to_string(&default_svg).expect("SVG readable");
+        let (_x, _y, _w, h) = background_rect(&svg);
+        assert!(
+            (h - 20.0 / 2.5).abs() < 1e-3,
+            "hirschhorn default export: frame height must be 20/2.5 = 8.0 world units, got {h}"
+        );
+
+        // Explicit --scale 1.0 wins: frame is 20.0 world units tall.
+        let explicit_svg = temp_svg("e14_explicit");
+        let mut argv = args(&[
+            "--tiling", "hirschhorn", "--width", "1200", "--height", "900",
+            "--scale", "1.0",
+        ]);
+        argv.push("--out".to_string());
+        argv.push(explicit_svg.to_string_lossy().into_owned());
+        export(&argv).expect("hirschhorn --scale 1.0 export must succeed");
+        let svg = std::fs::read_to_string(&explicit_svg).expect("SVG readable");
+        let (_x, _y, _w, h) = background_rect(&svg);
+        assert!(
+            (h - 20.0).abs() < 1e-3,
+            "hirschhorn --scale 1.0 must force 20.0 world-unit frame (explicit wins), got {h}"
+        );
+
+        // Explicit --scale equal to the declared default: identical bytes.
+        let declared_svg = temp_svg("e14_declared");
+        let mut argv = args(&[
+            "--tiling", "hirschhorn", "--width", "1200", "--height", "900",
+            "--scale", "2.5",
+        ]);
+        argv.push("--out".to_string());
+        argv.push(declared_svg.to_string_lossy().into_owned());
+        export(&argv).expect("hirschhorn --scale 2.5 export must succeed");
+        let bytes_default = std::fs::read(&default_svg).expect("SVG readable");
+        let bytes_declared = std::fs::read(&declared_svg).expect("SVG readable");
+        assert_eq!(
+            bytes_default, bytes_declared,
+            "hirschhorn default vs explicit --scale 2.5 (declared default): exports must be byte-identical"
+        );
+
+        // A declared-1.0 tiling (square) is unaffected by the fallback.
+        let square_svg = temp_svg("e14_square");
+        let mut argv = args(&["--tiling", "square", "--width", "1200", "--height", "900"]);
+        argv.push("--out".to_string());
+        argv.push(square_svg.to_string_lossy().into_owned());
+        export(&argv).expect("square default export must succeed");
+        let svg = std::fs::read_to_string(&square_svg).expect("SVG readable");
+        let (_x, _y, _w, h) = background_rect(&svg);
+        assert!(
+            (h - 20.0).abs() < 1e-3,
+            "square default export: frame height must be 20.0 world units (declared 1.0), got {h}"
+        );
+
+        for f in [&default_svg, &explicit_svg, &declared_svg, &square_svg] {
+            let _ = std::fs::remove_file(f);
+        }
     }
 
     // ---- --center: exact translation + finite values ----------------------
