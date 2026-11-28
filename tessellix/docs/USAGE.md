@@ -21,7 +21,7 @@ cargo run -p tess-tui -- export --tiling truncated-hexagonal \
 |---|---|---|
 | `--tiling ID` | — (required) | tiling id, see `list` |
 | `--width` / `--height` | 1200 / 800 | SVG canvas size in px |
-| `--scale` | 1.0 | uniform scale (1.0 → ~20 world units tall) |
+| `--scale` | the tiling's declared scale (1.0 for most tilings) | uniform scale; explicit `--scale` wins (1.0 → ~20 world units tall) |
 | `--rotation` | 0 | rotation in degrees |
 | `--center X,Y` | origin | center the view at world (X, Y) — finite values |
 | `--param ID=VALUE` | — (optional) | override a tiling parameter for this run (see `list` for the parameter's id/type); repeatable |
